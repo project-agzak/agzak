@@ -196,9 +196,3 @@ gradle-app.setting
 ### Gradle Patch ###
 # Java heap dump
 *.hprof
-
-# Firebase service account
-src/main/resources/firebase-service-account.json
-secrets/firebase-service-account.json
-
-uploads/gifticon/**
