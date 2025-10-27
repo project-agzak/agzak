@@ -45,9 +45,21 @@ CREATE TABLE `fortune_type` (
                                 `fortune_type_id` BIGINT      NOT NULL,
                                 `name`            VARCHAR(50) NOT NULL,
                                 `description`     VARCHAR(255) NULL,
-                                `good_with`       VARCHAR(50)  NULL,
-                                `bad_with`        VARCHAR(50)  NULL,
-                                PRIMARY KEY (`fortune_type_id`)
+                                `good_with_id`    BIGINT       NULL,
+                                `bad_with_id`     BIGINT       NULL,
+                                PRIMARY KEY (`fortune_type_id`),
+                                KEY `IDX_fortune_type_good_with` (`good_with_id`),
+                                KEY `IDX_fortune_type_bad_with`  (`bad_with_id`),
+
+                                CONSTRAINT `FK_fortune_type_good_with`
+                                    FOREIGN KEY (`good_with_id`)
+                                        REFERENCES `fortune_type`(`fortune_type_id`)
+                                        ON DELETE SET NULL ON UPDATE CASCADE,
+
+                                CONSTRAINT `FK_fortune_type_bad_with`
+                                    FOREIGN KEY (`bad_with_id`)
+                                        REFERENCES `fortune_type`(`fortune_type_id`)
+                                        ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
 /* =========================================================
@@ -125,13 +137,13 @@ CREATE TABLE `fortune_cookie` (
                                   `fortune_cookie_id` BIGINT      NOT NULL,
                                   `inventory_id`      BIGINT      NOT NULL,
                                   `game_session_id`   BIGINT      NULL, /* 선택적 역방향 링크: 세션 산출물 추적용 */
-                                  `name`              VARCHAR(50) NOT NULL,
                                   `type`              VARCHAR(50) NULL COMMENT 'ENUM(`MONEY`, `LOVE`, `ACHIEVEMENT`, `HEALTH`, `MIXED`, `ROTTEN`)',
                                   `love`              INT         NOT NULL,
                                   `money`             INT         NOT NULL,
                                   `achievement`       INT         NOT NULL,
                                   `health`            INT         NOT NULL,
                                   `status`            VARCHAR(50) NOT NULL DEFAULT 'AVAILABLE' COMMENT 'ENUM(`AVAILABLE`, `USED`)',
+                                  `created_at`    DATETIME     NOT NULL,
                                   PRIMARY KEY (`fortune_cookie_id`),
                                   KEY `IDX_cookie_inventory` (`inventory_id`),
                                   UNIQUE KEY `UQ_cookie_session` (`game_session_id`),
