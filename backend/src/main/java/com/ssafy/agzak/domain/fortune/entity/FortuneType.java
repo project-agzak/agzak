@@ -21,9 +21,17 @@ public class FortuneType {
     @Column(name = "description")
     private String description;
 
-    @Column(name = "good_with", length = 50)
-    private String goodWith;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "good_with_id",
+            foreignKey = @ForeignKey(name = "FK_fortune_type_good_with")
+    )
+    private FortuneType goodWith;
 
-    @Column(name = "bad_with", length = 50)
-    private String badWith;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "bad_with_id",
+            foreignKey = @ForeignKey(name = "FK_fortune_type_bad_with")
+    )
+    private FortuneType badWith;
 }
