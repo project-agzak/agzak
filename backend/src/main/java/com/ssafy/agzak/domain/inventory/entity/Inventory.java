@@ -21,7 +21,6 @@ public class Inventory {
     @Column(name = "inventory_id", nullable = false)
     private Long inventoryId;
 
-
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "member_id", nullable = false,
             foreignKey = @ForeignKey(name = "FK_inventory_member"))

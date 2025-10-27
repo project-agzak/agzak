@@ -3,6 +3,8 @@ package com.ssafy.agzak.domain.game.entity;
 import com.ssafy.agzak.domain.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -48,9 +50,11 @@ public class GameSession {
     @Builder.Default
     private Integer attemptsLimit = 10;
 
+    @CreationTimestamp
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    @UpdateTimestamp
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
