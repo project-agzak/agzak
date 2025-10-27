@@ -34,7 +34,7 @@ public class OAuthIdentity {
         @Column(name = "provider", nullable = false, length = 50)
         private OAuthProvider provider;
 
-        @Column(name = "sub", nullable = false, length = 255)
+        @Column(name = "sub", nullable = false)
         private String sub;
     }
 
