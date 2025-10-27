@@ -9,17 +9,20 @@ USE `agzak`;
    1) 회원 / 인증
    ========================================================= */
 CREATE TABLE `member` (
-                          `member_id`   BIGINT      NOT NULL,
-                          `nickname`    VARCHAR(50) NOT NULL,
-                          `gender`      VARCHAR(50) NOT NULL,
-                          `birth_date`  DATE        NOT NULL COMMENT 'YYYY-MM-DD',
-                          `birth_branch` VARCHAR(50) NULL COMMENT 'ENUM(`RAT`, `OX`, `TIGER`, `RABBIT`, `DRAGON`, `SNAKE`, `HORSE`, `SHEEP`, `MONKEY`, `ROOSTER`, `DOG`, `PIG`)',
-                          `birth_city`  VARCHAR(100) NULL,
-                          `created_at`  DATETIME    NOT NULL,
-                          `updated_at`  DATETIME    NOT NULL,
-                          `status`      VARCHAR(50) NULL COMMENT 'ENUM(`ACTIVE`, `WITHDRAWN`)',
+                          `member_id`     BIGINT       NOT NULL,
+                          `nickname`      VARCHAR(50)  NOT NULL,
+                          `email`         VARCHAR(255) NULL,
+                          `password` VARCHAR(255) NULL,
+                          `gender`        VARCHAR(50)  NOT NULL,
+                          `birth_date`    DATE         NOT NULL COMMENT 'YYYY-MM-DD',
+                          `birth_branch`  VARCHAR(50)  NULL COMMENT 'ENUM(`RAT`, `OX`, `TIGER`, `RABBIT`, `DRAGON`, `SNAKE`, `HORSE`, `SHEEP`, `MONKEY`, `ROOSTER`, `DOG`, `PIG`)',
+                          `birth_city`    VARCHAR(100) NULL,
+                          `created_at`    DATETIME     NOT NULL,
+                          `updated_at`    DATETIME     NOT NULL,
+                          `status`        VARCHAR(50)  NULL COMMENT 'ENUM(`ACTIVE`, `WITHDRAWN`)',
                           PRIMARY KEY (`member_id`),
-                          UNIQUE KEY `UQ_member_nickname` (`nickname`)
+                          UNIQUE KEY `UQ_member_nickname` (`nickname`),
+                          UNIQUE KEY `UQ_member_email` (`email`)
 ) ENGINE=InnoDB;
 
 CREATE TABLE `oauth_identity` (
