@@ -1,0 +1,16 @@
+services:
+  agzak-adminer:
+    image: adminer:latest
+    container_name: agzak-adminer
+    environment:
+      ADMINER_DEFAULT_SERVER: agzak-mysql
+      TZ: "Asia/Seoul"
+    ports:
+      - "18080:8080"
+    networks:
+      - agzak-network
+
+networks:
+  agzak-network:
+    external: true
+    name: agzak-network
