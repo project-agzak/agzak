@@ -67,7 +67,7 @@ pipeline {
                                         ssh -o StrictHostKeyChecking=no "$DEPLOY_HOST@$DEPLOY_USER" \
                                         "DOCKER_USER='$DOCKER_USER' DOCKER_PWD='$DOCKER_PWD' FULL_IMAGE='$FULL_IMAGE' bash -s" << 'ENDSSH'
                                         set -eux
-                                        cd /home/ubuntu/agzak-app/deploy/backend
+                                        cd /home/ubuntu/agzak-app/deploy
                                         [ -f Makefile ] || {echo "Makefile not found!"; exit 2;}
 
                                         echo "$DOCKER_PWD" | docker login -u "$DOCKER_USER" --password-stdin || true
