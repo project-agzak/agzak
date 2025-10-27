@@ -1,0 +1,67 @@
+package com.ssafy.agzak.domain.member.entity;
+
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder(toBuilder = true)
+@Entity
+@Table(
+        name = "member",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "UQ_member_nickname", columnNames = {"nickname"}),
+                @UniqueConstraint(name = "UQ_member_email", columnNames = {"email"})
+        }
+)
+public class Member {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "member_id", nullable = false)
+    private Long memberId;
+
+    @Column(name = "nickname", nullable = false, length = 50)
+    private String nickname;
+
+    @Column(name = "email")
+    private String email;
+
+    @Column(name = "password")
+    private String password;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "gender", nullable = false, length = 50)
+    private Gender gender;
+
+    @Column(name = "birth_date", nullable = false)
+    private LocalDate birthDate;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "birth_branch", length = 50)
+    private BirthBranch birthBranch;
+
+    @Column(name = "birth_city", length = 100)
+    private String birthCity;
+
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 50)
+    private MemberStatus status;
+
+    public enum Gender { MALE, FEMALE }
+
+    public enum BirthBranch {
+        RAT, OX, TIGER, RABBIT, DRAGON, SNAKE, HORSE, SHEEP, MONKEY, ROOSTER, DOG, PIG
+    }
+
+    public enum MemberStatus { ACTIVE, WITHDRAWN }
+}
