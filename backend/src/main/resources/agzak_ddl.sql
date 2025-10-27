@@ -12,7 +12,7 @@ CREATE TABLE `member` (
                           `member_id`     BIGINT       NOT NULL,
                           `nickname`      VARCHAR(50)  NOT NULL,
                           `email`         VARCHAR(255) NULL,
-                          `password` VARCHAR(255) NULL,
+                          `password`      VARCHAR(255) NULL,
                           `gender`        VARCHAR(50)  NOT NULL,
                           `birth_date`    DATE         NOT NULL COMMENT 'YYYY-MM-DD',
                           `birth_branch`  VARCHAR(50)  NULL COMMENT 'ENUM(`RAT`, `OX`, `TIGER`, `RABBIT`, `DRAGON`, `SNAKE`, `HORSE`, `SHEEP`, `MONKEY`, `ROOSTER`, `DOG`, `PIG`)',
