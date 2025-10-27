@@ -1,0 +1,47 @@
+package com.ssafy.agzak.domain.fortune.entity;
+
+import com.ssafy.agzak.domain.member.entity.Member;
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.LocalDate;
+
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder(toBuilder = true)
+@Entity
+@Table(
+        name = "fortune",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "UQ_fortune_member_date", columnNames = {"member_id", "date"})
+        },
+        indexes = {
+                @Index(name = "IDX_fortune_date_score", columnList = "date, total_score")
+        }
+)
+public class Fortune {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "fortune_id", nullable = false)
+    private Long fortuneId;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "member_id", nullable = false,
+            foreignKey = @ForeignKey(name = "FK_fortune_member"))
+    private Member member;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "fortune_type_id", nullable = false,
+            foreignKey = @ForeignKey(name = "FK_fortune_type"))
+    private FortuneType fortuneType;
+
+    @Column(name = "date", nullable = false)
+    private LocalDate date;
+
+    @Column(name = "description", length = 1000)
+    private String description;
+
+    @Column(name = "total_score", nullable = false)
+    private Integer totalScore;
+}
