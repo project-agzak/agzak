@@ -123,7 +123,7 @@ public class CookieGameController {
 
     @Operation(summary = "게임 종료 - 쿠키 생성",
             description = "게임으로 얻은 능력치 스냅샷을 보내면 인벤토리에 들어갈 포춘쿠키를 생성합니다.")
-    @PostMapping
+    @PostMapping("sessions/end")
     public ResponseEntity<CreateCookieResponse> createCookie(@RequestBody CreateCookieRequest req) {
         // 1) 합계 계산
         int love = req.snapLove();

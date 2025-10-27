@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 
-@Tag(name = "랭킹", description = "회원별 운세/게임 점수를 바탕으로 한 일일 랭킹 API")
+@Tag(name = "랭킹", description = "회원별 운세 점수를 바탕으로 한 일일 랭킹 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/ranking")
