@@ -76,12 +76,12 @@ dependencies {
     // ─────────────────────────────────────────────────────────────
     // OpenAPI / Swagger 문서화
     // ─────────────────────────────────────────────────────────────
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9'             // Swagger UI + OpenAPI v3
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13'             // Swagger UI + OpenAPI v3
+    implementation 'org.apache.commons:commons-lang3:3.18.0'                               // 문자열/컬렉션 유틸
 
     // ─────────────────────────────────────────────────────────────
     // 유틸리티
     // ─────────────────────────────────────────────────────────────
-//    implementation 'org.apache.commons:commons-lang3:3.18.0'                               // 문자열/컬렉션 유틸
 //    implementation 'org.springframework.security:spring-security-messaging'                 // STOMP/WebSocket 보안
 //    implementation 'com.google.firebase:firebase-admin:9.5.0'                               // Firebase Admin (FCM 등)
 
