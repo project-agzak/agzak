@@ -1,4 +1,4 @@
-package com.ssafy.agzak.dto.response;
+package com.ssafy.agzak.domain.member.dto.response;
 
 import java.time.LocalDateTime;
 
