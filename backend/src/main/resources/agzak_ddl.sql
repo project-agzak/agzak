@@ -13,7 +13,7 @@ CREATE TABLE `member` (
                           `nickname`    VARCHAR(50) NOT NULL,
                           `gender`      VARCHAR(50) NOT NULL,
                           `birth_date`  DATE        NOT NULL COMMENT 'YYYY-MM-DD',
-                          `birth_branch` VARCHAR(50) NULL COMMENT '자, 축, 인, 묘, 진, 사, 오, 미, 신, 유, 술, 해',
+                          `birth_branch` VARCHAR(50) NULL COMMENT 'ENUM(`RAT`, `OX`, `TIGER`, `RABBIT`, `DRAGON`, `SNAKE`, `HORSE`, `SHEEP`, `MONKEY`, `ROOSTER`, `DOG`, `PIG`)',
                           `birth_city`  VARCHAR(100) NULL,
                           `created_at`  DATETIME    NOT NULL,
                           `updated_at`  DATETIME    NOT NULL,
