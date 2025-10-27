@@ -29,6 +29,10 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/swagger-resources/**"
                         ).permitAll()
+                        // 개발 중 공개할 엔드포인트
+                        .requestMatchers(
+                                "/api/v1/**"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .httpBasic(AbstractHttpConfigurer::disable)
