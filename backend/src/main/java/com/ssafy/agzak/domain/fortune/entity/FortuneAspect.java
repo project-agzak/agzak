@@ -32,5 +32,8 @@ public class FortuneAspect {
     @Column(name = "score", nullable = false)
     private Integer score;
 
+    @Column(name = "original_score", nullable = false)
+    private Integer originalScore;
+
     public enum AspectName { MONEY, LOVE, ACHIEVEMENT, HEALTH }
 }

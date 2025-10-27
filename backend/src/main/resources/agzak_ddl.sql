@@ -60,6 +60,7 @@ CREATE TABLE `fortune` (
                            `date`            DATE         NOT NULL,
                            `description`     VARCHAR(1000) NULL,
                            `total_score`     INT          NOT NULL,
+                           `original_total_score` INT       NOT NULL,
                            PRIMARY KEY (`fortune_id`),
                            UNIQUE KEY `UQ_fortune_member_date` (`member_id`, `date`),
                            KEY `IDX_fortune_date_score` (`date`, `total_score`),
@@ -79,6 +80,7 @@ CREATE TABLE `fortune_aspect` (
                                   `fortune_id`        BIGINT      NOT NULL,
                                   `name`              VARCHAR(50) NOT NULL COMMENT 'ENUM(`MONEY`, `LOVE`, `ACHIEVEMENT`, `HEALTH`)',
                                   `score`             INT         NOT NULL,
+                                  `original_score`    INT         NOT NULL,
                                   PRIMARY KEY (`fortune_aspect_id`),
                                   UNIQUE KEY `UQ_aspect_per_fortune` (`fortune_id`, `name`),
                                   CONSTRAINT `FK_aspect_fortune`

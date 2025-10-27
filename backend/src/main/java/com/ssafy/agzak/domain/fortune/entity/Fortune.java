@@ -44,4 +44,7 @@ public class Fortune {
 
     @Column(name = "total_score", nullable = false)
     private Integer totalScore;
+
+    @Column(name = "original_total_score", nullable = false)
+    private Integer originalTotalScore;
 }
