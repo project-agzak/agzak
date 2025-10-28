@@ -9,17 +9,20 @@ USE `agzak`;
    1) 회원 / 인증
    ========================================================= */
 CREATE TABLE `member` (
-                          `member_id`   BIGINT      NOT NULL,
-                          `nickname`    VARCHAR(50) NOT NULL,
-                          `gender`      VARCHAR(50) NOT NULL,
-                          `birth_date`  DATE        NOT NULL COMMENT 'YYYY-MM-DD',
-                          `birth_branch` VARCHAR(50) NULL COMMENT '자, 축, 인, 묘, 진, 사, 오, 미, 신, 유, 술, 해',
-                          `birth_city`  VARCHAR(100) NULL,
-                          `created_at`  DATETIME    NOT NULL,
-                          `updated_at`  DATETIME    NOT NULL,
-                          `status`      VARCHAR(50) NULL COMMENT 'ENUM(`ACTIVE`, `WITHDRAWN`)',
+                          `member_id`     BIGINT       NOT NULL,
+                          `nickname`      VARCHAR(50)  NOT NULL,
+                          `email`         VARCHAR(255) NULL,
+                          `password`      VARCHAR(255) NULL,
+                          `gender`        VARCHAR(50)  NOT NULL,
+                          `birth_date`    DATE         NOT NULL COMMENT 'YYYY-MM-DD',
+                          `birth_branch`  VARCHAR(50)  NULL COMMENT 'ENUM(`RAT`, `OX`, `TIGER`, `RABBIT`, `DRAGON`, `SNAKE`, `HORSE`, `SHEEP`, `MONKEY`, `ROOSTER`, `DOG`, `PIG`)',
+                          `birth_city`    VARCHAR(100) NULL,
+                          `created_at`    DATETIME     NOT NULL,
+                          `updated_at`    DATETIME     NOT NULL,
+                          `status`        VARCHAR(50)  NULL COMMENT 'ENUM(`ACTIVE`, `WITHDRAWN`)',
                           PRIMARY KEY (`member_id`),
-                          UNIQUE KEY `UQ_member_nickname` (`nickname`)
+                          UNIQUE KEY `UQ_member_nickname` (`nickname`),
+                          UNIQUE KEY `UQ_member_email` (`email`)
 ) ENGINE=InnoDB;
 
 CREATE TABLE `oauth_identity` (
@@ -42,9 +45,21 @@ CREATE TABLE `fortune_type` (
                                 `fortune_type_id` BIGINT      NOT NULL,
                                 `name`            VARCHAR(50) NOT NULL,
                                 `description`     VARCHAR(255) NULL,
-                                `good_with`       VARCHAR(50)  NULL,
-                                `bad_with`        VARCHAR(50)  NULL,
-                                PRIMARY KEY (`fortune_type_id`)
+                                `good_with_id`    BIGINT       NULL,
+                                `bad_with_id`     BIGINT       NULL,
+                                PRIMARY KEY (`fortune_type_id`),
+                                KEY `IDX_fortune_type_good_with` (`good_with_id`),
+                                KEY `IDX_fortune_type_bad_with`  (`bad_with_id`),
+
+                                CONSTRAINT `FK_fortune_type_good_with`
+                                    FOREIGN KEY (`good_with_id`)
+                                        REFERENCES `fortune_type`(`fortune_type_id`)
+                                        ON DELETE SET NULL ON UPDATE CASCADE,
+
+                                CONSTRAINT `FK_fortune_type_bad_with`
+                                    FOREIGN KEY (`bad_with_id`)
+                                        REFERENCES `fortune_type`(`fortune_type_id`)
+                                        ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
 /* =========================================================
@@ -57,6 +72,7 @@ CREATE TABLE `fortune` (
                            `date`            DATE         NOT NULL,
                            `description`     VARCHAR(1000) NULL,
                            `total_score`     INT          NOT NULL,
+                           `original_total_score` INT       NOT NULL,
                            PRIMARY KEY (`fortune_id`),
                            UNIQUE KEY `UQ_fortune_member_date` (`member_id`, `date`),
                            KEY `IDX_fortune_date_score` (`date`, `total_score`),
@@ -76,6 +92,7 @@ CREATE TABLE `fortune_aspect` (
                                   `fortune_id`        BIGINT      NOT NULL,
                                   `name`              VARCHAR(50) NOT NULL COMMENT 'ENUM(`MONEY`, `LOVE`, `ACHIEVEMENT`, `HEALTH`)',
                                   `score`             INT         NOT NULL,
+                                  `original_score`    INT         NOT NULL,
                                   PRIMARY KEY (`fortune_aspect_id`),
                                   UNIQUE KEY `UQ_aspect_per_fortune` (`fortune_id`, `name`),
                                   CONSTRAINT `FK_aspect_fortune`
@@ -120,13 +137,13 @@ CREATE TABLE `fortune_cookie` (
                                   `fortune_cookie_id` BIGINT      NOT NULL,
                                   `inventory_id`      BIGINT      NOT NULL,
                                   `game_session_id`   BIGINT      NULL, /* 선택적 역방향 링크: 세션 산출물 추적용 */
-                                  `name`              VARCHAR(50) NOT NULL,
                                   `type`              VARCHAR(50) NULL COMMENT 'ENUM(`MONEY`, `LOVE`, `ACHIEVEMENT`, `HEALTH`, `MIXED`, `ROTTEN`)',
                                   `love`              INT         NOT NULL,
                                   `money`             INT         NOT NULL,
                                   `achievement`       INT         NOT NULL,
                                   `health`            INT         NOT NULL,
                                   `status`            VARCHAR(50) NOT NULL DEFAULT 'AVAILABLE' COMMENT 'ENUM(`AVAILABLE`, `USED`)',
+                                  `created_at`    DATETIME     NOT NULL,
                                   PRIMARY KEY (`fortune_cookie_id`),
                                   KEY `IDX_cookie_inventory` (`inventory_id`),
                                   UNIQUE KEY `UQ_cookie_session` (`game_session_id`),
