@@ -21,5 +21,8 @@ public record AttemptResponse(
         Integer snapMoney,
         Integer snapAchievement,
         Integer snapHealth,
-        Integer snapMisfortune
+        Integer snapMisfortune,
+
+        // 세션 완료 시 생성된 쿠키 정보(없으면 null)
+        CookieCreatedResponse cookie
 ) {}
