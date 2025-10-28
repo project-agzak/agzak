@@ -21,6 +21,8 @@ RUN apk add --no-cache curl
 
 COPY --from=build /app/app.jar /app/app.jar
 
+RUN apk add --no-cache curl
+
 ENV JAVA_OPTS="-XX:MaxRAMPercentage=75.0"
 EXPOSE 8082
 
