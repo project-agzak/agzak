@@ -164,6 +164,7 @@ CREATE TABLE `ranking` (
                            `date`        DATE     NOT NULL,
                            `rank_no`     INT      NOT NULL,
                            `total_score` INT      NOT NULL,
+                           `original_total_score` INT      NOT NULL,
                            `created_at`  DATETIME NOT NULL,
                            `updated_at`  DATETIME NOT NULL,
                            PRIMARY KEY (`ranking_id`),
