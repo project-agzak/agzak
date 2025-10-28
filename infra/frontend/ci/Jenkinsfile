@@ -28,7 +28,7 @@ pipeline {
 
         stage('Build React App') {
             steps {
-                dir("${env.SUBDIR}") {
+                dir("${env.SUBDIR}/agzak") {
                     sh '''
                         set -eux
                         npm ci
