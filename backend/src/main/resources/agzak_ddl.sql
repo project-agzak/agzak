@@ -199,6 +199,7 @@ CREATE TABLE `game_attempt` (
                                 `snap_money`       INT          NOT NULL,
                                 `snap_achievement` INT          NOT NULL,
                                 `snap_health`      INT          NOT NULL,
+                                `snap_misfortune`  INT          NOT NULL,
 
                                 `created_at`       DATETIME     NOT NULL,
 

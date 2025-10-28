@@ -69,6 +69,9 @@ public class GameAttempt {
     @Column(name = "snap_health", nullable = false)
     private Integer snapHealth;
 
+    @Column(name = "snap_misfortune", nullable = false)
+    private Integer snapMisfortune;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
