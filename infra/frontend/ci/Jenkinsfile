@@ -1,0 +1,63 @@
+pipeline {
+    agent any
+
+    options {
+        timestamps()
+        ansiColor('xterm')
+    }
+
+    environment {
+        SUBDIR = 'frontend'
+        DEPLOY_USER = 'ubuntu'
+        DEPLOY_HOST = 'k13b102.p.ssafy.io'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+                script {
+                    def full = (env.GIT_BRANCH ?: '').replaceFirst(/^origin\//, '')
+                    if (!full) full = sh(returnStdout: true, script: 'git rev-parse --abbrev-ref HEAD').trim()
+                    env.TARGET_BRANCH_FULL = full
+                    env.TARGET_BRANCH = full.replaceAll('/', '-')
+                    echo "Target branch: ${env.TARGET_BRANCH_FULL} -> ${env.TARGET_BRANCH}"
+                }
+            }
+        }
+
+        stage('Build React App') {
+            steps {
+                dir("${env.SUBDIR}") {
+                    sh '''
+                        set -eux
+                        npm ci
+                        npm run build
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                sshagent (credentials: ['deploy-ssh']) {
+                    sh '''
+                        set -eux
+                        rsync -avz --delete ${SUBDIR}/dist/ ${DEPLOY_USER}@${DEPLOY_HOST}:/home/ubuntu/agzak-app/deploy/data/www/dist/
+
+                        ssh ${DEPLOY_USER}@${DEPLOY_HOST} "docker restart agzak-nginx"
+                    '''
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Frontend deployment successful!"
+        }
+        failure {
+            echo "Frontend build/deploy failed!"
+        }
+    }
+}
