@@ -1,6 +1,8 @@
 package com.ssafy.agzak.global.error;
 
+import com.ssafy.agzak.domain.game.exception.AttemptLimitReachedException;
 import com.ssafy.agzak.domain.game.exception.DailyQuotaExceededException;
+import com.ssafy.agzak.domain.game.exception.NoActiveSessionException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
@@ -34,6 +36,28 @@ public class GlobalExceptionHandler {
         var body = ErrorResponse.of(
                 HttpStatus.CONFLICT.value(),
                 "QUOTA_EXCEEDED",
+                e.getMessage(),
+                req.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
+    @ExceptionHandler(NoActiveSessionException.class)
+    public ResponseEntity<ErrorResponse> handleNoActive(NoActiveSessionException e, HttpServletRequest req) {
+        var body = ErrorResponse.of(
+                HttpStatus.CONFLICT.value(),
+                "NO_ACTIVE_SESSION",
+                e.getMessage(),
+                req.getRequestURI())
+        ;
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
+    @ExceptionHandler(AttemptLimitReachedException.class)
+    public ResponseEntity<ErrorResponse> handleAttemptLimit(AttemptLimitReachedException e, HttpServletRequest req) {
+        var body = ErrorResponse.of(
+                HttpStatus.CONFLICT.value(),
+                "ATTEMPT_LIMIT",
                 e.getMessage(),
                 req.getRequestURI()
         );

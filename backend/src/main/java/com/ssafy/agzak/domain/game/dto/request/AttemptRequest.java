@@ -1,11 +1,9 @@
 package com.ssafy.agzak.domain.game.dto.request;
 
 public record AttemptRequest(
-        Long gameSessionId,
-        AspectName aspectName,
-        FireType fireType,
-        Boolean deterministic               // true면 applied>=50 성공, 아니면 난수
+        AttemptAspect aspectName,   // MONEY, LOVE, ACHIEVEMENT, HEALTH, MISFORTUNE
+        FireType fireType           // WEAK, STRONG
 ) {
-        public enum AspectName { MONEY, LOVE, ACHIEVEMENT, HEALTH }
+        public enum AttemptAspect { MONEY, LOVE, ACHIEVEMENT, HEALTH, MISFORTUNE }
         public enum FireType { WEAK, STRONG }
 }

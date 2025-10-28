@@ -38,4 +38,24 @@ public class CookieGameController {
         var body = gameService.startForCurrentUser();
         return ResponseEntity.status(201).body(body);
     }
+
+    @Operation(
+            summary = "굽기 시도(강/약불 + 항목) -> 서버 판정",
+            description = "현재 진행 중 세션에 대해 선택한 항목과 불세기를 반영하여 성공/실패를 판정하고, 결과/스냅샷/다음 확률을 반환합니다. 10회 도달 시 세션이 COMPLETED로 전환됩니다."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "시도 결과",
+                    content = @Content(schema = @Schema(implementation = com.ssafy.agzak.domain.game.dto.response.AttemptResponse.class))),
+            @ApiResponse(responseCode = "404", description = "회원 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "409", description = "진행 중 세션 없음 / 시도 한도 도달",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @PostMapping("/attempts")
+    public ResponseEntity<com.ssafy.agzak.domain.game.dto.response.AttemptResponse> attempt(
+            @RequestBody com.ssafy.agzak.domain.game.dto.request.AttemptRequest req
+    ) {
+        var body = gameService.attemptForCurrentUser(req);
+        return ResponseEntity.ok(body);
+    }
 }

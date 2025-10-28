@@ -9,7 +9,7 @@ import java.math.BigDecimal;
 public record AttemptResponse(
         Long gameSessionId,
         Integer attemptNo,
-        AttemptRequest.AspectName aspectName,
+        AttemptRequest.AttemptAspect aspectName,
         AttemptRequest.FireType fireType,
         BigDecimal baseProb,
         BigDecimal adjustmentPp,
@@ -20,5 +20,6 @@ public record AttemptResponse(
         Integer snapLove,
         Integer snapMoney,
         Integer snapAchievement,
-        Integer snapHealth
+        Integer snapHealth,
+        Integer snapMisfortune
 ) {}

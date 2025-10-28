@@ -1,9 +1,13 @@
 package com.ssafy.agzak.domain.game.service;
 
+import com.ssafy.agzak.domain.game.dto.request.AttemptRequest;
+import com.ssafy.agzak.domain.game.dto.response.AttemptResponse;
 import com.ssafy.agzak.domain.game.dto.response.StartGameResponse;
 import com.ssafy.agzak.domain.game.entity.GameAttempt;
 import com.ssafy.agzak.domain.game.entity.GameSession;
+import com.ssafy.agzak.domain.game.exception.AttemptLimitReachedException;
 import com.ssafy.agzak.domain.game.exception.DailyQuotaExceededException;
+import com.ssafy.agzak.domain.game.exception.NoActiveSessionException;
 import com.ssafy.agzak.domain.game.repository.GameAttemptRepository;
 import com.ssafy.agzak.domain.game.repository.GameSessionRepository;
 import com.ssafy.agzak.domain.member.entity.Member;
@@ -14,9 +18,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 @RequiredArgsConstructor
@@ -136,5 +142,142 @@ public class CookieGameService {
                 .snapHealth(0)
                 .snapMisfortune(0)
                 .build();
+    }
+
+    public AttemptResponse attemptForCurrentUser(AttemptRequest req) {
+        // Long memberId = authMemberProvider.currentMemberId();
+        Long memberId = 1L; // TODO: JWT에서 추출
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new EntityNotFoundException("member not found: " + memberId));
+
+        LocalDate today = LocalDate.now(KST);
+
+        // 진행중 세션
+        GameSession session = gameSessionRepository
+                .findTopByMemberAndGameDateAndStatusOrderBySessionNoDesc(
+                        member, today, GameSession.SessionStatus.IN_PROGRESS)
+                .orElseThrow(() -> new NoActiveSessionException("진행 중인 세션이 없습니다. 먼저 게임을 시작하세요."));
+
+        // 마지막 시도 상태
+        var lastOpt = gameAttemptRepository.findTopByGameSessionOrderByAttemptNoDesc(session);
+
+        int nextAttemptNo;
+        BigDecimal baseProb;
+        int snapLove, snapMoney, snapAchievement, snapHealth, snapMisfortune;
+
+        if (lastOpt.isPresent()) {
+            var last = lastOpt.get();
+            if (last.getAttemptNo() >= ATTEMPTS_LIMIT) {
+                throw new AttemptLimitReachedException("이 세션은 이미 10회 시도가 완료되었습니다.");
+            }
+            nextAttemptNo   = last.getAttemptNo() + 1;
+            baseProb        = last.getNextBaseProb();
+            snapLove        = last.getSnapLove();
+            snapMoney       = last.getSnapMoney();
+            snapAchievement = last.getSnapAchievement();
+            snapHealth      = last.getSnapHealth();
+            snapMisfortune  = last.getSnapMisfortune();
+        } else {
+            nextAttemptNo   = 1;
+            baseProb        = session.getInitialSuccessProb();
+            snapLove = snapMoney = snapAchievement = snapHealth = snapMisfortune = 0;
+        }
+
+        // 적용 확률 = base + (weak:+5 / strong:-5) → [0,100] clamp
+        BigDecimal adjustment = (req.fireType() == AttemptRequest.FireType.WEAK)
+                ? new BigDecimal("5.00") : new BigDecimal("-5.00");
+        BigDecimal applied = clamp0to100(baseProb.add(adjustment)); // 소수점 둘째 자리 고정
+
+        // 성공/실패 판정: Uniform[0,1) < applied/100
+        boolean success = ThreadLocalRandom.current().nextDouble() < applied.doubleValue() / 100.0;
+
+        // 델타 계산(행운 4종 vs 액운)
+        int delta = getDelta(req, success);
+
+        // 다음 기본성공확률 변화량(pp) 규칙(요구사항에 맞춰 ±10%p 고정)
+        BigDecimal nextDelta = success ? new BigDecimal("-10.00") : new BigDecimal("10.00");
+
+        // 스냅샷 반영
+        switch (req.aspectName()) {
+            case LOVE        -> snapLove        += delta;
+            case MONEY       -> snapMoney       += delta;
+            case ACHIEVEMENT -> snapAchievement += delta;
+            case HEALTH      -> snapHealth      += delta;
+            case MISFORTUNE  -> snapMisfortune  += delta;
+        }
+
+        BigDecimal nextBase = clamp0to100(baseProb.add(nextDelta));
+
+        // Attempt 저장
+        GameAttempt attempt = GameAttempt.builder()
+                .gameSession(session)
+                .attemptNo(nextAttemptNo)
+                .aspectName(GameAttempt.AspectName.valueOf(req.aspectName().name()))
+                .fireType(GameAttempt.FireType.valueOf(req.fireType().name()))
+                .baseProb(baseProb.setScale(2, RoundingMode.HALF_UP))
+                .adjustmentPp(adjustment.setScale(2, RoundingMode.HALF_UP))
+                .appliedProb(applied.setScale(2, RoundingMode.HALF_UP))
+                .isSuccess(success)
+                .deltaValue(delta)
+                .nextBaseProb(nextBase.setScale(2, RoundingMode.HALF_UP))
+                .snapLove(snapLove)
+                .snapMoney(snapMoney)
+                .snapAchievement(snapAchievement)
+                .snapHealth(snapHealth)
+                .snapMisfortune(snapMisfortune)
+                .createdAt(LocalDateTime.now(KST))
+                .build();
+        gameAttemptRepository.save(attempt);
+
+        // 10회 도달 시 세션 완료
+        session = session.toBuilder()
+                .status(nextAttemptNo >= ATTEMPTS_LIMIT ? GameSession.SessionStatus.COMPLETED : GameSession.SessionStatus.IN_PROGRESS)
+                .updatedAt(LocalDateTime.now(KST))
+                .build();
+        gameSessionRepository.save(session);
+
+        return AttemptResponse.builder()
+                .gameSessionId(session.getGameSessionId())
+                .attemptNo(nextAttemptNo)
+                .aspectName(req.aspectName())
+                .fireType(req.fireType())
+                .baseProb(baseProb)
+                .adjustmentPp(adjustment)
+                .appliedProb(applied)
+                .success(success)
+                .deltaValue(delta)
+                .nextBaseProb(nextBase)
+                .snapLove(snapLove)
+                .snapMoney(snapMoney)
+                .snapAchievement(snapAchievement)
+                .snapHealth(snapHealth)
+                .snapMisfortune(snapMisfortune)
+                .build();
+    }
+
+    private static int getDelta(AttemptRequest req, boolean success) {
+        int delta;
+        if (req.aspectName() == AttemptRequest.AttemptAspect.MISFORTUNE) {
+            // 액운 규칙
+            if (req.fireType() == AttemptRequest.FireType.WEAK) {
+                delta = success ? +5 : -7;
+            } else { // STRONG
+                delta = success ? +14 : -13;
+            }
+        } else {
+            // 행운 4종 규칙
+            if (req.fireType() == AttemptRequest.FireType.WEAK) {
+                delta = success ? +7 : -5;
+            } else { // STRONG
+                delta = success ? +13 : -14;
+            }
+        }
+        return delta;
+    }
+
+    private static BigDecimal clamp0to100(BigDecimal v) {
+        if (v.compareTo(BigDecimal.ZERO) < 0) return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        if (v.compareTo(new BigDecimal("100.00")) > 0) return new BigDecimal("100.00").setScale(2, RoundingMode.HALF_UP);
+        return v.setScale(2, RoundingMode.HALF_UP);
     }
 }
