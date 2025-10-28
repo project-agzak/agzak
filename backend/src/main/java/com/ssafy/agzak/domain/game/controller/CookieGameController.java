@@ -1,4 +1,3 @@
-// src/main/java/com/ssafy/agzak/domain/game/controller/CookieGameController.java
 package com.ssafy.agzak.domain.game.controller;
 
 import com.ssafy.agzak.domain.game.dto.response.StartGameResponse;
@@ -23,17 +22,15 @@ public class CookieGameController {
     private final CookieGameService gameService;
 
     @Operation(
-            summary = "게임 시작(서버 계산)",
-            description = "로그인 사용자 기준, 오늘 남은 회차(최대 3회) 중 다음 회차를 생성합니다. 오늘 진행 중인(IN_PROGRESS) 세션이 있다면 CANCELLED로 정리한 뒤 새 세션을 생성합니다."
+            summary = "게임 시작/재개",
+            description = "오늘 진행 중 세션이 있으면 해당 세션의 현재 진행상태로 재개, 없으면 새 세션을 생성(하루 최대 3회)."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "세션 생성됨",
+            @ApiResponse(responseCode = "201", description = "세션 생성됨 또는 재개됨",
                     content = @Content(schema = @Schema(implementation = StartGameResponse.class))),
             @ApiResponse(responseCode = "404", description = "회원 없음",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "409", description = "일일 3회 한도 초과",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "500", description = "서버 오류",
+            @ApiResponse(responseCode = "409", description = "일일 3회 한도 초과(새 시작 불가)",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/sessions/start")

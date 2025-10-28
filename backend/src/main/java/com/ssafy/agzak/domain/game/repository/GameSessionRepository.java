@@ -17,4 +17,8 @@ public interface GameSessionRepository extends JpaRepository<GameSession, Long> 
     List<GameSession> findByMemberAndGameDateAndStatus(Member member, LocalDate gameDate, GameSession.SessionStatus status);
 
     Optional<GameSession> findTopByMemberAndGameDateOrderBySessionNoDesc(Member member, LocalDate gameDate);
+
+    Optional<GameSession> findTopByMemberAndGameDateAndStatusOrderBySessionNoDesc(
+            Member member, LocalDate gameDate, GameSession.SessionStatus status
+    );
 }
