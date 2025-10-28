@@ -43,7 +43,7 @@ pipeline {
                 sshagent (credentials: ['deploy-ssh']) {
                     sh '''
                         set -eux
-                        rsync -avz --delete ${SUBDIR}/dist/ ${DEPLOY_USER}@${DEPLOY_HOST}:/home/ubuntu/agzak-app/deploy/data/www/dist/
+                        rsync -avz --delete ${SUBDIR}/dist/ ${DEPLOY_USER}@${DEPLOY_HOST}:/home/ubuntu/agzak-app/deploy/infra/nginx/data/www/dist/
 
                         ssh ${DEPLOY_USER}@${DEPLOY_HOST} "docker restart agzak-nginx"
                     '''
