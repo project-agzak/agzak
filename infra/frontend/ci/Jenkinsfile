@@ -41,12 +41,11 @@ pipeline {
         stage('Deploy') {
             steps {
                 sshagent (credentials: ['deploy-ssh']) {
-                    sh '''
+                    sh """
                         set -eux
-                        rsync -avz --delete ${SUBDIR}/dist/ ${DEPLOY_USER}@${DEPLOY_HOST}:/home/ubuntu/agzak-app/deploy/infra/nginx/data/www/dist/
-
-                        ssh ${DEPLOY_USER}@${DEPLOY_HOST} "docker restart agzak-nginx"
-                    '''
+                        rsync -avz --delete ${env.SUBDIR}/agzak/dist/ ${env.DEPLOY_USER}@${env.DEPLOY_HOST}:/home/ubuntu/agzak-app/deploy/infra/nginx/data/www/dist/
+                        ssh ${env.DEPLOY_USER}@${env.DEPLOY_HOST} "docker restart agzak-nginx"
+                    """
                 }
             }
         }
