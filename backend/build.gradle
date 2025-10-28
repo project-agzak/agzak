@@ -51,7 +51,7 @@ dependencies {
 //    implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'            // MongoDB 연동
 
     //점성술 라이브러리
-    implementation files('libs/swisseph-2.10.00-02.jar')
+    implementation files('libs/swisseph-2.01.00-02.jar')
     // ─────────────────────────────────────────────────────────────
     // AI 연동
     // ─────────────────────────────────────────────────────────────
