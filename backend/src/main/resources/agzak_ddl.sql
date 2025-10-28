@@ -181,7 +181,7 @@ CREATE TABLE `game_attempt` (
                                 `game_attempt_id`  BIGINT      NOT NULL AUTO_INCREMENT,
                                 `game_session_id`  BIGINT      NOT NULL,
                                 `attempt_no`       INT         NOT NULL,  -- 1..10
-                                `aspect_name`      VARCHAR(20) NOT NULL COMMENT 'ENUM(`MONEY`, `LOVE`, `ACHIEVEMENT`, `HEALTH`)',
+                                `aspect_name`      VARCHAR(20) NOT NULL COMMENT 'ENUM(`MONEY`, `LOVE`, `ACHIEVEMENT`, `HEALTH`, `MISFORTUNE`)',
                                 `fire_type`        VARCHAR(20) NOT NULL COMMENT 'ENUM(`WEAK`, `STRONG`)',
 
     /* 확률 기록 */

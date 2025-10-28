@@ -1,5 +1,7 @@
 package com.ssafy.agzak.domain.game.controller;
 
+import com.ssafy.agzak.domain.game.dto.request.AttemptRequest;
+import com.ssafy.agzak.domain.game.dto.response.AttemptResponse;
 import com.ssafy.agzak.domain.game.dto.response.StartGameResponse;
 import com.ssafy.agzak.domain.game.service.CookieGameService;
 import com.ssafy.agzak.global.error.ErrorResponse;
@@ -52,8 +54,8 @@ public class CookieGameController {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping("/attempts")
-    public ResponseEntity<com.ssafy.agzak.domain.game.dto.response.AttemptResponse> attempt(
-            @RequestBody com.ssafy.agzak.domain.game.dto.request.AttemptRequest req
+    public ResponseEntity<AttemptResponse> attempt(
+            @RequestBody AttemptRequest req
     ) {
         var body = gameService.attemptForCurrentUser(req);
         return ResponseEntity.ok(body);

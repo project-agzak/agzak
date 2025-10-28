@@ -75,7 +75,7 @@ public class GameAttempt {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    public enum AspectName { MONEY, LOVE, ACHIEVEMENT, HEALTH }
+    public enum AspectName { MONEY, LOVE, ACHIEVEMENT, HEALTH, MISFORTUNE }
 
     public enum FireType { WEAK, STRONG }
 }
