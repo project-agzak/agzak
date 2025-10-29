@@ -33,6 +33,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/v1/**"
                         ).permitAll()
+                        .requestMatchers("/actuator/health", "/actuator/health/**",
+                                "/actuator/info", "/actuator/prometheus").permitAll()
                         .anyRequest().authenticated()
                 )
                 .httpBasic(AbstractHttpConfigurer::disable)

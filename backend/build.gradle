@@ -50,6 +50,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'                // 운영/모니터링 엔드포인트
 //    implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'            // MongoDB 연동
 
+    // Prometheus
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+    implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
+
     // ─────────────────────────────────────────────────────────────
     // AI 연동
     // ─────────────────────────────────────────────────────────────

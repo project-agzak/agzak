@@ -1,17 +1,15 @@
 package com.ssafy.agzak.domain.game.dto.response;
 
 import com.ssafy.agzak.domain.game.dto.request.AttemptRequest;
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 
 import java.math.BigDecimal;
 
 @Builder
-@Schema(name = "AttemptResponse")
 public record AttemptResponse(
-        String gameSessionId,
+        Long gameSessionId,
         Integer attemptNo,
-        AttemptRequest.AspectName aspectName,
+        AttemptRequest.AttemptAspect aspectName,
         AttemptRequest.FireType fireType,
         BigDecimal baseProb,
         BigDecimal adjustmentPp,
@@ -22,5 +20,9 @@ public record AttemptResponse(
         Integer snapLove,
         Integer snapMoney,
         Integer snapAchievement,
-        Integer snapHealth
+        Integer snapHealth,
+        Integer snapMisfortune,
+
+        // 세션 완료 시 생성된 쿠키 정보(없으면 null)
+        CookieCreatedResponse cookie
 ) {}

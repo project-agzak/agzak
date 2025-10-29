@@ -9,7 +9,7 @@ USE `agzak`;
    1) 회원 / 인증
    ========================================================= */
 CREATE TABLE `member` (
-                          `member_id`     BIGINT       NOT NULL,
+                          `member_id`     BIGINT       NOT NULL AUTO_INCREMENT,
                           `nickname`      VARCHAR(50)  NOT NULL,
                           `email`         VARCHAR(255) NULL,
                           `password`      VARCHAR(255) NULL,
@@ -42,7 +42,7 @@ CREATE TABLE `oauth_identity` (
    2) 운세 타입
    ========================================================= */
 CREATE TABLE `fortune_type` (
-                                `fortune_type_id` BIGINT      NOT NULL,
+                                `fortune_type_id` BIGINT      NOT NULL AUTO_INCREMENT,
                                 `name`            VARCHAR(50) NOT NULL,
                                 `description`     VARCHAR(255) NULL,
                                 `good_with_id`    BIGINT       NULL,
@@ -66,7 +66,7 @@ CREATE TABLE `fortune_type` (
    3) 운세 결과 (일자별 총점/타입)
    ========================================================= */
 CREATE TABLE `fortune` (
-                           `fortune_id`      BIGINT       NOT NULL,
+                           `fortune_id`      BIGINT       NOT NULL AUTO_INCREMENT,
                            `member_id`       BIGINT       NOT NULL,
                            `fortune_type_id` BIGINT       NOT NULL,
                            `date`            DATE         NOT NULL,
@@ -88,7 +88,7 @@ CREATE TABLE `fortune` (
    4) 운세 세부 항목 점수
    ========================================================= */
 CREATE TABLE `fortune_aspect` (
-                                  `fortune_aspect_id` BIGINT      NOT NULL,
+                                  `fortune_aspect_id` BIGINT      NOT NULL AUTO_INCREMENT,
                                   `fortune_id`        BIGINT      NOT NULL,
                                   `name`              VARCHAR(50) NOT NULL COMMENT 'ENUM(`MONEY`, `LOVE`, `ACHIEVEMENT`, `HEALTH`)',
                                   `score`             INT         NOT NULL,
@@ -104,7 +104,7 @@ CREATE TABLE `fortune_aspect` (
    5) 인벤토리 & 포춘쿠키
    ========================================================= */
 CREATE TABLE `inventory` (
-                             `inventory_id` BIGINT NOT NULL,
+                             `inventory_id` BIGINT NOT NULL AUTO_INCREMENT,
                              `member_id`    BIGINT NOT NULL,
                              PRIMARY KEY (`inventory_id`),
     /* 멤버별 인벤토리 식별 인덱스(조회 용도) */
@@ -115,7 +115,7 @@ CREATE TABLE `inventory` (
 ) ENGINE=InnoDB;
 
 CREATE TABLE `game_session` (
-                                `game_session_id`      BIGINT      NOT NULL,
+                                `game_session_id`      BIGINT      NOT NULL AUTO_INCREMENT,
                                 `member_id`            BIGINT      NOT NULL,
                                 `game_date`            DATE        NOT NULL COMMENT 'Asia/Seoul 기준',
                                 `session_no`           INT         NOT NULL,
@@ -134,7 +134,7 @@ CREATE TABLE `game_session` (
 
 /* 쿠키는 인벤토리에 종속. 세션 산출 추적이 필요하면 역방향 링크(Nullable) 사용 */
 CREATE TABLE `fortune_cookie` (
-                                  `fortune_cookie_id` BIGINT      NOT NULL,
+                                  `fortune_cookie_id` BIGINT      NOT NULL AUTO_INCREMENT,
                                   `inventory_id`      BIGINT      NOT NULL,
                                   `game_session_id`   BIGINT      NULL, /* 선택적 역방향 링크: 세션 산출물 추적용 */
                                   `type`              VARCHAR(50) NULL COMMENT 'ENUM(`MONEY`, `LOVE`, `ACHIEVEMENT`, `HEALTH`, `MIXED`, `ROTTEN`)',
@@ -159,7 +159,7 @@ CREATE TABLE `fortune_cookie` (
    6) 랭킹 (일자별 스냅샷)
    ========================================================= */
 CREATE TABLE `ranking` (
-                           `ranking_id`  BIGINT   NOT NULL,
+                           `ranking_id`  BIGINT   NOT NULL AUTO_INCREMENT,
                            `member_id`   BIGINT   NOT NULL,
                            `date`        DATE     NOT NULL,
                            `rank_no`     INT      NOT NULL,
@@ -178,10 +178,10 @@ CREATE TABLE `ranking` (
    7) 게임 시도(강화) 로그
    ========================================================= */
 CREATE TABLE `game_attempt` (
-                                `game_attempt_id`  BIGINT      NOT NULL,
+                                `game_attempt_id`  BIGINT      NOT NULL AUTO_INCREMENT,
                                 `game_session_id`  BIGINT      NOT NULL,
                                 `attempt_no`       INT         NOT NULL,  -- 1..10
-                                `aspect_name`      VARCHAR(20) NOT NULL COMMENT 'ENUM(`MONEY`, `LOVE`, `ACHIEVEMENT`, `HEALTH`)',
+                                `aspect_name`      VARCHAR(20) NOT NULL COMMENT 'ENUM(`MONEY`, `LOVE`, `ACHIEVEMENT`, `HEALTH`, `MISFORTUNE`)',
                                 `fire_type`        VARCHAR(20) NOT NULL COMMENT 'ENUM(`WEAK`, `STRONG`)',
 
     /* 확률 기록 */
@@ -199,6 +199,7 @@ CREATE TABLE `game_attempt` (
                                 `snap_money`       INT          NOT NULL,
                                 `snap_achievement` INT          NOT NULL,
                                 `snap_health`      INT          NOT NULL,
+                                `snap_misfortune`  INT          NOT NULL,
 
                                 `created_at`       DATETIME     NOT NULL,
 
