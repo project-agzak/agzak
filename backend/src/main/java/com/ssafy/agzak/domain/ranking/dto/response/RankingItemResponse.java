@@ -12,4 +12,5 @@ public record RankingItemResponse(
         Integer originalRank,         // 기존 총점 랭크(강화 전)
         Integer increaseRank,         // 증가율 랭크
         Double increasePercent        // (total - original)/max(1,original)*100.0
-) {}
+) {
+}

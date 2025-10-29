@@ -8,5 +8,5 @@ import java.util.List;
 @Builder
 public record SnapshotRankingResponse(
         LocalDate date,
-        List<RankingItemResponse> leaderboard           // 스냅샷(총점 기준)
+        List<RankingItemResponse> leaderboard // 스냅샷(총점 기준)
 ) {}

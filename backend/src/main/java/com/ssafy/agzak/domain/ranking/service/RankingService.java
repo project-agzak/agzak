@@ -34,16 +34,16 @@ public class RankingService {
     private String dayKey(LocalDate d) { return d.format(DAY); }
     private String zTotal(LocalDate d) { return "rank:" + dayKey(d) + ":total"; }
     private String zOriginal(LocalDate d) { return "rank:" + dayKey(d) + ":original"; }
-    private String zGain(LocalDate d) { return "rank:" + dayKey(d) + ":gain"; } // ⬅️ 신규(ZSET: 증가율)
+    private String zGain(LocalDate d) { return "rank:" + dayKey(d) + ":gain"; } // ZSET: 증가율
     private String hUser(LocalDate d, Long memberId) { return "rank:" + dayKey(d) + ":user:" + memberId; }
 
     /** 오늘 랭킹을 Redis 에서 읽기 (없으면 빈 리스트) */
     public TodayRankingResponse getTodayFromRedis(int limit) {
         LocalDate today = LocalDate.now(KST);
 
-        List<RankingItemResponse> total = readZsetWithDetail(today, zTotal(today), limit, RankFill.TOTAL);
-        List<RankingItemResponse> original = readZsetWithDetail(today, zOriginal(today), limit, RankFill.ORIGINAL);
-        List<RankingItemResponse> increase = readZsetWithDetail(today, zGain(today), limit, RankFill.INCREASE);
+        List<RankingItemResponse> total = readZsetWithDetail(today, zTotal(today), limit);
+        List<RankingItemResponse> original = readZsetWithDetail(today, zOriginal(today), limit);
+        List<RankingItemResponse> increase = readZsetWithDetail(today, zGain(today), limit);
 
         // 각 리스트의 랭크 번호 채움
         for (int i = 0; i < total.size(); i++)      total.set(i, withTotalRank(total.get(i), i + 1));
@@ -100,7 +100,7 @@ public class RankingService {
         z.add(zTotal(today), member.getMemberId().toString(), f.getTotalScore());
         z.add(zOriginal(today), member.getMemberId().toString(), f.getOriginalTotalScore());
         double gain = increasePct(f.getOriginalTotalScore(), f.getTotalScore());
-        z.add(zGain(today), member.getMemberId().toString(), gain); // ⬅️ 증가율 ZSET
+        z.add(zGain(today), member.getMemberId().toString(), gain); // 증가율 ZSET
     }
 
     /** (배치) 오늘 전체 Fortune을 읽어 Redis/스냅샷 갱신 */
@@ -129,7 +129,7 @@ public class RankingService {
             z.add(zt, mid.toString(), f.getTotalScore());
             z.add(zo, mid.toString(), f.getOriginalTotalScore());
             double gain = increasePct(f.getOriginalTotalScore(), f.getTotalScore());
-            z.add(zg, mid.toString(), gain); // ⬅️ 증가율 ZSET
+            z.add(zg, mid.toString(), gain); // 증가율 ZSET
         }
 
         // MySQL 스냅샷(총점 기준) 저장
@@ -161,9 +161,7 @@ public class RankingService {
         if (!saveList.isEmpty()) rankingRepository.saveAll(saveList);
     }
 
-    private enum RankFill { TOTAL, ORIGINAL, INCREASE }
-
-    private List<RankingItemResponse> readZsetWithDetail(LocalDate d, String zkey, int limit, RankFill rankFill) {
+    private List<RankingItemResponse> readZsetWithDetail(LocalDate d, String zkey, int limit) {
         ZSetOperations<String, String> z = redis.opsForZSet();
         HashOperations<String, String, String> hash = redis.opsForHash();
 
