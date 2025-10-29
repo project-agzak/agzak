@@ -62,52 +62,52 @@ pipeline {
     }
 
     stage('Deploy') {
-          steps {
-            sshagent (credentials: ['deploy-ssh']) {
-              withCredentials([usernamePassword(
-                credentialsId: 'dockerhub-cred',
-                usernameVariable: 'DOCKER_USER',
-                passwordVariable: 'DOCKER_PWD'
-              )]) {
-                script {
-                  def repo = (env.REGISTRY?.trim() && env.REGISTRY != 'docker.io')
-                    ? "${env.REGISTRY}/${env.IMAGE_NAME}"
-                    : env.IMAGE_NAME
-                  def tag = "${env.TARGET_BRANCH}-${env.BUILD_NUMBER}"
-                  def image = "${repo}:${tag}"
+      steps {
+        sshagent (credentials: ['deploy-ssh']) {
+          withCredentials([usernamePassword(
+            credentialsId: 'dockerhub-cred',
+            usernameVariable: 'DOCKER_USER',
+            passwordVariable: 'DOCKER_PWD'
+          )]) {
+            script {
+              def repo = (env.REGISTRY?.trim() && env.REGISTRY != 'docker.io')
+                ? "${env.REGISTRY}/${env.IMAGE_NAME}"
+                : env.IMAGE_NAME
+              def tag = "${env.TARGET_BRANCH}-${env.BUILD_NUMBER}"
+              def image = "${repo}:${tag}"
 
-                  withEnv(["IMAGE=${image}"]) {
-                    sh '''
-                      set -eux
-                      ssh -o StrictHostKeyChecking=no "$DEPLOY_USER@$DEPLOY_HOST" 'bash -s' << 'ENDSSH'
-                        set -eux
-                        cd /home/ubuntu/agzak-app/deploy/backend
+              sh """
+                set -eux
+                ssh -o StrictHostKeyChecking=no \\
+                  "$DEPLOY_USER@$DEPLOY_HOST" \\
+                  "IMAGE=${image} DOCKER_USER=${DOCKER_USER} DOCKER_PWD=${DOCKER_PWD} bash -s" <<'ENDSSH'
+                    set -eux
+                    cd /home/ubuntu/agzak-app/deploy/backend
 
-                        echo "IMAGE=${IMAGE}" > .env
-                        echo "PROJECT=deploy" >> .env
+                    echo "IMAGE=\$IMAGE" > .env
+                    echo "PROJECT=deploy" >> .env
 
-                        echo "$DOCKER_PWD" | docker login -u "$DOCKER_USER" --password-stdin || true
+                    echo "\$DOCKER_PWD" | docker login -u "\$DOCKER_USER" --password-stdin || true
 
-                        make -C .. up-be
+                    make -C .. up-be
 
-                        for i in $(seq 1 12); do
-                          status=$(docker inspect --format '{{.State.Health.Status}}' agzak-app-server 2>/dev/null || echo "unhealthy")
-                          echo "Current status: $status"
-                          [ "$status" = "healthy" ] && { echo "Container is healthy."; exit 0; }
-                          echo "Waiting for container to be healthy... ($i/12)"
-                          sleep 5
-                        done
+                    for i in \$(seq 1 12); do
+                      status=\$(docker inspect --format '{{.State.Health.Status}}' agzak-app-server 2>/dev/null || echo "unhealthy")
+                      echo "Current status: \$status"
+                      [ "\$status" = "healthy" ] && { echo "Container is healthy."; exit 0; }
+                      echo "Waiting for container to be healthy... (\$i/12)"
+                      sleep 5
+                    done
 
-                        echo "Container did not become healthy in time." >&2
-                        exit 1
-                      ENDSSH
-                    '''
-                  }
-                }
-              }
+                    echo "Container did not become healthy in time." >&2
+                    exit 1
+                ENDSSH
+              """
             }
           }
         }
+      }
+    }
   }
 
   post {
