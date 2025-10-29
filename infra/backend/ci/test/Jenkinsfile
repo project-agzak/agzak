@@ -76,7 +76,7 @@ pipeline {
               withEnv(["TEST_IMAGE=${testImage}"]) {
                 sh '''
                   set -eux
-                  ssh -o StrictHostKeyChecking=no "$DEPLOY_USER@$DEPLOY_HOST" 'bash -s' <<'ENDSSH'
+                  ssh -o StrictHostKeyChecking=no "$DEPLOY_USER@$DEPLOY_HOST" bash -s <<ENDSSH
                     set -eux
                     cd /home/ubuntu/agzak-app/test/backend
 
