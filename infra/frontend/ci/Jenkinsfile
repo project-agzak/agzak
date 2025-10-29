@@ -53,10 +53,28 @@ pipeline {
 
     post {
         success {
-            echo "Frontend deployment successful!"
+          script {
+            def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
+            def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
+            mattermostSend(
+              color: 'good',
+              message: "빌드 성공: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name})\n(<${env.BUILD_URL}|상세 보기>)",
+              endpoint: 'http://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo',
+              channel: 'B102_Jenkins_Build_Result'
+            )
+          }
         }
         failure {
-            echo "Frontend build/deploy failed!"
+          script {
+            def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
+            def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
+            mattermostSend(
+              color: 'danger',
+              message: "빌드 실패: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name})\n(<${env.BUILD_URL}|상세 보기>)",
+              endpoint: 'http://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo',
+              channel: 'B102_Jenkins_Build_Result'
+            )
+          }
         }
     }
 }
