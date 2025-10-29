@@ -1,1 +1,13 @@
-// 전역 레이아웃(폭 360 고정 프레임, <Outlet/>)
+import { Outlet } from 'react-router-dom';
+import PWABadge from '../pwa/PWABadge';
+
+export default function AppLayout() {
+  return (
+    <div className="app-shell">
+      <Outlet />
+      <div className="pwa-badge-wrap">
+        <PWABadge />
+      </div>
+    </div>
+  );
+}
