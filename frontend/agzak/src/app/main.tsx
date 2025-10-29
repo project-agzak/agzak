@@ -1,1 +1,14 @@
-// 앱 엔트리(ReactDOM, RouterProvider, index.css import)
+import React, { Suspense } from 'react';
+import ReactDOM from 'react-dom/client';
+import { RouterProvider } from 'react-router-dom';
+import { router } from './router';
+import '../styles/index.css';
+import '../pwa/registerSW';
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <Suspense fallback={null}>
+      <RouterProvider router={router} />
+    </Suspense>
+  </React.StrictMode>
+);
