@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Component
 @RequiredArgsConstructor
@@ -23,6 +24,10 @@ public class MysqlRankingStore {
 
     public List<Fortune> fortunes(LocalDate date) {
         return fortuneRepository.findAllByDateWithMember(date);
+    }
+
+    public Optional<Fortune> findFortune(LocalDate date, Long memberId) {
+        return fortuneRepository.findByMember_MemberIdAndDate(memberId, date);
     }
 
     /** JPA 프록시로 Member 참조 획득 */

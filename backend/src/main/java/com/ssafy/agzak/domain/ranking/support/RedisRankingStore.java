@@ -2,6 +2,7 @@ package com.ssafy.agzak.domain.ranking.support;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Component;
@@ -25,6 +26,42 @@ public class RedisRankingStore {
     public String hUser(LocalDate d, Long memberId){ return key(d, "user:"+memberId); }
 
     public LocalDate today() { return LocalDate.now(KST); }
+
+    public void upsertTodayUser(Long memberId, String nickname, Integer total, Integer original) {
+        LocalDate d = today();
+        String hUser = hUser(d, memberId);
+        String zTotal = zTotal(d);
+        String zOriginal = zOriginal(d);
+        String zGain = zGain(d);
+
+        double gain = RankCalculator.increasePct(original, total);
+
+        redis.executePipelined((RedisCallback<Object>) connection -> {
+            HashOperations<String, String, String> h = redis.opsForHash();
+            ZSetOperations<String, String> z = redis.opsForZSet();
+
+            if (nickname != null) h.put(hUser, "nickname", nickname);
+            if (total != null)    h.put(hUser, "total", String.valueOf(total));
+            if (original != null) h.put(hUser, "original", String.valueOf(original));
+
+            if (total != null)       z.add(zTotal, String.valueOf(memberId), total.doubleValue());
+            if (original != null)    z.add(zOriginal, String.valueOf(memberId), original.doubleValue());
+            z.add(zGain, String.valueOf(memberId), gain);
+
+            return null;
+        });
+    }
+
+    public void removeTodayUser(Long memberId) {
+        LocalDate d = today();
+        redis.executePipelined((RedisCallback<Object>) connection -> {
+            redis.delete(hUser(d, memberId));
+            redis.opsForZSet().remove(zTotal(d), String.valueOf(memberId));
+            redis.opsForZSet().remove(zOriginal(d), String.valueOf(memberId));
+            redis.opsForZSet().remove(zGain(d), String.valueOf(memberId));
+            return null;
+        });
+    }
 
     /** 오늘자 TOP N 읽기(ZSET + HASH) → memberId, nickname, total, original */
     public List<UserRow> readTop(LocalDate d, String zset, int limit) {
