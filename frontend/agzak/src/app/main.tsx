@@ -1,9 +1,9 @@
 import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
-import { router } from './router';
-import '../styles/index.css';
 import '../pwa/registerSW';
+import '../styles/index.css';
+import { router } from './router';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
