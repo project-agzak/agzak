@@ -78,7 +78,7 @@ pipeline {
                 docker compose -f "$REMOTE_FE_COMPOSE" pull
                 docker compose -f "$REMOTE_FE_COMPOSE" up -d --remove-orphans
                 for i in $(seq 1 12); do
-                  curl -fsS http://127.0.0.1:5173/ >/dev/null && exit 0
+                  curl -fsS http://127.0.0.1:15173/ >/dev/null && exit 0
                   echo "Waiting FE test container... ($i/12)"; sleep 3
                 done
                 echo "FE test container not responding" >&2; exit 1
