@@ -88,7 +88,6 @@ pipeline {
 
                     make -C .. up-be
 
-                    # 🔹 $ → \$
                     for i in \$(seq 1 12); do
                       status=\$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' test-app || echo "unhealthy")
                       [ "\$status" = "healthy" ] && { echo "Container is healthy."; exit 0; }
