@@ -1,1 +1,51 @@
-/* 전역 스타일 + 레이아웃 토큰/규칙(폭 360, 배경 등) */
+@import "tailwindcss";
+
+/* 레이아웃 토큰 */
+:root {
+  --app-width: 360px;
+  --bg-pattern: url('/src/assets/pattern/fortune-cookie-tile@2x.png'); /* 무손실 PNG 추천 */
+  --bg-mobile-hero: url('/src/assets/hero/fortune-cookie-center@2x.png');
+}
+
+/* 바디: 데스크톱에서 전체 패턴 */
+html, body, #root {
+  height: 100%;
+}
+body {
+  @apply text-gray-900;
+  background-image: var(--bg-pattern);
+  background-repeat: repeat;
+  background-size: 256px 256px; /* 타일 크기(아래 가이드 참고) */
+}
+
+/* 앱 프레임: 360 고정 + 가운데 정렬 */
+.app-shell {
+  @apply mx-auto min-h-screen relative overflow-hidden;
+  width: var(--app-width);
+  /* 모바일에서 프레임 내부는 '가운데 쿠키'가 보이도록: cover + center */
+  background-image: var(--bg-mobile-hero);
+  background-position: center center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  /* 살짝 그린톤 */
+  box-shadow: 0 0 0 1px rgba(0,0,0,.04), 0 10px 30px rgba(0,0,0,.08);
+  border-radius: 20px;
+}
+
+/* 데스크톱에서 외부 배경은 패턴, 내부는 반투명 레이어로 가독성 확보 */
+@media (min-width: 768px) {
+  .app-shell::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: rgba(255,255,255,0.35);
+    backdrop-filter: blur(2px);
+    pointer-events: none;
+  }
+}
+
+/* PWA 배지 위치 */
+.pwa-badge-wrap {
+  @apply fixed left-1/2 -translate-x-1/2 bottom-4 z-50;
+  width: var(--app-width);
+  max-width: calc(100vw - 32px);
+}
