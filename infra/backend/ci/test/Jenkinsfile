@@ -89,7 +89,8 @@ pipeline {
                     make -C .. up-be
 
                     for i in \$(seq 1 12); do
-                      status=\$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' test-app-server || echo "unhealthy")
+                      status=\$(docker inspect --format='{{"{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}"}}' test-app-server 2>/dev/null || echo "unhealthy")
+                      echo "Current status: \$status"
                       [ "\$status" = "healthy" ] && { echo "Container is healthy."; exit 0; }
                       echo "Waiting for container to be healthy... (\$i/12)"
                       sleep 5
