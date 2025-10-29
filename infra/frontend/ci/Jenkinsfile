@@ -1,0 +1,78 @@
+pipeline {
+    agent any
+
+    options {
+        timestamps()
+        ansiColor('xterm')
+    }
+
+    environment {
+        SUBDIR = 'frontend'
+        DEPLOY_USER = 'ubuntu'
+        DEPLOY_HOST = 'k13b102.p.ssafy.io'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+                script {
+                    def full = (env.GIT_BRANCH ?: '').replaceFirst(/^origin\//, '')
+                    if (!full) full = sh(returnStdout: true, script: 'git rev-parse --abbrev-ref HEAD').trim()
+                    env.TARGET_BRANCH_FULL = full
+                    env.TARGET_BRANCH = full.replaceAll('/', '-')
+                    echo "Target branch: ${env.TARGET_BRANCH_FULL} -> ${env.TARGET_BRANCH}"
+                }
+            }
+        }
+
+        stage('Build React App') {
+            steps {
+                dir("${env.SUBDIR}/agzak") {
+                    sh '''
+                        set -eux
+                        npm ci
+                        npm run build
+                    '''
+                }
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                sshagent (credentials: ['deploy-ssh']) {
+                    sh """
+                        set -eux
+                        rsync -avz --delete ${env.SUBDIR}/agzak/dist/ ${env.DEPLOY_USER}@${env.DEPLOY_HOST}:/home/ubuntu/agzak-app/deploy/infra/nginx/data/www/dist/
+                        ssh ${env.DEPLOY_USER}@${env.DEPLOY_HOST} "docker restart agzak-nginx"
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+          script {
+            def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
+            def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
+            mattermostSend(
+              color: 'good',
+              message: "빌드 성공: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name})\n(<${env.BUILD_URL}|상세 보기>)",
+              endpoint: 'http://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo'
+            )
+          }
+        }
+        failure {
+          script {
+            def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
+            def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
+            mattermostSend(
+              color: 'danger',
+              message: "빌드 실패: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name})\n(<${env.BUILD_URL}|상세 보기>)",
+              endpoint: 'http://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo'
+            )
+          }
+        }
+    }
+}
