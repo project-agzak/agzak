@@ -1,22 +1,17 @@
-package com.ssafy.agzak.domain.ranking.service;
+ package com.ssafy.agzak.domain.ranking.service;
 
 import com.ssafy.agzak.domain.fortune.entity.Fortune;
-import com.ssafy.agzak.domain.fortune.repository.FortuneRepository;
 import com.ssafy.agzak.domain.member.entity.Member;
-import com.ssafy.agzak.domain.ranking.dto.response.RankingItemResponse;
-import com.ssafy.agzak.domain.ranking.dto.response.SnapshotRankingResponse;
-import com.ssafy.agzak.domain.ranking.dto.response.TodayRankingResponse;
+import com.ssafy.agzak.domain.ranking.dto.*;
 import com.ssafy.agzak.domain.ranking.entity.Ranking;
-import com.ssafy.agzak.domain.ranking.repository.RankingRepository;
+import com.ssafy.agzak.domain.ranking.support.MysqlRankingStore;
+import com.ssafy.agzak.domain.ranking.support.RedisRankingStore;
+import com.ssafy.agzak.domain.ranking.support.RankCalculator;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.redis.core.HashOperations;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ZSetOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.*;
-import java.time.format.DateTimeFormatter;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -25,221 +20,238 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class RankingService {
 
-    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
-    private static final DateTimeFormatter DAY = DateTimeFormatter.ofPattern("yyyyMMdd");
-    private final RedisTemplate<String, String> redis;
-    private final RankingRepository rankingRepository;
-    private final FortuneRepository fortuneRepository;
+    private final RedisRankingStore redisStore;
+    private final MysqlRankingStore mysqlStore;
 
-    private String dayKey(LocalDate d) { return d.format(DAY); }
-    private String zTotal(LocalDate d) { return "rank:" + dayKey(d) + ":total"; }
-    private String zOriginal(LocalDate d) { return "rank:" + dayKey(d) + ":original"; }
-    private String zGain(LocalDate d) { return "rank:" + dayKey(d) + ":gain"; } // ZSET: 증가율
-    private String hUser(LocalDate d, Long memberId) { return "rank:" + dayKey(d) + ":user:" + memberId; }
+    // ===== 읽기: 오늘(REDIS) =====
+    public RankingListDto getTodayTopN(int limit) {
+        LocalDate d = redisStore.today();
 
-    /** 오늘 랭킹을 Redis 에서 읽기 (없으면 빈 리스트) */
-    public TodayRankingResponse getTodayFromRedis(int limit) {
-        LocalDate today = LocalDate.now(KST);
+        var total    = redisStore.readTop(d, redisStore.zTotal(d),    limit);
+        var original = redisStore.readTop(d, redisStore.zOriginal(d), limit);
+        var gain     = redisStore.readTop(d, redisStore.zGain(d),     limit);
 
-        List<RankingItemResponse> total = readZsetWithDetail(today, zTotal(today), limit);
-        List<RankingItemResponse> original = readZsetWithDetail(today, zOriginal(today), limit);
-        List<RankingItemResponse> increase = readZsetWithDetail(today, zGain(today), limit);
+        // 증가율 계산
+        var totalDtos = fillRanks(total);
+        var origDtos  = fillRanks(original);
+        var gainDtos  = fillRanks(gain);
 
-        // 각 리스트의 랭크 번호 채움
-        for (int i = 0; i < total.size(); i++)      total.set(i, withTotalRank(total.get(i), i + 1));
-        for (int i = 0; i < original.size(); i++)   original.set(i, withOriginalRank(original.get(i), i + 1));
-        for (int i = 0; i < increase.size(); i++)   increase.set(i, withIncreaseRank(increase.get(i), i + 1));
+        // 각각 리스트 내에서 1-base 인덱싱으로 랭크 번호 부여
+        setListRanks(totalDtos,   RankBasis.TOTAL);
+        setListRanks(origDtos,    RankBasis.ORIGINAL);
+        setListRanks(gainDtos,    RankBasis.GAIN);
 
-        return TodayRankingResponse.builder()
-                .date(today)
-                .totalLeaderboard(total)
-                .originalLeaderboard(original)
-                .increaseLeaderboard(increase)
+        return RankingListDto.builder()
+                .date(d)
+                .totalLeaderboard(totalDtos)
+                .originalLeaderboard(origDtos)
+                .increaseLeaderboard(gainDtos)
                 .build();
     }
 
-    /** 특정 날짜 스냅샷을 MySQL 에서 읽기(총점 기준) */
-    public SnapshotRankingResponse getSnapshotFromMysql(LocalDate date, int limit) {
-        List<Ranking> ranks = rankingRepository.findByDateOrderByRankNoAsc(date);
-        List<RankingItemResponse> list = ranks.stream()
-                .limit(limit)
-                .map(r -> RankingItemResponse.builder()
-                        .memberId(r.getMember().getMemberId())
-                        .nickname(r.getMember().getNickname())
-                        .totalScore(r.getTotalScore())
-                        .originalTotalScore(r.getOriginalTotalScore())
-                        .totalRank(r.getRankNo())
-                        .originalRank(null)
-                        .increaseRank(null)
-                        .increasePercent(increasePct(r.getOriginalTotalScore(), r.getTotalScore()))
-                        .build())
-                .collect(Collectors.toList());
-        return SnapshotRankingResponse.builder()
-                .date(date)
-                .leaderboard(list)
-                .build();
-    }
-
-    /** 오늘 특정 멤버의 Fortune이 갱신될 때 Redis 랭킹 반영 */
-    @Transactional
-    public void upsertTodayMemberToRedis(Member member) {
-        LocalDate today = LocalDate.now(KST);
-        Fortune f = fortuneRepository.findTopByMemberAndDate(member, today);
-        if (f == null) return;
-
-        String userKey = hUser(today, member.getMemberId());
-        HashOperations<String, String, String> hash = redis.opsForHash();
-        ZSetOperations<String, String> z = redis.opsForZSet();
-
-        // 유저 데이터 저장/업데이트
-        hash.put(userKey, "nickname", member.getNickname());
-        hash.put(userKey, "total", String.valueOf(f.getTotalScore()));
-        hash.put(userKey, "original", String.valueOf(f.getOriginalTotalScore()));
-
-        // 랭킹 점수 반영 (총점/기존점수/증가율)
-        z.add(zTotal(today), member.getMemberId().toString(), f.getTotalScore());
-        z.add(zOriginal(today), member.getMemberId().toString(), f.getOriginalTotalScore());
-        double gain = increasePct(f.getOriginalTotalScore(), f.getTotalScore());
-        z.add(zGain(today), member.getMemberId().toString(), gain); // 증가율 ZSET
-    }
-
-    /** (배치) 오늘 전체 Fortune을 읽어 Redis/스냅샷 갱신 */
-    @Transactional
-    public void rebuildTodayRedisAndSnapshot() {
-        LocalDate today = LocalDate.now(KST);
-        List<Fortune> fortunes = fortuneRepository.findAllByDateWithMember(today);
-
-        // Redis 전체 리빌드 (세 키 모두 삭제)
-        String zt = zTotal(today), zo = zOriginal(today), zg = zGain(today);
-        redis.delete(Arrays.asList(zt, zo, zg));
-        List<String> toDelete = fortunes.stream().map(f -> hUser(today, f.getMember().getMemberId())).toList();
-        if (!toDelete.isEmpty()) redis.delete(toDelete);
-
-        HashOperations<String, String, String> hash = redis.opsForHash();
-        ZSetOperations<String, String> z = redis.opsForZSet();
-
-        for (Fortune f : fortunes) {
-            Long mid = f.getMember().getMemberId();
-            String userKey = hUser(today, mid);
-
-            hash.put(userKey, "nickname", f.getMember().getNickname());
-            hash.put(userKey, "total", String.valueOf(f.getTotalScore()));
-            hash.put(userKey, "original", String.valueOf(f.getOriginalTotalScore()));
-
-            z.add(zt, mid.toString(), f.getTotalScore());
-            z.add(zo, mid.toString(), f.getOriginalTotalScore());
-            double gain = increasePct(f.getOriginalTotalScore(), f.getTotalScore());
-            z.add(zg, mid.toString(), gain); // 증가율 ZSET
+    // ===== 읽기: 과거일자(MYSQL) =====
+    public RankingListDto getSnapshotTopN(LocalDate date, int limit) {
+        var fortunes = mysqlStore.fortunes(date);
+        if (fortunes.isEmpty()) {
+            return RankingListDto.builder()
+                    .date(date)
+                    .totalLeaderboard(List.of())
+                    .originalLeaderboard(List.of())
+                    .increaseLeaderboard(List.of())
+                    .build();
         }
-
-        // MySQL 스냅샷(총점 기준) 저장
-        rankingRepository.deleteByDate(today);
-
-        // ZSET의 현재 순위를 기준으로 rank_no 생성 (총점 기준)
-        Set<ZSetOperations.TypedTuple<String>> tops = z.reverseRangeWithScores(zt, 0, fortunes.size());
-        if (tops == null) tops = Set.of();
-
-        int rank = 1;
-        List<Ranking> saveList = new ArrayList<>();
-        Map<Long, Fortune> byMember = fortunes.stream()
-                .collect(Collectors.toMap(f -> f.getMember().getMemberId(), f -> f));
-
-        for (ZSetOperations.TypedTuple<String> t : tops) {
-            Long mid = Long.valueOf(Objects.requireNonNull(t.getValue()));
-            Fortune f = byMember.get(mid);
-            if (f == null) continue;
-
-            Ranking r = Ranking.builder()
-                    .member(f.getMember())
-                    .date(today)
-                    .rankNo(rank++)
+        // 공통 리스트 만들기
+        var items = fortunes.stream().map(f -> {
+            var inc = RankCalculator.increasePct(f.getOriginalTotalScore(), f.getTotalScore());
+            return RankingItemDto.builder()
+                    .memberId(f.getMember().getMemberId())
+                    .nickname(f.getMember().getNickname())
                     .totalScore(f.getTotalScore())
                     .originalTotalScore(f.getOriginalTotalScore())
+                    .increasePercent(inc)
                     .build();
-            saveList.add(r);
-        }
-        if (!saveList.isEmpty()) rankingRepository.saveAll(saveList);
+        }).toList();
+
+        // 각 기준별 정렬 후 상위 N + 리스트 내부 랭크 부여(경쟁랭킹)
+        var topTotal = topWithRanks(items, RankBasis.TOTAL, limit);
+        var topOrig  = topWithRanks(items, RankBasis.ORIGINAL, limit);
+        var topGain  = topWithRanks(items, RankBasis.GAIN, limit);
+
+        return RankingListDto.builder()
+                .date(date)
+                .totalLeaderboard(topTotal)
+                .originalLeaderboard(topOrig)
+                .increaseLeaderboard(topGain)
+                .build();
     }
 
-    private List<RankingItemResponse> readZsetWithDetail(LocalDate d, String zkey, int limit) {
-        ZSetOperations<String, String> z = redis.opsForZSet();
-        HashOperations<String, String, String> hash = redis.opsForHash();
+    // ===== 내 랭킹: 오늘(REDIS) =====
+    public MyRankDto getMyToday(long memberId) {
+        LocalDate d = redisStore.today();
 
-        Set<ZSetOperations.TypedTuple<String>> data = z.reverseRangeWithScores(zkey, 0, Math.max(0, limit - 1));
-        if (data == null || data.isEmpty()) return List.of();
+        // 점수 읽기
+        var rows = redisStore.readTop(d, redisStore.zTotal(d), Integer.MAX_VALUE); // 해시 채우기용
+        var me = rows.stream().filter(r -> Objects.equals(r.memberId(), memberId)).findFirst().orElse(null);
 
-        List<RankingItemResponse> out = new ArrayList<>();
-        for (ZSetOperations.TypedTuple<String> t : data) {
-            String memberIdStr = t.getValue();
-            if (memberIdStr == null) continue;
-            Long mid = Long.valueOf(memberIdStr);
+        Integer total = me==null?null:me.total();
+        Integer orig  = me==null?null:me.original();
+        String nick   = me==null?null:me.nickname();
+        double inc    = RankCalculator.increasePct(orig, total);
 
-            String userKey = hUser(d, mid);
-            String nick = hash.get(userKey, "nickname");
-            Integer total = parseInt(hash.get(userKey, "total"));
-            Integer orig = parseInt(hash.get(userKey, "original"));
+        Integer rTotal = redisStore.zrevRank1Base(redisStore.zTotal(d), memberId);
+        Integer rOrig  = redisStore.zrevRank1Base(redisStore.zOriginal(d), memberId);
+        Integer rGain  = redisStore.zrevRank1Base(redisStore.zGain(d), memberId);
 
-            double pct = increasePct(orig, total);
+        return MyRankDto.builder()
+                .date(d)
+                .memberId(memberId)
+                .nickname(nick)
+                .totalScore(total)
+                .originalTotalScore(orig)
+                .increasePercent(inc)
+                .totalRank(rTotal)
+                .originalRank(rOrig)
+                .increaseRank(rGain)
+                .build();
+    }
 
-            RankingItemResponse dto = RankingItemResponse.builder()
-                    .memberId(mid)
-                    .nickname(nick)
-                    .totalScore(total)
-                    .originalTotalScore(orig)
-                    .increasePercent(pct)
+    // ===== 내 랭킹: 과거일자(MYSQL) =====
+    public MyRankDto getMySnapshot(LocalDate date, long memberId) {
+        var fortunes = mysqlStore.fortunes(date);
+        if (fortunes.isEmpty()) {
+            return MyRankDto.builder().date(date).memberId(memberId).increasePercent(0.0).build();
+        }
+        Map<Long, Fortune> byId = fortunes.stream()
+                .collect(Collectors.toMap(f->f.getMember().getMemberId(), f->f));
+
+        var me = byId.get(memberId);
+        String nick = me==null?null:me.getMember().getNickname();
+        Integer total = me==null?null:me.getTotalScore();
+        Integer orig  = me==null?null:me.getOriginalTotalScore();
+        double inc    = RankCalculator.increasePct(orig, total);
+
+        // 경쟁랭킹 계산
+        var totalRank = RankCalculator.competitionRank(
+                fortunes.stream().map(Fortune::getTotalScore).toList(),
+                total==null?Integer.MIN_VALUE:total
+        );
+        var origRank  = RankCalculator.competitionRank(
+                fortunes.stream().map(Fortune::getOriginalTotalScore).toList(),
+                orig==null?Integer.MIN_VALUE:orig
+        );
+        var gainRank  = RankCalculator.competitionRank(
+                fortunes.stream().map(f->RankCalculator.increasePct(f.getOriginalTotalScore(), f.getTotalScore())).toList(),
+                inc
+        );
+
+        return MyRankDto.builder()
+                .date(date)
+                .memberId(memberId)
+                .nickname(nick)
+                .totalScore(total)
+                .originalTotalScore(orig)
+                .increasePercent(inc)
+                .totalRank(totalRank)
+                .originalRank(origRank)
+                .increaseRank(gainRank)
+                .build();
+    }
+
+    // ===== 스냅샷 재생성(자정/시간별 배치용) =====
+    @Transactional
+    public void rebuildTodaySnapshot() {
+        LocalDate today = redisStore.today();
+
+        // 총점 기준 역정렬(내림차순)로 전원 로드
+        var all = redisStore.readTop(today, redisStore.zTotal(today), Integer.MAX_VALUE);
+        if (all == null || all.isEmpty()) {
+            // 오늘자 스냅샷 비우기
+            mysqlStore.replaceTodaySnapshot(today, List.of());
+            return;
+        }
+
+        int rank = 1;
+        List<Ranking> rows = new ArrayList<>(all.size());
+        for (var r : all) {
+            // Member 프록시 참조
+            Member ref = mysqlStore.refMember(r.memberId());
+
+            rows.add(Ranking.builder()
+                    .member(ref)
+                    .date(today)
+                    .rankNo(rank++)                               // 총점 기준 1-base 순번
+                    .totalScore(r.total())
+                    .originalTotalScore(r.original())
+                    .build());
+        }
+
+        // 오늘자 스냅샷 교체 저장
+        mysqlStore.replaceTodaySnapshot(today, rows);
+    }
+
+    private enum RankBasis { TOTAL, ORIGINAL, GAIN }
+
+    private List<RankingItemDto> fillRanks(List<RedisRankingStore.UserRow> rows){
+        return rows.stream()
+                .map(r -> RankingItemDto.builder()
+                        .memberId(r.memberId())
+                        .nickname(r.nickname())
+                        .totalScore(r.total())
+                        .originalTotalScore(r.original())
+                        .increasePercent(RankCalculator.increasePct(r.original(), r.total()))
+                        .build()
+                )
+                .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    private void setListRanks(List<RankingItemDto> list, RankBasis basis) {
+        for (int i=0;i<list.size();i++) {
+            var d = list.get(i);
+            var b = RankingItemDto.builder()
+                    .memberId(d.memberId()).nickname(d.nickname())
+                    .totalScore(d.totalScore()).originalTotalScore(d.originalTotalScore())
+                    .increasePercent(d.increasePercent())
+                    .totalRank(d.totalRank()).originalRank(d.originalRank()).increaseRank(d.increaseRank());
+            int rank = i+1;
+            switch (basis) {
+                case TOTAL    -> b.totalRank(rank);
+                case ORIGINAL -> b.originalRank(rank);
+                case GAIN     -> b.increaseRank(rank);
+            }
+            list.set(i, b.build());
+        }
+    }
+
+    private List<RankingItemDto> topWithRanks(List<RankingItemDto> items, RankBasis basis, int limit) {
+        Comparator<RankingItemDto> cmp = switch (basis) {
+            case TOTAL    -> Comparator.comparing(RankingItemDto::totalScore, Comparator.nullsLast(Comparator.naturalOrder())).reversed();
+            case ORIGINAL -> Comparator.comparing(RankingItemDto::originalTotalScore, Comparator.nullsLast(Comparator.naturalOrder())).reversed();
+            case GAIN     -> Comparator.comparing(RankingItemDto::increasePercent, Comparator.nullsLast(Comparator.naturalOrder())).reversed();
+        };
+
+        var sorted = items.stream().sorted(cmp).limit(limit).toList();
+
+        return sorted.stream().map(d -> {
+            Integer rank = switch (basis) {
+                case TOTAL    -> RankCalculator.competitionRank(
+                        sorted.stream().map(RankingItemDto::totalScore).toList(),
+                        d.totalScore());
+                case ORIGINAL -> RankCalculator.competitionRank(
+                        sorted.stream().map(RankingItemDto::originalTotalScore).toList(),
+                        d.originalTotalScore());
+                case GAIN     -> RankCalculator.competitionRank(
+                        sorted.stream().map(RankingItemDto::increasePercent).toList(),
+                        d.increasePercent());
+            };
+
+            return RankingItemDto.builder()
+                    .memberId(d.memberId()).nickname(d.nickname())
+                    .totalScore(d.totalScore()).originalTotalScore(d.originalTotalScore())
+                    .increasePercent(d.increasePercent())
+                    .totalRank(basis==RankBasis.TOTAL?rank:d.totalRank())
+                    .originalRank(basis==RankBasis.ORIGINAL?rank:d.originalRank())
+                    .increaseRank(basis==RankBasis.GAIN?rank:d.increaseRank())
                     .build();
-            out.add(dto);
-        }
-        return out;
-    }
-
-    private RankingItemResponse withTotalRank(RankingItemResponse d, int rank) {
-        return RankingItemResponse.builder()
-                .memberId(d.memberId())
-                .nickname(d.nickname())
-                .totalScore(d.totalScore())
-                .originalTotalScore(d.originalTotalScore())
-                .totalRank(rank)
-                .originalRank(d.originalRank())
-                .increaseRank(d.increaseRank())
-                .increasePercent(d.increasePercent())
-                .build();
-    }
-
-    private RankingItemResponse withOriginalRank(RankingItemResponse d, int rank) {
-        return RankingItemResponse.builder()
-                .memberId(d.memberId())
-                .nickname(d.nickname())
-                .totalScore(d.totalScore())
-                .originalTotalScore(d.originalTotalScore())
-                .totalRank(d.totalRank())
-                .originalRank(rank)
-                .increaseRank(d.increaseRank())
-                .increasePercent(d.increasePercent())
-                .build();
-    }
-
-    private RankingItemResponse withIncreaseRank(RankingItemResponse d, int rank) {
-        return RankingItemResponse.builder()
-                .memberId(d.memberId())
-                .nickname(d.nickname())
-                .totalScore(d.totalScore())
-                .originalTotalScore(d.originalTotalScore())
-                .totalRank(d.totalRank())
-                .originalRank(d.originalRank())
-                .increaseRank(rank) // ⬅️ 증가율 랭크 세팅
-                .increasePercent(d.increasePercent())
-                .build();
-    }
-
-    private Integer parseInt(String s) {
-        if (s == null) return null;
-        try { return Integer.valueOf(s); } catch (Exception e) { return null; }
-    }
-
-    private double increasePct(Integer original, Integer total) {
-        if (original == null || total == null) return 0.0;
-        int denom = Math.max(1, original);
-        return ((double) (total - original)) * 100.0 / denom;
+        }).toList();
     }
 }

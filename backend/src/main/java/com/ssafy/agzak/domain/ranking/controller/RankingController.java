@@ -1,7 +1,6 @@
 package com.ssafy.agzak.domain.ranking.controller;
 
-import com.ssafy.agzak.domain.ranking.dto.response.SnapshotRankingResponse;
-import com.ssafy.agzak.domain.ranking.dto.response.TodayRankingResponse;
+import com.ssafy.agzak.domain.ranking.dto.*;
 import com.ssafy.agzak.domain.ranking.service.RankingService;
 import io.swagger.v3.oas.annotations.*;
 import io.swagger.v3.oas.annotations.media.*;
@@ -22,33 +21,36 @@ public class RankingController {
 
     private final RankingService rankingService;
 
-    @Operation(summary = "오늘의 랭킹(실시간, Redis)",
-            description = """
-                    Redis ZSET 기반의 오늘 랭킹을 반환합니다.
-                    - totalLeaderboard: 강화 후 총점 기준 내림차순
-                    - originalLeaderboard: 강화 전 총점 기준 내림차순
-                    각 항목에 증가율(increasePercent, %) 포함
-                    """)
-    @ApiResponse(responseCode = "200", description = "OK",
-            content = @Content(schema = @Schema(implementation = TodayRankingResponse.class)))
+    @Operation(summary="오늘의 랭킹(REDIS)")
+    @ApiResponse(responseCode="200", content=@Content(schema=@Schema(implementation=RankingListDto.class)))
     @GetMapping("/today")
-    public ResponseEntity<TodayRankingResponse> getToday(
-            @RequestParam(name = "limit", defaultValue = "100") int limit
-    ) {
-        var body = rankingService.getTodayFromRedis(limit);
-        return ResponseEntity.ok(body);
+    public ResponseEntity<RankingListDto> today(@RequestParam(defaultValue="100") int limit) {
+        return ResponseEntity.ok(rankingService.getTodayTopN(limit));
     }
 
-    @Operation(summary = "스냅샷 랭킹(과거일자, MySQL)",
-            description = "특정 일자의 스냅샷 랭킹(총점 기준, 시간대별 집계 결과)을 반환합니다.")
-    @ApiResponse(responseCode = "200", description = "OK",
-            content = @Content(schema = @Schema(implementation = SnapshotRankingResponse.class)))
+    @Operation(summary="스냅샷 랭킹(과거일자, MySQL)")
+    @ApiResponse(responseCode="200", content=@Content(schema=@Schema(implementation=RankingListDto.class)))
     @GetMapping("/{date}")
-    public ResponseEntity<SnapshotRankingResponse> getSnapshot(
+    public ResponseEntity<RankingListDto> snapshot(
             @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
-            @RequestParam(name = "limit", defaultValue = "100") int limit
-    ) {
-        var body = rankingService.getSnapshotFromMysql(date, limit);
-        return ResponseEntity.ok(body);
+            @RequestParam(defaultValue="100") int limit) {
+        return ResponseEntity.ok(rankingService.getSnapshotTopN(date, limit));
+    }
+
+    @Operation(summary="내 랭킹(오늘, REDIS)")
+    @ApiResponse(responseCode="200", content=@Content(schema=@Schema(implementation=MyRankDto.class)))
+    @GetMapping("/me/today")
+    public ResponseEntity<MyRankDto> myToday() {
+        long memberId = 1L; // TODO: JWT로 교체
+        return ResponseEntity.ok(rankingService.getMyToday(memberId));
+    }
+
+    @Operation(summary="내 랭킹(과거일자, MySQL)")
+    @ApiResponse(responseCode="200", content=@Content(schema=@Schema(implementation=MyRankDto.class)))
+    @GetMapping("/me/{date}")
+    public ResponseEntity<MyRankDto> mySnapshot(
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        long memberId = 1L; // TODO: JWT로 교체
+        return ResponseEntity.ok(rankingService.getMySnapshot(date, memberId));
     }
 }
