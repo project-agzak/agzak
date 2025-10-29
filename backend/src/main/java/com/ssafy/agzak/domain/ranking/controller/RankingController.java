@@ -1,48 +1,54 @@
 package com.ssafy.agzak.domain.ranking.controller;
 
-import com.ssafy.agzak.domain.ranking.dto.response.RankingResponse;
-import io.swagger.v3.oas.annotations.Operation;
+import com.ssafy.agzak.domain.ranking.dto.response.SnapshotRankingResponse;
+import com.ssafy.agzak.domain.ranking.dto.response.TodayRankingResponse;
+import com.ssafy.agzak.domain.ranking.service.RankingService;
+import io.swagger.v3.oas.annotations.*;
+import io.swagger.v3.oas.annotations.media.*;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
-import java.util.List;
 
-@Tag(name = "랭킹", description = "회원별 운세 점수를 바탕으로 한 일일 랭킹 API")
+@Tag(name = "랭킹", description = "운세 랭킹 API")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/ranking")
+@RequestMapping("/api/v1/rankings")
 public class RankingController {
 
-    @Operation(summary = "오늘의 랭킹 조회", description = "총점 기준으로 오늘 날짜의 랭킹을 반환합니다 (Mock 데이터).")
-    @GetMapping("/today")
-    public List<RankingResponse> getTodayRanking() {
-        LocalDate today = LocalDate.now();
+    private final RankingService rankingService;
 
-        return List.of(
-                RankingResponse.builder()
-                        .rankNo(1)
-                        .memberId(101L)
-                        .nickname("fortune_master")
-                        .totalScore(155)
-                        .date(today)
-                        .build(),
-                RankingResponse.builder()
-                        .rankNo(2)
-                        .memberId(102L)
-                        .nickname("cookie_lover")
-                        .totalScore(147)
-                        .date(today)
-                        .build(),
-                RankingResponse.builder()
-                        .rankNo(3)
-                        .memberId(103L)
-                        .nickname("daily_lucky")
-                        .totalScore(139)
-                        .date(today)
-                        .build()
-        );
+    @Operation(summary = "오늘의 랭킹(실시간, Redis)",
+            description = """
+                    Redis ZSET 기반의 오늘 랭킹을 반환합니다.
+                    - totalLeaderboard: 강화 후 총점 기준 내림차순
+                    - originalLeaderboard: 강화 전 총점 기준 내림차순
+                    각 항목에 증가율(increasePercent, %) 포함
+                    """)
+    @ApiResponse(responseCode = "200", description = "OK",
+            content = @Content(schema = @Schema(implementation = TodayRankingResponse.class)))
+    @GetMapping("/today")
+    public ResponseEntity<TodayRankingResponse> getToday(
+            @RequestParam(name = "limit", defaultValue = "100") int limit
+    ) {
+        var body = rankingService.getTodayFromRedis(limit);
+        return ResponseEntity.ok(body);
+    }
+
+    @Operation(summary = "스냅샷 랭킹(과거일자, MySQL)",
+            description = "특정 일자의 스냅샷 랭킹(총점 기준, 시간대별 집계 결과)을 반환합니다.")
+    @ApiResponse(responseCode = "200", description = "OK",
+            content = @Content(schema = @Schema(implementation = SnapshotRankingResponse.class)))
+    @GetMapping("/{date}")
+    public ResponseEntity<SnapshotRankingResponse> getSnapshot(
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(name = "limit", defaultValue = "100") int limit
+    ) {
+        var body = rankingService.getSnapshotFromMysql(date, limit);
+        return ResponseEntity.ok(body);
     }
 }
-
