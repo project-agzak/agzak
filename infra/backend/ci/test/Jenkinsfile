@@ -74,27 +74,29 @@ pipeline {
               def testImage = "${repo}:${tag}"
 
               withEnv(["TEST_IMAGE=${testImage}"]) {
-                sh '''
+                sh """
                   set -eux
-                  ssh -o StrictHostKeyChecking=no "$DEPLOY_USER@$DEPLOY_HOST" \
-                  "DOCKER_USER='$DOCKER_USER' DOCKER_PWD='$DOCKER_PWD' TEST_IMAGE='$TEST_IMAGE' bash -s" << 'ENDSSH'
-                  set -eux
-                  cd /home/ubuntu/agzak-app/test
-                  [ -f Makefile ] || { echo "Makefile not found!"; exit 2; }
+                  ssh -o StrictHostKeyChecking=no "$DEPLOY_USER@$DEPLOY_HOST" << 'ENDSSH'
+                    set -eux
+                    cd /home/ubuntu/agzak-app/test/backend
 
-                  echo "$DOCKER_PWD" | docker login -u "$DOCKER_USER" --password-stdin || true
-                  TEST_IMAGE="$TEST_IMAGE" make up-be
+                    echo "TEST_IMAGE='${TEST_IMAGE}'" > .env
+                    echo "PROJECT='test'" >> .env
 
-                  for i in $(seq 1 12); do
-                    status=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' agzak-app-server || echo "unhealthy")
-                    [ "$status" = "healthy" ] && { echo "Container is healthy."; exit 0; }
-                    echo "Waiting for container to be healthy... ($i/12)"
-                    sleep 5
-                  done
-                  echo "Container did not become healthy in time." >&2
-                  exit 1
-              ENDSSH
-                '''
+                    echo "$DOCKER_PWD" | docker login -u "$DOCKER_USER" --password-stdin || true
+                    make -C .. up-be
+
+                    for i in $(seq 1 12); do
+                      status=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' test-app || echo "unhealthy")
+                      [ "$status" = "healthy" ] && { echo "Container is healthy."; exit 0; }
+                      echo "Waiting for container to be healthy... ($i/12)"
+                      sleep 5
+                    done
+
+                    echo "Container did not become healthy in time." >&2
+                    exit 1
+                  ENDSSH
+                """
               }
             }
           }
