@@ -1,0 +1,109 @@
+pipeline {
+  agent any
+
+  options {
+    timestamps()
+    ansiColor('xterm')
+  }
+
+  environment {
+    SUBDIR      = 'backend'
+    IMAGE_NAME  = 'sso9594/agzak-app'
+    REGISTRY    = 'docker.io'
+    DEPLOY_USER = 'ubuntu'
+    DEPLOY_HOST = 'k13b102.p.ssafy.io'
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+        script {
+          def full = (env.GIT_BRANCH ?: '').replaceFirst(/^origin\//, '')
+          if (!full) {
+            full = sh(returnStdout: true, script: 'git rev-parse --abbrev-ref HEAD').trim()
+          }
+          env.TARGET_BRANCH_FULL = full
+          env.TARGET_BRANCH = full.replaceAll('/', '-')
+          echo "Target branch: ${env.TARGET_BRANCH_FULL} -> ${env.TARGET_BRANCH}"
+        }
+      }
+    }
+
+    stage('Docker Build & Push') {
+      steps {
+        dir("${env.SUBDIR}") {
+          withCredentials([usernamePassword(credentialsId: 'dockerhub-cred',
+              usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PWD')]) {
+            sh '''
+              set -eux
+
+              echo "$DOCKER_PWD" | docker login -u "$DOCKER_USER" --password-stdin ${REGISTRY}
+
+              export DOCKER_BUILDKIT=1
+              TAG="${TARGET_BRANCH}-${BUILD_NUMBER}"
+
+              if [ -n "${REGISTRY}" ] && [ "${REGISTRY}" != "docker.io" ]; then
+                REPO="${REGISTRY}/${IMAGE_NAME}"
+              else
+                REPO="${IMAGE_NAME}"
+              fi
+
+              docker build -t "${REPO}:${TAG}" .
+
+              docker push "${REPO}:${TAG}"
+
+              docker tag "${REPO}:${TAG}" "${REPO}:latest"
+              docker push "${REPO}:latest"
+            '''
+          }
+        }
+      }
+    }
+
+    stage('Deploy') {
+      steps {
+        sshagent (credentials: ['deploy-ssh']) {
+          withCredentials([usernamePassword(
+            credentialsId: 'dockerhub-cred',
+            usernameVariable: 'DOCKER_USER',
+            passwordVariable: 'DOCKER_PWD'
+          )]) {
+            script {
+              def repo = (env.REGISTRY?.trim() && env.REGISTRY != 'docker.io')
+                ? "${env.REGISTRY}/${env.IMAGE_NAME}"
+                : env.IMAGE_NAME
+              def tag = "${env.TARGET_BRANCH}-${env.BUILD_NUMBER}"
+              def testImage = "${repo}:${tag}"
+
+              withEnv(["TEST_IMAGE=${testImage}"]) {
+                sh '''
+                  set -eux
+                  ssh -o StrictHostKeyChecking=no "$DEPLOY_USER@$DEPLOY_HOST" \
+                  "DOCKER_USER='$DOCKER_USER' DOCKER_PWD='$DOCKER_PWD' TEST_IMAGE='$TEST_IMAGE' bash -s" << 'ENDSSH'
+                  set -eux
+                  cd /home/ubuntu/agzak-app/test
+                  [ -f Makefile ] || { echo "Makefile not found!"; exit 2; }
+
+                  echo "$DOCKER_PWD" | docker login -u "$DOCKER_USER" --password-stdin || true
+
+                  TEST_IMAGE="$TEST_IMAGE" make up-be
+
+                  for i in $(seq 1 12); do
+                    status=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' agzak-app-server || echo "unhealthy")
+                    [ "$status" = "healthy" ] && { echo "Container is healthy."; exit 0; }
+                    echo "Waiting for container to be healthy... ($i/12)"
+                    sleep 5
+                  done
+                  echo "Container did not become healthy in time." >&2
+                  exit 1
+              ENDSSH
+                '''
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
