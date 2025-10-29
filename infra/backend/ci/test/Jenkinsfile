@@ -74,7 +74,7 @@ pipeline {
               def testImage = "${repo}:${tag}"
 
               withEnv(["TEST_IMAGE=${testImage}"]) {
-                sh """
+                sh '''
                   set -eux
                   ssh -o StrictHostKeyChecking=no "$DEPLOY_USER@$DEPLOY_HOST" << 'ENDSSH'
                     set -eux
@@ -96,7 +96,7 @@ pipeline {
                     echo "Container did not become healthy in time." >&2
                     exit 1
                   ENDSSH
-                """
+                '''
               }
             }
           }
