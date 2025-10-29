@@ -66,18 +66,15 @@ pipeline {
         sshagent (credentials: ['deploy-ssh']) {
           sh """
             set -eux
-
             TEST_FE_IMAGE="${FE_IMAGE_REPO}:${TARGET_BRANCH}-${BUILD_NUMBER}"
 
             ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} '
               set -eux
-              TEST_FE_IMAGE="'$TEST_FE_IMAGE'" docker compose -f ${REMOTE_FE_COMPOSE} pull
-              TEST_FE_IMAGE="'$TEST_FE_IMAGE'" docker compose -f ${REMOTE_FE_COMPOSE} up -d --remove-orphans
-
-              # 헬스체크(포트 5173)
-              for i in $(seq 1 12); do
+              TEST_FE_IMAGE="'${TEST_FE_IMAGE}'" docker compose -f "${env.REMOTE_FE_COMPOSE}" pull
+              TEST_FE_IMAGE="'${TEST_FE_IMAGE}'" docker compose -f "${env.REMOTE_FE_COMPOSE}" up -d --remove-orphans
+              for i in \$(seq 1 12); do
                 curl -fsS http://127.0.0.1:5173/ >/dev/null && exit 0
-                echo "Waiting FE test container... ($i/12)"; sleep 3
+                echo "Waiting FE test container... (\$i/12)"; sleep 3
               done
               echo "FE test container not responding" >&2; exit 1
             '
