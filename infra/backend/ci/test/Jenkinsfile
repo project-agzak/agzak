@@ -37,9 +37,7 @@ pipeline {
               usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PWD')]) {
             sh '''
               set -eux
-
               echo "$DOCKER_PWD" | docker login -u "$DOCKER_USER" --password-stdin ${REGISTRY}
-
               export DOCKER_BUILDKIT=1
               TAG="${TARGET_BRANCH}-${BUILD_NUMBER}"
 
@@ -50,7 +48,6 @@ pipeline {
               fi
 
               docker build -t "${REPO}:${TAG}" .
-
               docker push "${REPO}:${TAG}"
 
               docker tag "${REPO}:${TAG}" "${REPO}:latest"
@@ -86,7 +83,6 @@ pipeline {
                   [ -f Makefile ] || { echo "Makefile not found!"; exit 2; }
 
                   echo "$DOCKER_PWD" | docker login -u "$DOCKER_USER" --password-stdin || true
-
                   TEST_IMAGE="$TEST_IMAGE" make up-be
 
                   for i in $(seq 1 12); do
@@ -103,6 +99,33 @@ pipeline {
             }
           }
         }
+      }
+    }
+  }
+
+  post {
+    success {
+      script {
+        def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
+        def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
+        mattermostSend(
+          color: 'good',
+          message: "빌드 성공: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name})\n(<${env.BUILD_URL}|상세 보기>)",
+          endpoint: 'http://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo',
+          channel: 'B102_Jenkins_Build_Result'
+        )
+      }
+    }
+    failure {
+      script {
+        def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
+        def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
+        mattermostSend(
+          color: 'danger',
+          message: "❌ 빌드 실패: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name})\n(<${env.BUILD_URL}|상세 보기>)",
+          endpoint: 'http://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo',
+          channel: 'B102_Jenkins_Build_Result'
+        )
       }
     }
   }
