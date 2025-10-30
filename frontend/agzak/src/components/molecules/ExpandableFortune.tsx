@@ -6,7 +6,7 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
+} from "@/components/ui/Accordion";
 
 type ExpandableFortuneProps = {
   label: string;
@@ -44,7 +44,7 @@ export function ExpandableFortune({
             />
           </div>
         </AccordionTrigger>
-        <AccordionContent className="pt-2 pb-3 text-[12px] leading-relaxed text-[#3A3A3A]">
+        <AccordionContent className="pt-2 pb-3 font-galmuri-xsmall text-[12px] leading-relaxed text-[#3A3A3A]">
           {description ? (
             <p>{description}</p>
           ) : (

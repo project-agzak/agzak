@@ -1,6 +1,6 @@
 // src/components/molecules/Header.tsx
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/Button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/Sheet";
 
 export default function Header() {
   return (
@@ -63,10 +63,10 @@ function SidebarContent() {
         <img
           src="/agzak-logo.svg"
           alt="Agzak Logo"
-          className="h-7 object-contain" 
+          className="h-10 object-contain" 
         />
       </div>
-      <nav className="px-2 py-2 space-y-1 text-[15px]">
+      <nav className="px-2 py-2 space-y-1 text-[15px] font-bitbit">
         <SidebarItem label="운세 보기" href="/fortune" />
         <SidebarItem label="운세 강화" href="/enforce" />
         <SidebarItem label="운세 달력" href="/calendar" />

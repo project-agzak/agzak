@@ -21,8 +21,6 @@ export default function Page() {
       <FortuneGaugeList />
       <FortuneBubble {...fortuneCookie} width={90} />
       <div className="min-h-dvh bg-[#FEFBF2] px-4 py-6">
-        <h1 className="text-xl font-extrabold mb-4 text-[#2A2A2A]">오늘의 운세</h1>
-
         <div className="space-y-3">
           <ExpandableFortune
             itemValue="health"

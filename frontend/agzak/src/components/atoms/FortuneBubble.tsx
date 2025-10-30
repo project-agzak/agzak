@@ -76,9 +76,9 @@ export function FortuneBubble({
 
       {/* 내용: 이미지 위에 절대배치 */}
       <div className={cn("absolute top-0 left-0 w-full pt-5",
-          flipX ? "pr-5.5 text-right" : "pl-5.5"
+          flipX ? "pr-5 text-right" : "pl-5"
       )}>
-        <h3 className="text-[14px] font-extrabold leading-none text-[#1F1F1F]">
+        <h3 className="font-galmuri-xsmall font-bold leading-none text-[#1F1F1F]">
           {title}
         </h3>
       </div>

@@ -1,6 +1,6 @@
 // src/components/molecules/CalendarBoard.tsx
 import blackboard from "@/assets/ui/blackboard.png";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { AspectRatio } from "@/components/ui/AspectRatio";
 import { cn } from "@/lib/utils";
 import * as React from "react";
 
@@ -84,9 +84,9 @@ export default function BlackboardCalendar({
                         className={cn(
                           "inline-flex items-center justify-center px-1",
                           // 시안 비슷한 폰트 크기
-                          "text-white text-[clamp(10px,2.7vw,18px)] font-bold leading-none",
+                          "text-white text-[clamp(10px,2.7vw,18px)] font-galmuri-xsmall leading-none",
                           isSelected &&
-                            "bg-[#9DD36D] text-white shadow-[0_1px_0_rgba(0,0,0,0.25)]",
+                            "bg-[#9DD36D] font-bold font-galmuri text-stroke-1 text-white shadow-[0_1px_0_rgba(0,0,0,0.25)]",
                           // hover 효과는 선택 안 된 날짜에만
                           !isSelected &&
                             "hover:text-slate-50/90 transition-colors"
