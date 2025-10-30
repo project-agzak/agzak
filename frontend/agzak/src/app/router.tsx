@@ -2,6 +2,7 @@
 import { lazy, Suspense, type ReactNode } from 'react';
 import { createBrowserRouter, Outlet } from 'react-router-dom';
 import AppLayout from './layout';
+import AppLoader from '@/components/ui/AppLoader';
 
 // --- lazy pages ---
 const HomePage = lazy(() => import('@/pages/Home/HomePage'));
@@ -21,7 +22,9 @@ const MyPage = lazy(() => import('@/pages/My/MyPage'));
 const NotFoundPage = lazy(() => import('@/pages/_shared/NotFoundPage'));
 const AppError = lazy(() => import('@/pages/_shared/AppError'));
 
-const suspense = (el: ReactNode) => <Suspense fallback={null}>{el}</Suspense>;
+const fallback = <AppLoader fullscreen label="페이지 로딩 중..." />;
+
+const suspense = (el: ReactNode) => <Suspense fallback={fallback}>{el}</Suspense>;
 
 const EmptyLayout = () => <Outlet />;
 
