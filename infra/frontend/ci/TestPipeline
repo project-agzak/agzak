@@ -1,0 +1,114 @@
+pipeline {
+  agent any
+
+  options {
+    timestamps()
+    ansiColor('xterm')
+  }
+
+  environment {
+    SUBDIR       = 'frontend'
+    DEPLOY_USER  = 'ubuntu'
+    DEPLOY_HOST  = 'k13b102.p.ssafy.io'
+
+    // FE 이미지 레포 (백엔드와 분리 추천)
+    REGISTRY     = 'docker.io'
+    FE_IMAGE_REPO= 'sso9594/agzak-fe'
+
+    // 원격 compose 파일 경로 (네가 만든 위치)
+    REMOTE_FE_COMPOSE = '/home/ubuntu/agzak-app/test/frontend/agzak-fe-test.yml'
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+        script {
+          def full = (env.GIT_BRANCH ?: '').replaceFirst(/^origin\//, '')
+          if (!full) full = sh(returnStdout: true, script: 'git rev-parse --abbrev-ref HEAD').trim()
+          env.TARGET_BRANCH_FULL = full
+          env.TARGET_BRANCH = full.replaceAll('/', '-')
+          echo "Target branch: ${env.TARGET_BRANCH_FULL} -> ${env.TARGET_BRANCH}"
+        }
+      }
+    }
+
+    stage('Build FE Image') {
+      steps {
+        dir("${env.SUBDIR}/agzak") {
+          withCredentials([usernamePassword(credentialsId: 'dockerhub-cred',
+            usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PWD')]) {
+            sh '''
+              set -eux
+
+              echo "$DOCKER_PWD" | docker login -u "$DOCKER_USER" --password-stdin ${REGISTRY}
+
+              TAG="${TARGET_BRANCH}-${BUILD_NUMBER}"
+              REPO="${FE_IMAGE_REPO}"
+
+              # 1) 프론트 이미지 빌드 (serve -s dist -l 5173 런타임)
+              docker build -t "${REPO}:${TAG}" -f Dockerfile .
+
+              # 2) 푸시
+              docker push "${REPO}:${TAG}"
+
+              # (선택) 테스트 최신 포인터도 갱신하고 싶다면 활성화
+              # docker tag  "${REPO}:${TAG}" "${REPO}:test"
+              # docker push "${REPO}:test"
+            '''
+          }
+        }
+      }
+    }
+
+    stage('Deploy FE (TEST via Docker Compose)') {
+      steps {
+        sshagent (credentials: ['deploy-ssh']) {
+          sh """
+            set -eux
+
+            TEST_FE_IMAGE="${FE_IMAGE_REPO}:${TARGET_BRANCH}-${BUILD_NUMBER}"
+
+            ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} '
+              set -eux
+              TEST_FE_IMAGE="'$TEST_FE_IMAGE'" docker compose -f ${REMOTE_FE_COMPOSE} pull
+              TEST_FE_IMAGE="'$TEST_FE_IMAGE'" docker compose -f ${REMOTE_FE_COMPOSE} up -d --remove-orphans
+
+              # 헬스체크(포트 5173)
+              for i in $(seq 1 12); do
+                curl -fsS http://127.0.0.1:5173/ >/dev/null && exit 0
+                echo "Waiting FE test container... ($i/12)"; sleep 3
+              done
+              echo "FE test container not responding" >&2; exit 1
+            '
+          """
+        }
+      }
+    }
+  }
+
+  post {
+      success {
+        script {
+          def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
+          def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
+          sh """
+            curl -X POST -H 'Content-Type: application/json' \
+            -d '{"text":"빌드 성공: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name}) (<${env.BUILD_URL}|상세 보기>)"}' \
+            https://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo
+          """
+        }
+      }
+      failure {
+        script {
+          def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
+          def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
+          sh """
+            curl -X POST -H 'Content-Type: application/json' \
+            -d '{"text":"빌드 실패: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name}) (<${env.BUILD_URL}|상세 보기>)"}' \
+            https://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo
+          """
+        }
+      }
+  }
+}

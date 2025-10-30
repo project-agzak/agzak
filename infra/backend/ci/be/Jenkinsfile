@@ -74,36 +74,63 @@ pipeline {
                 ? "${env.REGISTRY}/${env.IMAGE_NAME}"
                 : env.IMAGE_NAME
               def tag = "${env.TARGET_BRANCH}-${env.BUILD_NUMBER}"
-              def fullImage = "${repo}:${tag}"
+              def image = "${repo}:${tag}"
 
-              withEnv(["FULL_IMAGE=${fullImage}"]) {
-                sh '''
-                  set -eux
-                  ssh -o StrictHostKeyChecking=no "$DEPLOY_USER@$DEPLOY_HOST" \
-                  "DOCKER_USER='$DOCKER_USER' DOCKER_PWD='$DOCKER_PWD' FULL_IMAGE='$FULL_IMAGE' bash -s" << 'ENDSSH'
-                  set -eux
-                  cd /home/ubuntu/agzak-app/deploy
-                  [ -f Makefile ] || { echo "Makefile not found!"; exit 2; }
+              sh """
+                set -eux
+                ssh -o StrictHostKeyChecking=no \\
+                  "$DEPLOY_USER@$DEPLOY_HOST" \\
+                  "IMAGE=${image} DOCKER_USER=${DOCKER_USER} DOCKER_PWD=${DOCKER_PWD} bash -s" <<'ENDSSH'
+                    set -eux
+                    cd /home/ubuntu/agzak-app/deploy/backend
 
-                  echo "$DOCKER_PWD" | docker login -u "$DOCKER_USER" --password-stdin || true
+                    echo "IMAGE=\$IMAGE" > .env
+                    echo "PROJECT=deploy" >> .env
 
-                  IMAGE="$FULL_IMAGE" make up-be
+                    echo "\$DOCKER_PWD" | docker login -u "\$DOCKER_USER" --password-stdin || true
 
-                  for i in $(seq 1 12); do
-                    status=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' agzak-app-server || echo "unhealthy")
-                    [ "$status" = "healthy" ] && { echo "Container is healthy."; exit 0; }
-                    echo "Waiting for container to be healthy... ($i/12)"
-                    sleep 5
-                  done
+                    make -C .. up-be
 
-                  echo "Container did not become healthy in time." >&2
-                  exit 1
-ENDSSH
-                '''
-              }
+                    for i in \$(seq 1 12); do
+                      status=\$(docker inspect --format '{{.State.Health.Status}}' agzak-app-server 2>/dev/null || echo "unhealthy")
+                      echo "Current status: \$status"
+                      [ "\$status" = "healthy" ] && { echo "Container is healthy."; exit 0; }
+                      echo "Waiting for container to be healthy... (\$i/12)"
+                      sleep 5
+                    done
+
+                    echo "Container did not become healthy in time." >&2
+                    exit 1
+                ENDSSH
+              """
             }
           }
         }
+      }
+    }
+  }
+
+  post {
+    success {
+      script {
+        def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
+        def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
+        sh """
+          curl -X POST -H 'Content-Type: application/json' \
+          -d '{"text":"빌드 성공: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name}) (<${env.BUILD_URL}|상세 보기>)"}' \
+          https://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo
+        """
+      }
+    }
+    failure {
+      script {
+        def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
+        def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
+        sh """
+          curl -X POST -H 'Content-Type: application/json' \
+          -d '{"text":"빌드 실패: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name}) (<${env.BUILD_URL}|상세 보기>)"}' \
+          https://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo
+        """
       }
     }
   }
