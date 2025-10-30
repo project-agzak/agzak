@@ -12,5 +12,14 @@ export default {
       }
     },
   },
-  plugins: [],
+  plugins: [
+    plugin(({ addUtilities }) => {
+      const newUtilities = {
+        '.text-stroke-1': {
+          '-webkit-text-stroke': '1px black',
+        },
+      };
+      addUtilities(newUtilities);
+    }),
+  ],
 };

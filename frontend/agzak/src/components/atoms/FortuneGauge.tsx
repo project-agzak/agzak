@@ -1,6 +1,6 @@
 // @/components/atoms/FortuneGauge.tsx
 
-import { Progress } from "@/components/ui/progress";
+import { Progress } from "@/components/ui/Progress";
 import { cn } from "@/lib/utils";
 import * as React from "react";
 
@@ -40,7 +40,7 @@ export function FortuneGauge({
     <div className={cn("w-full space-y-1", className)}>
       {/* 라벨 줄 */}
       <div className="flex items-center justify-between">
-        <span className="text-[15px] font-extrabold text-[#2E2E2E] leading-none">
+        <span className="text-[15px] font-galmuri-small font-bold text-[#2E2E2E] leading-none">
           {label}
         </span>
         {rightSlot ? rightSlot : null}
