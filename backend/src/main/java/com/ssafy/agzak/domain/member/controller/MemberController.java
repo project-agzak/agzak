@@ -4,11 +4,13 @@ import com.ssafy.agzak.domain.fortune.dto.response.DetailFortuneDataResponse;
 import com.ssafy.agzak.domain.fortune.dto.response.FortuneAspectResponse;
 import com.ssafy.agzak.domain.fortune.dto.response.FortuneTypeResponse;
 import com.ssafy.agzak.domain.member.dto.response.MemberGraphResponse;
-import com.ssafy.agzak.domain.member.dto.response.MemberInfoResponse;
 import com.ssafy.agzak.domain.member.dto.request.MemberEditRequest;
+import com.ssafy.agzak.domain.member.dto.response.MemberInfoResponse;
+import com.ssafy.agzak.domain.member.entity.Member;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -17,8 +19,8 @@ import java.util.List;
 public class MemberController {
     @GetMapping
     public ResponseEntity<MemberInfoResponse> getMemberInfo() {
-        return ResponseEntity.ok().body(new MemberInfoResponse(1, "temp", "temp", "temp", "MALE",
-                LocalDateTime.now(), "Dog","Seoul"));
+        return ResponseEntity.ok().body(new MemberInfoResponse(1, "temp", "temp", Member.Gender.FEMALE,
+                LocalDate.now(),null, null,null));
     }
 
     @PutMapping
