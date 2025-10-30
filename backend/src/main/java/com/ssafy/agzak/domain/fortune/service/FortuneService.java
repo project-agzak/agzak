@@ -1,6 +1,6 @@
 package com.ssafy.agzak.domain.fortune.service;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssafy.agzak.domain.fortune.dto.request.BirthDataInput;
 import com.ssafy.agzak.domain.fortune.dto.response.*;
@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
+import java.io.IOException;
 import java.util.List;
 
 @Service
@@ -46,7 +47,7 @@ public class FortuneService {
         시스템 지시사항
         너는 제공된 출생 차트와 트랜싯 데이터를 바탕으로 5가지 영역의 '오늘의 운세 점수'를 계산하는 전문 점성가다.
         반드시 **아래 키만 포함한 단일 JSON 객체**로만 출력한다. 어떠한 설명/문장/코드펜스/마크다운도 금지한다.
-        문자열로 감싸지 말고, JSON 최상위에 바로 객체를 출력한다.
+        문자열로 감싸지 말고, JSON 최상위에 바로 객체를 출력한다. 답변은 반드시 한글로 줘
         
         제약:
         - 모든 점수는 0~100의 정수.
@@ -61,13 +62,12 @@ public class FortuneService {
           "health_score": number,
           "wealth_score": number,
           "achievement_score": number,
-          "total_summary": string,
+          "total_summary": string ("오늘의 총 운세 요약..."),
           "detailed_summaries": {
-            "romance": string,
-            "health": string,
-            "wealth": string,
-            "achievement": string
-          }
+            "romance": "연애운 요약...",
+            "health": "건강운 요약...",
+            "wealth": "금전운 요약...",
+            "achievement": "성취운 요약..."
         }
         
         점수 계산 가이드라인:
@@ -85,20 +85,17 @@ public class FortuneService {
         restClient = RestClient.builder()
                 .baseUrl(gmsBaseUrl)
                 .defaultHeaders(headers -> {
-                    headers.setBearerAuth(gmsApiKey); // Authorization: Bearer $GMS_KEY
+                    headers.setBearerAuth(gmsApiKey);
                     headers.set("Content-Type", "application/json");
                 })
                 .build();
 
-        // 1. 점성술 데이터 객체 생성
         AiPromptData aiData = calculationService.generateAiPromptData(input);
 
-        // 2. 데이터 -> 문자열 변환
         String natalPlanetsString = formatNatalPlanets(aiData.natalPlanets());
         String transitPlanetsString = formatTransitPlanets(aiData.transitPlanets());
         String aspectsString = formatAspects(aiData.aspects());
 
-        // 3. 사용자 프롬프트 템플릿(userTemplate)의 변수 수동 치환
         String userContent = userTemplate
                 .replace("{{ascSign}}", aiData.ascendantSign())
                 .replace("{{mcSign}}", aiData.mcSign())
@@ -122,7 +119,6 @@ public class FortuneService {
             }
             """.formatted(
                 gmsModel,
-                // objectMapper를 사용해 프롬프트 문자열을 'JSON 문자열 값'으로 안전하게 변환 (이스케이프 처리)
                 objectMapper.valueToTree(systemPrompt).toString(),
                 objectMapper.valueToTree(userContent).toString()
         );
@@ -130,12 +126,38 @@ public class FortuneService {
         log.info("--- GMS Request (Raw JSON Body) ---");
         log.info(jsonRequestBody);
 
-        return restClient.post()
+        JsonNode fullResponseNode = restClient.post()
                 .uri("/chat/completions")
-                // .body(chatRequest) 대신 .body(String) 사용
                 .body(jsonRequestBody)
                 .retrieve()
-                .body(FortuneScoreResponse.class);
+                .body(JsonNode.class);
+
+        log.info("GPT 응답 : {}", fullResponseNode);
+        String innerJsonString = null;
+        if (fullResponseNode != null) {
+            innerJsonString = fullResponseNode
+                    .path("choices")
+                    .path(0)
+                    .path("message")
+                    .path("content")
+                    .asText(null);
+        }
+
+        if (innerJsonString == null) {
+            log.error("AI response structure is invalid or content string is missing!");
+            log.error("Received Full Response: {}", fullResponseNode != null ? fullResponseNode.toString() : "null");
+            return new FortuneScoreResponse(0, 0, 0, 0, 0, "오류: AI 응답 구조 이상.", null);
+        }
+
+        log.info("--- Received Inner JSON String ---");
+        log.info(innerJsonString);
+
+        try {
+            return objectMapper.readValue(innerJsonString, FortuneScoreResponse.class);
+        } catch (IOException e) {
+            log.error("내부 JSON 문자열 파싱 실패: {}", e.getMessage());
+            return new FortuneScoreResponse(0, 0, 0, 0, 0, "오류: AI 응답 파싱 실패.", null);
+        }
     }
 
     private String formatNatalPlanets(List<NatalPlanetInfo> planets) {
@@ -144,7 +166,7 @@ public class FortuneService {
             sb.append(String.format("* %s: %s (%d 하우스)\n",
                     planet.name(), planet.sign(), planet.house()));
         }
-        return sb.toString().trim(); // 마지막 줄바꿈 제거
+        return sb.toString().trim();
     }
 
     private String formatTransitPlanets(List<TransitPlanetInfo> planets) {
@@ -159,7 +181,6 @@ public class FortuneService {
     private String formatAspects(List<AspectInfo> aspects) {
         StringBuilder sb = new StringBuilder();
         for (AspectInfo aspect : aspects) {
-            // (참고) 긍정/부정 판단 로직을 여기에 추가하면 더 좋습니다.
             String aspectType = aspect.aspectType();
             String mood = "[정보]";
             if (aspectType.contains("Trine") || aspectType.contains("Sextile")) {
@@ -173,14 +194,4 @@ public class FortuneService {
         }
         return sb.toString().trim();
     }
-
-    private record ChatRequest(
-            @JsonProperty("model") String model,
-            @JsonProperty("messages") List<Message> messages
-    ) {}
-
-    private record Message(
-            @JsonProperty("role") String role,
-            @JsonProperty("content") String content
-    ) {}
 }
