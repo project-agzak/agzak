@@ -9,4 +9,5 @@ import java.util.Optional;
 @Repository
 public interface FortuneTypeRepository extends JpaRepository<FortuneType, Long> {
     Optional<FortuneType> findFortuneTypeByFortuneTypeId(Long id);
+    Optional<FortuneType> findFortuneTypeByName(String name);
 }
