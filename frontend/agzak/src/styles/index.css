@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./fonts.css";
 
 /* 레이아웃 토큰 */
 :root {
@@ -46,4 +47,9 @@ media (min-width: 768px) {
   @apply fixed left-1/2 -translate-x-1/2 bottom-4 z-50;
   width: var(--app-width);
   max-width: calc(100vw - 32px);
+}
+
+@theme {
+  --font-galmuri: "Galmuri11", system-ui, sans-serif;
+  --font-dnf: "DNF", system-ui, sans-serif;
 }
