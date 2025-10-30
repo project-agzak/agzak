@@ -9,7 +9,7 @@ const SheetTrigger = SheetPrimitive.Trigger
 const SheetClose = SheetPrimitive.Close
 const SheetPortal = SheetPrimitive.Portal
 
-// ❗ overlay 투명도 조정
+// overlay 투명도 조정
 const SheetOverlay = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof SheetPrimitive.Overlay>
