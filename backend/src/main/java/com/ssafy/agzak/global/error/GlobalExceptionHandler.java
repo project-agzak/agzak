@@ -81,7 +81,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(JwtException.class)
     public ResponseEntity<ErrorResponse> handleJwt(JwtException e, HttpServletRequest req) {
-        var body = ErrorResponse.of(401, "INVALID_TOKEN", "유효하지 않은 토큰입니다.", req.getRequestURI());
+        var body = ErrorResponse.of(401, "INVALID_TOKEN", e.getMessage(), req.getRequestURI());
         return ResponseEntity.status(401).body(body);
     }
 

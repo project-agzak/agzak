@@ -74,9 +74,4 @@ public class AuthService {
             revoke.revoke(accessToken, Duration.ofMinutes(jwt.getAccessExpMinutes()));
         }
     }
-
-    @Transactional(readOnly = true)
-    public Member loadMe(Long memberId) {
-        return members.findById(memberId).orElseThrow(() -> new EntityNotFoundException("회원이 존재하지 않습니다."));
-    }
 }

@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController implements AuthApiDocs {
 
     private final AuthService authService;
-    private final JwtProvider jwt;
 
     @Override
     @PostMapping("/register")
