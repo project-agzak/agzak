@@ -15,7 +15,8 @@ export function Input({
         type="text"
         placeholder={placeholder}
         {...props}
-        className="input-field"
+        className="input-field font-galmuri"
+         style={{ fontWeight: 600 }}
       />
     </div>
   );
