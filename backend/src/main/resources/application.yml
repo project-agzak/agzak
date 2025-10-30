@@ -31,6 +31,14 @@ spring:
       api:
         key: ${KAKAO_MAP_KEY}
 
+  # DDL / DML
+  sql:
+    init:
+      mode: never
+      encoding: UTF-8
+      schema-locations: classpath:agzak_ddl.sql
+      data-locations: classpath:agzak_dml.sql
+
 server:
   port: ${SPRING_PORT:8082}
   forward-headers-strategy: native
