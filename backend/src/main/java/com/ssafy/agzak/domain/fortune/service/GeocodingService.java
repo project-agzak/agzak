@@ -1,7 +1,10 @@
 package com.ssafy.agzak.domain.fortune.service;
 
 import com.ssafy.agzak.domain.fortune.dto.response.KakaoAddressResponse;
+import com.ssafy.agzak.domain.fortune.exception.IllegalCityNameException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -9,6 +12,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.net.URI;
 
 @Service
+@Slf4j
 public class GeocodingService {
 
     @Value("${spring.kakao.map.api.key}")
@@ -29,7 +33,18 @@ public class GeocodingService {
                 .uri(uri)
                 .header("Authorization", "KakaoAK " + kakaoMapKey)
                 .retrieve()
+                .onStatus(HttpStatusCode::isError, (status,res) -> {
+                    int code = res.getStatusCode().value();
+
+                    if (code == 500) {
+                        throw new IllegalCityNameException("해당 도시명을 찾을 수 없습니다.(영문 입력 또는 미등록 지역)", city);
+                    }
+                })
                 .body(KakaoAddressResponse.class);
+
+        if (response == null || response.documents() == null || response.documents().isEmpty()) {
+            throw new IllegalCityNameException("해당 도시명을 찾을 수 없습니다.(영문 입력 또는 미등록 지역)", city);
+        }
 
         return response.documents().get(0);
     }
