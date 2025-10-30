@@ -1,12 +1,13 @@
 /*
- * 프로젝트: backend
- * 설명: Spring Boot 3.5.x 기반 백엔드 서비스의 Gradle 설정 (Java 17, JPA, Security, Redis, WebSocket, AMQP, OAuth2, Swagger, AI, OCR 등)
+ * Project: backend
+ * Desc   : Spring Boot 3.5.x 기반 백엔드 (Java 17)
+ * Stack  : Web, JPA, Security, OAuth2, Redis, Actuator, OpenAPI, JWT
  */
 
 plugins {
-    id 'java'                                                     // Java 프로젝트 플러그인
-    id 'org.springframework.boot' version '3.5.6'                 // Spring Boot 플러그인
-    id 'io.spring.dependency-management' version '1.1.7'          // 의존성 버전 일원화(Managed BOM)
+    id 'java'
+    id 'org.springframework.boot' version '3.5.6'
+    id 'io.spring.dependency-management' version '1.1.7'
 }
 
 group = 'com.ssafy.agzak'
@@ -15,40 +16,29 @@ description = 'backend'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)              // JDK Toolchain: Java 17
+        languageVersion = JavaLanguageVersion.of(17)
     }
 }
 
 configurations {
     compileOnly {
-        extendsFrom annotationProcessor                            // Lombok 등 annotationProcessor를 compileOnly에 포함
+        extendsFrom annotationProcessor
     }
 }
 
 repositories {
-    mavenCentral()                                                // 중앙 리포지토리
-}
-
-ext {
-    set('springAiVersion', "1.0.1")                               // Spring AI BOM 버전
+    mavenCentral()
 }
 
 dependencies {
-    // ─────────────────────────────────────────────────────────────
-    // Spring Boot Starters (핵심 프레임워크)
-    // ─────────────────────────────────────────────────────────────
-    implementation 'org.springframework.boot:spring-boot-starter-web'                     // Spring MVC (서블릿 기반 REST API)
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'                // JPA/Hibernate (ORM)
-    implementation 'org.springframework.boot:spring-boot-starter-security'                // Spring Security (인증/인가)
-//    implementation 'org.springframework.boot:spring-boot-starter-webflux'                 // Reactive WebClient 등 사용 목적
-//    implementation 'org.springframework.boot:spring-boot-starter-amqp'                    // AMQP(RabbitMQ) 연동
-    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'           // OAuth2 클라이언트
-    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'  // OAuth2 리소스 서버(JWT/Bearer 등)
-//    implementation 'org.springframework.boot:spring-boot-starter-websocket'               // WebSocket 서버
-//    implementation 'org.springframework.boot:spring-boot-starter-data-redis'              // Redis (Cache/Session/Message)
-//    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'               // 서버 사이드 템플릿(관리/간단 뷰)
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'                // 운영/모니터링 엔드포인트
-//    implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'            // MongoDB 연동
+    // ── Spring Boot Starters
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-security'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
     //점성술 라이브러리
     implementation files('libs/swisseph-2.01.00-02.jar')
@@ -56,71 +46,41 @@ dependencies {
     // AI 연동
     // ─────────────────────────────────────────────────────────────
     // implementation 'org.springframework.ai:spring-ai-starter-model-openai'                // Spring AI(OpenAI 모델 연동)
+    // ── Observability / Logging
+    implementation 'io.micrometer:micrometer-registry-prometheus'
+    implementation 'net.logstash.logback:logstash-logback-encoder:7.4'
 
-    // ─────────────────────────────────────────────────────────────
-    // Database Drivers (런타임 드라이버)
-    // ─────────────────────────────────────────────────────────────
-    runtimeOnly 'com.mysql:mysql-connector-j'                                             // MySQL 드라이버
-    runtimeOnly 'org.postgresql:postgresql'                                               // PostgreSQL 드라이버
+    // ── JSON & Utils
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    implementation 'org.apache.commons:commons-lang3:3.18.0'
 
-    // ─────────────────────────────────────────────────────────────
-    // JWT / 인증 토큰
-    // ─────────────────────────────────────────────────────────────
-    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'                                      // JJWT API
-    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'                                        // JJWT 구현체
-    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'                                     // JJWT Jackson 직렬화
+    // ── OpenAPI / Swagger
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13'
 
-    // ─────────────────────────────────────────────────────────────
-    // WebSocket + STOMP
-    // ─────────────────────────────────────────────────────────────
-//    implementation 'org.springframework:spring-messaging'
+    // ── DB Drivers (runtime only)
+    runtimeOnly 'com.mysql:mysql-connector-j'
+    runtimeOnly 'org.postgresql:postgresql'
 
-    // ─────────────────────────────────────────────────────────────
-    // OpenAPI / Swagger 문서화
-    // ─────────────────────────────────────────────────────────────
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.13'             // Swagger UI + OpenAPI v3
-    implementation 'org.apache.commons:commons-lang3:3.18.0'                               // 문자열/컬렉션 유틸
+    // ── JWT
+    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
-    // ─────────────────────────────────────────────────────────────
-    // 유틸리티
-    // ─────────────────────────────────────────────────────────────
-//    implementation 'org.springframework.security:spring-security-messaging'                 // STOMP/WebSocket 보안
-//    implementation 'com.google.firebase:firebase-admin:9.5.0'                               // Firebase Admin (FCM 등)
+    // ── Lombok
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
 
-    // ─────────────────────────────────────────────────────────────
-    // OpenAI 공식 SDK (Spring AI 미사용 시 직접 호출용)
-    // ─────────────────────────────────────────────────────────────
-//    implementation 'com.openai:openai-java:3.0.3'
+    // ── Dev only
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
 
-
-    // ─────────────────────────────────────────────────────────────
-    // Lombok (컴파일 시점 전용)
-    // ─────────────────────────────────────────────────────────────
-    compileOnly 'org.projectlombok:lombok'                                                // Lombok 어노테이션
-    annotationProcessor 'org.projectlombok:lombok'                                        // Lombok 프로세서
-
-    // ─────────────────────────────────────────────────────────────
-    // 개발 편의
-    // ─────────────────────────────────────────────────────────────
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'                       // 코드 변경 자동 재시작
-    developmentOnly 'org.springframework.boot:spring-boot-docker-compose'                 // Docker Compose 연동
-//    developmentOnly 'org.springframework.ai:spring-ai-spring-boot-docker-compose'         // Spring AI용 Compose 헬퍼
-
-    // ─────────────────────────────────────────────────────────────
-    // 테스트
-    // ─────────────────────────────────────────────────────────────
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'                // JUnit/AssertJ/MockMvc 등
-//    testImplementation 'org.springframework.amqp:spring-rabbit-test'                      // AMQP 테스트 유틸
-    testImplementation 'org.springframework.security:spring-security-test'                // Security 테스트 지원
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'                          // JUnit Platform 런처
-}
-
-dependencyManagement {
-    imports {
-        mavenBom "org.springframework.ai:spring-ai-bom:${springAiVersion}"                 // Spring AI BOM(하위 모듈 버전 일괄 관리)
-    }
+    // ── Test
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
 tasks.named('test') {
-    useJUnitPlatform()                                                                     // JUnit Platform 사용
+    useJUnitPlatform()
 }

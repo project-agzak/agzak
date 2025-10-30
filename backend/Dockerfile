@@ -21,7 +21,11 @@ RUN apk add --no-cache curl
 
 COPY --from=build /app/app.jar /app/app.jar
 
+RUN apk add --no-cache curl
+
 ENV JAVA_OPTS="-XX:MaxRAMPercentage=75.0"
 EXPOSE 8082
+
+HEALTHCHECK --interval=30s --timeout=3s --retries=5 CMD curl -fsS http://localhost:8082/actuator/health || exit 1
 
 ENTRYPOINT ["sh","-c","java $JAVA_OPTS -jar /app/app.jar"]
