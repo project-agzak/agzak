@@ -44,11 +44,17 @@ public class Member {
     @Column(name = "birth_date", nullable = false)
     private LocalDate birthDate;
 
-    @Column(name = "birth_time", nullable = false) // MySQL TIME ←→ Java LocalTime
+    @Column(name = "birth_time", nullable = false)
     private LocalTime birthTime;
 
     @Column(name = "birth_city", length = 100)
     private String birthCity;
+
+    @Column(name = "latitude")
+    private double latitude;
+
+    @Column(name = "longitude")
+    private double longitude;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)
@@ -63,5 +69,6 @@ public class Member {
     private MemberStatus status;
 
     public enum Gender { MALE, FEMALE }
+
     public enum MemberStatus { ACTIVE, WITHDRAWN }
 }

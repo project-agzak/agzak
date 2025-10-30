@@ -1,10 +1,11 @@
 package com.ssafy.agzak.domain.fortune.dto.request;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.LocalTime;
 
 public record BirthDataInput(
-        LocalDateTime birthDateTime,
-        String birthTimeZone,
+        LocalDate birthDate,
+        LocalTime birthTime,
         double latitude,
         double longitude
 ) {
