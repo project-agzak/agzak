@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,7 +25,7 @@ public class AuthController implements AuthApiDocs {
     @PostMapping("/register")
     public ResponseEntity<OkResponse> register(@RequestBody @Valid RegisterRequest req) {
         authService.register(req);
-        return ResponseEntity.ok(OkResponse.ok());
+        return ResponseEntity.ok(OkResponse.registerSuccess());
     }
 
     @Override
@@ -39,15 +40,18 @@ public class AuthController implements AuthApiDocs {
             @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
             Authentication authentication) {
 
-        if (authentication == null || authentication.getCredentials() == null) {
-            return ResponseEntity.status(401).body(new OkResponse("UNAUTHORIZED"));
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new BadCredentialsException("인증 토큰이 없습니다.");
         }
-        String access = null;
-        if (authHeader != null && authHeader.startsWith("Bearer ")) access = authHeader.substring(7);
 
+        if (authentication == null || authentication.getCredentials() == null) {
+            throw new BadCredentialsException("인증이 필요합니다.");
+        }
+
+        String access = authHeader.substring(7);
         Long memberId = Long.valueOf(authentication.getName());
         authService.logout(memberId, access);
 
-        return ResponseEntity.ok(OkResponse.ok());
+        return ResponseEntity.ok(OkResponse.logoutSuccess());
     }
 }

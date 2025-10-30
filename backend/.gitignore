@@ -196,3 +196,5 @@ gradle-app.setting
 ### Gradle Patch ###
 # Java heap dump
 *.hprof
+
+!/libs/swisseph-2.01.00-02.jar

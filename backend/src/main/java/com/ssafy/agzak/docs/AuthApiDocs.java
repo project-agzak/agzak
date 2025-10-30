@@ -30,18 +30,18 @@ public interface AuthApiDocs {
             requestBody = @RequestBody(
                     required = true,
                     content = @Content(schema = @Schema(implementation = RegisterRequest.class),
-                            examples = @ExampleObject(name = "예시",
+                            examples = @ExampleObject(name="예시",
                                     value = """
-                                            {
-                                              "email": "user@example.com",
-                                              "password": "P@ssword123!",
-                                              "nickname": "아그작유저",
-                                              "birthDate": "1999-09-09",
-                                              "gender": "MALE",
-                                              "birthTime": "07:30",
-                                              "birthCity": "서울특별시"
-                                            }
-                                            """)
+                                    {
+                                      "email": "user@example.com",
+                                      "password": "P@ssword123!",
+                                      "nickname": "아그작유저",
+                                      "birthDate": "1999-09-09",
+                                      "gender": "MALE",
+                                      "birthTime": "07:30",
+                                      "birthCity": "서울특별시"
+                                    }
+                                    """)
                     )
             ),
             responses = {
@@ -74,15 +74,13 @@ public interface AuthApiDocs {
             summary = "로그아웃",
             description = "리프레시 토큰 삭제 및 (선택) 액세스 토큰 블랙리스트 처리",
             security = @SecurityRequirement(name = "BearerAuth"),
-            parameters = {
-                    @Parameter(
-                            name = HttpHeaders.AUTHORIZATION,
-                            description = "Bearer 액세스 토큰",
-                            in = ParameterIn.HEADER,
-                            required = true,
-                            example = "Bearer eyJhbGciOi..."
-                    )
-            },
+            parameters = @Parameter(
+                    name = HttpHeaders.AUTHORIZATION,
+                    description = "Bearer 액세스 토큰",
+                    in = ParameterIn.HEADER,
+                    required = true,
+                    example = "Bearer eyJhbGciOi..."
+            ),
             responses = {
                     @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = OkResponse.class))),
                     @ApiResponse(responseCode = "401", description = "토큰 누락/무효", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
