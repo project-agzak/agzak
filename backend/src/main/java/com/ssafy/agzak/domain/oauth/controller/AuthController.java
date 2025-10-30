@@ -1,7 +1,7 @@
-package com.ssafy.agzak.controller;
+package com.ssafy.agzak.domain.oauth.controller;
 
-import com.ssafy.agzak.dto.request.OnboardingRequest;
-import com.ssafy.agzak.dto.response.LoginResponse;
+import com.ssafy.agzak.domain.oauth.dto.request.OnboardingRequest;
+import com.ssafy.agzak.domain.oauth.dto.response.LoginResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

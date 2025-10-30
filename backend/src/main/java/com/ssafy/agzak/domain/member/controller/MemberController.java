@@ -1,8 +1,11 @@
-package com.ssafy.agzak.controller;
+package com.ssafy.agzak.domain.member.controller;
 
-import com.ssafy.agzak.dto.request.MemberEditRequest;
-import com.ssafy.agzak.dto.response.*;
-import org.apache.coyote.Response;
+import com.ssafy.agzak.domain.fortune.dto.response.DetailFortuneDataResponse;
+import com.ssafy.agzak.domain.fortune.dto.response.FortuneAspectResponse;
+import com.ssafy.agzak.domain.fortune.dto.response.FortuneTypeResponse;
+import com.ssafy.agzak.domain.member.dto.response.MemberGraphResponse;
+import com.ssafy.agzak.domain.member.dto.response.MemberInfoResponse;
+import com.ssafy.agzak.domain.member.dto.request.MemberEditRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

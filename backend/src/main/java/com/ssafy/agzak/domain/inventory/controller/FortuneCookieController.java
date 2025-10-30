@@ -1,6 +1,6 @@
-package com.ssafy.agzak.controller;
+package com.ssafy.agzak.domain.inventory.controller;
 
-import com.ssafy.agzak.dto.response.CookieResponse;
+import com.ssafy.agzak.domain.inventory.dto.response.CookieResponse;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;

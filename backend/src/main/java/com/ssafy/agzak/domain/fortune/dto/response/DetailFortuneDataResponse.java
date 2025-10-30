@@ -1,4 +1,4 @@
-package com.ssafy.agzak.dto.response;
+package com.ssafy.agzak.domain.fortune.dto.response;
 
 import java.util.List;
 

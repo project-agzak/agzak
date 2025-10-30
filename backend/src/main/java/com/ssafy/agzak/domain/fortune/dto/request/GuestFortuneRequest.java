@@ -1,4 +1,4 @@
-package com.ssafy.agzak.dto.request;
+package com.ssafy.agzak.domain.fortune.dto.request;
 
 import java.time.LocalDateTime;
 

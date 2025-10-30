@@ -1,9 +1,9 @@
-package com.ssafy.agzak.controller;
+package com.ssafy.agzak.domain.fortune.controller;
 
-import com.ssafy.agzak.dto.request.GuestFortuneRequest;
-import com.ssafy.agzak.dto.response.DetailFortuneDataResponse;
-import com.ssafy.agzak.dto.response.FortuneAspectResponse;
-import com.ssafy.agzak.dto.response.FortuneTypeResponse;
+import com.ssafy.agzak.domain.fortune.dto.request.GuestFortuneRequest;
+import com.ssafy.agzak.domain.fortune.dto.response.DetailFortuneDataResponse;
+import com.ssafy.agzak.domain.fortune.dto.response.FortuneAspectResponse;
+import com.ssafy.agzak.domain.fortune.dto.response.FortuneTypeResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
