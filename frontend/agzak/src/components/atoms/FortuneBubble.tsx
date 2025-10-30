@@ -75,24 +75,24 @@ export function FortuneBubble({
       />
 
       {/* 내용: 이미지 위에 절대배치 */}
-      <div className={cn("absolute top-0 left-0 w-full pt-5",
+      <div className={cn("absolute top-0 left-0 w-full pt-4",
           flipX ? "pr-5 text-right" : "pl-5"
       )}>
-        <h3 className="font-galmuri-xsmall font-bold leading-none text-[#1F1F1F]">
+        <h3 className="font-galmuri-small font-bold leading-none text-[#1F1F1F]">
           {title}
         </h3>
       </div>
       <div
         className={cn(
-          "absolute inset-0 flex flex-col justify-center",
-          flipX ? "items-end pr-5 text-right" : "pl-5"
+          "absolute inset-0 flex flex-col justify-center h-full",
+          flipX ? "items-end pr-6 text-right" : "pl-6"
         )}
       >        
-        <ul className="space-y-1">
+        <ul className="space-y-1 ">
           {effects.map((eff) => (
             <li
               key={eff.label}
-              className="text-[10px] leading-none text-[#1F1F1F] py-0.5"
+              className="font-galmuri-xsmall font-stretch-condensed text-cons leading-none text-[#1F1F1F]"
             >
               {eff.label}{" "}
               <span className="font-bold">

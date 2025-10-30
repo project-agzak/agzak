@@ -7,7 +7,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        galmuri: ['"Galmuri11"', "system-ui", "sans-serif"],
+        galmuri: ['"Galmuri"', "system-ui", "sans-serif"],
         bitbit: ['"DNF BitBit v2"', "system-ui", "sans-serif"],
       }
     },
