@@ -40,6 +40,12 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
 
+    //점성술 라이브러리
+    implementation files('libs/swisseph-2.01.00-02.jar')
+    // ─────────────────────────────────────────────────────────────
+    // AI 연동
+    // ─────────────────────────────────────────────────────────────
+    // implementation 'org.springframework.ai:spring-ai-starter-model-openai'                // Spring AI(OpenAI 모델 연동)
     // ── Observability / Logging
     implementation 'io.micrometer:micrometer-registry-prometheus'
     implementation 'net.logstash.logback:logstash-logback-encoder:7.4'

@@ -1,0 +1,17 @@
+# === Profile: prod ===
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:mysql}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:agzak}?useSSL=true&serverTimezone=Asia/Seoul
+    username: ${MYSQL_USER:agzak}
+    password: ${MYSQL_PASSWORD:agzak102}
+  data:
+    redis:
+      host: ${REDIS_HOST:redis}
+      port: ${REDIS_PORT:6379}
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
