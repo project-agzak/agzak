@@ -26,11 +26,14 @@ public class FortuneController implements FortuneApiDocs {
     private final MemberService memberService;
 
     @PostMapping
-    public ResponseEntity<FinalFortuneResponse> postMemberTodayFortune(long memberId) {
+    public ResponseEntity<FinalFortuneResponse> postMemberTodayFortune() {
         //TODO security 적용시 파라미터 변경
+        long memberId = 1;
         MemberInfoResponse response = memberService.getMemberInfo(memberId);
         BirthDataInput input = BirthDataInput.fromMemberInfo(response);
-        return ResponseEntity.ok().body(fortuneService.getFortuneScores(input));
+        FinalFortuneResponse result = fortuneService.getFortuneScores(input);
+        fortuneService.saveFortune(memberId, result);
+        return ResponseEntity.ok().body(result);
     }
 
     @PostMapping("/guest")

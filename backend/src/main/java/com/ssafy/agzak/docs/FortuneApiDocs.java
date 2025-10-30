@@ -28,7 +28,7 @@ public interface FortuneApiDocs {
             @ApiResponse(responseCode = "200", description = "운세 생성 완료",
                     content = @Content(schema = @Schema(implementation = FortuneScoreResponse.class)))
     })
-    public ResponseEntity<FinalFortuneResponse> postMemberTodayFortune(long memberId);
+    public ResponseEntity<FinalFortuneResponse> postMemberTodayFortune();
 
     @Operation(
             summary = "게스트 운세 확인",

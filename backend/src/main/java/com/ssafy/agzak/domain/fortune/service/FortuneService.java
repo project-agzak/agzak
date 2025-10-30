@@ -4,12 +4,19 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssafy.agzak.domain.fortune.dto.request.BirthDataInput;
 import com.ssafy.agzak.domain.fortune.dto.response.*;
+import com.ssafy.agzak.domain.fortune.entity.Fortune;
+import com.ssafy.agzak.domain.fortune.entity.FortuneAspect;
 import com.ssafy.agzak.domain.fortune.entity.FortuneType;
+import com.ssafy.agzak.domain.fortune.repository.FortuneAspectRepository;
+import com.ssafy.agzak.domain.fortune.repository.FortuneRepository;
 import com.ssafy.agzak.domain.fortune.repository.FortuneTypeRepository;
+import com.ssafy.agzak.domain.member.entity.Member;
+import com.ssafy.agzak.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 
 import java.io.IOException;
@@ -24,6 +31,9 @@ public class FortuneService {
     private RestClient restClient;
     private final AstrologyCalculationService calculationService;
     private final FortuneTypeRepository fortuneTypeRepository;
+    private final MemberRepository memberRepository;
+    private final FortuneRepository fortuneRepository;
+    private final FortuneAspectRepository fortuneAspectRepository;
 
     @Value("${gms.base-url}")
     private String gmsBaseUrl;
@@ -160,6 +170,37 @@ public class FortuneService {
             log.error("내부 JSON 문자열 파싱 실패: {}", e.getMessage());
             return new FinalFortuneResponse(null,null);
         }
+    }
+
+    @Transactional
+    public void saveFortune(long memberId, FinalFortuneResponse fortuneResponse) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 회원 아이디입니다."));
+        FortuneType fortuneType = fortuneTypeRepository.findFortuneTypeByFortuneTypeId(fortuneResponse.type().id())
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 운세 타입입니다."));
+
+        Fortune fortune = Fortune.builder()
+                .member(member)
+                .fortuneType(fortuneType)
+                .description(fortuneResponse.scores().totalSummary())
+                .score(fortuneResponse.scores().totalScore())
+                .build();
+
+        fortuneRepository.save(fortune);
+
+        saveAspect(fortune, FortuneAspect.AspectName.LOVE, fortuneResponse.scores().romanceScore());
+        saveAspect(fortune, FortuneAspect.AspectName.MONEY, fortuneResponse.scores().wealthScore());
+        saveAspect(fortune, FortuneAspect.AspectName.HEALTH, fortuneResponse.scores().healthScore());
+        saveAspect(fortune, FortuneAspect.AspectName.ACHIEVEMENT, fortuneResponse.scores().achievementScore());
+    }
+
+    private void saveAspect(Fortune fortune, FortuneAspect.AspectName name, int score) {
+        FortuneAspect aspect = FortuneAspect.builder()
+                .fortune(fortune)
+                .name(name)
+                .score(score)
+                .build();
+        fortuneAspectRepository.save(aspect);
     }
 
     private String formatNatalPlanets(List<NatalPlanetInfo> planets) {
