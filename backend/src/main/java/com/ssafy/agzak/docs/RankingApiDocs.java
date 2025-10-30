@@ -1,4 +1,3 @@
-// src/main/java/com/ssafy/agzak/docs/RankingApiDocs.java
 package com.ssafy.agzak.docs;
 
 import com.ssafy.agzak.domain.ranking.dto.MyRankDto;
