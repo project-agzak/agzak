@@ -1,95 +1,137 @@
 pipeline {
-    agent any
+  agent any
 
-    options {
-        timestamp();
-        ansiColor('xterm');
+  options {
+    timestamps()
+    ansiColor('xterm')
+  }
+
+  environment {
+    SUBDIR      = 'backend'
+    IMAGE_NAME  = 'sso9594/agzak-app'
+    REGISTRY    = 'docker.io'
+    DEPLOY_USER = 'ubuntu'
+    DEPLOY_HOST = 'k13b102.p.ssafy.io'
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+        script {
+          def full = (env.GIT_BRANCH ?: '').replaceFirst(/^origin\//, '')
+          if (!full) {
+            full = sh(returnStdout: true, script: 'git rev-parse --abbrev-ref HEAD').trim()
+          }
+          env.TARGET_BRANCH_FULL = full
+          env.TARGET_BRANCH = full.replaceAll('/', '-')
+          echo "Target branch: ${env.TARGET_BRANCH_FULL} -> ${env.TARGET_BRANCH}"
+        }
+      }
     }
 
-    environment {
-        SUBDIR = 'backend'
-        IMAGE_NAME = 'sso9594/agzak-app'
-        REGISTRY = 'docker.io'
-        DEPLOY_USER = 'ubuntu'
-        DEPLOY_HOST = 'k13b102.p.ssafy.io'
+    stage('Docker Build & Push') {
+      steps {
+        dir("${env.SUBDIR}") {
+          withCredentials([usernamePassword(credentialsId: 'dockerhub-cred',
+              usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PWD')]) {
+            sh '''
+              set -eux
+
+              echo "$DOCKER_PWD" | docker login -u "$DOCKER_USER" --password-stdin ${REGISTRY}
+
+              export DOCKER_BUILDKIT=1
+              TAG="${TARGET_BRANCH}-${BUILD_NUMBER}"
+
+              if [ -n "${REGISTRY}" ] && [ "${REGISTRY}" != "docker.io" ]; then
+                REPO="${REGISTRY}/${IMAGE_NAME}"
+              else
+                REPO="${IMAGE_NAME}"
+              fi
+
+              docker build -t "${REPO}:${TAG}" .
+
+              docker push "${REPO}:${TAG}"
+
+              docker tag "${REPO}:${TAG}" "${REPO}:latest"
+              docker push "${REPO}:latest"
+            '''
+          }
+        }
+      }
     }
 
-    stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-                script {
-                    dev full = (env.GIT_BRANCH ?: '').replaceFirst(/^origin\//, '')
-                    if(!full) full = sh(returnStdout: true, script: 'git rev-parse --abbrev-ref HEAD').trim()
-                    env.TARGET_BRANCH_FULL = full
-                    env.TARGET_BRANCH = full.replaceAll('/', '-')
-                    echo "Target branch: ${env.TARGET_BRANCH_FULL} -> ${env.TARGET_BRANCH}"
-                }
+    stage('Deploy') {
+      steps {
+        sshagent (credentials: ['deploy-ssh']) {
+          withCredentials([usernamePassword(
+            credentialsId: 'dockerhub-cred',
+            usernameVariable: 'DOCKER_USER',
+            passwordVariable: 'DOCKER_PWD'
+          )]) {
+            script {
+              def repo = (env.REGISTRY?.trim() && env.REGISTRY != 'docker.io')
+                ? "${env.REGISTRY}/${env.IMAGE_NAME}"
+                : env.IMAGE_NAME
+              def tag = "${env.TARGET_BRANCH}-${env.BUILD_NUMBER}"
+              def image = "${repo}:${tag}"
+
+              sh """
+                set -eux
+                ssh -o StrictHostKeyChecking=no \\
+                  "$DEPLOY_USER@$DEPLOY_HOST" \\
+                  "IMAGE=${image} DOCKER_USER=${DOCKER_USER} DOCKER_PWD=${DOCKER_PWD} bash -s" <<'ENDSSH'
+                    set -eux
+                    cd /home/ubuntu/agzak-app/deploy/backend
+
+                    echo "IMAGE=\$IMAGE" > .env
+                    echo "PROJECT=deploy" >> .env
+
+                    echo "\$DOCKER_PWD" | docker login -u "\$DOCKER_USER" --password-stdin || true
+
+                    make -C .. up-be
+
+                    for i in \$(seq 1 12); do
+                      status=\$(docker inspect --format '{{.State.Health.Status}}' agzak-app-server 2>/dev/null || echo "unhealthy")
+                      echo "Current status: \$status"
+                      [ "\$status" = "healthy" ] && { echo "Container is healthy."; exit 0; }
+                      echo "Waiting for container to be healthy... (\$i/12)"
+                      sleep 5
+                    done
+
+                    echo "Container did not become healthy in time." >&2
+                    exit 1
+                ENDSSH
+              """
             }
+          }
         }
-
-        stage('Docker Build & Push') {
-            steps {
-                dir("${env.SUBDIR}") {
-                    withCredentials([usernamePassword(credentialsId: 'dockerhub-cred',
-                    usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PWD')]) {
-                        sh '''
-                            set -eux
-                            echo "$DOCKER_PWD" | docker login -u "$DOCKER_USER" --password-stdin ${env.REGISTRY}
-
-                            export DOCKER_BUILDKIT=1
-                            TAG=${TARGET_BRANCH}-${BUILD_NUMBER}
-
-                            docker build -t ${IMAGE_NAME}:${TAG}
-                            docker push ${IMAGE_NAME}:${TAG}
-
-                            docker tag ${IMAGE_NAME}:${TAG} ${IMAGE_NAME}:latest
-                            docker push ${IMAGE_NAME}:latest
-                        '''
-                    }
-                }
-            }
-        }
-
-        stage('Deploy') {
-            steps {
-                sshagent (credentials: ['deploy-ssh']) {
-                    withCredentials([usernamePassword(credentialsId: 'dockerhub-cred')]) {
-                        usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PWD']]) {
-                            script {
-                                def TAG = ${env.TARGET_BRANCH}-${env.BUILD_NUMBER}
-                                def IMG = (env.REGISTRY?.trim())
-                                    ? "${env.REGISTRY}/${env.IMAGE_NAME}:${TAG}"
-                                    : "${env.IMAGE_NAME}:${TAG}"
-                                withEnv(["FULL_IMAGE=${IMG}"]) {
-                                    sh '''
-                                        set -eux
-                                        ssh -o StrictHostKeyChecking=no "$DEPLOY_HOST@$DEPLOY_USER" \
-                                        "DOCKER_USER='$DOCKER_USER' DOCKER_PWD='$DOCKER_PWD' FULL_IMAGE='$FULL_IMAGE' bash -s" << 'ENDSSH'
-                                        set -eux
-                                        cd /home/ubuntu/agzak-app/deploy
-                                        [ -f Makefile ] || {echo "Makefile not found!"; exit 2;}
-
-                                        echo "$DOCKER_PWD" | docker login -u "$DOCKER_USER" --password-stdin || true
-
-                                        IMAGE="FULL_IMAGE" make up-be
-
-                                        for i in $(seq 1 12); do
-                                            status=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' agzak-app-server || echo "unhealthy")
-                                            [ "$status" = "healthy" ] && { echo "Container is healthy."; exit 0; }
-                                            echo "Waiting for container to be healthy... ($i/12)"
-                                            sleep 5
-                                        done
-
-                                        echo "Container did not become healthy in time." > &2; exit 1
-
-                                        EOS
-                                    '''
-                            }
-                        }
-                    }
-                }
-            }
-        }
+      }
     }
+  }
+
+  post {
+    success {
+      script {
+        def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
+        def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
+        sh """
+          curl -X POST -H 'Content-Type: application/json' \
+          -d '{"text":"빌드 성공: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name}) (<${env.BUILD_URL}|상세 보기>)"}' \
+          https://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo
+        """
+      }
+    }
+    failure {
+      script {
+        def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
+        def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
+        sh """
+          curl -X POST -H 'Content-Type: application/json' \
+          -d '{"text":"빌드 실패: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name}) (<${env.BUILD_URL}|상세 보기>)"}' \
+          https://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo
+        """
+      }
+    }
+  }
 }
