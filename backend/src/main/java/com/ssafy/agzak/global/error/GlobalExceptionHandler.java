@@ -1,5 +1,6 @@
 package com.ssafy.agzak.global.error;
 
+import com.ssafy.agzak.domain.fortune.exception.IllegalCityNameException;
 import com.ssafy.agzak.domain.game.exception.AttemptLimitReachedException;
 import com.ssafy.agzak.domain.game.exception.DailyQuotaExceededException;
 import com.ssafy.agzak.domain.game.exception.NoActiveSessionException;
@@ -31,6 +32,17 @@ public class GlobalExceptionHandler {
                 req.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+    @ExceptionHandler(IllegalCityNameException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalCity(IllegalCityNameException e, HttpServletRequest req) {
+        var body = ErrorResponse.of(
+                HttpStatus.BAD_REQUEST.value(),
+                "INVALID_CITY",
+                e.getMessage(),
+                req.getRequestURI()
+        );
+        return ResponseEntity.badRequest().body(body);
     }
 
     @ExceptionHandler(DailyQuotaExceededException.class)

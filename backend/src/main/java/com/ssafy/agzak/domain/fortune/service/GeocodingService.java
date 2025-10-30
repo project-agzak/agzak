@@ -24,7 +24,7 @@ public class GeocodingService {
         //도시를 위도 경도로 변환
         RestClient restClient = RestClient.create();
 
-        URI uri = UriComponentsBuilder.fromHttpUrl(KAKAO_MAP_API_URL)
+        URI uri = UriComponentsBuilder.fromUriString(KAKAO_MAP_API_URL)
                 .queryParam("query", city)
                 .build()
                 .toUri();

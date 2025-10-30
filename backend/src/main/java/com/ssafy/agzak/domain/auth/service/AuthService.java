@@ -3,6 +3,8 @@ package com.ssafy.agzak.domain.auth.service;
 import com.ssafy.agzak.domain.auth.dto.request.LoginRequest;
 import com.ssafy.agzak.domain.auth.dto.request.RegisterRequest;
 import com.ssafy.agzak.domain.auth.dto.response.TokenResponse;
+import com.ssafy.agzak.domain.fortune.dto.response.KakaoAddressResponse;
+import com.ssafy.agzak.domain.fortune.service.GeocodingService;
 import com.ssafy.agzak.domain.member.entity.Member;
 import com.ssafy.agzak.domain.member.repository.MemberRepository;
 import com.ssafy.agzak.global.security.JwtProvider;
@@ -27,6 +29,7 @@ public class AuthService {
     private final JwtProvider jwt;
     private final RefreshTokenStore refreshStore;
     private final TokenRevocationService revoke;
+    private final GeocodingService geocodingService;
 
     private TokenResponse issueTokens(Long memberId) {
         String access = jwt.createAccess(memberId);
@@ -42,6 +45,8 @@ public class AuthService {
         if (members.existsByNickname(req.nickname()))
             throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 사용중인 닉네임입니다.");
 
+        KakaoAddressResponse.Document geo = geocodingService.getCoordinates(req.birthCity());
+
         members.save(Member.builder()
                 .email(req.email())
                 .password(passwordEncoder.encode(req.password()))
@@ -50,6 +55,8 @@ public class AuthService {
                 .birthDate(req.birthDate())
                 .birthTime(req.birthTime() == null ? LocalTime.MIDNIGHT : req.birthTime())
                 .birthCity(req.birthCity())
+                .latitude(geo.latitude())
+                .longitude(geo.longitude())
                 .status(Member.MemberStatus.ACTIVE)
                 .build());
     }
