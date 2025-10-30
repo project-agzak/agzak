@@ -45,7 +45,7 @@ public class AstrologyCalculationService {
     public AiPromptData generateAiPromptData(BirthDataInput input) {
 
         ZoneId birthZone = ZoneId.of("Asia/Seoul");
-        ZonedDateTime natalZonedTime = input.birthDateTime().atZone(birthZone);
+        ZonedDateTime natalZonedTime = input.birthDate().atTime(input.birthTime()).atZone(birthZone);
         ZonedDateTime natalUtTime = natalZonedTime.withZoneSameInstant(ZoneId.of("UTC"));
         ZonedDateTime transitUtTime = ZonedDateTime.now(ZoneId.of("UTC"));
 
