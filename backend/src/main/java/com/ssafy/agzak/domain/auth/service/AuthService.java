@@ -8,7 +8,6 @@ import com.ssafy.agzak.domain.member.repository.MemberRepository;
 import com.ssafy.agzak.global.security.JwtProvider;
 import com.ssafy.agzak.global.security.RefreshTokenStore;
 import com.ssafy.agzak.global.security.TokenRevocationService;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;

@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
+import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
@@ -23,14 +24,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final TokenRevocationService revokeService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
+    protected void doFilterInternal(@NonNull HttpServletRequest req,
+                                    @NonNull HttpServletResponse res,
+                                    @NonNull FilterChain chain)
             throws ServletException, IOException {
 
         String uri = req.getRequestURI();
         boolean isAuthPath = uri.startsWith("/api/v1/auth/");
         boolean isLogout = uri.equals("/api/v1/auth/logout");
 
-        if (!isLogout && isAuthPath || "OPTIONS".equalsIgnoreCase(req.getMethod())) {
+        if ((!isLogout && isAuthPath) || "OPTIONS".equalsIgnoreCase(req.getMethod())) {
             chain.doFilter(req, res);
             return;
         }

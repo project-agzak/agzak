@@ -6,7 +6,6 @@ import com.ssafy.agzak.domain.auth.dto.request.RegisterRequest;
 import com.ssafy.agzak.domain.auth.dto.response.OkResponse;
 import com.ssafy.agzak.domain.auth.dto.response.TokenResponse;
 import com.ssafy.agzak.domain.auth.service.AuthService;
-import com.ssafy.agzak.global.security.JwtProvider;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
