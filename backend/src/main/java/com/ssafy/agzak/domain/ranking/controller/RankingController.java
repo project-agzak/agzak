@@ -1,11 +1,8 @@
 package com.ssafy.agzak.domain.ranking.controller;
 
+import com.ssafy.agzak.docs.RankingApiDocs;
 import com.ssafy.agzak.domain.ranking.dto.*;
 import com.ssafy.agzak.domain.ranking.service.RankingService;
-import io.swagger.v3.oas.annotations.*;
-import io.swagger.v3.oas.annotations.media.*;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -13,23 +10,20 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 
-@Tag(name = "랭킹", description = "운세 랭킹 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/rankings")
-public class RankingController {
+public class RankingController implements RankingApiDocs {
 
     private final RankingService rankingService;
 
-    @Operation(summary="오늘의 랭킹(REDIS)")
-    @ApiResponse(responseCode="200", content=@Content(schema=@Schema(implementation=RankingListDto.class)))
+    @Override
     @GetMapping("/today")
     public ResponseEntity<RankingListDto> today(@RequestParam(defaultValue="100") int limit) {
         return ResponseEntity.ok(rankingService.getTodayTopN(limit));
     }
 
-    @Operation(summary="스냅샷 랭킹(과거일자, MySQL)")
-    @ApiResponse(responseCode="200", content=@Content(schema=@Schema(implementation=RankingListDto.class)))
+    @Override
     @GetMapping("/{date}")
     public ResponseEntity<RankingListDto> snapshot(
             @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
@@ -37,16 +31,14 @@ public class RankingController {
         return ResponseEntity.ok(rankingService.getSnapshotTopN(date, limit));
     }
 
-    @Operation(summary="내 랭킹(오늘, REDIS)")
-    @ApiResponse(responseCode="200", content=@Content(schema=@Schema(implementation=MyRankDto.class)))
+    @Override
     @GetMapping("/me/today")
     public ResponseEntity<MyRankDto> myToday() {
         long memberId = 1L; // TODO: JWT로 교체
         return ResponseEntity.ok(rankingService.getMyToday(memberId));
     }
 
-    @Operation(summary="내 랭킹(과거일자, MySQL)")
-    @ApiResponse(responseCode="200", content=@Content(schema=@Schema(implementation=MyRankDto.class)))
+    @Override
     @GetMapping("/me/{date}")
     public ResponseEntity<MyRankDto> mySnapshot(
             @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {

@@ -69,9 +69,9 @@ public class AuthService {
 
     @Transactional
     public void logout(Long memberId, String accessToken) {
-        refreshStore.delete(memberId); // refresh 제거
+        refreshStore.delete(memberId);
         if (accessToken != null) {
-            revoke.revoke(accessToken, Duration.ofMinutes(jwt.getAccessExpMinutes())); // access 블랙리스트(선택)
+            revoke.revoke(accessToken, Duration.ofMinutes(jwt.getAccessExpMinutes()));
         }
     }
 

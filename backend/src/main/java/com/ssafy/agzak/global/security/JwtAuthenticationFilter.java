@@ -27,7 +27,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String uri = req.getRequestURI();
-        if (uri.startsWith("/api/v1/auth/") || "OPTIONS".equalsIgnoreCase(req.getMethod())) {
+        boolean isAuthPath = uri.startsWith("/api/v1/auth/");
+        boolean isLogout = uri.equals("/api/v1/auth/logout");
+
+        if (!isLogout && isAuthPath || "OPTIONS".equalsIgnoreCase(req.getMethod())) {
             chain.doFilter(req, res);
             return;
         }
