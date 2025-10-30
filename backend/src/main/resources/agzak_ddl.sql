@@ -44,7 +44,6 @@ CREATE TABLE `oauth_identity` (
 CREATE TABLE `fortune_type` (
                                 `fortune_type_id` BIGINT      NOT NULL AUTO_INCREMENT,
                                 `name`            VARCHAR(50) NOT NULL,
-                                `description`     VARCHAR(255) NULL,
                                 `good_with_id`    BIGINT       NULL,
                                 `bad_with_id`     BIGINT       NULL,
                                 PRIMARY KEY (`fortune_type_id`),
