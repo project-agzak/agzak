@@ -1,6 +1,7 @@
 package com.ssafy.agzak.docs;
 
 import com.ssafy.agzak.domain.fortune.dto.request.GuestFortuneRequest;
+import com.ssafy.agzak.domain.fortune.dto.response.FinalFortuneResponse;
 import com.ssafy.agzak.domain.fortune.dto.response.FortuneScoreResponse;
 import com.ssafy.agzak.domain.fortune.dto.response.FortuneTypeResponse;
 import com.ssafy.agzak.global.error.ErrorResponse;
@@ -20,6 +21,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface FortuneApiDocs {
 
     @Operation(
+            summary = "회원 운세 확인",
+            description = "가입된 회원의 오늘의 운세 조회"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "운세 생성 완료",
+                    content = @Content(schema = @Schema(implementation = FortuneScoreResponse.class)))
+    })
+    public ResponseEntity<FinalFortuneResponse> postMemberTodayFortune(long memberId);
+
+    @Operation(
             summary = "게스트 운세 확인",
             description = "가입하지 않은 회원은 정보 입력 후 운세 확인"
     )
@@ -30,7 +41,7 @@ public interface FortuneApiDocs {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
     })
     @PostMapping("/guest")
-    public ResponseEntity<FortuneScoreResponse> postGuestFortune(@RequestBody GuestFortuneRequest guestFortuneRequest);
+    public ResponseEntity<FinalFortuneResponse> postGuestFortune(@RequestBody GuestFortuneRequest guestFortuneRequest);
 
     @Operation(
             summary = "운세 타입 상세 조회",

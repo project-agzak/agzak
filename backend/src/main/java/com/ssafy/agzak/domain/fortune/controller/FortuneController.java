@@ -8,11 +8,11 @@ import com.ssafy.agzak.domain.fortune.service.GeocodingService;
 import com.ssafy.agzak.domain.fortune.dto.request.BirthDataInput;
 import com.ssafy.agzak.domain.fortune.dto.request.GuestFortuneRequest;
 import com.ssafy.agzak.domain.fortune.dto.response.*;
+import com.ssafy.agzak.domain.member.dto.response.MemberInfoResponse;
+import com.ssafy.agzak.domain.member.service.MemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -23,16 +23,18 @@ public class FortuneController implements FortuneApiDocs {
     private final GeocodingService geocodingService;
     private final FortuneService fortuneService;
     private final FortuneTypeService fortuneTypeService;
+    private final MemberService memberService;
 
     @PostMapping
-    public ResponseEntity<DetailFortuneDataResponse> postMemberTodayFortune(long memberId) {
-        return ResponseEntity.ok().body(new DetailFortuneDataResponse(1, "겸손하세요",1,1,
-                new FortuneTypeResponse(1,"개",2,3),
-                List.of(new FortuneAspectResponse("금전운",1,1))));
+    public ResponseEntity<FinalFortuneResponse> postMemberTodayFortune(long memberId) {
+        //TODO security 적용시 파라미터 변경
+        MemberInfoResponse response = memberService.getMemberInfo(memberId);
+        BirthDataInput input = BirthDataInput.fromMemberInfo(response);
+        return ResponseEntity.ok().body(fortuneService.getFortuneScores(input));
     }
 
     @PostMapping("/guest")
-    public ResponseEntity<FortuneScoreResponse> postGuestFortune(@RequestBody GuestFortuneRequest guestFortuneRequest) {
+    public ResponseEntity<FinalFortuneResponse> postGuestFortune(@RequestBody GuestFortuneRequest guestFortuneRequest) {
         KakaoAddressResponse.Document geo = geocodingService.getCoordinates(guestFortuneRequest.birthCity());
         BirthDataInput input = new BirthDataInput(guestFortuneRequest.birthDate(), guestFortuneRequest.birthTime(), geo.latitude(), geo.longitude());
         return ResponseEntity.ok().body(fortuneService.getFortuneScores(input));
