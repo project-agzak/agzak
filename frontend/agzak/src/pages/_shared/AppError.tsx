@@ -1,3 +1,5 @@
+// @/pages/_shared/AppError.tsx
+
 export default function AppError() {
   return (
     <main className="relative z-10 p-4 min-h-screen">
