@@ -5,7 +5,12 @@ export default {
     './src/**/*.{js,ts,jsx,tsx}',
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        galmuri: ['"Galmuri11"', "system-ui", "sans-serif"],
+        bitbit: ['"DNF BitBit v2"', "system-ui", "sans-serif"],
+      }
+    },
   },
   plugins: [],
 };
