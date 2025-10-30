@@ -1,4 +1,4 @@
-package com.ssafy.agzak.domain.fortune.Service;
+package com.ssafy.agzak.domain.fortune.service;
 
 
 import com.ssafy.agzak.domain.fortune.dto.request.BirthDataInput;
@@ -44,7 +44,7 @@ public class AstrologyCalculationService {
 
     public AiPromptData generateAiPromptData(BirthDataInput input) {
 
-        ZoneId birthZone = ZoneId.of(input.birthTimeZone());
+        ZoneId birthZone = ZoneId.of("Asia/Seoul");
         ZonedDateTime natalZonedTime = input.birthDateTime().atZone(birthZone);
         ZonedDateTime natalUtTime = natalZonedTime.withZoneSameInstant(ZoneId.of("UTC"));
         ZonedDateTime transitUtTime = ZonedDateTime.now(ZoneId.of("UTC"));

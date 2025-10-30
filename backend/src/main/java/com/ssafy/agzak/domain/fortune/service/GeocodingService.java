@@ -1,4 +1,4 @@
-package com.ssafy.agzak.domain.fortune.Service;
+package com.ssafy.agzak.domain.fortune.service;
 
 import com.ssafy.agzak.domain.fortune.dto.response.KakaoAddressResponse;
 import org.springframework.beans.factory.annotation.Value;
