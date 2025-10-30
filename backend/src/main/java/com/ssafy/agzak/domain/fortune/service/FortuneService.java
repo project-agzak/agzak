@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssafy.agzak.domain.fortune.dto.request.BirthDataInput;
 import com.ssafy.agzak.domain.fortune.dto.response.*;
+import com.ssafy.agzak.domain.fortune.entity.FortuneType;
+import com.ssafy.agzak.domain.fortune.repository.FortuneTypeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,7 +13,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +23,7 @@ import java.util.List;
 public class FortuneService {
     private RestClient restClient;
     private final AstrologyCalculationService calculationService;
+    private final FortuneTypeRepository fortuneTypeRepository;
 
     @Value("${gms.base-url}")
     private String gmsBaseUrl;
@@ -81,7 +86,7 @@ public class FortuneService {
         - **JSON만 출력**, 따옴표로 감싸지 말 것, 코드블록(````), 주석, 추가 텍스트 금지.
         """;;
 
-    public FortuneScoreResponse getFortuneScores(BirthDataInput input) {
+    public FinalFortuneResponse getFortuneScores(BirthDataInput input) {
         restClient = RestClient.builder()
                 .baseUrl(gmsBaseUrl)
                 .defaultHeaders(headers -> {
@@ -123,16 +128,12 @@ public class FortuneService {
                 objectMapper.valueToTree(userContent).toString()
         );
 
-        log.info("--- GMS Request (Raw JSON Body) ---");
-        log.info(jsonRequestBody);
-
         JsonNode fullResponseNode = restClient.post()
                 .uri("/chat/completions")
                 .body(jsonRequestBody)
                 .retrieve()
                 .body(JsonNode.class);
 
-        log.info("GPT 응답 : {}", fullResponseNode);
         String innerJsonString = null;
         if (fullResponseNode != null) {
             innerJsonString = fullResponseNode
@@ -146,17 +147,18 @@ public class FortuneService {
         if (innerJsonString == null) {
             log.error("AI response structure is invalid or content string is missing!");
             log.error("Received Full Response: {}", fullResponseNode != null ? fullResponseNode.toString() : "null");
-            return new FortuneScoreResponse(0, 0, 0, 0, 0, "오류: AI 응답 구조 이상.", null);
+            return new FinalFortuneResponse(null,null);
         }
 
-        log.info("--- Received Inner JSON String ---");
-        log.info(innerJsonString);
-
+        FortuneScoreResponse scores;
         try {
-            return objectMapper.readValue(innerJsonString, FortuneScoreResponse.class);
+            scores = objectMapper.readValue(innerJsonString, FortuneScoreResponse.class);
+            FortuneType fortuneType = determineFortuneType(scores);
+            return new FinalFortuneResponse(scores, FortuneTypeResponse.fromEntity(fortuneType));
+
         } catch (IOException e) {
             log.error("내부 JSON 문자열 파싱 실패: {}", e.getMessage());
-            return new FortuneScoreResponse(0, 0, 0, 0, 0, "오류: AI 응답 파싱 실패.", null);
+            return new FinalFortuneResponse(null,null);
         }
     }
 
@@ -193,5 +195,65 @@ public class FortuneService {
                     mood, aspect.transitPlanet(), aspect.natalPlanet(), aspect.aspectType(), aspect.orb()));
         }
         return sb.toString().trim();
+    }
+
+    private FortuneType determineFortuneType(FortuneScoreResponse scores) {
+        int wealth = scores.wealthScore();
+        int health = scores.healthScore();
+        int romance = scores.romanceScore();
+        int achievement = scores.achievementScore();
+
+        Map<String, Integer> scoreMap = Map.of(
+                "wealth", wealth,
+                "health", health,
+                "romance", romance,
+                "achievement", achievement
+        );
+
+        // 최고 점수 찾기
+        String maxKey = Collections.max(scoreMap.entrySet(), Map.Entry.comparingByValue()).getKey();
+        // 최저 점수 찾기
+        String minKey = Collections.min(scoreMap.entrySet(), Map.Entry.comparingByValue()).getKey();
+
+        String name = "";
+        if ("wealth".equals(maxKey) && "romance".equals(minKey)) {
+            name = "소";
+        }
+        if ("wealth".equals(maxKey) && "achievement".equals(minKey)) {
+            name = "쥐";
+        }
+        if ("wealth".equals(maxKey) && "health".equals(minKey)) {
+            name = "용";
+        }
+        if ("romance".equals(maxKey) && "wealth".equals(minKey)) {
+            name = "토끼";
+        }
+        if ("romance".equals(maxKey) && "achievement".equals(minKey)) {
+            name = "양";
+        }
+        if ("romance".equals(maxKey) && "health".equals(minKey)) {
+            name = "고양이";
+        }
+        if ("achievement".equals(maxKey) && "wealth".equals(minKey)) {
+            name = "호랑이";
+        }
+        if ("achievement".equals(maxKey) && "romance".equals(minKey)) {
+            name = "말";
+        }
+        if ("achievement".equals(maxKey) && "health".equals(minKey)) {
+            name = "닭";
+        }
+        if ("health".equals(maxKey) && "wealth".equals(minKey)) {
+            name = "개";
+        }
+        if ("health".equals(maxKey) && "romance".equals(minKey)) {
+            name = "뱀";
+        }
+        if ("health".equals(maxKey) && "achievement".equals(minKey)) {
+            name = "원숭이";
+        }
+
+        return fortuneTypeRepository.findFortuneTypeByName(name)
+                .orElseThrow(() -> new IllegalArgumentException("일치하는 운세 타입 이름이 없습니다."));
     }
 }
