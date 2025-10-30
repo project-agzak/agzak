@@ -1,0 +1,204 @@
+.input-wrap {
+  position: relative;
+  display: inline-block;
+  line-height: 0;
+}
+
+.input-bg {
+  display: block;
+  width: 260px; /* ← 원하는 가로길이 */
+  height: auto;
+  user-select: none;
+  pointer-events: none; /* 클릭은 input이 받도록 */
+}
+
+.input-field {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+
+  background: transparent;
+  border: none;
+  outline: none;
+
+  text-align: left;
+  padding-left: 20px;
+
+  font-size: 14px;
+  font-weight: 500;
+  color: #111;
+
+  box-sizing: border-box;
+}
+
+.btnL-wrap {
+  position: relative;
+  display: block;
+  width: var(--btn-width, 260px);
+  margin: 0 auto;           /* 가운데 정렬 (원하면 제거 가능) */
+  line-height: 0;           /* 이미지 하단 공백 제거 */
+}
+
+.btnL-img {
+  display: block;
+  width: 100%;              /* 부모 width에 맞게 비율 유지 */
+  height: auto;
+  transition: filter 0.1s ease;
+  user-select: none;
+  pointer-events: none;     /* 클릭은 버튼이 받도록 */
+}
+
+/* 눌림 효과 */
+.btnL-wrap.is-pressed .btnL-img {
+  filter: brightness(0.85);
+}
+
+.btnL-click {
+  position: absolute;
+  inset: 0;                 /* 전체 덮기 */
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  user-select: none;
+}
+
+.btnM-wrap {
+  position: relative;
+  display: block;
+  width: var(--btn-width, 130px);
+  margin: 0 auto;
+  line-height: 0;
+}
+
+.btnM-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  transition: filter 0.1s ease;
+  user-select: none;
+  pointer-events: none;
+}
+
+.btnM-wrap.is-pressed .btnM-img {
+  filter: brightness(0.85);
+}
+
+.btnM-click {
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  user-select: none;
+}
+
+
+.dropdown-container {
+  position: relative;
+  display: block;
+  width: var(--dropdown-width, 260px);
+  margin: 0 auto;
+  line-height: 0;
+}
+
+.dropdown-bg {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* 버튼 */
+.dropdown-button {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+
+  color: #111;
+  font-size: 14px;
+  font-weight: 600;
+  box-sizing: border-box;
+}
+
+.dropdown-label {
+  line-height: 1;
+}
+
+.dropdown-arrow {
+  width: 24px;
+  height: 24px;
+  user-select: none;
+  transition: transform 0.1s linear;
+}
+
+.dropdown-arrow.rotated {
+  transform: rotate(180deg);
+}
+
+/* 목록 */
+.dropdown-list {
+  position: absolute;
+  left: 0;
+  top: 100%;
+  width: 100%;
+
+  background: #fff;
+  border: 2px solid #000;
+  border-radius: 4px;
+  margin-top: 4px;
+  z-index: 10;
+  line-height: 1.4;
+}
+
+.dropdown-item {
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.dropdown-item:hover {
+  background: #f3f4f6;
+}
+
+.dropdown-empty {
+  padding: 8px 16px;
+  font-size: 14px;
+  color: #9ca3af;
+  text-align: center;
+  user-select: none;
+}
