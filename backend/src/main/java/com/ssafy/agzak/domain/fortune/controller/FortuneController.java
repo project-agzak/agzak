@@ -3,6 +3,7 @@ package com.ssafy.agzak.domain.fortune.controller;
 import com.ssafy.agzak.docs.FortuneApiDocs;
 import com.ssafy.agzak.domain.fortune.service.AstrologyCalculationService;
 import com.ssafy.agzak.domain.fortune.service.FortuneService;
+import com.ssafy.agzak.domain.fortune.service.FortuneTypeService;
 import com.ssafy.agzak.domain.fortune.service.GeocodingService;
 import com.ssafy.agzak.domain.fortune.dto.request.BirthDataInput;
 import com.ssafy.agzak.domain.fortune.dto.request.GuestFortuneRequest;
@@ -21,6 +22,7 @@ public class FortuneController implements FortuneApiDocs {
     private final AstrologyCalculationService astrologyCalculationService;
     private final GeocodingService geocodingService;
     private final FortuneService fortuneService;
+    private final FortuneTypeService fortuneTypeService;
 
     @PostMapping
     public ResponseEntity<DetailFortuneDataResponse> postMemberTodayFortune(long memberId) {
@@ -36,9 +38,10 @@ public class FortuneController implements FortuneApiDocs {
         return ResponseEntity.ok().body(fortuneService.getFortuneScores(input));
     }
 
+
     @GetMapping("/fortuneType/{fortuneTypeId}")
     public ResponseEntity<FortuneTypeResponse> getFortuneTypeDetail(@PathVariable Long fortuneTypeId) {
-        return ResponseEntity.ok().body(new FortuneTypeResponse(1, "고양이", "건강 다운", 2L, 3L));
+        return ResponseEntity.ok().body(fortuneTypeService.getFortuneType(fortuneTypeId));
     }
 
     @PostMapping("/test")
