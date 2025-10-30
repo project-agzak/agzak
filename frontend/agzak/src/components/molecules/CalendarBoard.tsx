@@ -1,4 +1,5 @@
 // src/components/molecules/CalendarBoard.tsx
+import blackboard from "@/assets/ui/blackboard.png";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { cn } from "@/lib/utils";
 import * as React from "react";
@@ -50,7 +51,7 @@ export default function BlackboardCalendar({
         <div className="relative h-full w-full">
           {/* 배경 보드 이미지 */}
           <img
-            src="/images/blackboard.png"
+            src={blackboard}
             alt="blackboard"
             className="absolute inset-0 h-full w-full object-contain pointer-events-none select-none"
             draggable={false}

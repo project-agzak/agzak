@@ -1,6 +1,17 @@
+import { FortuneBubble } from "@/components/atoms/FortuneBubble";
 import BlackboardCalendar from "@/components/molecules/CalendarBoard";
 import { ExpandableFortune } from "@/components/molecules/ExpandableFortune";
 import { FortuneGaugeList } from "@/components/molecules/FortuneGaugeList";
+import type { FortuneCookieDetail } from "@/types/cookies";
+
+const fortuneCookie: FortuneCookieDetail = {
+  title: "건강쿠키",
+  effects: [
+    { label: "건강운", value: 100 },
+    { label: "성취운", value: 30 },
+    { label: "애정운", value: 10 },
+  ],
+};
 
 export default function Page() {
   return (
@@ -8,6 +19,7 @@ export default function Page() {
       <h1 className="text-xl font-semibold">페이지 타이틀</h1>
       <BlackboardCalendar />
       <FortuneGaugeList />
+      <FortuneBubble {...fortuneCookie} width={90} />
       <div className="min-h-dvh bg-[#FEFBF2] px-4 py-6">
         <h1 className="text-xl font-extrabold mb-4 text-[#2A2A2A]">오늘의 운세</h1>
 
