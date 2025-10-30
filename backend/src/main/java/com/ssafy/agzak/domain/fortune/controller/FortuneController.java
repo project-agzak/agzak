@@ -10,6 +10,7 @@ import com.ssafy.agzak.domain.fortune.dto.request.GuestFortuneRequest;
 import com.ssafy.agzak.domain.fortune.dto.response.*;
 import com.ssafy.agzak.domain.member.dto.response.MemberInfoResponse;
 import com.ssafy.agzak.domain.member.service.MemberService;
+import com.ssafy.agzak.global.security.AuthMemberProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,11 +25,11 @@ public class FortuneController implements FortuneApiDocs {
     private final FortuneService fortuneService;
     private final FortuneTypeService fortuneTypeService;
     private final MemberService memberService;
+    private final AuthMemberProvider authMemberProvider;
 
     @PostMapping
     public ResponseEntity<FinalFortuneResponse> postMemberTodayFortune() {
-        //TODO security 적용시 파라미터 변경
-        long memberId = 1;
+        long memberId = authMemberProvider.currentMemberId();
         MemberInfoResponse response = memberService.getMemberInfo(memberId);
         BirthDataInput input = BirthDataInput.fromMemberInfo(response);
         FinalFortuneResponse result = fortuneService.getFortuneScores(input);
