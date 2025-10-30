@@ -56,7 +56,7 @@ export function DropDown({
           if (e.key === "Escape") setOpen(false);
         }}
       >
-        <span className="dropdown-label">{label}</span>
+        <span className="dropdown-label font-galmuri"  style={{ fontSize: "12px", fontWeight: 400 }}>{label}</span>
         <img
           src="/images/DropDown_Button.png"
           alt="드롭다운 버튼"
@@ -66,7 +66,7 @@ export function DropDown({
 
       {/* 목록 */}
       {open && (
-        <div className="dropdown-list" role="listbox">
+        <div className="dropdown-list font-galmuri" role="listbox">
           {items.length ? (
             items.map((item, i) => (
               <div
