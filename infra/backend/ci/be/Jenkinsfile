@@ -84,7 +84,10 @@ pipeline {
                     set -eux
                     cd /home/ubuntu/agzak-app/deploy/backend
 
-                    echo "IMAGE=\$IMAGE" > .env
+                    sed -i '/^IMAGE=/d' .env
+                    sed -i '/^PROJECT=/d' .env
+
+                    echo "IMAGE=\$IMAGE" >> .env
                     echo "PROJECT=deploy" >> .env
 
                     echo "\$DOCKER_PWD" | docker login -u "\$DOCKER_USER" --password-stdin || true
