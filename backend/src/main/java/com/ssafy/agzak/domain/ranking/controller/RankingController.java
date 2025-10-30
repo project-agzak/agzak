@@ -3,6 +3,7 @@ package com.ssafy.agzak.domain.ranking.controller;
 import com.ssafy.agzak.docs.RankingApiDocs;
 import com.ssafy.agzak.domain.ranking.dto.*;
 import com.ssafy.agzak.domain.ranking.service.RankingService;
+import com.ssafy.agzak.global.security.AuthMemberProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +17,7 @@ import java.time.LocalDate;
 public class RankingController implements RankingApiDocs {
 
     private final RankingService rankingService;
+    private final AuthMemberProvider authMemberProvider;
 
     @Override
     @GetMapping("/today")
@@ -34,7 +36,7 @@ public class RankingController implements RankingApiDocs {
     @Override
     @GetMapping("/me/today")
     public ResponseEntity<MyRankDto> myToday() {
-        long memberId = 1L; // TODO: JWT로 교체
+        long memberId = authMemberProvider.currentMemberId();
         return ResponseEntity.ok(rankingService.getMyToday(memberId));
     }
 
@@ -42,7 +44,7 @@ public class RankingController implements RankingApiDocs {
     @GetMapping("/me/{date}")
     public ResponseEntity<MyRankDto> mySnapshot(
             @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        long memberId = 1L; // TODO: JWT로 교체
+        long memberId = authMemberProvider.currentMemberId();
         return ResponseEntity.ok(rankingService.getMySnapshot(date, memberId));
     }
 }
