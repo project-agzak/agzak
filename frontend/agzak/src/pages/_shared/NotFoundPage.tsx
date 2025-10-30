@@ -16,7 +16,22 @@ const fortuneCookie: FortuneCookieDetail = {
 export default function Page() {
   return (
     <main className="relative z-10 p-4 min-h-screen">
-      <h1 className="text-xl font-semibold">페이지 타이틀</h1>
+      <div className="bg-white/80 rounded-2xl px-5 py-4 shadow">
+        <p className="text-center font-medium">행운을 열어볼까요? 🥠</p>
+        <p className="font-galmuri-xsmall">갈무리 폰트 xsmall</p>
+        <p className="font-galmuri-small">갈무리 폰트 small</p>
+        <p className="font-galmuri">갈무리 폰트 base</p>
+        <p className="font-galmuri-large">갈무리 폰트 large</p>
+        <p className="font-galmuri-xlarge">갈무리 폰트 xlarge</p>
+        
+        <br />
+
+        <p className="font-bitbit-xsmall">DNF 폰트xsmall</p>
+        <p className="font-bitbit-small">DNF 폰트 small</p>
+        <p className="font-bitbit">DNF 폰트 base</p>
+        <p className="font-bitbit-large">DNF 폰트 large</p>
+        <p className="font-bitbit-xlarge">DNF 폰트 xlarge</p>
+      </div>
       <BlackboardCalendar />
       <FortuneGaugeList />
       <FortuneBubble {...fortuneCookie} width={90} />
