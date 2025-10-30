@@ -11,14 +11,14 @@ USE `agzak`;
 CREATE TABLE `member` (
                           `member_id`     BIGINT       NOT NULL AUTO_INCREMENT,
                           `nickname`      VARCHAR(50)  NOT NULL,
-                          `email`         VARCHAR(255) NULL,
+                          `email`         VARCHAR(255) NOT NULL,
                           `password`      VARCHAR(255) NULL,
                           `gender`        VARCHAR(50)  NOT NULL,
                           `birth_date`    DATE         NOT NULL COMMENT 'YYYY-MM-DD',
                           `birth_time`    TIME         NOT NULL DEFAULT '00:00:00' COMMENT '태어난 시:분 (:초는 00)',
                           `birth_city`    VARCHAR(100) NULL,
-                          `latitude`      DECIMAL(10,7) NULL COMMENT '위도(y)',
-                          `longitude`     DECIMAL(10,7) NULL COMMENT '경도(x)',
+                          `latitude`      DOUBLE       NULL COMMENT '위도(y)',
+                          `longitude`     DOUBLE       NULL COMMENT '경도(x)',
                           `created_at`    DATETIME     NOT NULL,
                           `updated_at`    DATETIME     NOT NULL,
                           `status`        VARCHAR(50)  NULL COMMENT 'ENUM(`ACTIVE`, `WITHDRAWN`)',
@@ -106,7 +106,6 @@ CREATE TABLE `inventory` (
                              `inventory_id` BIGINT NOT NULL AUTO_INCREMENT,
                              `member_id`    BIGINT NOT NULL,
                              PRIMARY KEY (`inventory_id`),
-                             UNIQUE KEY `UQ_inventory_member` (`member_id`, `inventory_id`),
                              CONSTRAINT `FK_inventory_member`
                                  FOREIGN KEY (`member_id`) REFERENCES `member`(`member_id`)
                                      ON DELETE CASCADE ON UPDATE CASCADE
