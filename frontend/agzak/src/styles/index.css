@@ -27,7 +27,7 @@ body {
   background-position: center center;
   background-repeat: no-repeat;
   background-size: cover;
-  box-shadow: 0 0 0 1px rgba(0,0,0,.04), 0 10px 30px rgba(0,0,0,.08);
+  box-shadow: 0 0 0 2px rgba(0,0,0,.04), 0 10px 30px rgba(0,0,0,.08);
 }
 
 /* 데스크톱에서 외부 배경은 패턴, 내부는 반투명 레이어로 가독성 확보 */
