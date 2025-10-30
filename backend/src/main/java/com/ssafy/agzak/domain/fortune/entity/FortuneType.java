@@ -18,9 +18,6 @@ public class FortuneType {
     @Column(name = "name", nullable = false, length = 50)
     private String name;
 
-    @Column(name = "description")
-    private String description;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
             name = "good_with_id",
