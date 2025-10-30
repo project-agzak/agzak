@@ -1,18 +1,22 @@
 package com.ssafy.agzak.global.error;
 
+import com.ssafy.agzak.domain.fortune.exception.IllegalCityNameException;
 import com.ssafy.agzak.domain.game.exception.AttemptLimitReachedException;
 import com.ssafy.agzak.domain.game.exception.DailyQuotaExceededException;
 import com.ssafy.agzak.domain.game.exception.NoActiveSessionException;
+import io.jsonwebtoken.JwtException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.server.ResponseStatusException;
 
 @Slf4j
 @RestControllerAdvice
@@ -28,6 +32,17 @@ public class GlobalExceptionHandler {
                 req.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
+    }
+
+    @ExceptionHandler(IllegalCityNameException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalCity(IllegalCityNameException e, HttpServletRequest req) {
+        var body = ErrorResponse.of(
+                HttpStatus.BAD_REQUEST.value(),
+                "INVALID_CITY",
+                e.getMessage(),
+                req.getRequestURI()
+        );
+        return ResponseEntity.badRequest().body(body);
     }
 
     @ExceptionHandler(DailyQuotaExceededException.class)
@@ -62,6 +77,24 @@ public class GlobalExceptionHandler {
                 req.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ErrorResponse> handleAuth(AuthenticationException e, HttpServletRequest req) {
+        var body = ErrorResponse.of(401, "UNAUTHORIZED", e.getMessage(), req.getRequestURI());
+        return ResponseEntity.status(401).body(body);
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ErrorResponse> handleRse(ResponseStatusException e, HttpServletRequest req) {
+        var body = ErrorResponse.of(e.getStatusCode().value(), e.getStatusCode().toString(), e.getReason(), req.getRequestURI());
+        return ResponseEntity.status(e.getStatusCode()).body(body);
+    }
+
+    @ExceptionHandler(JwtException.class)
+    public ResponseEntity<ErrorResponse> handleJwt(JwtException e, HttpServletRequest req) {
+        var body = ErrorResponse.of(401, "INVALID_TOKEN", e.getMessage(), req.getRequestURI());
+        return ResponseEntity.status(401).body(body);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

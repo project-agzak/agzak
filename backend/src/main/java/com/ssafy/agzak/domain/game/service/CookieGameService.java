@@ -17,6 +17,7 @@ import com.ssafy.agzak.domain.inventory.repository.FortuneCookieRepository;
 import com.ssafy.agzak.domain.inventory.repository.InventoryRepository;
 import com.ssafy.agzak.domain.member.entity.Member;
 import com.ssafy.agzak.domain.member.repository.MemberRepository;
+import com.ssafy.agzak.global.security.AuthMemberProvider;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -39,7 +40,7 @@ public class CookieGameService {
     private final MemberRepository memberRepository;
     private final InventoryRepository inventoryRepository;
     private final FortuneCookieRepository fortuneCookieRepository;
-//  private final AuthMemberProvider authMemberProvider;
+    private final AuthMemberProvider authMemberProvider;
 
     private static final BigDecimal INIT_PROB = new BigDecimal("70.00");
     private static final int ATTEMPTS_LIMIT = 10;
@@ -47,8 +48,7 @@ public class CookieGameService {
     private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
     public StartGameResponse startForCurrentUser() {
-        // Long memberId = authMemberProvider.currentMemberId();
-        Long memberId = 1L; // TODO: JWT에서 꺼내기
+        Long memberId = authMemberProvider.currentMemberId();
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new EntityNotFoundException("member not found: " + memberId));
 
@@ -152,7 +152,7 @@ public class CookieGameService {
     }
 
     public AttemptResponse attemptForCurrentUser(AttemptRequest req) {
-        Long memberId = 1L; // TODO JWT
+        Long memberId = authMemberProvider.currentMemberId();
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new EntityNotFoundException("member not found: " + memberId));
 
