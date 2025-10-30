@@ -46,7 +46,7 @@ public class MemberController {
     @GetMapping("/fortunes/{date}")
     public ResponseEntity<DetailFortuneDataResponse> getDetailData(@PathVariable LocalDateTime date) {
         return ResponseEntity.ok().body(new DetailFortuneDataResponse(1, "겸손하세요",1,1,
-                new FortuneTypeResponse(1,"개","금전은 좋다",2,3),
+                new FortuneTypeResponse(1,"개",2,3),
                 List.of(new FortuneAspectResponse("금전운",1,1))));
     }
 
