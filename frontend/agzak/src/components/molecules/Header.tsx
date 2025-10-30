@@ -66,7 +66,7 @@ function SidebarContent() {
           className="h-10 object-contain" 
         />
       </div>
-      <nav className="px-2 py-2 space-y-1 text-[15px] font-bitbit">
+      <nav className="px-2 py-2 space-y-1 font-bitbit">
         <SidebarItem label="운세 보기" href="/fortune" />
         <SidebarItem label="운세 강화" href="/enforce" />
         <SidebarItem label="운세 달력" href="/calendar" />
