@@ -2,7 +2,11 @@ import { FortuneBubble } from "@/components/atoms/FortuneBubble";
 import BlackboardCalendar from "@/components/molecules/CalendarBoard";
 import { ExpandableFortune } from "@/components/molecules/ExpandableFortune";
 import { FortuneGaugeList } from "@/components/molecules/FortuneGaugeList";
+import { PureFlipImage } from "@/components/molecules/PureFlipImage";
 import type { FortuneCookieDetail } from "@/types/cookies";
+
+import Front from "@/assets/Back/Front.svg";
+import Back from "@/assets/Back/Back.svg";
 
 const fortuneCookie: FortuneCookieDetail = {
   title: "건강쿠키",
@@ -70,6 +74,15 @@ export default function Page() {
           />
         </div>
       </div>
+
+      <PureFlipImage
+        className="w-64 aspect-[2/3]"   // 카드 크기·비율
+        frontSrc={Front}
+        backSrc={Back}
+        altFront="카드 앞면"
+        altBack="카드 뒷면"
+      />
+
     </main>
   );
 }
