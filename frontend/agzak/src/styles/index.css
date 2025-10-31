@@ -60,6 +60,10 @@ media (min-width: 768px) {
   --font-bitbit: "DNF", system-ui, sans-serif;
 }
 
+@layer utilities {
+  .pixelated { image-rendering: pixelated; }
+}
+
 /* ===== Galmuri (5종) ===== */
 .font-galmuri-xsmall { font-family: var(--font-galmuri); font-size: var(--fz-xsmall); line-height: var(--lh-tight); }
 .font-galmuri-small  { font-family: var(--font-galmuri); font-size: var(--fz-small);  line-height: var(--lh-tight); }
