@@ -2,10 +2,23 @@ import { ExpandableFortune } from "@/components/molecules/ExpandableFortune";
 import { Button_L } from "@/components/atoms/Button_L";
 import Cat from "@/assets/Back/FriendCat.svg";
 import Rabbit from "@/assets/Back/FriendRabbit.svg";
+import { PureFlipImage } from "@/components/molecules/PureFlipImage";
+import Front from "@/assets/Back/Front.svg";
+import Back from "@/assets/Back/Back.svg";
 
 export default function FortuneResultPage() {
   return (
     <main className="relative z-10 p-4 min-h-screen">
+
+      <div className="flex justify-center pb-5">
+        <PureFlipImage
+          className="w-64 aspect-[2/3] cursor-pointer"   // 카드 크기·비율
+          frontSrc={Front}
+          backSrc={Back}
+          altFront="카드 앞면"
+          altBack="카드 뒷면"
+        />
+      </div>
 
       <div className="flex flex-col items-center">
         <p className="font-galmuri">오늘의 총운</p>
