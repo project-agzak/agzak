@@ -1,30 +1,39 @@
 // src/pages/Auth/LoginPage.tsx
-import * as React from "react";
-import Logo from "@/assets/Background/agzak-logo.svg";
-import { Input } from "@/components/atoms/Input";
-import { Button_L } from "@/components/atoms/Button_L";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from 'react-router-dom';
+
+import Logo from '@/assets/Background/agzak-logo.svg';
+import { Input } from '@/components/atoms/Input';
+import { Button_L } from '@/components/atoms/Button_L';
 
 export default function LoginPage() {
   const navigate = useNavigate();
 
+  const handleSignupClick = () => {
+    navigate('/signup');
+  };
+
+  const handleKakaoLogin = () => {
+    // 실제 연동 시 OAuth 시작 URL로 교체
+    window.location.href = '/auth/kakao';
+  };
+
   return (
-    <main className="relative z-10 p-4 min-h-screen bg-[#FEFBF2]">
+    <main className="relative z-10 min-h-screen bg-[#FEFBF2] p-4">
       {/* ✅ 로고 */}
-      <div className="flex w-full justify-center ml-2 mt-5">
-        <img src={Logo} alt="아그작" className="block mx-auto" />
+      <div className="ml-2 mt-5 flex w-full justify-center">
+        <img src={Logo} alt="아그작 로고" className="mx-auto block" />
       </div>
 
       {/* ✅ 폼 컨테이너 */}
-      <div className="mt-8 w-full flex flex-col items-center gap-4">
+      <div className="mt-8 flex w-full flex-col items-center gap-4">
         {/* 아이디 */}
-        <div className="flex flex-col w-full max-w-[300px] items-center gap-2">
-          <Input placeholder="아이디" />
+        <div className="flex w-full max-w-[300px] flex-col items-center gap-2">
+          <Input placeholder="아이디" aria-label="아이디" />
         </div>
 
         {/* 비밀번호 */}
-        <div className="flex flex-col w-full max-w-[300px] items-center gap-2">
-          <Input placeholder="비밀번호" type="password" />
+        <div className="flex w-full max-w-[300px] flex-col items-center gap-2">
+          <Input placeholder="비밀번호" type="password" aria-label="비밀번호" />
         </div>
 
         {/* ✅ 로그인 버튼 + 카카오 로그인 + 회원가입 */}
@@ -32,21 +41,29 @@ export default function LoginPage() {
           {/* 기본 로그인 */}
           <Button_L to="/" label="로그인" width={260} />
 
-          {/* 카카오 로그인 */}
-   <img
-  src="/images/kakao_login_medium_wide.svg"
-  alt="카카오 로그인"
-  className="w-[270px] h-auto cursor-pointer hover:opacity-90 transition"
-  onClick={() => (window.location.href = '/auth/kakao')} // 실제 연동 시 수정
-/>
+          {/* 카카오 로그인: 키보드 접근성 + 비율 유지 */}
+          <button
+            type="button"
+            onClick={handleKakaoLogin}
+            aria-label="카카오로 로그인"
+            className="focus:outline-none focus:ring-2 focus:ring-offset-2 hover:opacity-90"
+          >
+            <img
+              src="/images/kakao_login_medium_wide.svg"
+              alt="카카오 로그인"
+              className="block h-auto w-[270px] cursor-pointer transition"
+              draggable={false}
+            />
+          </button>
 
           {/* 회원가입 링크 */}
-      <button
-  onClick={() => navigate("/signup")}
-  className="mt-3 font-galmuri-small font-extrabold text-[#121212] hover:text-[#000] transition-colors cursor-pointer"
->
-  회원가입
-</button>
+          <button
+            type="button"
+            onClick={handleSignupClick}
+            className="mt-3 cursor-pointer font-galmuri-small font-extrabold text-[#121212] transition-colors hover:text-[#000]"
+          >
+            회원가입
+          </button>
         </div>
       </div>
     </main>
