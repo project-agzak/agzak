@@ -76,7 +76,7 @@ function SidebarContent() {
       </div>
 
            {/* 로그인/회원가입 버튼 - 좁은 폭 + 중앙 정렬 */}
-      <div className="px-3">
+      <div className="px-3 py-5">
         <div className="flex flex-col items-center gap-3">
           <Button_M to="/login"  label="로그인"   width={170} />
           <Button_M to="/signup" label="회원가입" width={170} />
