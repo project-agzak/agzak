@@ -57,7 +57,7 @@ export default function MyPage() {
         </div>
 
         {/* 하단 버튼 */}
-        <div className="mt-20 flex justify-center">
+        <div className="mt-30 flex justify-center">
           <Button_L to="/my/edit" label="정보 수정" width={260} />
         </div>
       </div>
