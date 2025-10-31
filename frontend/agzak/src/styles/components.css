@@ -26,7 +26,7 @@
   padding-left: 20px;
 
   
-  font-size: 14px;
+   font-size: small;
   font-weight: 500;
   color: #111;
 
@@ -65,19 +65,19 @@
 
   font-family: "Galmuri11", system-ui, sans-serif;
   color: #fff;
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 700;
 
   
     text-shadow:
-       -1px 0 #000,
-  1px 0 #000,
-  0 -1px #000,
-  0 1px #000,
-  -1px -1px #000,
-  1px -1px #000,
-  -1px 1px #000,
-  1px 1px #000;
+       -1px 0 #121212,
+  1px 0 #121212,
+  0 -1px #121212,
+  0 1px #121212,
+  -1px -1px #121212,
+  1px -1px #121212,
+  -1px 1px #121212,
+  1px 1px #121212;
 
   display: flex;
   align-items: center;
@@ -117,17 +117,17 @@
 
   font-family: "Galmuri11", system-ui, sans-serif;
   color: #fff;
-  font-size: 15px;
+  font-size: 20px;
   font-weight: 700;
     text-shadow:
-   -1px 0 #000,
-  1px 0 #000,
-  0 -1px #000,
-  0 1px #000,
-  -1px -1px #000,
-  1px -1px #000,
-  -1px 1px #000,
-  1px 1px #000;
+   -1px 0 #121212,
+  1px 0 #121212,
+  0 -1px #121212,
+  0 1px #121212,
+  -1px -1px #121212,
+  1px -1px #121212,
+  -1px 1px #121212,
+  1px 1px #121212;
 
   display: flex;
   align-items: center;
@@ -135,8 +135,14 @@
 
   user-select: none;
 }
+.right-align .btnM-wrap {
+  margin-left: auto !important;
+  margin-right: 0 !important;
 
-
+}
+.right-align .btnM-click {
+  font-size: 14px !important;
+}
 .dropdown-container {
   position: relative;
   display: block;
@@ -167,7 +173,7 @@
   outline: none;
   cursor: pointer;
 
-  color: #111;
+  color: #121212;
   font-size: 14px;
   box-sizing: border-box;
 }
@@ -195,7 +201,7 @@
   width: 100%;
 
   background: #fff;
-  border: 2px solid #000;
+  border: 2px solid #121212;
   border-radius: 4px;
   margin-top: 4px;
   z-index: 10;
@@ -224,3 +230,4 @@
   text-align: center;
   user-select: none;
 }
+
