@@ -7,6 +7,7 @@ import com.ssafy.agzak.domain.member.dto.request.MemberEditRequest;
 import com.ssafy.agzak.domain.member.dto.response.MemberInfoResponse;
 import com.ssafy.agzak.domain.member.entity.Member;
 import com.ssafy.agzak.domain.member.service.MemberService;
+import com.ssafy.agzak.global.security.AuthMemberProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +21,7 @@ import java.util.List;
 @RequestMapping("/api/v1/members")
 public class MemberController implements MemberApiDocs {
     private final MemberService memberService;
+    private final AuthMemberProvider authMemberProvider;
 
     @GetMapping
     public ResponseEntity<MemberInfoResponse> getMemberInfo() {
@@ -39,14 +41,10 @@ public class MemberController implements MemberApiDocs {
     }
 
     @GetMapping("/graphs")
-    public ResponseEntity<?> getGraphs(@RequestParam LocalDateTime startDate,@RequestParam LocalDateTime endDate) {
-        return ResponseEntity.ok().body(List.of(new MemberGraphResponse(LocalDateTime.now(), 1,1)));
-    }
+    public ResponseEntity<?> getGraphs(@RequestParam LocalDate startDate,@RequestParam LocalDate endDate) {
+        long memberId = authMemberProvider.currentMemberId();
 
-    @GetMapping("/fortunes")
-    public ResponseEntity<?> getCalendar(@RequestParam LocalDateTime month) {
-        //TODO 프론트와 상의 후 결정
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok().body(memberService.getMemberGraph(memberId, startDate, endDate));
     }
 
     @GetMapping("/fortunes/{date}")
