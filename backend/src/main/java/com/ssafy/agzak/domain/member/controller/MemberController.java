@@ -40,6 +40,7 @@ public class MemberController implements MemberApiDocs {
     @DeleteMapping
     public ResponseEntity<Void> deleteMember() {
         long memberId = authMemberProvider.currentMemberId();
+        memberService.deleteMember(memberId);
         return ResponseEntity.noContent().build();
     }
 

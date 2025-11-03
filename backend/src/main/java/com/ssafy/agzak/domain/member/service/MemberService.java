@@ -91,4 +91,12 @@ public class MemberService {
         member.updateNickname(nickname);
     }
 
+    @Transactional
+    public void deleteMember(long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 멤버 아이디입니다."));
+
+        member.deleteMember();
+    }
+
 }
