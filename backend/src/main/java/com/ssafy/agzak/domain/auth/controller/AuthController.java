@@ -3,6 +3,7 @@ package com.ssafy.agzak.domain.auth.controller;
 import com.ssafy.agzak.docs.AuthApiDocs;
 import com.ssafy.agzak.domain.auth.dto.request.LoginRequest;
 import com.ssafy.agzak.domain.auth.dto.request.RegisterRequest;
+import com.ssafy.agzak.domain.auth.dto.response.CheckEmailResponse;
 import com.ssafy.agzak.domain.auth.dto.response.OkResponse;
 import com.ssafy.agzak.domain.auth.dto.response.TokenResponse;
 import com.ssafy.agzak.domain.auth.service.AuthService;
@@ -53,5 +54,10 @@ public class AuthController implements AuthApiDocs {
         authService.logout(memberId, access);
 
         return ResponseEntity.ok(OkResponse.logoutSuccess());
+    }
+
+    @GetMapping("/check-email")
+    public ResponseEntity<CheckEmailResponse> checkEmailAvailability(@RequestParam String email) {
+        return ResponseEntity.ok().body(authService.checkEmail(email));
     }
 }

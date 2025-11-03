@@ -2,6 +2,7 @@ package com.ssafy.agzak.domain.auth.service;
 
 import com.ssafy.agzak.domain.auth.dto.request.LoginRequest;
 import com.ssafy.agzak.domain.auth.dto.request.RegisterRequest;
+import com.ssafy.agzak.domain.auth.dto.response.CheckEmailResponse;
 import com.ssafy.agzak.domain.auth.dto.response.TokenResponse;
 import com.ssafy.agzak.domain.fortune.dto.response.KakaoAddressResponse;
 import com.ssafy.agzak.domain.fortune.service.GeocodingService;
@@ -79,5 +80,13 @@ public class AuthService {
         if (accessToken != null) {
             revoke.revoke(accessToken, Duration.ofMinutes(jwt.getAccessExpMinutes()));
         }
+    }
+
+    public CheckEmailResponse checkEmail(String email) {
+        if(members.existsByEmail(email)) {
+            return new CheckEmailResponse(email, false);
+        }
+
+        return new CheckEmailResponse(email, true);
     }
 }
