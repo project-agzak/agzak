@@ -1,6 +1,6 @@
 import * as React from "react";
 import Rainbow from "@/assets/Gifs/Rainbow.gif";
-import { Button_M } from "@/components/atoms/Button_M";
+import { ActionButton_M } from "@/components/atoms/ActionButton_M";
 import { FortuneGaugeList } from "@/components/molecules/FortuneGaugeList";
 import { CookieInventory, type CookieData } from "@/components/organisms/CookieInventory";
 import InventoryImg from "@/assets/ui/CookieInventory.svg";
@@ -81,8 +81,8 @@ export default function CookiesPage() {
       </div>
 
       <div className="flex flex-row mt-4">
-        <Button_M label="쿠키 먹기"  onClick={eatSelected} disabled={!selectedCookie} />
-        <Button_M label="삭제" onClick={removeSelected} disabled={!selectedCookie} />
+        <ActionButton_M label="쿠키 먹기" onClick={eatSelected} disabled={!selectedCookie} />
+        <ActionButton_M label="삭제" onClick={removeSelected} disabled={!selectedCookie} />
       </div>
 
       <div className="relative mt-5">

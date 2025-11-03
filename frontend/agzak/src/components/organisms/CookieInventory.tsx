@@ -1,4 +1,3 @@
-import * as React from "react";
 import { CookieCloverItem } from "@/components/molecules/CookieCloverItem";
 import type { FortuneCookieDetail } from "@/types/cookies";
 
