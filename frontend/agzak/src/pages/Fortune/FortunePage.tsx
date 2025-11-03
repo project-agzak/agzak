@@ -156,7 +156,7 @@ export default function FortunePage() {
 
         {/* 하단 버튼 */}
         <div className="mt-12 flex justify-center pb-15">
-          <Button_L to="/my/edit" label="정보 등록" width={260} />
+          <Button_L to="/my/edit" label="운세 카드 확인" width={260} />
         </div>
       </div>
     </main>
