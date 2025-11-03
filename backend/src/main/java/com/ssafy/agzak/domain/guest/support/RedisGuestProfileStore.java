@@ -40,7 +40,7 @@ public class RedisGuestProfileStore implements GuestProfileStore {
         String json = redis.opsForValue().get(key(guestId));
         if (json == null) return null;
         try {
-            return om.readValue(json, new TypeReference<GuestProfile>(){});
+            return om.readValue(json, new TypeReference<>(){});
         } catch (Exception e) {
             throw new IllegalStateException("게스트 프로필 역직렬화 실패", e);
         }

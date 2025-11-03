@@ -33,7 +33,7 @@ public interface MemberApiDocs {
             @ApiResponse(responseCode = "404", description = "운세 조회 실패",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
     })
-    public ResponseEntity<DetailFortuneDataResponse> getDetailData(@PathVariable LocalDate date);
+    ResponseEntity<DetailFortuneDataResponse> getDetailData(@PathVariable LocalDate date);
 
 
     @Operation(
@@ -47,7 +47,7 @@ public interface MemberApiDocs {
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = MemberGraphResponse.class)))
             )
     })
-    public ResponseEntity<List<MemberGraphResponse>> getGraphs(@RequestParam LocalDate startDate, @RequestParam LocalDate endDate);
+    ResponseEntity<List<MemberGraphResponse>> getGraphs(@RequestParam LocalDate startDate, @RequestParam LocalDate endDate);
 
     @Operation(
             summary = "회원 정보 수정",
@@ -72,7 +72,7 @@ public interface MemberApiDocs {
             @ApiResponse(responseCode = "409", description = "닉네임 중복",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
     })
-    public ResponseEntity<Void> editMemberInfo(@RequestBody MemberEditRequest request);
+    ResponseEntity<Void> editMemberInfo(@RequestBody MemberEditRequest request);
 
 
     @Operation(
@@ -85,5 +85,5 @@ public interface MemberApiDocs {
                     description = "탈퇴 완료"
             )
     })
-    public ResponseEntity<Void> deleteMember();
+    ResponseEntity<Void> deleteMember();
 }

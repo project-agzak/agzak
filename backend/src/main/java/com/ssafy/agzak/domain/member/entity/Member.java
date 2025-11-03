@@ -72,19 +72,6 @@ public class Member {
 
     public enum MemberStatus { ACTIVE, WITHDRAWN }
 
-    public void updateProfileIfEmptyOrOverwrite(
-            String nickname, Member.Gender gender, LocalDate birthDate, LocalTime birthTime,
-            String birthCity, Double latitude, Double longitude
-    ) {
-        if (nickname != null) this.nickname = nickname;
-        if (gender != null) this.gender = gender;
-        if (birthDate != null) this.birthDate = birthDate;
-        if (birthTime != null) this.birthTime = birthTime;
-        if (birthCity != null) this.birthCity = birthCity;
-        if (latitude != null) this.latitude = latitude;
-        if (longitude != null) this.longitude = longitude;
-    }
-
     public void updateNickname(String nickname) {
         this.nickname = nickname;
     }
