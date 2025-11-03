@@ -9,7 +9,7 @@ export default function MyPage() {
   const [isEdit, setIsEdit] = useState(false);
 
   // ✅ 양력/음력
- const [calendarType, setCalendarType] = useState<"solar" | "lunar">("solar");
+ 
 
   // ✅ 태어난 시간
   const [hour, setHour] = useState<string | null>(null);
