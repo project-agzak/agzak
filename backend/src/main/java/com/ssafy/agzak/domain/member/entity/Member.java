@@ -71,4 +71,12 @@ public class Member {
     public enum Gender { MALE, FEMALE }
 
     public enum MemberStatus { ACTIVE, WITHDRAWN }
+
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void deleteMember() {
+        this.status = MemberStatus.WITHDRAWN;
+    }
 }

@@ -2,6 +2,7 @@ package com.ssafy.agzak.docs;
 
 import com.ssafy.agzak.domain.auth.dto.request.LoginRequest;
 import com.ssafy.agzak.domain.auth.dto.request.RegisterRequest;
+import com.ssafy.agzak.domain.auth.dto.response.CheckEmailResponse;
 import com.ssafy.agzak.domain.auth.dto.response.OkResponse;
 import com.ssafy.agzak.domain.auth.dto.response.TokenResponse;
 import com.ssafy.agzak.global.error.ErrorResponse;
@@ -20,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 
 import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Tag(name = "인증", description = "회원가입 / 로그인 / 로그아웃")
 public interface AuthApiDocs {
@@ -87,4 +89,19 @@ public interface AuthApiDocs {
             }
     )
     ResponseEntity<OkResponse> logout(String authHeader, Authentication authentication);
+
+    @Operation(
+            summary = "이메일 중복 확인",
+            description = "이메일 중복 확인",
+            parameters = @Parameter(
+                    name = "email",
+                    description = "중복확인하고자하는 이메일",
+                    required = true,
+                    example = "test@email.com"
+            ),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = CheckEmailResponse.class))),
+            }
+    )
+    public ResponseEntity<CheckEmailResponse> checkEmailAvailability(@RequestParam String email);
 }
