@@ -1,6 +1,6 @@
 // @/components/atoms/FortuneBubble.tsx
 
-import CookieBubble from "@/assets/ui/bubble-cookie.png";
+import CookieBubble from "@/assets/ui/bubble-cookie.svg";
 import { cn } from "@/lib/utils";
 import type { FortuneCookieDetail } from "@/types/cookies";
 import { useLayoutEffect, useRef, useState } from "react";
