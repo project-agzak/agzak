@@ -43,9 +43,9 @@ type Props = {
 
 export function MidImages34({ itemWidth = 300, className = "", whiteBg = true }: Props) {
   return (
-    <div className={`flex flex-col items-center gap-1 ${className}`}>
+    <div className={`flex flex-col items-center gap-3 ${className}`}>
       {images.map(({ n, avif, webp }) => (
-        <picture key={n} className={`flex justify-center ${whiteBg ? "bg-white rounded-xl" : ""}`}>
+        <picture key={n} className={`flex justify-center ${whiteBg ? "bg-white" : ""}`}>
           {avif && <source srcSet={avif} type="image/avif" />}
           {webp && <source srcSet={webp} type="image/webp" />}
           <img
@@ -57,7 +57,7 @@ export function MidImages34({ itemWidth = 300, className = "", whiteBg = true }:
             decoding="async"
             // fetchPriority는 타입 최신 아니면 경고 날 수 있음. 필요 없으면 지워도 OK
             // fetchPriority={idx < 2 ? "high" : "auto"}
-            className={`block w-[${itemWidth}px] h-auto ${whiteBg ? "rounded-xl" : ""}`}
+            className={`block w-[${itemWidth}px] h-auto`}
           />
         </picture>
       ))}
