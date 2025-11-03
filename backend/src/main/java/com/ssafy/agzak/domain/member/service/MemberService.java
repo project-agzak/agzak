@@ -14,8 +14,10 @@ import com.ssafy.agzak.domain.member.dto.response.MemberInfoResponse;
 import com.ssafy.agzak.domain.member.entity.Member;
 import com.ssafy.agzak.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -75,6 +77,18 @@ public class MemberService {
                 .toList();
     }
 
-    public record DateScore(int originalScore, int totalScore) { }
+    private record DateScore(int originalScore, int totalScore) { }
+
+    @Transactional
+    public void editMemberInfo(long memberId, String nickname) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 멤버 아이디입니다."));
+
+        if (memberRepository.existsByNickname(nickname)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 사용중인 닉네임입니다.");
+        }
+
+        member.updateNickname(nickname);
+    }
 
 }

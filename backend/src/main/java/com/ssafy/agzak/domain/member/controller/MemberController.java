@@ -29,9 +29,10 @@ public class MemberController implements MemberApiDocs {
                 LocalDate.now(),null, null,null));
     }
 
-    @PutMapping
+    @PatchMapping
     public ResponseEntity<Void> editMemberInfo(@RequestBody MemberEditRequest request) {
-        //TODO 닉네임 수정
+        long memberId = authMemberProvider.currentMemberId();
+        memberService.editMemberInfo(memberId, request.nickname());
         return ResponseEntity.ok().build();
     }
 
