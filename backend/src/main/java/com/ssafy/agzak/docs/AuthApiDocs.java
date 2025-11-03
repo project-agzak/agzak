@@ -17,6 +17,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Tag(name = "인증", description = "회원가입 / 로그인 / 로그아웃")
 public interface AuthApiDocs {
@@ -150,4 +151,19 @@ public interface AuthApiDocs {
             }
     )
     ResponseEntity<OkResponse> logout(String authHeader, Authentication authentication);
+
+    @Operation(
+            summary = "이메일 중복 확인",
+            description = "이메일 중복 확인",
+            parameters = @Parameter(
+                    name = "email",
+                    description = "중복확인하고자하는 이메일",
+                    required = true,
+                    example = "test@email.com"
+            ),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "OK", content = @Content(schema = @Schema(implementation = CheckEmailResponse.class))),
+            }
+    )
+    ResponseEntity<CheckEmailResponse> checkEmailAvailability(@RequestParam String email);
 }

@@ -16,7 +16,7 @@ import java.util.UUID;
 public class RedisGuestProfileStore implements GuestProfileStore {
 
     private final StringRedisTemplate redis;
-    private final ObjectMapper om = new ObjectMapper();
+    private final ObjectMapper om;
 
     @Value("${guest.ttl-hours:24}")
     private long ttlHours;

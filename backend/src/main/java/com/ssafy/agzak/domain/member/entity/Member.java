@@ -84,4 +84,12 @@ public class Member {
         if (latitude != null) this.latitude = latitude;
         if (longitude != null) this.longitude = longitude;
     }
+
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void deleteMember() {
+        this.status = MemberStatus.WITHDRAWN;
+    }
 }

@@ -7,6 +7,8 @@ import com.ssafy.agzak.domain.member.dto.request.MemberEditRequest;
 import com.ssafy.agzak.domain.member.dto.response.MemberInfoResponse;
 import com.ssafy.agzak.domain.member.entity.Member;
 import com.ssafy.agzak.domain.member.service.MemberService;
+import com.ssafy.agzak.global.security.AuthMemberProvider;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +22,7 @@ import java.util.List;
 @RequestMapping("/api/v1/members")
 public class MemberController implements MemberApiDocs {
     private final MemberService memberService;
+    private final AuthMemberProvider authMemberProvider;
 
     @GetMapping
     public ResponseEntity<MemberInfoResponse> getMemberInfo() {
@@ -27,26 +30,25 @@ public class MemberController implements MemberApiDocs {
                 LocalDate.now(),null, null,null));
     }
 
-    @PutMapping
-    public ResponseEntity<Void> editMemberInfo(@RequestBody MemberEditRequest request) {
-        //TODO 닉네임 수정
+    @PatchMapping
+    public ResponseEntity<Void> editMemberInfo(@Valid @RequestBody MemberEditRequest request) {
+        long memberId = authMemberProvider.currentMemberId();
+        memberService.editMemberInfo(memberId, request.nickname());
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping
     public ResponseEntity<Void> deleteMember() {
+        long memberId = authMemberProvider.currentMemberId();
+        memberService.deleteMember(memberId);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/graphs")
-    public ResponseEntity<?> getGraphs(@RequestParam LocalDateTime startDate,@RequestParam LocalDateTime endDate) {
-        return ResponseEntity.ok().body(List.of(new MemberGraphResponse(LocalDateTime.now(), 1,1)));
-    }
+    public ResponseEntity<List<MemberGraphResponse>> getGraphs(@RequestParam LocalDate startDate,@RequestParam LocalDate endDate) {
+        long memberId = authMemberProvider.currentMemberId();
 
-    @GetMapping("/fortunes")
-    public ResponseEntity<?> getCalendar(@RequestParam LocalDateTime month) {
-        //TODO 프론트와 상의 후 결정
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok().body(memberService.getMemberGraph(memberId, startDate, endDate));
     }
 
     @GetMapping("/fortunes/{date}")
