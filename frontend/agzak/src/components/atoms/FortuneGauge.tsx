@@ -1,6 +1,6 @@
 // @/components/atoms/FortuneGauge.tsx
 
-import { Progress } from "@/components/ui/Progress";
+import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import * as React from "react";
 

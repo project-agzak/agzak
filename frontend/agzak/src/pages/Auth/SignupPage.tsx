@@ -1,9 +1,8 @@
-import * as React from 'react';
 
 import Logo from '@/assets/Background/agzak-logo.svg';
-import { Input } from '@/components/atoms/Input';
-import { Button_M } from '@/components/atoms/Button_M';
 import { Button_L } from '@/components/atoms/Button_L';
+import { Button_M } from '@/components/atoms/Button_M';
+import { Input } from '@/components/atoms/Input';
 
 export default function SignupPage() {
   return (
