@@ -11,14 +11,14 @@ USE `agzak`;
 CREATE TABLE `member` (
                           `member_id`     BIGINT       NOT NULL AUTO_INCREMENT,
                           `nickname`      VARCHAR(50)  NOT NULL,
-                          `email`         VARCHAR(255) NULL,
+                          `email`         VARCHAR(255) NOT NULL,
                           `password`      VARCHAR(255) NULL,
                           `gender`        VARCHAR(50)  NOT NULL,
                           `birth_date`    DATE         NOT NULL COMMENT 'YYYY-MM-DD',
                           `birth_time`    TIME         NOT NULL DEFAULT '00:00:00' COMMENT '태어난 시:분 (:초는 00)',
                           `birth_city`    VARCHAR(100) NULL,
-                          `latitude`    DOUBLE NULL COMMENT '위도(y)',
-                          `longitude`   DOUBLE NULL COMMENT '경도(x)',
+                          `latitude`      DOUBLE       NULL COMMENT '위도(y)',
+                          `longitude`     DOUBLE       NULL COMMENT '경도(x)',
                           `created_at`    DATETIME     NOT NULL,
                           `updated_at`    DATETIME     NOT NULL,
                           `status`        VARCHAR(50)  NULL COMMENT 'ENUM(`ACTIVE`, `WITHDRAWN`)',
@@ -31,8 +31,6 @@ CREATE TABLE `oauth_identity` (
                                   `member_id` BIGINT       NOT NULL,
                                   `provider`  VARCHAR(50)  NOT NULL COMMENT 'ENUM(`KAKAO`, `NAVER`, `GOOGLE`)',
                                   `sub`       VARCHAR(255) NOT NULL,
-    /* 한 provider 내에서 sub 유일,
-       한 member는 같은 provider로 중복 연결 불가 */
                                   PRIMARY KEY (`provider`, `sub`),
                                   UNIQUE KEY `UQ_member_provider` (`member_id`, `provider`),
                                   CONSTRAINT `FK_oauth_member`
@@ -102,14 +100,12 @@ CREATE TABLE `fortune_aspect` (
 ) ENGINE=InnoDB;
 
 /* =========================================================
-   5) 인벤토리 & 포춘쿠키
+   5) 인벤토리 & 게임세션 & 포춘쿠키
    ========================================================= */
 CREATE TABLE `inventory` (
                              `inventory_id` BIGINT NOT NULL AUTO_INCREMENT,
                              `member_id`    BIGINT NOT NULL,
                              PRIMARY KEY (`inventory_id`),
-    /* 멤버별 인벤토리 식별 인덱스(조회 용도) */
-                             UNIQUE KEY `UQ_inventory_member` (`member_id`, `inventory_id`),
                              CONSTRAINT `FK_inventory_member`
                                  FOREIGN KEY (`member_id`) REFERENCES `member`(`member_id`)
                                      ON DELETE CASCADE ON UPDATE CASCADE
@@ -133,11 +129,10 @@ CREATE TABLE `game_session` (
                                         ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
-/* 쿠키는 인벤토리에 종속. 세션 산출 추적이 필요하면 역방향 링크(Nullable) 사용 */
 CREATE TABLE `fortune_cookie` (
                                   `fortune_cookie_id` BIGINT      NOT NULL AUTO_INCREMENT,
                                   `inventory_id`      BIGINT      NOT NULL,
-                                  `game_session_id`   BIGINT      NULL, /* 선택적 역방향 링크: 세션 산출물 추적용 */
+                                  `game_session_id`   BIGINT      NULL,
                                   `type`              VARCHAR(50) NULL COMMENT 'ENUM(`MONEY`, `LOVE`, `ACHIEVEMENT`, `HEALTH`, `MIXED`, `ROTTEN`)',
                                   `love`              INT         NOT NULL,
                                   `money`             INT         NOT NULL,

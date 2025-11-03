@@ -51,10 +51,10 @@ public class Member {
     private String birthCity;
 
     @Column(name = "latitude")
-    private double latitude;
+    private Double latitude;
 
     @Column(name = "longitude")
-    private double longitude;
+    private Double longitude;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)
