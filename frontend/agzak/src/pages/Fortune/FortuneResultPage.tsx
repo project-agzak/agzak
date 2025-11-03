@@ -1,5 +1,6 @@
 import { ExpandableFortune } from "@/components/molecules/ExpandableFortune";
 import { Button_L } from "@/components/atoms/Button_L";
+import ShareButton from "@/components/atoms/ShareButton";
 import Cat from "@/assets/Back/FriendCat.svg";
 import Rabbit from "@/assets/Back/FriendRabbit.svg";
 import { PureFlipImage } from "@/components/molecules/PureFlipImage";
@@ -7,6 +8,8 @@ import Front from "@/assets/Back/Front.svg";
 import Back from "@/assets/Back/Back.svg";
 
 export default function FortuneResultPage() {
+  const shareUrl = "https://www.agzak.co.kr/";
+
   return (
     <main className="relative z-10 p-4 min-h-screen">
 
@@ -82,7 +85,11 @@ export default function FortuneResultPage() {
             <Button_L to="/enforce" label="운세 강화" width={260} />
         </div>
         <div>
-          <Button_L label="공유하기" width={260} />
+          <ShareButton
+          label="공유하기"
+          width={260}
+          url={shareUrl}
+          />
         </div>
       </div>
       
