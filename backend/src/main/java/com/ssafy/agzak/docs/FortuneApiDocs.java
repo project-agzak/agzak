@@ -4,6 +4,7 @@ import com.ssafy.agzak.domain.fortune.dto.request.GuestFortuneRequest;
 import com.ssafy.agzak.domain.fortune.dto.response.FinalFortuneResponse;
 import com.ssafy.agzak.domain.fortune.dto.response.FortuneScoreResponse;
 import com.ssafy.agzak.domain.fortune.dto.response.FortuneTypeResponse;
+import com.ssafy.agzak.domain.fortune.dto.response.GuestFortuneWithIdResponse;
 import com.ssafy.agzak.global.error.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -38,7 +39,7 @@ public interface FortuneApiDocs {
             @ApiResponse(responseCode = "400", description = "도시 입력 오류",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
     })
-    ResponseEntity<FinalFortuneResponse> postGuestFortune(@RequestBody GuestFortuneRequest guestFortuneRequest);
+    ResponseEntity<GuestFortuneWithIdResponse> postGuestFortune(@RequestBody GuestFortuneRequest guestFortuneRequest);
 
     @Operation(
             summary = "운세 타입 상세 조회",

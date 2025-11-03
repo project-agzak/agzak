@@ -18,8 +18,4 @@ public class AuthMemberProvider {
             throw new BadCredentialsException("인증 토큰이 올바르지 않습니다.");
         }
     }
-
-    public boolean isAuthenticated() {
-        return SecurityContextHolder.getContext().getAuthentication() != null;
-    }
 }

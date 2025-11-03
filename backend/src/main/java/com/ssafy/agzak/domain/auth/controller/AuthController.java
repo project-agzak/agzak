@@ -1,11 +1,8 @@
 package com.ssafy.agzak.domain.auth.controller;
 
 import com.ssafy.agzak.docs.AuthApiDocs;
-import com.ssafy.agzak.domain.auth.dto.request.LoginRequest;
-import com.ssafy.agzak.domain.auth.dto.request.RegisterRequest;
-import com.ssafy.agzak.domain.auth.dto.response.CheckEmailResponse;
-import com.ssafy.agzak.domain.auth.dto.response.OkResponse;
-import com.ssafy.agzak.domain.auth.dto.response.TokenResponse;
+import com.ssafy.agzak.domain.auth.dto.response.*;
+import com.ssafy.agzak.domain.auth.dto.request.*;
 import com.ssafy.agzak.domain.auth.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,11 +19,31 @@ public class AuthController implements AuthApiDocs {
 
     private final AuthService authService;
 
+    @PostMapping("/kakao/login")
+    public ResponseEntity<SocialLoginResponse> kakaoLogin(
+            @RequestBody @Valid KakaoLoginRequest req
+    ) {
+        return ResponseEntity.ok(authService.kakaoLogin(req));
+    }
+
+    @PostMapping("/kakao/complete")
+    public ResponseEntity<TokenResponse> kakaoComplete(
+            @RequestBody @Valid KakaoCompleteSignupRequest req
+    ) {
+        return ResponseEntity.ok(authService.kakaoCompleteSignup(req));
+    }
+
     @Override
     @PostMapping("/register")
     public ResponseEntity<OkResponse> register(@RequestBody @Valid RegisterRequest req) {
         authService.register(req);
         return ResponseEntity.ok(OkResponse.registerSuccess());
+    }
+
+    @Override
+    @PostMapping("/register/with-guest")
+    public ResponseEntity<TokenResponse> registerWithGuest(@RequestBody @Valid RegisterWithGuestRequest req) {
+        return ResponseEntity.ok(authService.registerWithGuest(req));
     }
 
     @Override

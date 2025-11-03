@@ -10,7 +10,7 @@ import java.time.LocalTime;
 public record RegisterRequest(
         @Email @NotBlank String email,
         @NotBlank @Size(min = 8, max = 100) String password,
-        @NotBlank @Size(max = 50) String nickname,
+        @NotBlank @Size(max = 20) String nickname,
         @NotNull LocalDate birthDate,
         @NotNull Member.Gender gender,
         @NotNull @JsonFormat(pattern = "HH:mm") LocalTime birthTime,

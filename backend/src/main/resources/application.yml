@@ -27,11 +27,18 @@ spring:
         jdbc:
           time_zone: Asia/Seoul
 
-  # === KakaoMap ===
+  # === Kakao Map ===
   kakao:
     map:
       api:
         key: ${KAKAO_MAP_KEY}
+
+# === Kakao Login ===
+kakao:
+  rest:
+    key: ${KAKAO_REST_KEY}
+  js:
+    key: ${KAKAO_JS_KEY}
 
 # === Server ===
 server:

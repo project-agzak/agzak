@@ -22,7 +22,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -41,7 +40,7 @@ public class MemberService {
     }
 
     public DetailFortuneDataResponse getMemberFortune(Long memberId, LocalDate date) {
-        Member member = memberRepository.findById(memberId)
+                memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 멤버 아이디입니다."));
 
         Fortune fortune = fortuneRepository.findByMember_MemberIdAndDate(memberId, date)
