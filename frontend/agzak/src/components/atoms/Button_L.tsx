@@ -25,7 +25,7 @@ export function Button_L({ to, label = "확인", width = 260, onClick }: ButtonL
     >
       <img src="/images/Button_Large.svg" alt="Button Large" className="btnL-img" draggable={false} />
       <button
-        className="btnL-click"
+        className="btnL-click font-galmuri"
         onClick={handleClick}  // ✅ 통합 클릭 핸들러
         onMouseDown={() => setPressed(true)}
         onMouseUp={() => setPressed(false)}
