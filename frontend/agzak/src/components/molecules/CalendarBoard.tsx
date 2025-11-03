@@ -4,17 +4,18 @@ import { AspectRatio } from "@/components/ui/AspectRatio";
 import { cn } from "@/lib/utils";
 import * as React from "react";
 
-export default function BlackboardCalendar({
-  className,
-}: {
-  className?: string;
-}) {
+type Props = {
+  className?: string
+  onSelectDate?: (isoDate: string) => void
+}
+
+export default function BlackboardCalendar({ className, onSelectDate }: Props) {
   // 오늘 날짜
-  const today = React.useMemo(() => new Date(), []);
-  const year = today.getFullYear();
-  const month = today.getMonth(); // 0~11
-  const daysInMonth = new Date(year, month + 1, 0).getDate(); // 이번 달 일수
-  const startWeekday = new Date(year, month, 1).getDay(); // 이번 달 1일 요일 (0=Sun)
+  const today = React.useMemo(() => new Date(), [])
+  const year = today.getFullYear()
+  const month = today.getMonth() // 0~11
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+  const startWeekday = new Date(year, month, 1).getDay()
 
   // ✅ 클릭해서 하이라이트할 날짜
   const [selectedDay, setSelectedDay] = React.useState<number | null>(null);
@@ -33,17 +34,18 @@ export default function BlackboardCalendar({
 
   // 날짜 클릭 핸들러
   const handleDayClick = (day: number | null) => {
-    if (!day) return;
-    setSelectedDay(day);
+    if (!day) return
 
-    // 여기에서 모달을 열면 됨
-    // 이 부분을 Zustand/modal hook 등으로 갈아끼우면 됨.
-    // 예)
-    // openModal({
-    //   date: new Date(year, month, day),
-    //   fortuneType: ...,
-    // });
-  };
+    // 1) 내부 하이라이트는 무조건 유지
+    setSelectedDay(day)
+
+    // 2) 부모로도 알려주기 (YYYY-MM-DD)
+    if (onSelectDate) {
+      const mm = String(month + 1).padStart(2, "0")
+      const dd = String(day).padStart(2, "0")
+      onSelectDate(`${year}-${mm}-${dd}`)
+    }
+  }
 
   return (
     <div className={cn("w-full max-w-sm", className)}>
@@ -83,19 +85,16 @@ export default function BlackboardCalendar({
                       <span
                         className={cn(
                           "inline-flex items-center justify-center px-1",
-                          // 시안 비슷한 폰트 크기
-                          "text-white text-[clamp(10px,2.7vw,18px)] font-galmuri-xsmall leading-none",
+                          "text-white text-[clamp(10px,2.7vw,18px)] font-galmuri leading-none",
                           isSelected &&
-                            "bg-[#9DD36D] font-bold font-galmuri text-stroke-1 text-white shadow-[0_1px_0_rgba(0,0,0,0.25)]",
-                          // hover 효과는 선택 안 된 날짜에만
+                            "bg-[#9DD36D] font-bold text-white shadow-[0_1px_0_rgba(0,0,0,0.25)]",
                           !isSelected &&
-                            "hover:text-slate-50/90 transition-colors"
+                            "hover:text-slate-50/90 transition-colors font-stretch-condensed"
                         )}
                       >
                         {num}
                       </span>
                     ) : (
-                      // 빈칸용 placeholder (레이아웃 유지)
                       <span className="opacity-0 select-none">0</span>
                     )}
                   </button>
