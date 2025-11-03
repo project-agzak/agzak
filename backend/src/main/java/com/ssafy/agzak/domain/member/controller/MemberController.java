@@ -8,6 +8,7 @@ import com.ssafy.agzak.domain.member.dto.response.MemberInfoResponse;
 import com.ssafy.agzak.domain.member.entity.Member;
 import com.ssafy.agzak.domain.member.service.MemberService;
 import com.ssafy.agzak.global.security.AuthMemberProvider;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -30,7 +31,7 @@ public class MemberController implements MemberApiDocs {
     }
 
     @PatchMapping
-    public ResponseEntity<Void> editMemberInfo(@RequestBody MemberEditRequest request) {
+    public ResponseEntity<Void> editMemberInfo(@Valid @RequestBody MemberEditRequest request) {
         long memberId = authMemberProvider.currentMemberId();
         memberService.editMemberInfo(memberId, request.nickname());
         return ResponseEntity.ok().build();
@@ -38,6 +39,7 @@ public class MemberController implements MemberApiDocs {
 
     @DeleteMapping
     public ResponseEntity<Void> deleteMember() {
+        long memberId = authMemberProvider.currentMemberId();
         return ResponseEntity.noContent().build();
     }
 

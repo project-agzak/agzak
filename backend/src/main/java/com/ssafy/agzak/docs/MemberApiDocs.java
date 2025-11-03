@@ -1,6 +1,5 @@
 package com.ssafy.agzak.docs;
 
-import com.ssafy.agzak.domain.auth.dto.request.RegisterRequest;
 import com.ssafy.agzak.domain.fortune.dto.response.DetailFortuneDataResponse;
 import com.ssafy.agzak.domain.member.dto.request.MemberEditRequest;
 import com.ssafy.agzak.domain.member.dto.response.MemberGraphResponse;
