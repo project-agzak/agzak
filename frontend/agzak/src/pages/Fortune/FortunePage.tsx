@@ -29,19 +29,17 @@ export default function FortunePage() {
 
   return (
     <main className="relative z-10 p-4 min-h-screen">
-      {/* 상단 로고 */}
-      <div className="flex flex-col items-center">
-        <img src={FortuneCookie} alt="FortuneCookie" />
-        <img src={FullnameLogo} alt="Agzak Fullname" />
-      </div>
+    
 
 
  {/*중간 이미지 - 세로 1열 */}
-       <div className="mt-15 flex justify-center bg-gradient-to-b from-[#fff8e7] via-[#121212] to-[#fff8e7] py-10 transition-all duration-500">
-  <MidImages34 itemWidth={300} whiteBg />
-</div>
+    <div className="mt-1 flex justify-center bg-gradient-to-b from-[#fff8e7] via-[#121212] to-[#fff8e7] py-10 transition-all duration-500"> <MidImages34 itemWidth={300} whiteBg /> </div>
 
-
+  {/* 상단 로고 */}
+      <div className="mt-15 flex flex-col items-center pb-10">
+        <img src={FortuneCookie} alt="FortuneCookie" />
+        <img src={FullnameLogo} alt="Agzak Fullname" />
+      </div>
 
       {/* 입력 폼 */}
       <div className="mt-10 flex flex-col items-center gap-3">
@@ -139,7 +137,7 @@ export default function FortunePage() {
 
         {/* ④ 태어난 도시 (카카오 지도 검색) */}
         <div className="flex max-w-[300px] flex-col gap-1">
-          <div className="flex w-full justify-center">
+          <div className="mx-auto flex w-[230px] justify-between items-center">
             <div className="w-[260px] text-left">
               <label className="font-galmuri-small font-extrabold text-[#222]">
                 태어난 도시
@@ -157,7 +155,7 @@ export default function FortunePage() {
         </div>
 
         {/* 하단 버튼 */}
-        <div className="mt-12 flex justify-center">
+        <div className="mt-12 flex justify-center pb-15">
           <Button_L to="/my/edit" label="정보 등록" width={260} />
         </div>
       </div>
