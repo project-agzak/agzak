@@ -33,7 +33,7 @@ public class SocialSignupTicketStore {
     public Map<String, String> get(String ticket) {
         String json = redis.opsForValue().get(key(ticket));
         if (json == null) return null;
-        try { return om.readValue(json, new TypeReference<Map<String, String>>(){}); }
+        try { return om.readValue(json, new TypeReference<>(){}); }
         catch (Exception e) { throw new IllegalStateException("티켓 역직렬화 실패", e); }
     }
 
