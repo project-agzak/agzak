@@ -58,42 +58,25 @@ export default function FortunePage() {
           />
         </div>
 
-        {/* ② 생년월일 */}
-        <div className="flex max-w-[300px] flex-col gap-1">
-          <div className="mx-auto flex w-[230px] justify-between items-center">
-            <label className="font-galmuri-small font-extrabold text-[#222]">
-              생년월일
-            </label>
+    {/* ② 생년월일 */}
+<div className="flex max-w-[300px] flex-col gap-1">
+  <div className="mx-auto flex w-[230px] justify-between items-center">
+    <label className="font-galmuri-small font-extrabold text-[#222]">
+      생년월일
+    </label>
 
-            {/* 양력/음력 선택 */}
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setCalendarType("solar")}
-                className={`px-1 py-[2px] text-xs font-galmuri-xsmall font-extrabold cursor-pointer transition-colors ${
-                  calendarType === "solar" ? "text-[#121212]" : "text-[#777]"
-                }`}
-              >
-                양력
-              </button>
-              <button
-                type="button"
-                onClick={() => setCalendarType("lunar")}
-                className={`px-1 py-[2px] text-xs font-galmuri-xsmall font-extrabold cursor-pointer transition-colors ${
-                  calendarType === "lunar" ? "text-[#121212]" : "text-[#777]"
-                }`}
-              >
-                음력
-              </button>
-            </div>
-          </div>
+    {/* ✅ 양력 글자만 표시 */}
+    <span className="text-xs font-galmuri-xsmall font-extrabold text-[#121212] opacity-70">
+      양력
+    </span>
+  </div>
 
-          <Input
-            placeholder="2000.01.01"
-            inputMode="numeric"
-            aria-label="생년월일 입력"
-          />
-        </div>
+  <Input
+    placeholder="2000.01.01"
+    inputMode="numeric"
+    aria-label="생년월일 입력"
+  />
+</div>
 
         {/* ③ 태어난 시간 */}
         <div className="flex max-w-[300px] flex-col gap-1">
