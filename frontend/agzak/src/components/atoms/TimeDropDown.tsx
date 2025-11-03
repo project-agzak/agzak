@@ -1,4 +1,3 @@
-// @/components/atoms/TimeDropDown.tsx
 import * as React from "react";
 import "@/styles/components.css";
 
@@ -6,8 +5,10 @@ type Props = {
   hour?: string | null;
   minute?: string | null;
   onChange?: (next: { hour: string; minute: string }) => void;
-  width?: number; // 기본 230
-  placeholder?: string; // 예: "시간 선택"
+  width?: number;
+  placeholder?: string;
+  disabled?: boolean;
+  showArrow?: boolean;
 };
 
 export function TimeDropDown({
@@ -16,6 +17,8 @@ export function TimeDropDown({
   onChange,
   width = 260,
   placeholder = "시간 선택",
+  disabled = false,
+  showArrow = true,
 }: Props) {
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef<HTMLDivElement>(null);
@@ -38,18 +41,31 @@ export function TimeDropDown({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const display = hour && minute ? `${hour} : ${minute}` : placeholder;
+  const isSelected = !!(hour && minute);
+  const display = isSelected ? `${hour} : ${minute}` : placeholder;
 
-  const selectHour = (h: string) => onChange?.({ hour: h, minute: minute ?? "00" });
-  const selectMinute = (m: string) => onChange?.({ hour: hour ?? "00", minute: m });
+  const selectHour = (h: string) => {
+    if (disabled) return;
+    onChange?.({ hour: h, minute: minute ?? "00" });
+  };
+  const selectMinute = (m: string) => {
+    if (disabled) return;
+    onChange?.({ hour: hour ?? "00", minute: m });
+  };
+
+  const handleToggle = () => {
+    if (disabled) return;
+    setOpen((v) => !v);
+  };
 
   return (
     <div
       ref={ref}
-      className={`dropdown-container ${open ? "open" : ""}`}
-      style={{ ["--dropdown-width" as any]: `${width}px` }}
+      className={`dropdown-container ${open ? "open" : ""} ${isSelected ? "has-value" : ""} ${disabled ? "is-disabled" : ""} ${!showArrow ? "no-arrow" : ""}`} // ← 공백 추가
+      style={
+        { ["--dropdown-width" as any]: `${width}px` } as React.CSSProperties // ← 타입 캐스팅 추가
+      }
     >
-      {/* 배경 프레임 (기존 Input.svg 재사용) */}
       <img
         src="/images/Input.svg"
         alt="time dropdown background"
@@ -57,37 +73,33 @@ export function TimeDropDown({
         draggable={false}
       />
 
-      {/* 버튼 */}
       <button
         type="button"
         className="dropdown-button"
         aria-expanded={open}
         aria-haspopup="listbox"
-        onClick={() => setOpen(v => !v)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            setOpen(v => !v);
-          }
-          if (e.key === "Escape") setOpen(false);
-        }}
+        disabled={disabled}
+        onClick={handleToggle}
       >
-        <span className="dropdown-label font-galmuri" style={{ fontSize: 12, fontWeight: 400 }}>
+        <span
+          className={`dropdown-label font-galmuri ${
+            isSelected ? "text-active" : "text-placeholder"
+          }`}
+          style={{ fontSize: 12, fontWeight: 400 }}
+        >
           {display}
         </span>
-        <img
-          src="/images/DropDown_Button.png"
-          alt="드롭다운 버튼"
-          className={`dropdown-arrow ${open ? "rotated" : ""}`}
-        />
+        {showArrow && (
+          <img
+            src="/images/DropDown_Button.png"
+            alt=""
+            className={`dropdown-arrow ${open ? "rotated" : ""}`}
+          />
+        )}
       </button>
 
-      {/* 패널: 시/분 두 칼럼 */}
-      {open && (
+      {open && !disabled && (
         <div className="time-panel" role="listbox">
-          {/* 가운데 선택 라인 */}
-       
-
           <div className="time-col" aria-label="hour">
             {hours.map((h) => (
               <div
@@ -99,9 +111,7 @@ export function TimeDropDown({
               </div>
             ))}
           </div>
-
           <div className="time-sep">:</div>
-
           <div className="time-col" aria-label="minute">
             {minutes.map((m) => (
               <div

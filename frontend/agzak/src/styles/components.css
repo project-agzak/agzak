@@ -43,6 +43,9 @@
 /* =========================
    BUTTONS (L / M)
    ========================= */
+/* =========================
+   BUTTONS (L / M)
+   ========================= */
 .btnL-wrap {
   position: relative;
   display: block;
@@ -59,14 +62,22 @@
   pointer-events: none;
 }
 .btnL-wrap.is-pressed .btnL-img { filter: brightness(.85); }
+
 .btnL-click {
   position: absolute; inset: 0;
   background: transparent; border: none; outline: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   user-select: none;
 
-  font-family: "Galmuri11", system-ui, sans-serif;
-  color: #fff; font-size: 20px; font-weight: 700;
+  /* ✅ 수정된 부분 */
+ font-family: 'Galmuri-Bold', 'Galmuri', sans-serif;
+  font-weight: 400;
+  font-synthesis: none;
+  -webkit-appearance: none;
+  -webkit-font-smoothing: antialiased;
+
+  color: #fff;
+  font-size: 20px;
   text-shadow:
     -1px 0 #121212, 1px 0 #121212, 0 -1px #121212, 0 1px #121212,
     -1px -1px #121212, 1px -1px #121212, -1px 1px #121212, 1px 1px #121212;
@@ -88,18 +99,27 @@
   pointer-events: none;
 }
 .btnM-wrap.is-pressed .btnM-img { filter: brightness(.85); }
+
 .btnM-click {
   position: absolute; inset: 0;
   background: transparent; border: none; outline: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   user-select: none;
 
-  font-family: "Galmuri11", system-ui, sans-serif;
-  color: #fff; font-size: 20px; font-weight: 700;
+  /* ✅ 수정된 부분 */
+   font-family: 'Galmuri-Bold', 'Galmuri', sans-serif;
+  font-weight: 400;
+  font-synthesis: none;
+  -webkit-appearance: none;
+  -webkit-font-smoothing: antialiased;
+
+  color: #fff;
+  font-size: 20px;
   text-shadow:
     -1px 0 #121212, 1px 0 #121212, 0 -1px #121212, 0 1px #121212,
     -1px -1px #121212, 1px -1px #121212, -1px 1px #121212, 1px 1px #121212;
 }
+
 /* 정렬 헬퍼 */
 .right-align .btnM-wrap { margin-left: auto !important; margin-right: 0 !important; }
 .right-align .btnM-click { font-size: 14px !important; }
@@ -178,6 +198,7 @@
 /* =========================
    TimeDropDown 전용 (시/분 2칼럼 패널)
    ========================= */
+   
 :root {
   --td-row-h: 36px;   /* 한 행 높이 */
   --td-max-rows: 5;   /* 보이는 행 수 */
@@ -236,7 +257,7 @@
 .input-field,
 .time-item,
 .pixel-text-12 {
-  font-family: 'Galmuri11', sans-serif !important;
+  font-family: 'Galmuri', sans-serif !important;
   font-size: 12px !important;
   font-weight: 400 !important;
 
@@ -295,3 +316,16 @@
 }
 
 .mid-grid-smart { content-visibility: auto; contain-intrinsic-size: 280px 280px; }
+
+/* 회색/검정 전환 */
+.dropdown-label.text-placeholder {
+  color: #777 !important;
+}
+.dropdown-label.text-active {
+  color: #121212 !important;
+}
+
+
+.dropdown-container.is-disabled .dropdown-button {
+   pointer-events: none !important;
+}

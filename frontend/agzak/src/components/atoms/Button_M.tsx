@@ -25,7 +25,7 @@ export function Button_M({ to, label = "다음", width = 130 }: ButtonMProps) {
       />
 
       <button
-        className="btnM-click"
+        className="btnM-click font-galmuri"
         onClick={() => navigate(to)}
         onMouseDown={() => setPressed(true)}
         onMouseUp={() => setPressed(false)}

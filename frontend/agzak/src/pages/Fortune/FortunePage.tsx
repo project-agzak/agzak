@@ -7,11 +7,11 @@ import { Input } from "@/components/atoms/Input";
 import { Button_L } from "@/components/atoms/Button_L";
 import { TimeDropDown } from "@/components/atoms/TimeDropDown";
 import { BirthCitySearch } from "@/components/atoms/BirthCitySearch";
-import { MidImages34 } from "@/components/MidImages34";
+import { MidImages34 } from "@/components/templates/MidImages34";
 
 export default function FortunePage() {
   // ✅ 양력/음력 선택
-  const [calendarType, setCalendarType] = useState<"solar" | "lunar" | null>(null);
+  
 
   // ✅ 태어난 시간
   const [hour, setHour] = useState<string | null>(null);
@@ -36,7 +36,7 @@ export default function FortunePage() {
     <div className="mt-1 flex justify-center bg-gradient-to-b from-[#fff8e7] via-[#121212] to-[#fff8e7] py-10 transition-all duration-500"> <MidImages34 itemWidth={300} whiteBg /> </div>
 
   {/* 상단 로고 */}
-      <div className="mt-15 flex flex-col items-center pb-10">
+      <div className="mt-5 flex flex-col items-center pb-10">
         <img src={FortuneCookie} alt="FortuneCookie" />
         <img src={FullnameLogo} alt="Agzak Fullname" />
       </div>
@@ -58,42 +58,25 @@ export default function FortunePage() {
           />
         </div>
 
-        {/* ② 생년월일 */}
-        <div className="flex max-w-[300px] flex-col gap-1">
-          <div className="mx-auto flex w-[230px] justify-between items-center">
-            <label className="font-galmuri-small font-extrabold text-[#222]">
-              생년월일
-            </label>
+    {/* ② 생년월일 */}
+<div className="flex max-w-[300px] flex-col gap-1">
+  <div className="mx-auto flex w-[230px] justify-between items-center">
+    <label className="font-galmuri-small font-extrabold text-[#222]">
+      생년월일
+    </label>
 
-            {/* 양력/음력 선택 */}
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setCalendarType("solar")}
-                className={`px-1 py-[2px] text-xs font-galmuri-xsmall font-extrabold cursor-pointer transition-colors ${
-                  calendarType === "solar" ? "text-[#121212]" : "text-[#777]"
-                }`}
-              >
-                양력
-              </button>
-              <button
-                type="button"
-                onClick={() => setCalendarType("lunar")}
-                className={`px-1 py-[2px] text-xs font-galmuri-xsmall font-extrabold cursor-pointer transition-colors ${
-                  calendarType === "lunar" ? "text-[#121212]" : "text-[#777]"
-                }`}
-              >
-                음력
-              </button>
-            </div>
-          </div>
+    {/* ✅ 양력 글자만 표시 */}
+    <span className="text-xs font-galmuri-xsmall font-extrabold text-[#121212] opacity-70">
+      양력
+    </span>
+  </div>
 
-          <Input
-            placeholder="2000.01.01"
-            inputMode="numeric"
-            aria-label="생년월일 입력"
-          />
-        </div>
+  <Input
+    placeholder="2000.01.01"
+    inputMode="numeric"
+    aria-label="생년월일 입력"
+  />
+</div>
 
         {/* ③ 태어난 시간 */}
         <div className="flex max-w-[300px] flex-col gap-1">
@@ -120,7 +103,7 @@ export default function FortunePage() {
               unknownTime ? "opacity-50 pointer-events-none" : ""
             }`}
           >
-            <div className="w-[260px]">
+           
               <TimeDropDown
                 hour={hour ?? undefined}
                 minute={minute ?? undefined}
@@ -131,7 +114,7 @@ export default function FortunePage() {
                 width={260}
                 placeholder="시간 선택"
               />
-            </div>
+          
           </div>
         </div>
 
@@ -156,7 +139,7 @@ export default function FortunePage() {
 
         {/* 하단 버튼 */}
         <div className="mt-12 flex justify-center pb-15">
-          <Button_L to="/my/edit" label="정보 등록" width={260} />
+          <Button_L to="/my/edit" label="운세 카드 확인" width={260} />
         </div>
       </div>
     </main>
