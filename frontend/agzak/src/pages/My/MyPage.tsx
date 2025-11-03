@@ -88,12 +88,16 @@ export default function MyPage() {
 
 {/* ③ 태어난 시간 */}
 <div className="flex max-w-[300px] flex-col gap-1">
-  <div className="mx-auto flex w-[230px] items-center justify-between h-5">
-    <label className="font-galmuri-small font-extrabold text-[#222]">태어난 시간</label>
+  <div className="mx-auto flex w-[230px] justify-between items-center">
+    <label className="font-galmuri-small font-extrabold text-[#222]">
+      태어난 시간
+    </label>
 
+    {/* ✅ 수정 모드일 때만 보이도록 */}
     <label
-      className={`flex items-center gap-[4px] select-none transition-opacity duration-150
-        ${isEdit ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+      className={`flex items-center gap-[4px] cursor-pointer select-none transition-opacity duration-150 ${
+        isEdit ? "opacity-100" : "opacity-0 pointer-events-none"
+      }`}
     >
       <input
         type="checkbox"
@@ -101,28 +105,33 @@ export default function MyPage() {
         checked={unknownTime}
         onChange={(e) => setUnknownTime(e.target.checked)}
       />
-      <span className="text-[#121212] font-galmuri-xsmall font-extrabold">시간 모름</span>
+      <span className="text-[#121212] font-galmuri-xsmall font-extrabold">
+        시간 모름
+      </span>
     </label>
   </div>
 
-  {/* ⭕️ 프레임 높이/폭 고정 → 미세 이동 방지 */}
-  <div className="flex w-full justify-center">
-      <TimeDropDown
-        hour={hour ?? undefined}
-        minute={minute ?? undefined}
-        onChange={({ hour: h, minute: m }) => {
-          setHour(h);
-          setMinute(m);
-        }}
-        width={260}
-        placeholder="시간 선택"
-        /** ⭕️ 수정 전/시간모름일 때 비활성화 */
-        disabled={!isEdit || unknownTime}
-     showArrow={isEdit && !unknownTime} 
-      />
-
+  {/* ✅ 시간 모름 시 반투명 + 클릭 불가 */}
+  <div
+    className={`flex w-full justify-center transition-opacity duration-150 ${
+      unknownTime ? "opacity-50 pointer-events-none" : "opacity-100"
+    }`}
+  >
+    <TimeDropDown
+      hour={hour ?? undefined}
+      minute={minute ?? undefined}
+      onChange={({ hour: h, minute: m }) => {
+        setHour(h);
+        setMinute(m);
+      }}
+      width={260}
+      placeholder="시간 선택"
+      disabled={!isEdit || unknownTime}     // 수정 전 또는 시간모름 시 비활성
+      showArrow={isEdit && !unknownTime}   // 수정 중 & 시간모름 아닐 때만 화살표 표시
+    />
   </div>
 </div>
+
 
 
         {/* ④ 태어난 도시 */}
