@@ -28,6 +28,7 @@ public class FortuneController implements FortuneApiDocs {
     @PostMapping
     public ResponseEntity<FinalFortuneResponse> postMemberTodayFortune() {
         //TODO security 적용시 파라미터 변경
+        //TODO 이미 운세 조회한경우 접근 차단
         long memberId = 1;
         MemberInfoResponse response = memberService.getMemberInfo(memberId);
         BirthDataInput input = BirthDataInput.fromMemberInfo(response);
