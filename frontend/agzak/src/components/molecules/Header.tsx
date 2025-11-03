@@ -1,12 +1,12 @@
 // src/components/molecules/Header.tsx
-import { Button } from "@/components/ui/Button";
+import { Button_M } from "@/components/atoms/Button_M";
+import { Button } from "@/components/ui/button";
 import {
   Sheet,
+  SheetClose,
   SheetContent,
   SheetTrigger,
-  SheetClose,
-} from "@/components/ui/Sheet"; // ✅ SheetClose 추가
-import { Button_M } from "@/components/atoms/Button_M";
+} from "@/components/ui/sheet"; // ✅ SheetClose 추가
 
 export default function Header() {
   return (
