@@ -132,7 +132,7 @@ export default function MyPage() {
                   isEdit ? "opacity-0 pointer-events-none" : "opacity-100"
                 }`}
               >
-                <Input placeholder="City" aria-label="태어난 도시" disabled />
+                <Input placeholder="태어난 도시 검색" aria-label="태어난 도시" disabled />
               </div>
               {/* 검색 */}
               <div
