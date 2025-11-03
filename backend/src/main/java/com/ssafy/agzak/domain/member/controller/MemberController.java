@@ -1,12 +1,13 @@
 package com.ssafy.agzak.domain.member.controller;
 
+import com.ssafy.agzak.docs.MemberApiDocs;
 import com.ssafy.agzak.domain.fortune.dto.response.DetailFortuneDataResponse;
-import com.ssafy.agzak.domain.fortune.dto.response.FortuneAspectResponse;
-import com.ssafy.agzak.domain.fortune.dto.response.FortuneTypeResponse;
 import com.ssafy.agzak.domain.member.dto.response.MemberGraphResponse;
 import com.ssafy.agzak.domain.member.dto.request.MemberEditRequest;
 import com.ssafy.agzak.domain.member.dto.response.MemberInfoResponse;
 import com.ssafy.agzak.domain.member.entity.Member;
+import com.ssafy.agzak.domain.member.service.MemberService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,8 +16,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/v1/members")
-public class MemberController {
+public class MemberController implements MemberApiDocs {
+    private final MemberService memberService;
+
     @GetMapping
     public ResponseEntity<MemberInfoResponse> getMemberInfo() {
         return ResponseEntity.ok().body(new MemberInfoResponse(1, "temp", "temp", Member.Gender.FEMALE,
@@ -46,10 +50,8 @@ public class MemberController {
     }
 
     @GetMapping("/fortunes/{date}")
-    public ResponseEntity<DetailFortuneDataResponse> getDetailData(@PathVariable LocalDateTime date) {
-        return ResponseEntity.ok().body(new DetailFortuneDataResponse(1, "겸손하세요",1,1,
-                new FortuneTypeResponse(1,"개",2,3),
-                List.of(new FortuneAspectResponse("금전운",1,1))));
+    public ResponseEntity<DetailFortuneDataResponse> getDetailData(@PathVariable LocalDate date) {
+        return ResponseEntity.ok().body(memberService.getMemberFortune(1L, date));
     }
 
 }

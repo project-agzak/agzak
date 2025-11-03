@@ -1,8 +1,10 @@
 package com.ssafy.agzak.domain.auth.controller;
 
 import com.ssafy.agzak.docs.AuthApiDocs;
+import com.ssafy.agzak.domain.auth.dto.request.AttachGuestRequest;
 import com.ssafy.agzak.domain.auth.dto.request.LoginRequest;
 import com.ssafy.agzak.domain.auth.dto.request.RegisterRequest;
+import com.ssafy.agzak.domain.auth.dto.request.RegisterWithGuestRequest;
 import com.ssafy.agzak.domain.auth.dto.response.OkResponse;
 import com.ssafy.agzak.domain.auth.dto.response.TokenResponse;
 import com.ssafy.agzak.domain.auth.service.AuthService;
@@ -26,6 +28,23 @@ public class AuthController implements AuthApiDocs {
     public ResponseEntity<OkResponse> register(@RequestBody @Valid RegisterRequest req) {
         authService.register(req);
         return ResponseEntity.ok(OkResponse.registerSuccess());
+    }
+
+    @Override
+    @PostMapping("/register/with-guest")
+    public ResponseEntity<TokenResponse> registerWithGuest(@RequestBody @Valid RegisterWithGuestRequest req) {
+        return ResponseEntity.ok(authService.registerWithGuest(req));
+    }
+
+    @PostMapping("/attach-guest")
+    public ResponseEntity<OkResponse> attachGuest(
+            @RequestBody @Valid AttachGuestRequest req,
+            Authentication authentication
+    ) {
+        if (authentication == null) throw new BadCredentialsException("인증이 필요합니다.");
+        Long memberId = Long.valueOf(authentication.getName());
+        authService.attachGuestProfile(memberId, req.guestId());
+        return ResponseEntity.ok(OkResponse.attachSuccess());
     }
 
     @Override

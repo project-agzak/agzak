@@ -6,6 +6,7 @@ import com.ssafy.agzak.domain.game.exception.DailyQuotaExceededException;
 import com.ssafy.agzak.domain.game.exception.NoActiveSessionException;
 import io.jsonwebtoken.JwtException;
 import jakarta.persistence.EntityNotFoundException;
+import java.util.NoSuchElementException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
@@ -119,6 +120,17 @@ public class GlobalExceptionHandler {
                 req.getRequestURI()
         );
         return ResponseEntity.badRequest().body(body);
+    }
+
+    @ExceptionHandler(NoSuchElementException.class)
+    public ResponseEntity<ErrorResponse> handleNoElement(Exception e, HttpServletRequest req) {
+        var body = ErrorResponse.of(
+                HttpStatus.NOT_FOUND.value(),
+                "NOT_FOUND",
+                e.getMessage(),
+                req.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
 
     @ExceptionHandler(Exception.class)

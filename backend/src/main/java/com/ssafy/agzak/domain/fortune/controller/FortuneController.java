@@ -8,6 +8,7 @@ import com.ssafy.agzak.domain.fortune.service.GeocodingService;
 import com.ssafy.agzak.domain.fortune.dto.request.BirthDataInput;
 import com.ssafy.agzak.domain.fortune.dto.request.GuestFortuneRequest;
 import com.ssafy.agzak.domain.fortune.dto.response.*;
+import com.ssafy.agzak.domain.guest.dto.GuestProfile;
 import com.ssafy.agzak.domain.member.dto.response.MemberInfoResponse;
 import com.ssafy.agzak.domain.member.service.MemberService;
 import com.ssafy.agzak.global.security.AuthMemberProvider;
@@ -38,10 +39,21 @@ public class FortuneController implements FortuneApiDocs {
     }
 
     @PostMapping("/guest")
-    public ResponseEntity<FinalFortuneResponse> postGuestFortune(@RequestBody GuestFortuneRequest guestFortuneRequest) {
-        KakaoAddressResponse.Document geo = geocodingService.getCoordinates(guestFortuneRequest.birthCity());
-        BirthDataInput input = new BirthDataInput(guestFortuneRequest.birthDate(), guestFortuneRequest.birthTime(), geo.latitude(), geo.longitude());
-        return ResponseEntity.ok().body(fortuneService.getFortuneScores(input));
+    public ResponseEntity<GuestFortuneWithIdResponse> postGuestFortune(
+            @RequestBody GuestFortuneRequest req
+    ) {
+        var geo = geocodingService.getCoordinates(req.birthCity());
+
+        var input = new BirthDataInput(req.birthDate(), req.birthTime(), geo.latitude(), geo.longitude());
+        FinalFortuneResponse fortune = fortuneService.getFortuneScores(input);
+
+        var profile = new GuestProfile(
+                req.nickname(), req.gender(), req.birthDate(), req.birthTime(),
+                req.birthCity(), geo.latitude(), geo.longitude()
+        );
+        String guestId = fortuneService.saveGuestProfile(profile);
+
+        return ResponseEntity.ok(new GuestFortuneWithIdResponse(fortune, guestId));
     }
 
 
