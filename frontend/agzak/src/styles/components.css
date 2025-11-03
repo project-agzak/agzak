@@ -70,7 +70,7 @@
   user-select: none;
 
   /* ✅ 수정된 부분 */
-  font-family: 'Galmuri', system-ui, sans-serif;
+ font-family: 'Galmuri-Bold', 'Galmuri', sans-serif;
   font-weight: 400;
   font-synthesis: none;
   -webkit-appearance: none;
@@ -107,7 +107,7 @@
   user-select: none;
 
   /* ✅ 수정된 부분 */
-  font-family: 'Galmuri', system-ui, sans-serif;
+   font-family: 'Galmuri-Bold', 'Galmuri', sans-serif;
   font-weight: 400;
   font-synthesis: none;
   -webkit-appearance: none;
