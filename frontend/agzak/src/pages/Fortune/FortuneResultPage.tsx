@@ -1,5 +1,6 @@
 import { ExpandableFortune } from "@/components/molecules/ExpandableFortune";
 import { Button_L } from "@/components/atoms/Button_L";
+
 import ShareButton from "@/components/atoms/ShareButton";
 import Cat from "@/assets/Back/FriendCat.svg";
 import Rabbit from "@/assets/Back/FriendRabbit.svg";
@@ -85,6 +86,8 @@ export default function FortuneResultPage() {
             <Button_L to="/enforce" label="운세 강화" width={260} />
         </div>
         <div>
+          <Button_L to="#" label="공유하기" width={260} />
+
           <ShareButton
           label="공유하기"
           width={260}
