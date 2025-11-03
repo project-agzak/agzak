@@ -2,7 +2,8 @@ import * as React from "react";
 import Rainbow from "@/assets/Gifs/Rainbow.gif";
 import { Button_M } from "@/components/atoms/Button_M";
 import { FortuneGaugeList } from "@/components/molecules/FortuneGaugeList";
-import { CookieInventory, type CookieData } from "@/components/templates/CookieInventory";
+import { CookieInventory, type CookieData } from "@/components/organisms/CookieInventory";
+import InventoryImg from "@/assets/ui/CookieInventory.svg";
 
 // 데모 데이터: 실제로는 API에서 주입
 const demoCookies: CookieData[] = [
@@ -84,11 +85,17 @@ export default function CookiesPage() {
         <Button_M label="삭제" onClick={removeSelected} disabled={!selectedCookie} />
       </div>
 
-      <div className="mt-4">
+      <div className="relative mt-5">
+        <img
+          src={InventoryImg}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover object-top pointer-events-none pl-3 -z-10"
+        />
         <CookieInventory
           items={cookies}
           selectedId={selectedId}
           onChangeSelected={setSelectedId}
+          className="relative translate-y-3"
         />
       </div>
     </main>

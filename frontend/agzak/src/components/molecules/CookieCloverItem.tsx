@@ -28,7 +28,6 @@ export function CookieCloverItem({
         onClick={() => onSelect(id)}
         className={clsx(
           "w-full aspect-square rounded-xl grid place-items-center",
-          "bg-[#F7F3E6] border-2 border-[#B5AEA1]/60",
           "active:translate-y-[1px]",
           selected && "ring-2 ring-[#2BD4BD] border-[#2BD4BD]"
         )}
@@ -49,7 +48,6 @@ export function CookieCloverItem({
           <FortuneBubble
             title={detail.title}
             effects={detail.effects}
-            width={160}
           />
         </div>
       )}

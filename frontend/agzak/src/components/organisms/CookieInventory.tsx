@@ -2,11 +2,12 @@ import * as React from "react";
 import { CookieCloverItem } from "@/components/molecules/CookieCloverItem";
 import type { FortuneCookieDetail } from "@/types/cookies";
 
+
 export type CookieData = {
   id: string;
   imgSrc: string;
   detail: FortuneCookieDetail; // { title, effects:[{label, value}] }
-  createdAt: number;
+  createdAt: number; 
 };
 
 type Props = {
@@ -32,16 +33,19 @@ export function CookieInventory({
       className={className}
       aria-label="쿠키 인벤토리"
     >
+      <p className="ml-7 font-galmuri-small font-bold">
+        {items.length} / 50
+      </p>
       <div
         className="
           h-[420px] overflow-y-auto px-2 py-3
-          bg-[#F0ECE2]/60 rounded-2xl border border-[#C9C3B8]
+           rounded-2xl
         "
       >
         <div
           className="
             grid grid-cols-3 gap-3
-            sm:grid-cols-4
+            sm:grid-cols-3
           "
         >
           {items.map((it) => (
@@ -56,9 +60,6 @@ export function CookieInventory({
           ))}
         </div>
       </div>
-      <p className="mt-2 text-center font-galmuri-xsmall text-[#6B6760]">
-        {items.length} / 50
-      </p>
     </section>
   );
 }
