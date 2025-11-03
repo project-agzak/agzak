@@ -82,7 +82,7 @@ export default function FortuneResultPage() {
             <Button_L to="/enforce" label="운세 강화" width={260} />
         </div>
         <div>
-          <Button_L label="공유하기" width={260} />
+          <Button_L to="#" label="공유하기" width={260} />
         </div>
       </div>
       

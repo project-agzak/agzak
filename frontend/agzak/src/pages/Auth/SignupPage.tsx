@@ -1,4 +1,4 @@
-import * as React from 'react';
+
 
 import Logo from '@/assets/Background/agzak-logo.svg';
 import { Input } from '@/components/atoms/Input';

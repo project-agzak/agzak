@@ -1,3 +1,6 @@
+/* =========================
+   INPUT (픽셀 프레임)
+   ========================= */
 .input-wrap {
   position: relative;
   display: inline-block;
@@ -6,10 +9,10 @@
 
 .input-bg {
   display: block;
-  width: 260px; /* ← 원하는 가로길이 */
-  height: auto;
+  width: 260px;           /* 인풋 가로 */
+  height: auto;           /* 세로는 비율대로 */
   user-select: none;
-  pointer-events: none; /* 클릭은 input이 받도록 */
+  pointer-events: none;   /* 클릭은 실제 input이 받도록 */
 }
 
 .input-field {
@@ -17,73 +20,56 @@
   inset: 0;
   width: 100%;
   height: 100%;
-
   background: transparent;
   border: none;
   outline: none;
+  box-sizing: border-box;
 
   text-align: left;
   padding-left: 20px;
 
-  
-   font-size: small;
-  font-weight: 500;
+  font-family: 'Galmuri11', 'Galmuri', sans-serif !important;
+  font-weight: 400 !important;
+  font-size: 12px !important;   /* xsmall */
   color: #111;
-
-  box-sizing: border-box;
+}
+.input-field::placeholder {
+  font-family: 'Galmuri11', 'Galmuri', sans-serif !important;
+  font-weight: 400 !important;
+  font-size: 12px !important;
+  opacity: 1;
 }
 
+/* =========================
+   BUTTONS (L / M)
+   ========================= */
 .btnL-wrap {
   position: relative;
   display: block;
   width: var(--btn-width, 260px);
-  margin: 0 auto;           /* 가운데 정렬 (원하면 제거 가능) */
-  line-height: 0;           /* 이미지 하단 공백 제거 */
+  margin: 0 auto;
+  line-height: 0;
 }
-
 .btnL-img {
   display: block;
-  width: 100%;              /* 부모 width에 맞게 비율 유지 */
+  width: 100%;
   height: auto;
-  transition: filter 0.1s ease;
+  transition: filter .1s ease;
   user-select: none;
-  pointer-events: none;     /* 클릭은 버튼이 받도록 */
+  pointer-events: none;
 }
-
-/* 눌림 효과 */
-.btnL-wrap.is-pressed .btnL-img {
-  filter: brightness(0.85);
-}
-
+.btnL-wrap.is-pressed .btnL-img { filter: brightness(.85); }
 .btnL-click {
-  position: absolute;
-  inset: 0;                 /* 전체 덮기 */
-  background: transparent;
-  border: none;
-  outline: none;
-  cursor: pointer;
+  position: absolute; inset: 0;
+  background: transparent; border: none; outline: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  user-select: none;
 
   font-family: "Galmuri11", system-ui, sans-serif;
-  color: #fff;
-  font-size: 20px;
-  font-weight: 700;
-
-  
-    text-shadow:
-       -1px 0 #121212,
-  1px 0 #121212,
-  0 -1px #121212,
-  0 1px #121212,
-  -1px -1px #121212,
-  1px -1px #121212,
-  -1px 1px #121212,
-  1px 1px #121212;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  user-select: none;
+  color: #fff; font-size: 20px; font-weight: 700;
+  text-shadow:
+    -1px 0 #121212, 1px 0 #121212, 0 -1px #121212, 0 1px #121212,
+    -1px -1px #121212, 1px -1px #121212, -1px 1px #121212, 1px 1px #121212;
 }
 
 .btnM-wrap {
@@ -93,136 +79,94 @@
   margin: 0 auto;
   line-height: 0;
 }
-
 .btnM-img {
   display: block;
   width: 100%;
   height: auto;
-  transition: filter 0.1s ease;
+  transition: filter .1s ease;
   user-select: none;
   pointer-events: none;
 }
-
-.btnM-wrap.is-pressed .btnM-img {
-  filter: brightness(0.85);
-}
-
+.btnM-wrap.is-pressed .btnM-img { filter: brightness(.85); }
 .btnM-click {
-  position: absolute;
-  inset: 0;
-  background: transparent;
-  border: none;
-  outline: none;
-  cursor: pointer;
+  position: absolute; inset: 0;
+  background: transparent; border: none; outline: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  user-select: none;
 
   font-family: "Galmuri11", system-ui, sans-serif;
-  color: #fff;
-  font-size: 20px;
-  font-weight: 700;
-    text-shadow:
-   -1px 0 #121212,
-  1px 0 #121212,
-  0 -1px #121212,
-  0 1px #121212,
-  -1px -1px #121212,
-  1px -1px #121212,
-  -1px 1px #121212,
-  1px 1px #121212;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  user-select: none;
+  color: #fff; font-size: 20px; font-weight: 700;
+  text-shadow:
+    -1px 0 #121212, 1px 0 #121212, 0 -1px #121212, 0 1px #121212,
+    -1px -1px #121212, 1px -1px #121212, -1px 1px #121212, 1px 1px #121212;
 }
-.right-align .btnM-wrap {
-  margin-left: auto !important;
-  margin-right: 0 !important;
+/* 정렬 헬퍼 */
+.right-align .btnM-wrap { margin-left: auto !important; margin-right: 0 !important; }
+.right-align .btnM-click { font-size: 14px !important; }
 
-}
-.right-align .btnM-click {
-  font-size: 14px !important;
-}
+/* =========================
+   DROPDOWN (Input.svg 프레임 재사용)
+   ========================= */
+/* 컨테이너: Input과 동일 규칙(가로 고정, 세로 auto) */
 .dropdown-container {
   position: relative;
-  display: block;
+  display: inline-block;
   width: var(--dropdown-width, 260px);
-  margin: 0 auto;
   line-height: 0;
 }
-
+/* 프레임 이미지: 비율 유지 */
 .dropdown-bg {
   display: block;
   width: 100%;
-  height: auto;
+  height: auto;           /* 중요: auto (contain/fill 금지) */
   user-select: none;
   pointer-events: none;
 }
-
-/* 버튼 */
+/* 버튼(내용) */
 .dropdown-button {
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
-
+  padding: 0 20px;        /* Input과 비슷한 내부 여백 */
   background: transparent;
   border: none;
   outline: none;
   cursor: pointer;
-
   color: #121212;
   font-size: 14px;
   box-sizing: border-box;
 }
+.dropdown-label { line-height: 1; }
+.dropdown-arrow { width: 24px; height: 24px; user-select: none; transition: transform .1s linear; }
+.dropdown-arrow.rotated { transform: rotate(180deg); }
 
-.dropdown-label {
-  line-height: 1;
-}
-
-.dropdown-arrow {
-  width: 24px;
-  height: 24px;
-  user-select: none;
-  transition: transform 0.1s linear;
-}
-
-.dropdown-arrow.rotated {
-  transform: rotate(180deg);
-}
-
-/* 목록 */
+/* 펼친 리스트: 7행 스크롤(변수 기반) */
 .dropdown-list {
   position: absolute;
-  left: 0;
-  top: 100%;
+  left: 0; top: 100%;
   width: 100%;
-
   background: #fff;
   border: 2px solid #121212;
   border-radius: 4px;
   margin-top: 4px;
   z-index: 10;
   line-height: 1.4;
-}
 
+  max-height: calc(var(--dropdown-row-height, 36px) * var(--dropdown-max-rows, 7));
+  overflow-y: auto;
+}
 .dropdown-item {
-  padding: 8px 16px;
+  height: var(--dropdown-row-height, 36px);
+  line-height: var(--dropdown-row-height, 36px);
+  padding: 0 16px;
   font-size: 14px;
   cursor: pointer;
   border-bottom: 1px solid #e5e7eb;
 }
-
-.dropdown-item:last-child {
-  border-bottom: none;
-}
-
-.dropdown-item:hover {
-  background: #f3f4f6;
-}
-
+.dropdown-item:last-child { border-bottom: none; }
+.dropdown-item:hover { background: #f3f4f6; }
 .dropdown-empty {
   padding: 8px 16px;
   font-size: 14px;
@@ -231,3 +175,123 @@
   user-select: none;
 }
 
+/* =========================
+   TimeDropDown 전용 (시/분 2칼럼 패널)
+   ========================= */
+:root {
+  --td-row-h: 36px;   /* 한 행 높이 */
+  --td-max-rows: 7;   /* 보이는 행 수 */
+}
+.time-panel {
+  position: absolute;
+  left: 0; top: 100%;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 24px 1fr; /* 시 | : | 분 */
+  align-items: center;
+  gap: 4px;
+  background: #fff;
+  border: 2px solid #121212;
+  border-radius: 4px;
+  margin-top: 4px;
+  z-index: 20;
+  padding: 6px 8px;
+  box-sizing: border-box;
+  max-height: calc(var(--td-row-h) * var(--td-max-rows) + 12px);
+  overflow: hidden;   /* 내부 스크롤러만 스크롤 */
+}
+/* 가운데 하이라이트 라인 */
+.time-panel-highlight {
+  position: absolute;
+  left: 8px; right: 8px;
+  top: calc(6px + (var(--td-row-h) * 3));
+  height: var(--td-row-h);
+  border-radius: 8px;
+  background: rgba(18,18,18,0.06);
+  pointer-events: none;
+}
+/* 칼럼 스크롤 */
+.time-col {
+  max-height: calc(var(--td-row-h) * var(--td-max-rows));
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.time-col::-webkit-scrollbar { width: 8px; }
+.time-col::-webkit-scrollbar-thumb { background: #cfcfcf; border-radius: 4px; }
+/* 아이템 */
+.time-item {
+  height: var(--td-row-h);
+  line-height: var(--td-row-h);
+  text-align: center;
+  font-size: 14px;
+  cursor: pointer;
+  user-select: none;
+}
+.time-item.is-active { color: #121212; font-weight: 700; }
+.time-sep { text-align: center; font-weight: 700; color: #999; }
+/* =========================
+   공통 폰트 적용 (Galmuri11, 12px)
+   ========================= */
+.dropdown-label,
+.input-field,
+.time-item,
+.pixel-text-12 {
+  font-family: 'Galmuri11', sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+
+}
+/* 전역 유틸은 유지해도 OK. 다만 input 요소 전체에 !important 주는 규칙은 피하세요. */
+/* .dropdown-label, .input-field, .time-item, .pixel-text-12 { ... } ← 이건 유지 가능 */
+
+:root{
+  --field-h: 48px;
+}
+
+/* ⛓️ 입력 전/후(포커스 포함), 오토필 포함해서 사이즈 고정 */
+.birthcity-input{
+  height: var(--field-h) !important;
+  box-sizing: border-box !important;
+
+  /* 세로 위치 미세 보정: 필요시 1~2px만 조절 */
+  padding-top: 16px !important;
+  padding-bottom: 10px !important;
+
+  line-height: 1 !important;
+  font-family: 'Galmuri11','Galmuri',sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  color: #121212 !important;
+
+  -webkit-appearance: none;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* 포커스 시에도 동일하게 고정 */
+.birthcity-input:focus{
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  line-height: 1 !important;
+}
+
+/* placeholder도 동일 톤 */
+.birthcity-input::placeholder{
+  font-family: 'Galmuri11','Galmuri',sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  line-height: 1 !important;
+  color: #12121299 !important;
+}
+
+/* 크롬 오토필 케이스(폰트/사이즈 유지) */
+.birthcity-input:-webkit-autofill,
+.birthcity-input:-webkit-autofill:hover,
+.birthcity-input:-webkit-autofill:focus{
+  -webkit-text-size-adjust: 100%;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  font-family: 'Galmuri11','Galmuri',sans-serif !important;
+  transition: background-color 9999s ease-out, color 9999s ease-out;
+}
+
+.mid-grid-smart { content-visibility: auto; contain-intrinsic-size: 280px 280px; }
