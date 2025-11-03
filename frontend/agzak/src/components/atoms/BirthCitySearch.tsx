@@ -4,7 +4,6 @@ import { useKakaoSdk } from "@/hooks/useKakaoSdk";
 type BirthCity = {
   sido: string;
   sgg?: string;
-    dong?: string;
   address: string;
   lat: number;
   lng: number;
@@ -78,7 +77,6 @@ export function BirthCitySearch({
               address: it.address.address_name,
               sido: it.address.region_1depth_name,
               sgg: it.address.region_2depth_name,
-            dong: it.address.region_3depth_name, 
               lat: it.y,
               lng: it.x,
             }))
