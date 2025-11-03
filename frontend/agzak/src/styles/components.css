@@ -180,7 +180,7 @@
    ========================= */
 :root {
   --td-row-h: 36px;   /* 한 행 높이 */
-  --td-max-rows: 7;   /* 보이는 행 수 */
+  --td-max-rows: 5;   /* 보이는 행 수 */
 }
 .time-panel {
   position: absolute;
