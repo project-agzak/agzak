@@ -73,7 +73,7 @@ function SidebarContent() {
   return (
     <div className="h-full flex flex-col">
       {/* 로고 */}
-      <div className="px-0 py-3 flex items-center gap-2">
+      <div className="px-5 py-3 flex items-center gap-2">
         <img
           src="/agzak-logo.svg"
           alt="Agzak Logo"
@@ -97,7 +97,7 @@ function SidebarContent() {
       </div>
 
       {/* 메뉴 */}
-      <nav className="px-0 py-5 space-y-1 font-bitbit">
+      <nav className="px-5 py-5 space-y-1 font-bitbit">
         <SheetClose asChild>
           <a
             href="/fortune"

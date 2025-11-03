@@ -7,11 +7,11 @@ import { Input } from "@/components/atoms/Input";
 import { Button_L } from "@/components/atoms/Button_L";
 import { TimeDropDown } from "@/components/atoms/TimeDropDown";
 import { BirthCitySearch } from "@/components/atoms/BirthCitySearch";
-import { MidImages34 } from "@/components/MidImages34";
+import { MidImages34 } from "@/components/templates/MidImages34";
 
 export default function FortunePage() {
   // ✅ 양력/음력 선택
-  const [calendarType, setCalendarType] = useState<"solar" | "lunar" | null>(null);
+  const [calendarType, setCalendarType] = useState<"solar" | "lunar">("solar");
 
   // ✅ 태어난 시간
   const [hour, setHour] = useState<string | null>(null);
@@ -36,7 +36,7 @@ export default function FortunePage() {
     <div className="mt-1 flex justify-center bg-gradient-to-b from-[#fff8e7] via-[#121212] to-[#fff8e7] py-10 transition-all duration-500"> <MidImages34 itemWidth={300} whiteBg /> </div>
 
   {/* 상단 로고 */}
-      <div className="mt-15 flex flex-col items-center pb-10">
+      <div className="mt-5 flex flex-col items-center pb-10">
         <img src={FortuneCookie} alt="FortuneCookie" />
         <img src={FullnameLogo} alt="Agzak Fullname" />
       </div>
@@ -120,7 +120,7 @@ export default function FortunePage() {
               unknownTime ? "opacity-50 pointer-events-none" : ""
             }`}
           >
-            <div className="w-[260px]">
+           
               <TimeDropDown
                 hour={hour ?? undefined}
                 minute={minute ?? undefined}
@@ -131,7 +131,7 @@ export default function FortunePage() {
                 width={260}
                 placeholder="시간 선택"
               />
-            </div>
+          
           </div>
         </div>
 

@@ -58,6 +58,9 @@
   user-select: none;
   pointer-events: none;
 }
+
+
+
 .btnL-wrap.is-pressed .btnL-img { filter: brightness(.85); }
 .btnL-click {
   position: absolute; inset: 0;
@@ -178,6 +181,7 @@
 /* =========================
    TimeDropDown 전용 (시/분 2칼럼 패널)
    ========================= */
+   
 :root {
   --td-row-h: 36px;   /* 한 행 높이 */
   --td-max-rows: 5;   /* 보이는 행 수 */
@@ -295,3 +299,16 @@
 }
 
 .mid-grid-smart { content-visibility: auto; contain-intrinsic-size: 280px 280px; }
+
+/* 회색/검정 전환 */
+.dropdown-label.text-placeholder {
+  color: #777 !important;
+}
+.dropdown-label.text-active {
+  color: #121212 !important;
+}
+
+
+.dropdown-container.is-disabled .dropdown-button {
+   pointer-events: none !important;
+}

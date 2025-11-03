@@ -21,9 +21,9 @@ export default function SignupPage() {
             <Button_M to="#" label="중복확인" width={80} />
           </div>
 
-          {/* 아이디 인풋 중앙 배치 */}
+          {/* 이메일 인풋 중앙 배치 */}
           <div className="flex justify-center">
-            <Input placeholder="아이디" aria-label="아이디 입력" />
+            <Input placeholder="이메일" aria-label="이메일 입력" />
           </div>
 
           <p className="mt-0 pl-8 text-left font-galmuri-xsmall text-[#9CA3AF]">

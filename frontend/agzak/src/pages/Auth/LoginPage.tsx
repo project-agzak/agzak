@@ -16,7 +16,9 @@ export default function LoginPage() {
     // 실제 연동 시 OAuth 시작 URL로 교체
     window.location.href = '/auth/kakao';
   };
-
+const handleFortuneClick = () => {
+  window.location.href = "/fortune"; // 또는 router.push("/fortune");
+};
   return (
     <main className="relative z-10 min-h-screen bg-[#FEFBF2] p-4">
       {/* ✅ 로고 */}
@@ -26,9 +28,9 @@ export default function LoginPage() {
 
       {/* ✅ 폼 컨테이너 */}
       <div className="mt-8 flex w-full flex-col items-center gap-4">
-        {/* 아이디 */}
+        {/* 이메일 */}
         <div className="flex w-full max-w-[300px] flex-col items-center gap-2">
-          <Input placeholder="아이디" aria-label="아이디" />
+          <Input placeholder="이메일" aria-label="이메일" />
         </div>
 
         {/* 비밀번호 */}
@@ -57,13 +59,28 @@ export default function LoginPage() {
           </button>
 
           {/* 회원가입 링크 */}
-          <button
-            type="button"
-            onClick={handleSignupClick}
-            className="mt-3 cursor-pointer font-galmuri-small font-extrabold text-[#121212] transition-colors hover:text-[#000]"
-          >
-            회원가입
-          </button>
+         <div className="mt-3 flex items-center justify-center gap-3">
+  {/* 회원가입 버튼 */}
+  <button
+    type="button"
+    onClick={handleSignupClick}
+    className="cursor-pointer font-galmuri-small font-extrabold text-[#121212] transition-colors hover:text-[#000]"
+  >
+    회원가입
+  </button>
+
+  {/* 구분선 */}
+  <span className="text-[#888] font-galmuri-small select-none">|</span>
+
+  {/* 운세 보기 버튼 */}
+  <button
+    type="button"
+    onClick={handleFortuneClick} // ✨ 새 함수 만들어서 페이지 이동 or 액션
+    className="cursor-pointer font-galmuri-small font-extrabold text-[#121212] transition-colors hover:text-[#000]"
+  >
+    로그인 없이 운세 보기
+  </button>
+</div>
         </div>
       </div>
     </main>
