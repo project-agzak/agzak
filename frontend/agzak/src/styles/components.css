@@ -43,6 +43,9 @@
 /* =========================
    BUTTONS (L / M)
    ========================= */
+/* =========================
+   BUTTONS (L / M)
+   ========================= */
 .btnL-wrap {
   position: relative;
   display: block;
@@ -58,18 +61,23 @@
   user-select: none;
   pointer-events: none;
 }
-
-
-
 .btnL-wrap.is-pressed .btnL-img { filter: brightness(.85); }
+
 .btnL-click {
   position: absolute; inset: 0;
   background: transparent; border: none; outline: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   user-select: none;
 
-  font-family: "Galmuri11", system-ui, sans-serif;
-  color: #fff; font-size: 20px; font-weight: 700;
+  /* ✅ 수정된 부분 */
+  font-family: 'Galmuri', system-ui, sans-serif;
+  font-weight: 400;
+  font-synthesis: none;
+  -webkit-appearance: none;
+  -webkit-font-smoothing: antialiased;
+
+  color: #fff;
+  font-size: 20px;
   text-shadow:
     -1px 0 #121212, 1px 0 #121212, 0 -1px #121212, 0 1px #121212,
     -1px -1px #121212, 1px -1px #121212, -1px 1px #121212, 1px 1px #121212;
@@ -91,18 +99,27 @@
   pointer-events: none;
 }
 .btnM-wrap.is-pressed .btnM-img { filter: brightness(.85); }
+
 .btnM-click {
   position: absolute; inset: 0;
   background: transparent; border: none; outline: none; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   user-select: none;
 
-  font-family: "Galmuri11", system-ui, sans-serif;
-  color: #fff; font-size: 20px; font-weight: 700;
+  /* ✅ 수정된 부분 */
+  font-family: 'Galmuri', system-ui, sans-serif;
+  font-weight: 400;
+  font-synthesis: none;
+  -webkit-appearance: none;
+  -webkit-font-smoothing: antialiased;
+
+  color: #fff;
+  font-size: 20px;
   text-shadow:
     -1px 0 #121212, 1px 0 #121212, 0 -1px #121212, 0 1px #121212,
     -1px -1px #121212, 1px -1px #121212, -1px 1px #121212, 1px 1px #121212;
 }
+
 /* 정렬 헬퍼 */
 .right-align .btnM-wrap { margin-left: auto !important; margin-right: 0 !important; }
 .right-align .btnM-click { font-size: 14px !important; }
