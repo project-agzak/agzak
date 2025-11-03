@@ -1,8 +1,10 @@
 package com.ssafy.agzak.docs;
 
 import com.ssafy.agzak.domain.fortune.dto.response.DetailFortuneDataResponse;
+import com.ssafy.agzak.domain.member.dto.response.MemberGraphResponse;
 import com.ssafy.agzak.global.error.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -10,8 +12,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Tag(name = "회원", description = "회원 관련 API")
 public interface MemberApiDocs {
@@ -27,4 +31,18 @@ public interface MemberApiDocs {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
     })
     public ResponseEntity<DetailFortuneDataResponse> getDetailData(@PathVariable LocalDate date);
+
+
+    @Operation(
+            summary = "운세 그래프 조회",
+            description = "특정 기간 동안 운세 그래프 조회"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "운세 조회 완료",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = MemberGraphResponse.class)))
+            )
+    })
+    public ResponseEntity<List<MemberGraphResponse>> getGraphs(@RequestParam LocalDate startDate, @RequestParam LocalDate endDate);
 }

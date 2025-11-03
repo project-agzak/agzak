@@ -41,7 +41,7 @@ public class MemberController implements MemberApiDocs {
     }
 
     @GetMapping("/graphs")
-    public ResponseEntity<?> getGraphs(@RequestParam LocalDate startDate,@RequestParam LocalDate endDate) {
+    public ResponseEntity<List<MemberGraphResponse>> getGraphs(@RequestParam LocalDate startDate,@RequestParam LocalDate endDate) {
         long memberId = authMemberProvider.currentMemberId();
 
         return ResponseEntity.ok().body(memberService.getMemberGraph(memberId, startDate, endDate));
