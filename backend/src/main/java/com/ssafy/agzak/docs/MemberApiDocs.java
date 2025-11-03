@@ -1,17 +1,21 @@
 package com.ssafy.agzak.docs;
 
+import com.ssafy.agzak.domain.auth.dto.request.RegisterRequest;
 import com.ssafy.agzak.domain.fortune.dto.response.DetailFortuneDataResponse;
+import com.ssafy.agzak.domain.member.dto.request.MemberEditRequest;
 import com.ssafy.agzak.domain.member.dto.response.MemberGraphResponse;
 import com.ssafy.agzak.global.error.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.time.LocalDate;
@@ -45,4 +49,29 @@ public interface MemberApiDocs {
             )
     })
     public ResponseEntity<List<MemberGraphResponse>> getGraphs(@RequestParam LocalDate startDate, @RequestParam LocalDate endDate);
+
+    @Operation(
+            summary = "회원 정보 수정",
+            description = "닉네임 수정",
+            requestBody = @RequestBody(
+                    required = true,
+                    content = @Content(schema = @Schema(implementation = MemberEditRequest.class),
+                            examples = @ExampleObject(name="예시",
+                                    value = """
+                                    {
+                                      "nickname": "아그작유저",
+                                    }
+                                    """)
+                    )
+            )
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "변경 완료"
+            ),
+            @ApiResponse(responseCode = "409", description = "닉네임 중복",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+    })
+    public ResponseEntity<Void> editMemberInfo(@RequestBody MemberEditRequest request);
 }
