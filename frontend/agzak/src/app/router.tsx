@@ -1,8 +1,8 @@
 // src/app/router.tsx
+import AppLoader from '@/components/ui/AppLoader';
 import { lazy, Suspense, type ReactNode } from 'react';
 import { createBrowserRouter, Outlet } from 'react-router-dom';
 import AppLayout from './layout';
-import AppLoader from '@/components/ui/AppLoader';
 
 // --- lazy pages ---
 const HomePage = lazy(() => import('@/pages/Home/HomePage'));
@@ -13,7 +13,6 @@ const FortunePage = lazy(() => import('@/pages/Fortune/FortunePage'));
 const FortuneResultPage = lazy(() => import('@/pages/Fortune/FortuneResultPage'));
 
 const EnforcePage = lazy(() => import('@/pages/Enforce/EnforcePage'));
-const EnforceResultPage = lazy(() => import('@/pages/Enforce/EnforceResultPage'));
 
 const CookiesPage = lazy(() => import('@/pages/Cookies/CookiesPage'));
 const CalendarPage = lazy(() => import('@/pages/Calendar/CalendarPage'));
@@ -49,9 +48,7 @@ export const router = createBrowserRouter([
         path: 'enforce',
         element: <EmptyLayout />,
         children: [
-          { index: true, element: suspense(<EnforcePage />) },
-          { path: 'result', element: suspense(<EnforceResultPage />) },
-        ],
+          { index: true, element: suspense(<EnforcePage />) },        ],
       },
       { path: 'cookies', element: suspense(<CookiesPage />) },
       { path: 'calendar', element: suspense(<CalendarPage />) },
