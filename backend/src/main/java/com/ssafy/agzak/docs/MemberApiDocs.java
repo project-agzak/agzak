@@ -73,4 +73,17 @@ public interface MemberApiDocs {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
     })
     public ResponseEntity<Void> editMemberInfo(@RequestBody MemberEditRequest request);
+
+
+    @Operation(
+            summary = "회원 탈퇴",
+            description = "회원 탈퇴"
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "204",
+                    description = "탈퇴 완료"
+            )
+    })
+    public ResponseEntity<Void> deleteMember();
 }
