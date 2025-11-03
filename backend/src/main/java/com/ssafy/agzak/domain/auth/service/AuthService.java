@@ -1,5 +1,6 @@
 package com.ssafy.agzak.domain.auth.service;
 
+import com.ssafy.agzak.domain.auth.client.KakaoOAuthClient;
 import com.ssafy.agzak.domain.auth.dto.request.LoginRequest;
 import com.ssafy.agzak.domain.auth.dto.request.RegisterRequest;
 import com.ssafy.agzak.domain.auth.dto.response.CheckEmailResponse;
@@ -45,6 +46,7 @@ public class AuthService {
     private final GeocodingService geocodingService;
     private final GuestProfileStore guestStore;
     private final KakaoApiClient kakao;
+    private final KakaoOAuthClient kakaoOAuth;
     private final OAuthIdentityRepository oauthRepo;
     private final SocialSignupTicketStore ticketStore;
 
@@ -58,7 +60,19 @@ public class AuthService {
     // === 카카오 로그인 메인 진입 ===
     @Transactional
     public SocialLoginResponse kakaoLogin(KakaoLoginRequest req) {
-        var me = kakao.getUserMe(req.accessToken());
+        if (req.authCode() == null || req.authCode().isBlank() || req.redirectUri() == null || req.redirectUri().isBlank()) {
+            throw new BadCredentialsException("authCode와 redirectUri가 필요합니다.");
+        }
+
+        // 1) 서버에서 토큰 교환
+        var token = kakaoOAuth.exchangeCode(req.authCode(), req.redirectUri());
+        if (token == null || token.getAccess_token() == null) {
+            throw new BadCredentialsException("카카오 토큰 교환 실패");
+        }
+        String accessToken = token.getAccess_token();
+
+        // 2) 카카오 사용자 조회
+        var me = kakao.getUserMe(accessToken);
         if (me == null || me.getId() == null) throw new BadCredentialsException("카카오 인증 실패");
 
         String sub = String.valueOf(me.getId());
@@ -68,21 +82,24 @@ public class AuthService {
             return SocialLoginResponse.ok(issueTokens(existing.get().getMember().getMemberId()));
         }
 
-        // 신규: 게스트가 있으면 즉시 가입
+        // (선택) 이메일 동의값 가공
+        String kakaoEmail = me.email();      // null 가능
+        String kakaoNick  = me.nickname();   // null 가능
+
+        // 3) 게스트 즉시 전환 경로
         if (req.guestId() != null && !req.guestId().isBlank()) {
             var gp = guestStore.find(req.guestId());
             if (gp == null) throw new BadCredentialsException("게스트 정보가 만료되었거나 없습니다.");
 
             String nickname = gp.nickname() != null ? gp.nickname() :
-                    (me.nickname() != null ? me.nickname() : "user");
+                    (kakaoNick != null ? kakaoNick : "user");
             if (members.existsByNickname(nickname)) {
                 nickname = nickname + "_" + (int)(Math.random()*900+100);
             }
 
-            // email은 null 가능(스키마가 허용) — 있으면 저장
             var m = Member.builder()
-                    .email(me.email())
-                    .password(null) // 소셜 계정
+                    .email(kakaoEmail)
+                    .password(null)
                     .nickname(nickname)
                     .gender(gp.gender())
                     .birthDate(gp.birthDate())
@@ -94,28 +111,23 @@ public class AuthService {
                     .build();
             members.save(m);
 
-            // OAuthIdentity 연결
             oauthRepo.save(OAuthIdentity.builder()
-                    .id(OAuthIdentityId.builder()
-                            .provider(OAuthProvider.KAKAO)
-                            .sub(sub)
-                            .build())
+                    .id(OAuthIdentityId.builder().provider(OAuthProvider.KAKAO).sub(sub).build())
                     .member(m)
                     .build());
 
             guestStore.delete(req.guestId());
-
             return SocialLoginResponse.ok(issueTokens(m.getMemberId()));
         }
 
-        // 게스트 없음 → 추가 정보 필요. 티켓 발급
+        // 4) 신규 & 게스트 아님 → 추가정보 필요 (티켓 발급)
         var payload = new HashMap<String, String>();
         payload.put("provider", OAuthProvider.KAKAO.name());
         payload.put("sub", sub);
-        if (me.email() != null) payload.put("email", me.email());
+        if (kakaoEmail != null) payload.put("email", kakaoEmail);
 
         String ticket = ticketStore.create(payload);
-        return SocialLoginResponse.needInfo(ticket, me.email(), me.nickname());
+        return SocialLoginResponse.needInfo(ticket, kakaoEmail, kakaoNick);
     }
 
     // === 카카오 완료: 티켓 + 추가정보로 가입 완료 ===
