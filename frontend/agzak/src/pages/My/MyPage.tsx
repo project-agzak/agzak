@@ -46,45 +46,26 @@ export default function MyPage() {
           />
         </div>
 
-        {/* ② 생년월일 */}
-        <div className="flex max-w-[300px] flex-col gap-1">
-          <div className="mx-auto flex w-[230px] justify-between items-center">
-            <label className="font-galmuri-small font-extrabold text-[#222]">생년월일</label>
+     {/* ② 생년월일 */}
+<div className="flex max-w-[300px] flex-col gap-1">
+  <div className="mx-auto flex w-[230px] justify-between items-center">
+    <label className="font-galmuri-small font-extrabold text-[#222]">생년월일</label>
 
-            {/* ✅ 항상 렌더 + 고정 높이 + opacity 전환 (공간 유지) */}
-            <div
-              className={`flex gap-2 items-center h-5 transition-opacity duration-150 ${
-                isEdit ? "opacity-100" : "opacity-70 pointer-events-none"
-              }`}
-            >
-              <button
-                type="button"
-                onClick={() => setCalendarType("solar")} disabled={!isEdit}
-                className={`px-1 py-[2px] text-xs font-galmuri-xsmall font-extrabold cursor-pointer transition-colors ${
-                  calendarType === "solar" ? "text-[#121212]" : "text-[#777]"
-                } ${!isEdit ? "cursor-default" : "cursor-pointer"}`}
-              >
-                양력
-              </button>
-              <button
-                type="button"
-                onClick={() => setCalendarType("lunar")}
-                className={`px-1 py-[2px] text-xs font-galmuri-xsmall font-extrabold cursor-pointer transition-colors ${
-                  calendarType === "lunar" ? "text-[#121212]" : "text-[#777]"
-                } ${!isEdit ? "cursor-default" : "cursor-pointer"}`}
-              >
-                음력
-              </button>
-            </div>
-          </div>
+    {/* ✅ "양력" 글자만 표시 */}
+    <div className="flex items-center h-5 opacity-70">
+      <span className="text-xs font-galmuri-xsmall font-extrabold text-[#121212]">
+        양력
+      </span>
+    </div>
+  </div>
 
-          <Input
-            placeholder="2000.01.01"
-            inputMode="numeric"
-            aria-label="생년월일 입력"
-            disabled={!isEdit}
-          />
-        </div>
+  <Input
+    placeholder="2000.01.01"
+    inputMode="numeric"
+    aria-label="생년월일 입력"
+    disabled={!isEdit}
+  />
+</div>
 
 {/* ③ 태어난 시간 */}
 <div className="flex max-w-[300px] flex-col gap-1">
