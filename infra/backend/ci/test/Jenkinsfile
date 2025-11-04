@@ -1,4 +1,4 @@
-// Jenkinsfile (sandbox-safe; no java.net.URL, no nohup, no ssh-agent in post)
+// Jenkinsfile (sandbox-safe; POSIX sh only; no java.net.URL, no nohup)
 
 pipeline {
   agent any
@@ -26,7 +26,9 @@ pipeline {
                                            usernameVariable: 'SSH_USER')]) {
           sh '''
             set -eux
-            ssh -o StrictHostKeyChecking=no -i "$SSH_KEY" "$SSH_USER@$DEPLOY_HOST" "echo ssh ok"
+            # sh 환경에서 절대경로 ssh 사용
+            export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+            /usr/bin/ssh -o StrictHostKeyChecking=no -i "$SSH_KEY" "$SSH_USER@$DEPLOY_HOST" "echo ssh ok"
           '''
         }
       }
@@ -36,7 +38,6 @@ pipeline {
       steps {
         checkout scm
         script {
-          // 브랜치 이름 정규화
           def full = (env.GIT_BRANCH ?: '').replaceFirst(/^origin\\//, '')
           if (!full) {
             full = sh(returnStdout: true, script: 'git rev-parse --abbrev-ref HEAD').trim()
@@ -45,7 +46,6 @@ pipeline {
           env.TARGET_BRANCH = full.replaceAll('/', '-')
           echo "Target branch: ${env.TARGET_BRANCH_FULL} -> ${env.TARGET_BRANCH}"
 
-          // 작성자 정보 ENV에 저장 (post에서 안전하게 사용)
           env.AUTHOR_NAME = sh(returnStdout: true, script: 'git show -s --pretty=%an').trim()
           env.AUTHOR_MAIL = sh(returnStdout: true, script: 'git show -s --pretty=%ae').trim()
         }
@@ -60,14 +60,14 @@ pipeline {
             usernameVariable: 'DOCKER_USER',
             passwordVariable: 'DOCKER_PWD'
           )]) {
-            sh '''#!/usr/bin/env bash
+            sh '''
 set -euo pipefail
 set -x
 
 TAG="${TARGET_BRANCH}-${BUILD_NUMBER}"
 
-# 목적지 레포 / 인증 레지스트리 결정
-if [[ -n "${REGISTRY}" && "${REGISTRY}" != "docker.io" ]]; then
+# 목적지 레포 / 인증 레지스트리 (POSIX [ ] 사용)
+if [ -n "${REGISTRY}" ] && [ "${REGISTRY}" != "docker.io" ]; then
   DEST_REPO="${REGISTRY}/${IMAGE_NAME}"
   AUTH_REGISTRY="${REGISTRY}"
 else
@@ -75,7 +75,6 @@ else
   AUTH_REGISTRY="https://index.docker.io/v1/"
 fi
 
-# Kaniko 인증 파일
 DOCKERCFG="${WORKSPACE}/kaniko-config"
 mkdir -p "${DOCKERCFG}"
 AUTH="$(printf "%s:%s" "${DOCKER_USER}" "${DOCKER_PWD}" | base64 | tr -d '\n')"
@@ -83,12 +82,9 @@ printf '{"auths":{"%s":{"auth":"%s"}}}\n' "${AUTH_REGISTRY}" "${AUTH}" > "${DOCK
 
 WORKDIR="$(pwd)"
 DF="${WORKDIR}/Dockerfile"
-
-# Kaniko가 DOCKER_CONFIG 읽음
 export DOCKER_CONFIG="${DOCKERCFG}"
 
 # Kaniko 바이너리 확인
-command -v /kaniko/executor >/dev/null || { echo "kaniko executor not found"; exit 1; }
 /kaniko/executor version || true
 
 # 루트로 실행(권한 이슈 회피)
@@ -124,26 +120,25 @@ command -v /kaniko/executor >/dev/null || { echo "kaniko executor not found"; ex
             def tag = "${env.TARGET_BRANCH}-${env.BUILD_NUMBER}"
             def testImage = "${repo}:${tag}"
 
-            sh """#!/usr/bin/env bash
+            sh """
 set -euo pipefail
 set -x
 
-# 0) PATH를 확실히 지정 (재시작 시 PATH 누락 방지)
+# PATH 보강 (재시작/리플레이 대비)
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
-# 1) ssh 존재 확인, 없으면 즉시 설치
-if ! command -v /usr/bin/ssh >/dev/null 2>&1; then
-  echo "ssh not found; installing openssh-client..."
-  sudo apt-get update
-  sudo apt-get install -y openssh-client
+# ssh 존재 확인(정상이면 그냥 통과)
+if ! /usr/bin/ssh -V >/dev/null 2>&1; then
+  echo "ssh client not found; installing..."
+  sudo apt-get update && sudo apt-get install -y openssh-client
 fi
 
-# 2) 절대 경로로 ssh 호출
+# 원격에서 bash -s 사용 (원격은 Ubuntu라 bash 존재)
+# 로컬은 sh, 원격은 bash이므로 충돌 없음
 /usr/bin/ssh -o StrictHostKeyChecking=no -i "\$SSH_KEY" "\$SSH_USER@$DEPLOY_HOST" "TEST_IMAGE=${testImage} DOCKER_USER=\$DOCKER_USER DOCKER_PWD=\$DOCKER_PWD bash -s" <<'ENDSSH'
   set -eux
   cd /home/ubuntu/agzak-app/test/backend
 
-  # 태그를 먼저 시도, 없으면 latest 폴백(재시작 시 유용)
   if ! docker pull "\$TEST_IMAGE"; then
     echo "WARN: \$TEST_IMAGE not found. Fallback to :latest"
     TEST_IMAGE="\${TEST_IMAGE%:*}:latest"
@@ -175,7 +170,7 @@ ENDSSH
       }
     }
 
-  } // <<<<<< 이 줄: stages 블록 닫기 (누락되어 있었던 부분)
+  } // stages
 
   post {
     success {
