@@ -60,7 +60,7 @@ function ScoreBadge({ score }: { score: number }) {
 export default function RankingList() {
   return (
     <div className="mt-3 w-[min(360px,92%)] mx-auto">
-      <div className="max-h-[340px] overflow-y-auto overscroll-contain pr-2">
+      <div className="max-h-[400px] overflow-y-auto overscroll-contain pr-2">
         {ranking.map((item, idx) => (
           <div key={item.rank}>
             <div className="flex items-center justify-between py-3">

@@ -87,7 +87,7 @@ export function FortuneBubble({
           flipX ? "items-end pr-6 text-right" : "pl-6"
         )}
       >        
-        <ul className="space-y-1 ">
+        <ul className="space-y-1 translate-x-1">
           {effects.map((eff) => (
             <li
               key={eff.label}

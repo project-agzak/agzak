@@ -35,7 +35,7 @@ export default function Page() {
       </div>
       <BlackboardCalendar />
       <FortuneGaugeList />
-      <FortuneBubble {...fortuneCookie} width={90} />
+      <FortuneBubble {...fortuneCookie} width={120} />
       <div className="min-h-dvh bg-[#FEFBF2] px-4 py-6">
         <div className="space-y-3">
           <ExpandableFortune
