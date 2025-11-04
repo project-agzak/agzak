@@ -6,15 +6,16 @@ interface ButtonMProps {
   to: string;
   label?: string;
   width?: number; // 원하는 폭 (기본 130)
+  className?: string;
 }
 
-export function Button_M({ to, label = "다음", width = 130 }: ButtonMProps) {
+export function Button_M({ to, label = "다음", width = 130, className }: ButtonMProps) {
   const navigate = useNavigate();
   const [pressed, setPressed] = React.useState(false);
 
   return (
     <div
-      className={`btnM-wrap ${pressed ? "is-pressed" : ""}`}
+      className={`btnM-wrap ${pressed ? "is-pressed" : ""} ${className ?? ""}`}
       style={{ "--btn-width": `${width}px` } as React.CSSProperties}
     >
       <img
