@@ -27,9 +27,11 @@ pipeline {
     stage('Kaniko Build & Push') {
       steps {
         dir("${env.SUBDIR}") {
-          withCredentials([usernamePassword(credentialsId: 'dockerhub-cred',
-            usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PWD')]) {
-
+          withCredentials([usernamePassword(
+            credentialsId: 'dockerhub-cred',
+            usernameVariable: 'DOCKER_USER',
+            passwordVariable: 'DOCKER_PWD'
+          )]) {
             sh '''
               set -eux
 
@@ -52,22 +54,24 @@ pipeline {
                   "${AUTH_REGISTRY}": { "auth": "${AUTH}" }
                 }
               }
-EOF
+    EOF
 
               WORKDIR="$(pwd)"
               DF="${WORKDIR}/Dockerfile"
 
               export DOCKER_CONFIG="${DOCKERCFG}"
+              export KANIKO_DIR="${WORKSPACE}/.kaniko"
+              mkdir -p "${KANIKO_DIR}"
 
               /kaniko/executor \
                 --context=dir://"${WORKDIR}" \
                 --dockerfile="${DF}" \
+                --kaniko-dir="${KANIKO_DIR}" \
                 --destination="${DEST_REPO}:${TAG}" \
                 --destination="${DEST_REPO}:latest" \
                 --use-new-run \
                 --single-snapshot
-                # 필요시 캐시 활성화:
-                # --cache=true --cache-repo="${DEST_REPO}-cache"
+                --cache=true --cache-repo="${DEST_REPO}-cache"
             '''
           }
         }
