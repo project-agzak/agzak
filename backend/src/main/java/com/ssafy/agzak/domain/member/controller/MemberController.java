@@ -25,8 +25,8 @@ public class MemberController implements MemberApiDocs {
 
     @GetMapping
     public ResponseEntity<MemberInfoResponse> getMemberInfo() {
-        return ResponseEntity.ok().body(new MemberInfoResponse(1, "temp", "temp", Member.Gender.FEMALE,
-                LocalDate.now(),null, null,null));
+        long memberId = authMemberProvider.currentMemberId();
+        return ResponseEntity.ok().body(memberService.getMemberInfo(memberId));
     }
 
     @PatchMapping

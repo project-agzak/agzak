@@ -37,7 +37,7 @@ public class FortuneController implements FortuneApiDocs {
         fortuneService.checkDuplicate(memberId, LocalDate.now());
         MemberInfoResponse response = memberService.getMemberInfo(memberId);
         BirthDataInput input = BirthDataInput.fromMemberInfo(response);
-        FinalFortuneResponse result = fortuneService.getFortuneScores(input);
+        FinalFortuneResponse result = fortuneService.getFortuneScores(input, response.birthCity());
         fortuneService.saveFortune(memberId, result);
         return ResponseEntity.ok().body(result);
     }
@@ -49,7 +49,7 @@ public class FortuneController implements FortuneApiDocs {
         var geo = geocodingService.getCoordinates(req.birthCity());
 
         var input = new BirthDataInput(req.birthDate(), req.birthTime(), geo.latitude(), geo.longitude());
-        FinalFortuneResponse fortune = fortuneService.getFortuneScores(input);
+        FinalFortuneResponse fortune = fortuneService.getFortuneScores(input, req.birthCity());
 
         var profile = new GuestProfile(
                 req.nickname(), req.gender(), req.birthDate(), req.birthTime(),

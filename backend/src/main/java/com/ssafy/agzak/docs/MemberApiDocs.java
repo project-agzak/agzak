@@ -3,6 +3,7 @@ package com.ssafy.agzak.docs;
 import com.ssafy.agzak.domain.fortune.dto.response.DetailFortuneDataResponse;
 import com.ssafy.agzak.domain.member.dto.request.MemberEditRequest;
 import com.ssafy.agzak.domain.member.dto.response.MemberGraphResponse;
+import com.ssafy.agzak.domain.member.dto.response.MemberInfoResponse;
 import com.ssafy.agzak.global.error.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
@@ -22,6 +23,16 @@ import java.util.List;
 
 @Tag(name = "회원", description = "회원 관련 API")
 public interface MemberApiDocs {
+
+    @Operation(
+            summary = "회원 정보 조회",
+            description = "회원 상세 정보 조회"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "회원 조회 완료",
+                    content = @Content(schema = @Schema(implementation = MemberInfoResponse.class))),
+    })
+    public ResponseEntity<MemberInfoResponse> getMemberInfo();
 
     @Operation(
             summary = "멤버 운세 확인",
