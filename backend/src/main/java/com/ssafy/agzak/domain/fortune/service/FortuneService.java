@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -304,5 +305,14 @@ public class FortuneService {
 
         return fortuneTypeRepository.findFortuneTypeByName(name)
                 .orElseThrow(() -> new IllegalArgumentException("일치하는 운세 타입 이름이 없습니다."));
+    }
+
+    public void checkDuplicate(long memberId, LocalDate date) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 회원 아이디입니다."));
+
+        if (fortuneRepository.existsByMemberAndDate(member, date)) {
+            throw new IllegalArgumentException("이미 조회한 운세 정보가 있습니다. 날짜 조회를 이용하세요");
+        }
     }
 }

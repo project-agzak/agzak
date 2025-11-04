@@ -28,4 +28,6 @@ public interface FortuneRepository extends JpaRepository<Fortune, Long> {
         and f.date between :startDate and :endDate
     """)
     List<Fortune> findAllByMemberAndDateBetween(Member member, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+
+    boolean existsByMemberAndDate(Member member, LocalDate date);
 }
