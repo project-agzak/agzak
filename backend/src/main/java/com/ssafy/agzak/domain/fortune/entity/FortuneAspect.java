@@ -43,4 +43,8 @@ public class FortuneAspect {
         this.score = score;
         this.originalScore = score;
     }
+
+    public void updateScore(int score) {
+        this.score += score;
+    }
 }
