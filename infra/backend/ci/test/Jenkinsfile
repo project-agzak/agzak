@@ -1,10 +1,6 @@
 pipeline {
   agent any
-
-  options {
-    timestamps()
-    ansiColor('xterm')
-  }
+  options { timestamps(); ansiColor('xterm') }
 
   environment {
     SUBDIR      = 'backend'
@@ -20,9 +16,7 @@ pipeline {
         checkout scm
         script {
           def full = (env.GIT_BRANCH ?: '').replaceFirst(/^origin\//, '')
-          if (!full) {
-            full = sh(returnStdout: true, script: 'git rev-parse --abbrev-ref HEAD').trim()
-          }
+          if (!full) { full = sh(returnStdout: true, script: 'git rev-parse --abbrev-ref HEAD').trim() }
           env.TARGET_BRANCH_FULL = full
           env.TARGET_BRANCH = full.replaceAll('/', '-')
           echo "Target branch: ${env.TARGET_BRANCH_FULL} -> ${env.TARGET_BRANCH}"
@@ -30,28 +24,54 @@ pipeline {
       }
     }
 
-    stage('Docker Build & Push') {
+    stage('Kaniko Build & Push') {
       steps {
         dir("${env.SUBDIR}") {
-          withCredentials([usernamePassword(credentialsId: 'dockerhub-cred',
-              usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PWD')]) {
+          withCredentials([usernamePassword(
+            credentialsId: 'dockerhub-cred',
+            usernameVariable: 'DOCKER_USER',
+            passwordVariable: 'DOCKER_PWD'
+          )]) {
             sh '''
               set -eux
-              echo "$DOCKER_PWD" | docker login -u "$DOCKER_USER" --password-stdin ${REGISTRY}
-              export DOCKER_BUILDKIT=1
+
               TAG="${TARGET_BRANCH}-${BUILD_NUMBER}"
 
               if [ -n "${REGISTRY}" ] && [ "${REGISTRY}" != "docker.io" ]; then
-                REPO="${REGISTRY}/${IMAGE_NAME}"
+                DEST_REPO="${REGISTRY}/${IMAGE_NAME}"
+                AUTH_REGISTRY="${REGISTRY}"
               else
-                REPO="${IMAGE_NAME}"
+                DEST_REPO="docker.io/${IMAGE_NAME}"
+                AUTH_REGISTRY="https://index.docker.io/v1/"
               fi
 
-              docker build -t "${REPO}:${TAG}" .
-              docker push "${REPO}:${TAG}"
+              DOCKERCFG="${WORKSPACE}/kaniko-config"
+              mkdir -p "${DOCKERCFG}"
+              AUTH="$(printf "%s:%s" "${DOCKER_USER}" "${DOCKER_PWD}" | base64 | tr -d '\\n')"
+              cat > "${DOCKERCFG}/config.json" <<EOF
+              {
+                "auths": {
+                  "${AUTH_REGISTRY}": { "auth": "${AUTH}" }
+                }
+              }
+    EOF
 
-              docker tag "${REPO}:${TAG}" "${REPO}:latest"
-              docker push "${REPO}:latest"
+              WORKDIR="$(pwd)"
+              DF="${WORKDIR}/Dockerfile"
+
+              export DOCKER_CONFIG="${DOCKERCFG}"
+              export KANIKO_DIR="${WORKSPACE}/.kaniko"
+              mkdir -p "${KANIKO_DIR}"
+
+              /kaniko/executor \
+                --context=dir://"${WORKDIR}" \
+                --dockerfile="${DF}" \
+                --kaniko-dir="${KANIKO_DIR}" \
+                --destination="${DEST_REPO}:${TAG}" \
+                --destination="${DEST_REPO}:latest" \
+                --use-new-run \
+                --single-snapshot
+                --cache=true --cache-repo="${DEST_REPO}-cache"
             '''
           }
         }
@@ -69,7 +89,7 @@ pipeline {
             script {
               def repo = (env.REGISTRY?.trim() && env.REGISTRY != 'docker.io')
                 ? "${env.REGISTRY}/${env.IMAGE_NAME}"
-                : env.IMAGE_NAME
+                : "docker.io/${env.IMAGE_NAME}"
               def tag = "${env.TARGET_BRANCH}-${env.BUILD_NUMBER}"
               def testImage = "${repo}:${tag}"
 
@@ -83,7 +103,6 @@ pipeline {
 
                     sed -i '/^TEST_IMAGE=/d' .env
                     sed -i '/^PROJECT=/d' .env
-
                     echo "TEST_IMAGE=\$TEST_IMAGE" >> .env
                     echo "PROJECT=test" >> .env
 
@@ -111,27 +130,27 @@ pipeline {
   }
 
   post {
-      success {
-        script {
-          def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
-          def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
-          sh """
-            curl -X POST -H 'Content-Type: application/json' \
-            -d '{"text":"빌드 성공: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name}) (<${env.BUILD_URL}|상세 보기>)"}' \
-            https://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo
-          """
-        }
+    success {
+      script {
+        def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
+        def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
+        sh """
+          curl -X POST -H 'Content-Type: application/json' \
+          -d '{"text":"빌드 성공: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name}) (<${env.BUILD_URL}|상세 보기>)"}' \
+          https://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo
+        """
       }
-      failure {
-        script {
-          def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
-          def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
-          sh """
-            curl -X POST -H 'Content-Type: application/json' \
-            -d '{"text":"빌드 실패: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name}) (<${env.BUILD_URL}|상세 보기>)"}' \
-            https://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo
-          """
-        }
+    }
+    failure {
+      script {
+        def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
+        def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
+        sh """
+          curl -X POST -H 'Content-Type: application/json' \
+          -d '{"text":"빌드 실패: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name}) (<${env.BUILD_URL}|상세 보기>)"}' \
+          https://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo
+        """
       }
+    }
   }
 }

@@ -108,7 +108,8 @@ CREATE TABLE `inventory` (
                              PRIMARY KEY (`inventory_id`),
                              CONSTRAINT `FK_inventory_member`
                                  FOREIGN KEY (`member_id`) REFERENCES `member`(`member_id`)
-                                     ON DELETE CASCADE ON UPDATE CASCADE
+                                     ON DELETE CASCADE ON UPDATE CASCADE,
+                             UNIQUE KEY `UQ_inventory_member`  (`member_id`)
 ) ENGINE=InnoDB;
 
 CREATE TABLE `game_session` (

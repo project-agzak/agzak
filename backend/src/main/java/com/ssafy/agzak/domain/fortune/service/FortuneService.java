@@ -10,6 +10,8 @@ import com.ssafy.agzak.domain.fortune.entity.FortuneType;
 import com.ssafy.agzak.domain.fortune.repository.FortuneAspectRepository;
 import com.ssafy.agzak.domain.fortune.repository.FortuneRepository;
 import com.ssafy.agzak.domain.fortune.repository.FortuneTypeRepository;
+import com.ssafy.agzak.domain.guest.dto.GuestProfile;
+import com.ssafy.agzak.domain.guest.support.GuestProfileStore;
 import com.ssafy.agzak.domain.member.entity.Member;
 import com.ssafy.agzak.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +36,7 @@ public class FortuneService {
     private final MemberRepository memberRepository;
     private final FortuneRepository fortuneRepository;
     private final FortuneAspectRepository fortuneAspectRepository;
+    private final GuestProfileStore guestStore;
 
     @Value("${gms.base-url}")
     private String gmsBaseUrl;
@@ -170,6 +173,11 @@ public class FortuneService {
             log.error("내부 JSON 문자열 파싱 실패: {}", e.getMessage());
             return new FinalFortuneResponse(null,null);
         }
+    }
+
+    @Transactional
+    public String saveGuestProfile(GuestProfile profile) {
+        return guestStore.save(profile);
     }
 
     @Transactional
