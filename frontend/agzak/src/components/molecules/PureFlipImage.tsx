@@ -1,29 +1,21 @@
-import { useState, type KeyboardEvent } from "react";
+import { useState, type KeyboardEvent, type ReactNode } from "react";
 import clsx from "clsx";
 
-/**
- * PureFlipImage — 클릭으로 앞/뒷면 이미지를 3D로 뒤집어 보여주는 순수 이미지 전용 컴포넌트
- *
- * 의존성: Tailwind CSS (임의 스타일은 인라인으로 처리)
- *
- * 사용법
- * <PureFlipImage
- *   className="w-64 aspect-[2/3]" // 컨테이너 크기 지정
- *   frontSrc={FrontImg},mk
- *   backSrc={BackImg}
- *   altFront="카드 앞면"
- *   altBack="카드 뒷면"
- * />
- */
 export type PureFlipImageProps = {
-  frontSrc: string;
-  backSrc: string;
+  // 기존 이미지 src 방식
+  frontSrc?: string;
+  backSrc?: string;
+
+  // ✅ 새로 추가: 컴포넌트 방식 (노드를 우선 사용)
+  frontNode?: ReactNode;
+  backNode?: ReactNode;
+
   altFront?: string;
   altBack?: string;
-  className?: string; // 크기 지정 (w-*, h-* / aspect-*)
-  roundedClass?: string; // 모서리 (기본 rounded-2xl)
-  isFlipped?: boolean; // 제어형
-  onFlippedChange?: (next: boolean) => void; // 제어형 핸들러
+  className?: string;      // 컨테이너 크기 (w-*, h-* / aspect-*)
+  roundedClass?: string;   // 모서리 (기본 rounded-2xl)
+  isFlipped?: boolean;     // 제어형
+  onFlippedChange?: (next: boolean) => void;
   disabled?: boolean;
   ariaLabel?: string;
 };
@@ -31,6 +23,8 @@ export type PureFlipImageProps = {
 export function PureFlipImage({
   frontSrc,
   backSrc,
+  frontNode,
+  backNode,
   altFront = "front",
   altBack = "back",
   className,
@@ -49,7 +43,6 @@ export function PureFlipImage({
   };
 
   const toggle = () => !disabled && setFlipped(!flipped);
-
   const onKeyDown = (e: KeyboardEvent) => {
     if (disabled) return;
     if (e.key === "Enter" || e.key === " ") {
@@ -59,10 +52,7 @@ export function PureFlipImage({
   };
 
   return (
-    <div
-      className={clsx("inline-block", className)}
-      style={{ perspective: "1000px" }}
-    >
+    <div className={clsx("inline-block", className)} style={{ perspective: "1000px" }}>
       <div
         role="button"
         aria-label={ariaLabel}
@@ -75,54 +65,52 @@ export function PureFlipImage({
           disabled && "pointer-events-none opacity-60"
         )}
       >
-        {/* 3D 무대 */}
+        {/* 3D stage */}
         <div
           className={clsx(
             "h-full w-full transition-transform duration-500 [transform-style:preserve-3d] motion-reduce:transition-none",
             flipped && "[transform:rotateY(180deg)]"
           )}
         >
-          {/* 앞면 */}
-          <img
-            src={frontSrc}
-            alt={altFront}
+          {/* Front */}
+          <div
             className={clsx(
-              "absolute inset-0 h-full w-full object-cover [backface-visibility:hidden]",
+              "absolute inset-0 h-full w-full [backface-visibility:hidden]",
               roundedClass,
-              "shadow-md"
+              "shadow-md overflow-hidden"
             )}
-          />
-          {/* 뒷면 */}
-          <img
-            src={backSrc}
-            alt={altBack}
+          >
+            {frontNode ? (
+              frontNode
+            ) : (
+              <img
+                src={frontSrc!}
+                alt={altFront}
+                className="h-full w-full object-cover"
+              />
+            )}
+          </div>
+
+          {/* Back */}
+          <div
             className={clsx(
-              "absolute inset-0 h-full w-full object-cover [backface-visibility:hidden] [transform:rotateY(180deg)]",
+              "absolute inset-0 h-full w-full [backface-visibility:hidden] [transform:rotateY(180deg)]",
               roundedClass,
-              "shadow-md"
+              "shadow-md overflow-hidden"
             )}
-          />
+          >
+            {backNode ? (
+              backNode
+            ) : (
+              <img
+                src={backSrc!}
+                alt={altBack}
+                className="h-full w-full object-cover"
+              />
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-// --- 데모 --- //
-import Front from "@/assets/Back/Front.svg";
-import Back from "@/assets/Back/Back.svg";
-
-export default function PureFlipImageDemo() {
-  return (
-    <div className="min-h-[60vh] grid place-items-center p-6">
-      {/* 세로카드 비율: 2:3 */}
-      <PureFlipImage
-        className="w-64 aspect-[2/3]"
-        frontSrc={Front}
-        backSrc={Back}
-        altFront="카드 앞면"
-        altBack="카드 뒷면"
-      />
     </div>
   );
 }
