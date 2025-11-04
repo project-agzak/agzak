@@ -34,7 +34,7 @@ export default function HomePage() {
         />
       </div>
       
-      <div className="mt-2">
+      <div className="mt-1">
         <div className="relative mx-auto w-[min(320px,90%)]">
           <img 
           src={ RankingRibbon } 
@@ -44,10 +44,12 @@ export default function HomePage() {
           />
           <p className="absolute inset-0 flex items-center justify-center font-bitbit-large leading-none pb-5">오늘의 랭킹</p>
         </div>
-        <p className="text-center font-galmuri-xsmall"> KST 24:00 기준</p>
+        <p className="text-center font-galmuri-xsmall -translate-y-8"> KST 24:00 기준</p>
       </div>
-      <RankingList />
-
+      <div className="-translate-y-8">
+        <RankingList />
+      </div>
+    
     </main>
   );
 }
