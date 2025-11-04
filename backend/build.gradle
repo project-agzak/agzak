@@ -71,6 +71,10 @@ dependencies {
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
 
+    // ── Cache
+    implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
+
+
     // ── Dev only
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     developmentOnly 'org.springframework.boot:spring-boot-docker-compose'
