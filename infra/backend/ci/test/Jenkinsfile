@@ -1,6 +1,4 @@
-// Jenkinsfile (stable: TMPDIR 고정, post에서 sh 제거, ssh-agent 미사용)
 
-// ── Webhook helper (pure Groovy; shell/nojup 비사용) ─────────────────────────
 @NonCPS
 def postJson(String urlStr, Map body) {
   def url  = new URL(urlStr)
@@ -13,20 +11,14 @@ def postJson(String urlStr, Map body) {
   def code = conn.responseCode
   def stream = (code >= 200 && code < 400) ? conn.inputStream : conn.errorStream
   def resp = stream ? stream.getText('UTF-8') : ''
-  // @NonCPS 내부에서 echo 호출을 피하고, 문자열로 반환
   return "HTTP ${code}: ${resp}"
 }
 
-// ── Pipeline ─────────────────────────────────────────────────────────────────
 pipeline {
   agent any
-  options {
-    timestamps()
-    ansiColor('xterm')
-  }
+  options { timestamps(); ansiColor('xterm') }
 
   environment {
-    // ★ 중요: durable-task/프로세스 spawn이 참조할 TMPDIR 고정
     TMPDIR = '/tmp'
     JAVA_TOOL_OPTIONS = '-Djava.io.tmpdir=/tmp'
 
@@ -36,13 +28,15 @@ pipeline {
     DEPLOY_USER = 'ubuntu'
     DEPLOY_HOST = 'k13b102.p.ssafy.io'
     WEBHOOK_URL = 'https://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo'
+    // post에서 쓸 기본값
+    AUTHOR_NAME = 'unknown'
+    AUTHOR_MAIL = ''
   }
 
   stages {
 
     stage('SSH smoke') {
       steps {
-        // ssh-agent 대신 키 직접 바인딩
         withCredentials([sshUserPrivateKey(credentialsId: 'deploy-ssh',
                                            keyFileVariable: 'SSH_KEY',
                                            usernameVariable: 'SSH_USER')]) {
@@ -70,6 +64,16 @@ pipeline {
           env.TARGET_BRANCH      = full.replaceAll('/', '-')
           echo "Target branch: ${env.TARGET_BRANCH_FULL} -> ${env.TARGET_BRANCH}"
         }
+        // ★ 여기서만 git 사용해서 작성자 정보를 ENV로 저장(샌드박스/포스트 sh 회피)
+        sh '''
+          set -eu
+          echo "AUTHOR_NAME=$(git show -s --pretty=%an)" >> "$GITHUB_ENV" 2>/dev/null || true
+          echo "AUTHOR_MAIL=$(git show -s --pretty=%ae)" >> "$GITHUB_ENV" 2>/dev/null || true
+        ''' // 위 두 줄은 GitHub Actions 문법이지만, Jenkins에선 아래처럼 대체:
+        script {
+          env.AUTHOR_NAME = sh(returnStdout: true, script: 'git show -s --pretty=%an').trim()
+          env.AUTHOR_MAIL = sh(returnStdout: true, script: 'git show -s --pretty=%ae').trim()
+        }
       }
     }
 
@@ -87,7 +91,6 @@ set -x
 
 TAG="${TARGET_BRANCH}-${BUILD_NUMBER}"
 
-# 목적지 레포/인증 레지스트리
 if [[ -n "${REGISTRY}" && "${REGISTRY}" != "docker.io" ]]; then
   DEST_REPO="${REGISTRY}/${IMAGE_NAME}"
   AUTH_REGISTRY="${REGISTRY}"
@@ -96,7 +99,6 @@ else
   AUTH_REGISTRY="https://index.docker.io/v1/"
 fi
 
-# Kaniko 인증 파일
 DOCKERCFG="${WORKSPACE}/kaniko-config"
 mkdir -p "${DOCKERCFG}"
 AUTH="$(printf "%s:%s" "${DOCKER_USER}" "${DOCKER_PWD}" | base64 | tr -d '\n')"
@@ -104,15 +106,9 @@ printf '{"auths":{"%s":{"auth":"%s"}}}\n' "${AUTH_REGISTRY}" "${AUTH}" > "${DOCK
 
 WORKDIR="$(pwd)"
 DF="${WORKDIR}/Dockerfile"
-
-# Kaniko가 DOCKER_CONFIG 읽음
 export DOCKER_CONFIG="${DOCKERCFG}"
 
-# Kaniko 바이너리 확인
-command -v /kaniko/executor >/dev/null || { echo "kaniko executor not found"; exit 1; }
 /kaniko/executor version || true
-
-# 루트 권한으로 실행하여 chown 오류 회피 (컨테이너 내부에서만 사용)
 sudo -E /kaniko/executor \
   --context=dir://"${WORKDIR}" \
   --dockerfile="${DF}" \
@@ -181,28 +177,20 @@ ENDSSH
     }
   }
 
+  // ── post: 절대 sh 호출하지 않음 (샌드박스/ nohup 문제 원천 차단) ───────────────
   post {
     success {
       script {
-        // author 정보를 shell 없이 가져오기 (SCM changeSets)
-        def items = currentBuild.changeSets?.collectMany { it.items } ?: []
-        def last  = items ? items[-1] : null
-        def authorId   = last?.author?.fullName ?: 'unknown'
-        def authorMail = (last?.authorEmail ?: '')
         def res = postJson(env.WEBHOOK_URL, [
-          text: "빌드 성공: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${authorId}(${authorMail}) (<${env.BUILD_URL}|상세 보기>)"
+          text: "빌드 성공: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${env.AUTHOR_NAME}(${env.AUTHOR_MAIL}) (<${env.BUILD_URL}|상세 보기>)"
         ])
         echo "Webhook result: ${res}"
       }
     }
     failure {
       script {
-        def items = currentBuild.changeSets?.collectMany { it.items } ?: []
-        def last  = items ? items[-1] : null
-        def authorId   = last?.author?.fullName ?: 'unknown'
-        def authorMail = (last?.authorEmail ?: '')
         def res = postJson(env.WEBHOOK_URL, [
-          text: "빌드 실패: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${authorId}(${authorMail}) (<${env.BUILD_URL}|상세 보기>)"
+          text: "빌드 실패: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${env.AUTHOR_NAME}(${env.AUTHOR_MAIL}) (<${env.BUILD_URL}|상세 보기>)"
         ])
         echo "Webhook result: ${res}"
       }
