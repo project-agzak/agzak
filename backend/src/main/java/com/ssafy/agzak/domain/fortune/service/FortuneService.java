@@ -83,7 +83,7 @@ public class FortuneService {
           "achievement": number,
           "total_summary": string ("오늘의 총 운세 요약..."),
           "detailed_summaries": {
-            "romance": "연애운 요약...",
+            "love": "연애운 요약...",
             "health": "건강운 요약...",
             "wealth": "금전운 요약...",
             "achievement": "성취운 요약..."
@@ -197,7 +197,7 @@ public class FortuneService {
 
         fortuneRepository.save(fortune);
 
-        saveAspect(fortune, FortuneAspect.AspectName.LOVE, fortuneResponse.scores().romance());
+        saveAspect(fortune, FortuneAspect.AspectName.LOVE, fortuneResponse.scores().love());
         saveAspect(fortune, FortuneAspect.AspectName.MONEY, fortuneResponse.scores().wealth());
         saveAspect(fortune, FortuneAspect.AspectName.HEALTH, fortuneResponse.scores().health());
         saveAspect(fortune, FortuneAspect.AspectName.ACHIEVEMENT, fortuneResponse.scores().achievement());
@@ -250,7 +250,7 @@ public class FortuneService {
     private FortuneType determineFortuneType(FortuneScoreResponse scores) {
         int wealth = scores.wealth();
         int health = scores.health();
-        int romance = scores.romance();
+        int romance = scores.love();
         int achievement = scores.achievement();
 
         Map<String, Integer> scoreMap = Map.of(
