@@ -33,10 +33,11 @@ pipeline {
             passwordVariable: 'DOCKER_PWD'
           )]) {
             sh '''
-              set -eux
+              set -euxo pipefail
 
               TAG="${TARGET_BRANCH}-${BUILD_NUMBER}"
 
+              # 목적지 리포/인증 레지스트리
               if [ -n "${REGISTRY}" ] && [ "${REGISTRY}" != "docker.io" ]; then
                 DEST_REPO="${REGISTRY}/${IMAGE_NAME}"
                 AUTH_REGISTRY="${REGISTRY}"
@@ -45,6 +46,7 @@ pipeline {
                 AUTH_REGISTRY="https://index.docker.io/v1/"
               fi
 
+              # Kaniko 인증 파일
               DOCKERCFG="${WORKSPACE}/kaniko-config"
               mkdir -p "${DOCKERCFG}"
               AUTH="$(printf "%s:%s" "${DOCKER_USER}" "${DOCKER_PWD}" | base64 | tr -d '\\n')"
@@ -56,9 +58,11 @@ pipeline {
               }
     EOF
 
+              # Kaniko 작업 디렉토리(쓰기 가능한 경로)와 Dockerfile 경로
               WORKDIR="$(pwd)"
               DF="${WORKDIR}/Dockerfile"
 
+              # ✅ 구버전 호환: 플래그 대신 환경변수로 전달
               export DOCKER_CONFIG="${DOCKERCFG}"
               export KANIKO_DIR="${WORKSPACE}/.kaniko"
               mkdir -p "${KANIKO_DIR}"
@@ -70,8 +74,9 @@ pipeline {
                 --destination="${DEST_REPO}:${TAG}" \
                 --destination="${DEST_REPO}:latest" \
                 --use-new-run \
-                --single-snapshot
-                --cache=true --cache-repo="${DEST_REPO}-cache"
+                --single-snapshot \
+                --cache=true \
+                --cache-repo="${DEST_REPO}-cache"
             '''
           }
         }
