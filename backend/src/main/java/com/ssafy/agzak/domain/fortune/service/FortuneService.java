@@ -77,15 +77,15 @@ public class FortuneService {
         필수 출력 형식(키/타입 고정):
         {
           "total_score": number,
-          "romance": number,
+          "love": number,
           "health": number,
-          "wealth": number,
+          "money": number,
           "achievement": number,
           "total_summary": string ("오늘의 총 운세 요약..."),
           "detailed_summaries": {
             "love": "연애운 요약...",
             "health": "건강운 요약...",
-            "wealth": "금전운 요약...",
+            "money": "금전운 요약...",
             "achievement": "성취운 요약..."
         }
         
@@ -198,7 +198,7 @@ public class FortuneService {
         fortuneRepository.save(fortune);
 
         saveAspect(fortune, FortuneAspect.AspectName.LOVE, fortuneResponse.scores().love());
-        saveAspect(fortune, FortuneAspect.AspectName.MONEY, fortuneResponse.scores().wealth());
+        saveAspect(fortune, FortuneAspect.AspectName.MONEY, fortuneResponse.scores().money());
         saveAspect(fortune, FortuneAspect.AspectName.HEALTH, fortuneResponse.scores().health());
         saveAspect(fortune, FortuneAspect.AspectName.ACHIEVEMENT, fortuneResponse.scores().achievement());
     }
@@ -248,7 +248,7 @@ public class FortuneService {
     }
 
     private FortuneType determineFortuneType(FortuneScoreResponse scores) {
-        int wealth = scores.wealth();
+        int wealth = scores.money();
         int health = scores.health();
         int romance = scores.love();
         int achievement = scores.achievement();
