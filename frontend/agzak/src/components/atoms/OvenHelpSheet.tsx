@@ -26,7 +26,8 @@ export default function OvenHelpSheet({ open, onClose, src }: Props) {
       {/* 바텀시트 컨테이너 */}
       <div
         className={`fixed left-1/2 bottom-0 z-50 w-full max-w-[480px] -translate-x-1/2
-          transition-transform duration-300 pb-[env(safe-area-inset-bottom,16px)]
+          transition-transform duration-300
+          pb-[env(safe-area-inset-bottom,16px)]
           ${open ? "translate-y-0" : "translate-y-[120%]"}
         `}
         aria-hidden={!open}
@@ -37,22 +38,24 @@ export default function OvenHelpSheet({ open, onClose, src }: Props) {
           <img
             src={img}
             alt="강화 쿠키 오븐 도움말"
-            className="w-full h-auto object-contain
-                       max-w-[min(92vw,440px)] max-h-[70vh]"
+            className="block w-full h-auto
+              max-w-[min(92vw,280px)] max-h-[70vh] object-contain"
             draggable={false}
           />
 
           {/* 닫기 버튼: 이미지 우상단에 겹치기 */}
           <button
-            type="button"
-            aria-label="도움말 닫기"
-            onClick={onClose}
-            className="absolute -top-2 -right-2 w-8 h-8 pr-35 pt-10 rounded-full
-                       text-[#70431B] font-extrabold
-                       flex items-center justify-center"
-          >
-            ✕
-          </button>
+              type="button"
+              aria-label="도움말 닫기"
+              onClick={onClose}
+              className="absolute top-2 right-2
+                w-8 h-8 rounded-full
+                text-[#70431B] font-extrabold
+                flex items-center justify-center
+                pt-5 pr-24"
+            >
+              ✕
+            </button>
         </div>
       </div>
     </>
