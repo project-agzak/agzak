@@ -4,6 +4,7 @@ import com.ssafy.agzak.domain.fortune.dto.request.GuestFortuneRequest;
 import com.ssafy.agzak.domain.fortune.dto.response.FinalFortuneResponse;
 import com.ssafy.agzak.domain.fortune.dto.response.FortuneScoreResponse;
 import com.ssafy.agzak.domain.fortune.dto.response.FortuneTypeResponse;
+import com.ssafy.agzak.domain.inventory.dto.response.CookieResponse;
 import com.ssafy.agzak.global.error.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -51,4 +52,15 @@ public interface FortuneApiDocs {
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
     })
     ResponseEntity<FortuneTypeResponse> getFortuneTypeDetail(@PathVariable Long fortuneTypeId);
+
+
+    @Operation(
+            summary = "쿠키 상세 조회",
+            description = "특정 쿠키 상세 조회"
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "쿠키 조회 성공",
+                    content = @Content(schema = @Schema(implementation = CookieResponse.class))),
+    })
+    public ResponseEntity<CookieResponse> getCookieInfo(@PathVariable Long cookieId);
 }

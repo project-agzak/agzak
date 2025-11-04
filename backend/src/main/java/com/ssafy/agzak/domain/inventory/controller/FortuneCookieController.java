@@ -2,7 +2,6 @@ package com.ssafy.agzak.domain.inventory.controller;
 
 import com.ssafy.agzak.domain.inventory.dto.response.CookieResponse;
 import com.ssafy.agzak.domain.inventory.service.CookieService;
-import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -29,6 +28,7 @@ public class FortuneCookieController {
     public ResponseEntity<CookieResponse> getCookieInfo(@PathVariable Long cookieId) {
         return ResponseEntity.ok().body(cookieService.getCookieInfo(cookieId));
     }
+
     @GetMapping
     public ResponseEntity<List<CookieResponse>> getInventory(
             @PageableDefault(size = 10, sort = "cookieId", direction = Sort.Direction.DESC) Pageable pageable) {
