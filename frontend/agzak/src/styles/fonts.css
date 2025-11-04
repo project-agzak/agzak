@@ -12,6 +12,7 @@
 @font-face {
   font-family: Galmuri-Condensed;
   src: url(../assets/Fonts/Galmuri11-Condensed.woff2);
+  font-display: swap;
 }
 
 @font-face {

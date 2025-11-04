@@ -24,6 +24,11 @@ body {
   background-repeat: repeat;
   background-size: 512px 512px;
   image-rendering: pixelated;
+  -ms-overflow-style: none;
+}
+
+::-webkit-scrollbar {
+  display: none;
 }
 
 /* 앱 프레임: 360 고정 + 가운데 정렬 */
@@ -67,6 +72,7 @@ body {
 @theme {
   --font-galmuri: "Galmuri", system-ui, sans-serif;
   --font-bitbit: "DNF", system-ui, sans-serif;
+  --font-galmuri-condensed: "Galmuri-Condensed", "Galmuri", system-ui, sans-serif;
 }
 
 @layer utilities {
@@ -86,6 +92,9 @@ body {
 .font-bitbit { font-family: var(--font-bitbit); font-size: var(--fz-medium); line-height: var(--lh-tight); }
 .font-bitbit-large  { font-family: var(--font-bitbit); font-size: var(--fz-large);  line-height: var(--lh-tight); }
 .font-bitbit-xlarge { font-family: var(--font-bitbit); font-size: var(--fz-xlarge); line-height: var(--lh-tight); }
+
+.font-galmuri-condensed-small { font-family: var(--font-galmuri-condensed); font-size: var(--fz-small); line-height: var(--lh-tight);}
+.font-galmuri-condensed { font-family: var(--font-galmuri-condensed); font-size: var(--fz-medium); line-height: var(--lh-tight);}
 
 .scrollbar-thin { scrollbar-width: thin; }
 .scrollbar-thin::-webkit-scrollbar { width: 6px; }

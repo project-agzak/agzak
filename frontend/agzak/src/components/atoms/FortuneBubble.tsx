@@ -30,7 +30,6 @@ export function FortuneBubble({
 
     const rect = el.getBoundingClientRect();
     const vw = window.innerWidth;
-    const vh = window.innerHeight;
 
     // 기본값
     let shouldFlipX = false;
@@ -42,7 +41,7 @@ export function FortuneBubble({
     }
 
     // 위로 나갔으면 -> 위아래 뒤집기
-    if (rect.top < vh - viewportPadding) {
+    if (rect.top < viewportPadding) {
       shouldFlipY = true;
     }
 
@@ -78,7 +77,7 @@ export function FortuneBubble({
       <div className={cn("absolute top-0 left-0 w-full pt-4",
           flipX ? "pr-5 text-right" : "pl-5"
       )}>
-        <h3 className="font-galmuri-small font-bold leading-none text-[#1F1F1F]">
+        <h3 className="flex justify-center pr-1 font-galmuri-small font-bold leading-none text-[#121212]">
           {title}
         </h3>
       </div>
@@ -88,7 +87,7 @@ export function FortuneBubble({
           flipX ? "items-end pr-6 text-right" : "pl-6"
         )}
       >        
-        <ul className="space-y-1 ">
+        <ul className="space-y-1 translate-x-1">
           {effects.map((eff) => (
             <li
               key={eff.label}

@@ -6,7 +6,8 @@ import Cat from "@/assets/Back/FriendCat.svg";
 import Rabbit from "@/assets/Back/FriendRabbit.svg";
 import { PureFlipImage } from "@/components/molecules/PureFlipImage";
 import Front from "@/assets/Back/Front.svg";
-import Back from "@/assets/Back/Back.svg";
+import BackCard from "@/components/atoms/BackCard";
+
 
 export default function FortuneResultPage() {
   const shareUrl = "https://www.agzak.co.kr/";
@@ -16,11 +17,9 @@ export default function FortuneResultPage() {
 
       <div className="flex justify-center pb-5">
         <PureFlipImage
-          className="w-64 aspect-[2/3] cursor-pointer"   // 카드 크기·비율
+          className="w-64 aspect-[2/3] cursor-pointer"
           frontSrc={Front}
-          backSrc={Back}
-          altFront="카드 앞면"
-          altBack="카드 뒷면"
+          backNode={<BackCard />}
         />
       </div>
 
@@ -86,8 +85,6 @@ export default function FortuneResultPage() {
             <Button_L to="/enforce" label="운세 강화" width={260} />
         </div>
         <div>
-          <Button_L to="#" label="공유하기" width={260} />
-
           <ShareButton
           label="공유하기"
           width={260}

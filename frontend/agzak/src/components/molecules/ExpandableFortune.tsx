@@ -34,7 +34,7 @@ export function ExpandableFortune({
       <AccordionItem value={itemValue} className="border-none">
         {/* 헤더 영역을 우리가 커스텀해서 FortuneGauge로 대체 */}
         <AccordionTrigger
-          className="p-0 hover:no-underline [&[data-state=open]>svg]:rotate-180"
+          className="p-0 hover:no-underline [&[data-state=open]>svg]:rotate-180 cursor-pointer"
         >
           <div className="flex w-full items-center gap-2">
             <FortuneGauge

@@ -29,7 +29,7 @@ export default function MyPage() {
   const handleEditToggle = () => setIsEdit((p) => !p);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-start bg-[#FFF9EF] pt-16">
+    <main className="flex min-h-screen flex-col items-center justify-start p-4">
       {/* 입력 폼 */}
       <div className="mt-0 flex flex-col items-center gap-3">
         {/* ① 이름(닉네임) */}
