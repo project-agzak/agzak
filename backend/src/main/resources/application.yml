@@ -2,22 +2,24 @@
 spring:
   application:
     name: agzak-app-server
+
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
+
   jackson:
     serialization:
       write-dates-as-timestamps: false
     time-zone: Asia/Seoul
+
   docker:
     compose:
       enabled: false
+
   task:
     scheduling:
       pool:
         size: 2
-  ai:
-    openai:
-      api-key: DUMMY_KEY_TO_PREVENT_ERROR
+
   jpa:
     database-platform: org.hibernate.dialect.MySQL8Dialect
     properties:
@@ -25,15 +27,30 @@ spring:
         jdbc:
           time_zone: Asia/Seoul
 
-  # === KakaoMap ===
+  # === Kakao Map ===
   kakao:
     map:
       api:
         key: ${KAKAO_MAP_KEY}
 
+# === Kakao Login ===
+kakao:
+  rest:
+    key: ${KAKAO_REST_KEY}
+  js:
+    key: ${KAKAO_JS_KEY}
+
+# === Server ===
 server:
   port: ${SPRING_PORT:8082}
   forward-headers-strategy: native
+
+# === JWT ===
+jwt:
+  secret: ${JWT_SECRET}
+  issuer: ${JWT_ISSUER}
+  access-exp-minutes: ${ACCESS_EXP_MINUTES:60}
+  refresh-exp-days: ${REFRESH_EXP_DAYS:14}
 
 # === GMS LLM (proxy to OpenAI) ===
 gms:

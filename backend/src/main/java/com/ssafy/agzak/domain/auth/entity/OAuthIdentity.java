@@ -1,4 +1,4 @@
-package com.ssafy.agzak.domain.oauth.entity;
+package com.ssafy.agzak.domain.auth.entity;
 
 import com.ssafy.agzak.domain.member.entity.Member;
 import jakarta.persistence.*;

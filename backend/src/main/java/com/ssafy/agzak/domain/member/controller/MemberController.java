@@ -1,53 +1,59 @@
 package com.ssafy.agzak.domain.member.controller;
 
+import com.ssafy.agzak.docs.MemberApiDocs;
 import com.ssafy.agzak.domain.fortune.dto.response.DetailFortuneDataResponse;
-import com.ssafy.agzak.domain.fortune.dto.response.FortuneAspectResponse;
-import com.ssafy.agzak.domain.fortune.dto.response.FortuneTypeResponse;
 import com.ssafy.agzak.domain.member.dto.response.MemberGraphResponse;
-import com.ssafy.agzak.domain.member.dto.response.MemberInfoResponse;
 import com.ssafy.agzak.domain.member.dto.request.MemberEditRequest;
+import com.ssafy.agzak.domain.member.dto.response.MemberInfoResponse;
+import com.ssafy.agzak.domain.member.entity.Member;
+import com.ssafy.agzak.domain.member.service.MemberService;
+import com.ssafy.agzak.global.security.AuthMemberProvider;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/v1/members")
-public class MemberController {
+public class MemberController implements MemberApiDocs {
+    private final MemberService memberService;
+    private final AuthMemberProvider authMemberProvider;
+
     @GetMapping
     public ResponseEntity<MemberInfoResponse> getMemberInfo() {
-        return ResponseEntity.ok().body(new MemberInfoResponse(1, "temp", "temp", "temp", "MALE",
-                LocalDateTime.now(), "Dog","Seoul"));
+        long memberId = authMemberProvider.currentMemberId();
+        return ResponseEntity.ok().body(memberService.getMemberInfo(memberId));
     }
 
-    @PutMapping
-    public ResponseEntity<Void> editMemberInfo(@RequestBody MemberEditRequest request) {
-        //TODO 닉네임 수정
+    @PatchMapping
+    public ResponseEntity<Void> editMemberInfo(@Valid @RequestBody MemberEditRequest request) {
+        long memberId = authMemberProvider.currentMemberId();
+        memberService.editMemberInfo(memberId, request.nickname(), request.birthTime());
         return ResponseEntity.ok().build();
     }
 
     @DeleteMapping
     public ResponseEntity<Void> deleteMember() {
+        long memberId = authMemberProvider.currentMemberId();
+        memberService.deleteMember(memberId);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/graphs")
-    public ResponseEntity<?> getGraphs(@RequestParam LocalDateTime startDate,@RequestParam LocalDateTime endDate) {
-        return ResponseEntity.ok().body(List.of(new MemberGraphResponse(LocalDateTime.now(), 1,1)));
-    }
+    public ResponseEntity<List<MemberGraphResponse>> getGraphs(@RequestParam LocalDate startDate,@RequestParam LocalDate endDate) {
+        long memberId = authMemberProvider.currentMemberId();
 
-    @GetMapping("/fortunes")
-    public ResponseEntity<?> getCalendar(@RequestParam LocalDateTime month) {
-        //TODO 프론트와 상의 후 결정
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok().body(memberService.getMemberGraph(memberId, startDate, endDate));
     }
 
     @GetMapping("/fortunes/{date}")
-    public ResponseEntity<DetailFortuneDataResponse> getDetailData(@PathVariable LocalDateTime date) {
-        return ResponseEntity.ok().body(new DetailFortuneDataResponse(1, "겸손하세요",1,1,
-                new FortuneTypeResponse(1,"개","금전은 좋다",2,3),
-                List.of(new FortuneAspectResponse("금전운",1,1))));
+    public ResponseEntity<DetailFortuneDataResponse> getDetailData(@PathVariable LocalDate date) {
+        long memberId = authMemberProvider.currentMemberId();
+        return ResponseEntity.ok().body(memberService.getMemberFortune(memberId, date));
     }
 
 }

@@ -1,6 +1,14 @@
 package com.ssafy.agzak.domain.fortune.dto.request;
 
-import java.time.LocalDateTime;
+import com.ssafy.agzak.domain.member.entity.Member;
 
-public record GuestFortuneRequest(String gender, LocalDateTime birthDate, String birthHour, String birthCity) {
-}
+import java.time.LocalDate;
+import java.time.LocalTime;
+
+public record GuestFortuneRequest(
+        String nickname,
+        Member.Gender gender,
+        LocalDate birthDate,
+        LocalTime birthTime,
+        String birthCity
+) {}
