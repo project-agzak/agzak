@@ -32,52 +32,55 @@ pipeline {
             usernameVariable: 'DOCKER_USER',
             passwordVariable: 'DOCKER_PWD'
           )]) {
-            sh '''
-              set -euxo pipefail
+            sh '''#!/usr/bin/env bash
+    set -euo pipefail
+    set -x
 
-              TAG="${TARGET_BRANCH}-${BUILD_NUMBER}"
+    TAG="${TARGET_BRANCH}-${BUILD_NUMBER}"
 
-              # 목적지 리포/인증 레지스트리
-              if [ -n "${REGISTRY}" ] && [ "${REGISTRY}" != "docker.io" ]; then
-                DEST_REPO="${REGISTRY}/${IMAGE_NAME}"
-                AUTH_REGISTRY="${REGISTRY}"
-              else
-                DEST_REPO="docker.io/${IMAGE_NAME}"
-                AUTH_REGISTRY="https://index.docker.io/v1/"
-              fi
+    # 목적지 리포/인증 레지스트리
+    if [[ -n "${REGISTRY}" && "${REGISTRY}" != "docker.io" ]]; then
+      DEST_REPO="${REGISTRY}/${IMAGE_NAME}"
+      AUTH_REGISTRY="${REGISTRY}"
+    else
+      DEST_REPO="docker.io/${IMAGE_NAME}"
+      AUTH_REGISTRY="https://index.docker.io/v1/"
+    fi
 
-              # Kaniko 인증 파일
-              DOCKERCFG="${WORKSPACE}/kaniko-config"
-              mkdir -p "${DOCKERCFG}"
-              AUTH="$(printf "%s:%s" "${DOCKER_USER}" "${DOCKER_PWD}" | base64 | tr -d '\\n')"
-              cat > "${DOCKERCFG}/config.json" <<EOF
-              {
-                "auths": {
-                  "${AUTH_REGISTRY}": { "auth": "${AUTH}" }
-                }
-              }
-    EOF
+    # Kaniko 인증 파일
+    DOCKERCFG="${WORKSPACE}/kaniko-config"
+    mkdir -p "${DOCKERCFG}"
+    AUTH="$(printf "%s:%s" "${DOCKER_USER}" "${DOCKER_PWD}" | base64 | tr -d '\n')"
+    cat > "${DOCKERCFG}/config.json" <<EOF
+    {
+      "auths": {
+        "${AUTH_REGISTRY}": { "auth": "${AUTH}" }
+      }
+    }
+    EOF   # ← 반드시 열(column 0)에 EOF (앞에 공백 금지)
 
-              # Kaniko 작업 디렉토리(쓰기 가능한 경로)와 Dockerfile 경로
-              WORKDIR="$(pwd)"
-              DF="${WORKDIR}/Dockerfile"
+    # 경로/작업 디렉토리
+    WORKDIR="$(pwd)"
+    DF="${WORKDIR}/Dockerfile"
 
-              # ✅ 구버전 호환: 플래그 대신 환경변수로 전달
-              export DOCKER_CONFIG="${DOCKERCFG}"
-              export KANIKO_DIR="${WORKSPACE}/.kaniko"
-              mkdir -p "${KANIKO_DIR}"
+    # 구버전 호환: 환경변수로 전달
+    export DOCKER_CONFIG="${DOCKERCFG}"
+    export KANIKO_DIR="${WORKSPACE}/.kaniko"
+    mkdir -p "${KANIKO_DIR}"
 
-              /kaniko/executor \
-                --context=dir://"${WORKDIR}" \
-                --dockerfile="${DF}" \
-                --kaniko-dir="${KANIKO_DIR}" \
-                --destination="${DEST_REPO}:${TAG}" \
-                --destination="${DEST_REPO}:latest" \
-                --use-new-run \
-                --single-snapshot \
-                --cache=true \
-                --cache-repo="${DEST_REPO}-cache"
-            '''
+    # Kaniko 실행 (Docker 데몬/소켓 불필요)
+    #/usr/local/bin/kaniko 가 심볼릭 링크면 아래 줄을 'kaniko'로 바꿔도 됨
+    /kaniko/executor \
+      --context=dir://"${WORKDIR}" \
+      --dockerfile="${DF}" \
+      --kaniko-dir="${KANIKO_DIR}" \
+      --destination="${DEST_REPO}:${TAG}" \
+      --destination="${DEST_REPO}:latest" \
+      --use-new-run \
+      --single-snapshot \
+      --cache=true \
+      --cache-repo="${DEST_REPO}-cache"
+    '''
           }
         }
       }
