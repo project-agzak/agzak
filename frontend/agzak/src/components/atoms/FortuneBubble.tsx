@@ -92,7 +92,7 @@ export function FortuneBubble({
           {effects.map((eff) => (
             <li
               key={eff.label}
-              className="font-galmuri-xsmall font-stretch-condensed text-cons leading-none text-[#1F1F1F]"
+              className="font-galmuri-condensed-small text-cons leading-none text-[#1F1F1F]"
             >
               {eff.label}{" "}
               <span className="font-bold">

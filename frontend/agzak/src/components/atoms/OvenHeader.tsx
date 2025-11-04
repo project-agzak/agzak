@@ -12,7 +12,7 @@ export function OvenHeader({ onHelp }: { onHelp: () => void }) {
         >
           <img src={helpIcon} alt="도움말" className="w-4 h-4" />
         </button>
-        <span className="text-xs font-galmuri-small text-condensed text-[#4a3a2d]">오븐은 어떻게 사용하나요?</span>
+        <span className="text-xs font-galmuri-condensed-small text-[#4a3a2d]">오븐은 어떻게 사용하나요?</span>
       </div>
     </header>
   )

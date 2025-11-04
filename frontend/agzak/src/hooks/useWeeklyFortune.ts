@@ -1,53 +1,36 @@
 // src/hooks/useWeeklyFortune.ts
 "use client"
 
-import { useEffect, useMemo } from "react"
-import { useGraphStore } from "@/stores/calendarStore"
+import { useEffect, useState } from "react"
+import { useMembersStore } from "@/store/useMembersStore"
+import type { MemberGraphPoint } from "@/lib/mainAPI"
 
-// 요일 라벨 (KST 기준)
-const KOR_WEEKDAY = ["일", "월", "화", "수", "목", "금", "토"]
-const toKstDate = (yyyy_mm_dd: string) => new Date(`${yyyy_mm_dd}T00:00:00+09:00`)
-const weekdayLabel = (yyyy_mm_dd: string) => KOR_WEEKDAY[toKstDate(yyyy_mm_dd).getDay()]
+export type WeeklyBarData = { day: string; base: number; enhanced: number }
 
-// 차트 기본값(빈 데이터 시)
-export const WEEKLY_FALLBACK = [
-  { day: "월", base: 0, enhanced: 0 },
-  { day: "화", base: 0, enhanced: 0 },
-  { day: "수", base: 0, enhanced: 0 },
-  { day: "목", base: 0, enhanced: 0 },
-  { day: "금", base: 0, enhanced: 0 },
-  { day: "토", base: 0, enhanced: 0 },
-  { day: "일", base: 0, enhanced: 0 },
-] as const
+// ✅ 날짜 → 요일 변환 + 데이터 맵핑
+export function toWeeklyBar(rows: MemberGraphPoint[]): WeeklyBarData[] {
+  const weekday = ["일", "월", "화", "수", "목", "금", "토"]
+  return rows.map((r) => {
+    const d = new Date(r.date)
+    return {
+      day: weekday[d.getDay()],
+      base: r.originalScore,
+      enhanced: r.totalScore,
+    }
+  })
+}
 
 export function useWeeklyFortune() {
-  const { data, loading, error, resetRangeToLast7Days, fetchGraphs } = useGraphStore()
+  const { graphs, graphsLoading, graphsError, fetchGraphsLast7Days } = useMembersStore()
+  const [weekly, setWeekly] = useState<WeeklyBarData[]>([])
 
-  // 마운트 시 최근 7일로 초기화 후 호출
   useEffect(() => {
-    resetRangeToLast7Days()
-    fetchGraphs()
-  }, [resetRangeToLast7Days, fetchGraphs])
+    fetchGraphsLast7Days()
+  }, [fetchGraphsLast7Days])
 
-  // API 응답 → 차트 포맷
-  const chartData = useMemo(() => {
-    if (!data?.length) return WEEKLY_FALLBACK.slice()
+  useEffect(() => {
+    setWeekly(graphs.length ? toWeeklyBar(graphs) : [])
+  }, [graphs])
 
-    // 날짜 오름차순 정렬 후 요일/점수 매핑
-    const sorted = [...data].sort((a, b) => a.date.localeCompare(b.date))
-    const mapped = sorted.map(d => ({
-      day: weekdayLabel(d.date),
-      base: d.originalScore ?? 0,
-      enhanced: d.totalScore ?? 0,
-    }))
-
-    // 요일 순서가 뒤섞일 수 있어 7개만 보정 (부족하면 fallback로 패드)
-    if (mapped.length < 7) {
-      const pad = WEEKLY_FALLBACK.slice(0, 7 - mapped.length)
-      return [...mapped, ...pad]
-    }
-    return mapped.slice(-7)
-  }, [data])
-
-  return { data: chartData, loading, error }
+  return { weekly, loading: graphsLoading, error: graphsError }
 }

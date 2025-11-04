@@ -85,11 +85,11 @@ export default function BlackboardCalendar({ className, onSelectDate }: Props) {
                       <span
                         className={cn(
                           "inline-flex items-center justify-center px-1",
-                          "text-white text-[clamp(10px,2.7vw,18px)] font-galmuri leading-none",
+                          "text-white text-[clamp(10px,2.7vw,18px)] font-galmuri-condensed leading-none",
                           isSelected &&
                             "bg-[#9DD36D] font-bold text-white shadow-[0_1px_0_rgba(0,0,0,0.25)]",
                           !isSelected &&
-                            "hover:text-slate-50/90 transition-colors font-stretch-condensed"
+                            "hover:text-slate-50/90 transition-colors"
                         )}
                       >
                         {num}

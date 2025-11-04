@@ -1,12 +1,12 @@
+// src/components/molecules/WeeklyChart.tsx
 "use client"
 
 import { WeeklyFortuneBar } from "@/components/atoms/WeeklyBar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card"
-import { useWeeklyFortune, WEEKLY_FALLBACK } from "@/hooks/useWeeklyFortune"
+import { useWeeklyFortune } from "@/hooks/useWeeklyFortune"
 
 export function WeeklyFortuneCard() {
-  const { data, loading, error } = useWeeklyFortune()
-  const safeData = data?.length ? data : [...WEEKLY_FALLBACK]
+  const { weekly, loading, error } = useWeeklyFortune()
 
   return (
     <Card
@@ -40,7 +40,7 @@ export function WeeklyFortuneCard() {
             <div className="text-[10px] text-red-500 mb-1">오류: {error}</div>
           )}
           <div className="w-[95%] mt-1">
-            <WeeklyFortuneBar data={safeData} />
+            <WeeklyFortuneBar data={weekly} />
           </div>
         </CardContent>
       </div>
