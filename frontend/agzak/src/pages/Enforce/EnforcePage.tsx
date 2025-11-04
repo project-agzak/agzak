@@ -23,7 +23,7 @@ export default function EnforcePage() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col items-center justify-start py-8">
+    <main className="min-h-screen flex flex-col items-center justify-start py-8 p-4">
       {view === "game" && (
         <>
           <OvenHeader onHelp={() => setHelpOpen(true)} />

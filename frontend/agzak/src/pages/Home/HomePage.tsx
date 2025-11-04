@@ -18,6 +18,7 @@ export default function HomePage() {
         <div className="flex flex-col items-center pr-5">
           <p className="font-galmuri">총운</p>
           <p className="font-bitbit-large">NNN 점</p>
+          <p className="font-galmuri-xsmall pt-0.5">강화 잔여 횟수: NN</p>
         </div>
       </div>
       <div>
@@ -28,7 +29,7 @@ export default function HomePage() {
           </div>
         </div>
         <ShareButton
-          label="공유하기"
+          label="공유하고 강화 횟수 얻기"
           url={shareUrl}
         />
       </div>
