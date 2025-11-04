@@ -1,5 +1,6 @@
 package com.ssafy.agzak.domain.inventory.controller;
 
+import com.ssafy.agzak.docs.FortuneCookieApiDocs;
 import com.ssafy.agzak.domain.inventory.dto.response.CookieResponse;
 import com.ssafy.agzak.domain.inventory.service.CookieService;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +16,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/cookies")
-public class FortuneCookieController {
+public class FortuneCookieController implements FortuneCookieApiDocs {
 
     private final CookieService cookieService;
 
