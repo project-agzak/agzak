@@ -95,7 +95,7 @@ export default function OvenResult({
           draggable={false}
         />
         {/* 텍스트 오버레이 */}
-        <p className="absolute inset-0 flex items-center justify-center text-[12px] text-[#1f1f1f] font-galmuri-small font-stretch-condensed leading-tight px-5 pb-2 text-center whitespace-pre-line mx-6">
+        <p className="absolute inset-0 flex items-center justify-center text-[#121212] font-galmuri-condensed-small not-first: px-5 pb-2 text-center whitespace-pre-line mx-6">
           {cookie.message}
         </p>
       </div>
