@@ -78,63 +78,65 @@ export HOME="${WORKSPACE}"     # kaniko의 홈 참조 안정화
 
     stage('Deploy') {
       steps {
-        script {
-          def repo = (env.REGISTRY?.trim() && env.REGISTRY != 'docker.io')
+        withCredentials([
+          sshUserPrivateKey(credentialsId: 'deploy-ssh',
+                            keyFileVariable: 'SSH_KEY',
+                            usernameVariable: 'SSH_USER'),
+          usernamePassword(credentialsId: 'dockerhub-cred',
+                           usernameVariable: 'DOCKER_USER',
+                           passwordVariable: 'DOCKER_PWD')
+        ]) {
+          script {
+            def repo = (env.REGISTRY?.trim() && env.REGISTRY != 'docker.io')
               ? "${env.REGISTRY}/${env.IMAGE_NAME}"
               : "docker.io/${env.IMAGE_NAME}"
-          def tag = "${env.TARGET_BRANCH}-${env.BUILD_NUMBER}"
-          def testImage = "${repo}:${tag}"
+            def tag = "${env.TARGET_BRANCH}-${env.BUILD_NUMBER}"
+            def testImage = "${repo}:${tag}"
 
-          def remote = [
-            name: 'deploy',
-            host: env.DEPLOY_HOST,
-            user: env.DEPLOY_USER,
-            // Jenkins Credentials에 등록된 SSH Key ID
-            identityFile: '',  // 비워두고 아래 credentialId 사용
-            allowAnyHosts: true
-          ]
+            sh(script: """
+    #!/usr/bin/env bash
+    set -euo pipefail
+    set -x
 
-          withCredentials([
-            sshUserPrivateKey(credentialsId: 'deploy-ssh',
-                              keyFileVariable: 'SSH_KEY',
-                              usernameVariable: 'SSH_USER'),
-            usernamePassword(credentialsId: 'dockerhub-cred',
-                             usernameVariable: 'DOCKER_USER',
-                             passwordVariable: 'DOCKER_PWD')
-          ]) {
-            // 플러그인이 키를 내부적으로 읽도록 credentialId만 넘김
-            sshCommand remote: remote + [credentialId: 'deploy-ssh'],
-              command: """
-                set -eux
-                cd /home/ubuntu/agzak-app/test/backend
+    export TEST_IMAGE='${testImage}'
+    export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
-                if ! docker pull '${testImage}'; then
-                  echo 'WARN: ${testImage} not found. Fallback to :latest'
-                  TEST_IMAGE='${repo}:latest'
-                  docker pull "$TEST_IMAGE"
-                else
-                  TEST_IMAGE='${testImage}'
-                fi
+    # ssh 바이너리 확인(없으면 실패 메시지 보이게만 함)
+    if ! /usr/bin/ssh -V >/dev/null 2>&1; then
+      echo "ERROR: /usr/bin/ssh not found in Jenkins container" >&2
+      exit 127
+    fi
 
-                sed -i '/^TEST_IMAGE=/d' .env
-                sed -i '/^PROJECT=/d' .env
-                echo "TEST_IMAGE=$TEST_IMAGE" >> .env
-                echo "PROJECT=test" >> .env
+    /usr/bin/ssh -o StrictHostKeyChecking=no -i "\$SSH_KEY" "\$SSH_USER@${env.DEPLOY_HOST}" "TEST_IMAGE=\$TEST_IMAGE DOCKER_USER=\$DOCKER_USER DOCKER_PWD=\$DOCKER_PWD bash -s" <<'ENDSSH'
+      set -eux
+      cd /home/ubuntu/agzak-app/test/backend
 
-                echo '${DOCKER_PWD}' | docker login -u '${DOCKER_USER}' --password-stdin || true
-                make -C .. up-be
+      if ! docker pull "\$TEST_IMAGE"; then
+        echo "WARN: \$TEST_IMAGE not found. Fallback to :latest"
+        TEST_IMAGE="\${TEST_IMAGE%:*}:latest"
+        docker pull "\$TEST_IMAGE"
+      fi
 
-                for i in \$(seq 1 12); do
-                  status=\$(docker inspect --format '{{.State.Health.Status}}' test-app-server 2>/dev/null || echo "unhealthy")
-                  echo "Current status: \$status"
-                  [ "\$status" = "healthy" ] && { echo "Container is healthy."; exit 0; }
-                  echo "Waiting for container to be healthy... (\$i/12)"
-                  sleep 5
-                done
+      sed -i '/^TEST_IMAGE=/d' .env
+      sed -i '/^PROJECT=/d' .env
+      echo "TEST_IMAGE=\$TEST_IMAGE" >> .env
+      echo "PROJECT=test" >> .env
 
-                echo "Container did not become healthy in time." >&2
-                exit 1
-              """
+      echo "\$DOCKER_PWD" | docker login -u "\$DOCKER_USER" --password-stdin || true
+      make -C .. up-be
+
+      for i in \$(seq 1 12); do
+        status=\$(docker inspect --format '{{.State.Health.Status}}' test-app-server 2>/dev/null || echo "unhealthy")
+        echo "Current status: \$status"
+        [ "\$status" = "healthy" ] && { echo "Container is healthy."; exit 0; }
+        echo "Waiting for container to be healthy... (\$i/12)"
+        sleep 5
+      done
+
+      echo "Container did not become healthy in time." >&2
+      exit 1
+    ENDSSH
+    """, shell: '/bin/bash')
           }
         }
       }
