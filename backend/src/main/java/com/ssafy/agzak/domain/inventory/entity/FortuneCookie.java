@@ -65,4 +65,8 @@ public class FortuneCookie {
 
     public enum CookieType { MONEY, LOVE, ACHIEVEMENT, HEALTH, MIXED, ROTTEN }
     public enum CookieStatus { AVAILABLE, USED }
+
+    public void updateStatus() {
+        this.status = CookieStatus.USED;
+    }
 }
