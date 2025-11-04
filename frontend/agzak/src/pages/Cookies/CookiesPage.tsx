@@ -80,9 +80,11 @@ export default function CookiesPage() {
         <p className="font-bitbit"> +20 점</p>
       </div>
 
-      <div className="flex flex-row mt-4">
-        <ActionButton_M label="쿠키 먹기" onClick={eatSelected} disabled={!selectedCookie} />
-        <ActionButton_M label="삭제" onClick={removeSelected} disabled={!selectedCookie} />
+      <div className="flex justify-center pb-2 mt-4">
+        <div className="flex w-fit gap-[10px]">
+          <ActionButton_M className="shrink-0 !mx-0" label="쿠키 먹기" onClick={eatSelected} disabled={!selectedCookie} />
+          <ActionButton_M className="shrink-0 !mx-0" label="삭제" onClick={removeSelected} disabled={!selectedCookie} />
+        </div>
       </div>
 
       <div className="relative mt-5">
