@@ -63,13 +63,11 @@ export HOME="${WORKSPACE}"     # kaniko의 홈 참조 안정화
 
 /kaniko/executor version || true
 
-# ✅ sudo 금지: 같은 컨테이너에서 root 승격으로 사이드이펙트 제거
-/kaniko/executor \
+/usr/bin/sudo -E /kaniko/executor \
   --context=dir://"${WORKDIR}" \
   --dockerfile="${DF}" \
   --destination="${DEST_REPO}:${TAG}" \
   --destination="${DEST_REPO}:latest" \
-  --single-snapshot \
   --cache=true \
   --cache-repo="${DEST_REPO}-cache"
 '''
