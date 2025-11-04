@@ -30,28 +30,49 @@ pipeline {
       }
     }
 
-    stage('Docker Build & Push') {
+    stage('Kaniko Build & Push') {
       steps {
         dir("${env.SUBDIR}") {
           withCredentials([usernamePassword(credentialsId: 'dockerhub-cred',
               usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PWD')]) {
+
             sh '''
               set -eux
-              echo "$DOCKER_PWD" | docker login -u "$DOCKER_USER" --password-stdin ${REGISTRY}
-              export DOCKER_BUILDKIT=1
+
               TAG="${TARGET_BRANCH}-${BUILD_NUMBER}"
 
               if [ -n "${REGISTRY}" ] && [ "${REGISTRY}" != "docker.io" ]; then
                 REPO="${REGISTRY}/${IMAGE_NAME}"
+                AUTH_REGISTRY="${REGISTRY}"
               else
                 REPO="${IMAGE_NAME}"
+                AUTH_REGISTRY="https://index.docker.io/v1/"
               fi
 
-              docker build -t "${REPO}:${TAG}" .
-              docker push "${REPO}:${TAG}"
+              # Kaniko용 인증 정보 생성
+              mkdir -p ${WORKSPACE}/kaniko-config
+              AUTH=$(echo -n "${DOCKER_USER}:${DOCKER_PWD}" | base64 -w0)
+              cat > ${WORKSPACE}/kaniko-config/config.json <<EOF
+              {
+                "auths": {
+                  "${AUTH_REGISTRY}": {
+                    "auth": "${AUTH}"
+                  }
+                }
+              }
+EOF
 
-              docker tag "${REPO}:${TAG}" "${REPO}:latest"
-              docker push "${REPO}:latest"
+              # Kaniko 빌드 및 푸시 (Docker-in-Docker 불필요)
+              docker run --rm \
+                -v "$(pwd)":/workspace \
+                -v "${WORKSPACE}/kaniko-config":/kaniko/.docker \
+                gcr.io/kaniko-project/executor:latest \
+                --context=dir:///workspace \
+                --dockerfile=/workspace/Dockerfile \
+                --destination=${REPO}:${TAG} \
+                --destination=${REPO}:latest \
+                --use-new-run \
+                --single-snapshot
             '''
           }
         }
@@ -111,27 +132,27 @@ pipeline {
   }
 
   post {
-      success {
-        script {
-          def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
-          def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
-          sh """
-            curl -X POST -H 'Content-Type: application/json' \
-            -d '{"text":"빌드 성공: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name}) (<${env.BUILD_URL}|상세 보기>)"}' \
-            https://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo
-          """
-        }
+    success {
+      script {
+        def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
+        def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
+        sh """
+          curl -X POST -H 'Content-Type: application/json' \
+          -d '{"text":"빌드 성공: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name}) (<${env.BUILD_URL}|상세 보기>)"}' \
+          https://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo
+        """
       }
-      failure {
-        script {
-          def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
-          def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
-          sh """
-            curl -X POST -H 'Content-Type: application/json' \
-            -d '{"text":"빌드 실패: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name}) (<${env.BUILD_URL}|상세 보기>)"}' \
-            https://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo
-          """
-        }
+    }
+    failure {
+      script {
+        def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
+        def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
+        sh """
+          curl -X POST -H 'Content-Type: application/json' \
+          -d '{"text":"빌드 실패: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name}) (<${env.BUILD_URL}|상세 보기>)"}' \
+          https://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo
+        """
       }
+    }
   }
 }
