@@ -33,9 +33,11 @@ pipeline {
     stage('Kaniko Build & Push') {
       steps {
         dir("${env.SUBDIR}") {
-          withCredentials([usernamePassword(credentialsId: 'dockerhub-cred',
-              usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PWD')]) {
-
+          withCredentials([usernamePassword(
+            credentialsId: 'dockerhub-cred',
+            usernameVariable: 'DOCKER_USER',
+            passwordVariable: 'DOCKER_PWD'
+          )]) {
             sh '''
               set -eux
 
@@ -49,28 +51,26 @@ pipeline {
                 AUTH_REGISTRY="https://index.docker.io/v1/"
               fi
 
-              # Kaniko용 인증 정보 생성
-              mkdir -p ${WORKSPACE}/kaniko-config
-              AUTH=$(echo -n "${DOCKER_USER}:${DOCKER_PWD}" | base64 -w0)
-              cat > ${WORKSPACE}/kaniko-config/config.json <<EOF
+              DOCKERCFG="${WORKSPACE}/kaniko-config"
+              mkdir -p "${DOCKERCFG}"
+              AUTH="$(printf "%s:%s" "${DOCKER_USER}" "${DOCKER_PWD}" | base64 | tr -d '\\n')"
+              cat > "${DOCKERCFG}/config.json" <<EOF
               {
                 "auths": {
-                  "${AUTH_REGISTRY}": {
-                    "auth": "${AUTH}"
-                  }
+                  "${AUTH_REGISTRY}": { "auth": "${AUTH}" }
                 }
               }
 EOF
 
-              # Kaniko 빌드 및 푸시 (Docker-in-Docker 불필요)
-              docker run --rm \
-                -v "$(pwd)":/workspace \
-                -v "${WORKSPACE}/kaniko-config":/kaniko/.docker \
-                gcr.io/kaniko-project/executor:latest \
-                --context=dir:///workspace \
-                --dockerfile=/workspace/Dockerfile \
-                --destination=${REPO}:${TAG} \
-                --destination=${REPO}:latest \
+              WORKDIR="$(pwd)"
+              DF="${WORKDIR}/Dockerfile"
+
+              /kaniko/executor \
+                --context=dir://"${WORKDIR}" \
+                --dockerfile="${DF}" \
+                --docker-config="${DOCKERCFG}" \
+                --destination="${REPO}:${TAG}" \
+                --destination="${REPO}:latest" \
                 --use-new-run \
                 --single-snapshot
             '''
