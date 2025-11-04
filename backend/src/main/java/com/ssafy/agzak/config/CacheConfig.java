@@ -13,10 +13,32 @@ import java.util.concurrent.TimeUnit;
 public class CacheConfig {
     @Bean
     public CaffeineCacheManager cacheManager() {
-        CaffeineCacheManager cacheManager = new CaffeineCacheManager("fortuneCache");
-        cacheManager.setCaffeine(Caffeine.newBuilder()
-                .expireAfterWrite(1, TimeUnit.DAYS)  // 하루 지나면 자동 만료
-                .maximumSize(10000));                // 캐시 최대 1만 개
-        return cacheManager;
+        CaffeineCacheManager m = new CaffeineCacheManager("fortuneCache");
+        m.setCaffeine(Caffeine.newBuilder()
+                .maximumSize(10_000)
+                .expireAfter(new com.github.benmanes.caffeine.cache.Expiry<Object, Object>() {
+                    @Override
+                    public long expireAfterCreate(Object key, Object value, long currentTimeNanos) {
+                        return nanosUntilNextMidnightKST();
+                    }
+                    @Override
+                    public long expireAfterUpdate(Object key, Object value, long currentTimeNanos, long currentDurationNanos) {
+                        return nanosUntilNextMidnightKST();
+                    }
+                    @Override
+                    public long expireAfterRead(Object key, Object value, long currentTimeNanos, long currentDurationNanos) {
+                        return currentDurationNanos;
+                    }
+                })
+        );
+        return m;
+    }
+
+    private long nanosUntilNextMidnightKST() {
+        var zone = java.time.ZoneId.of("Asia/Seoul");
+        var now = java.time.ZonedDateTime.now(zone);
+        var midnight = now.toLocalDate().plusDays(1).atStartOfDay(zone);
+        long seconds = java.time.Duration.between(now, midnight).getSeconds();
+        return java.util.concurrent.TimeUnit.SECONDS.toNanos(Math.max(seconds, 1));
     }
 }
