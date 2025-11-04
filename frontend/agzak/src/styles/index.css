@@ -24,6 +24,11 @@ body {
   background-repeat: repeat;
   background-size: 512px 512px;
   image-rendering: pixelated;
+  -ms-overflow-style: none;
+}
+
+::-webkit-scrollbar {
+  display: none;
 }
 
 /* 앱 프레임: 360 고정 + 가운데 정렬 */
