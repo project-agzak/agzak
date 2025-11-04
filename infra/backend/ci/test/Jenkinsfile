@@ -125,57 +125,57 @@ command -v /kaniko/executor >/dev/null || { echo "kaniko executor not found"; ex
             def testImage = "${repo}:${tag}"
 
             sh """#!/usr/bin/env bash
-    set -euo pipefail
-    set -x
+set -euo pipefail
+set -x
 
-    # 0) PATH를 확실히 지정 (재시작 시 PATH 누락 방지)
-    export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+# 0) PATH를 확실히 지정 (재시작 시 PATH 누락 방지)
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
-    # 1) ssh 존재 확인, 없으면 즉시 설치
-    if ! command -v /usr/bin/ssh >/dev/null 2>&1; then
-      echo "ssh not found; installing openssh-client..."
-      sudo apt-get update
-      sudo apt-get install -y openssh-client
-    fi
+# 1) ssh 존재 확인, 없으면 즉시 설치
+if ! command -v /usr/bin/ssh >/dev/null 2>&1; then
+  echo "ssh not found; installing openssh-client..."
+  sudo apt-get update
+  sudo apt-get install -y openssh-client
+fi
 
-    # 2) 절대 경로로 ssh 호출
-    /usr/bin/ssh -o StrictHostKeyChecking=no -i "\$SSH_KEY" "\$SSH_USER@$DEPLOY_HOST" "TEST_IMAGE=${testImage} DOCKER_USER=\$DOCKER_USER DOCKER_PWD=\$DOCKER_PWD bash -s" <<'ENDSSH'
-      set -eux
-      cd /home/ubuntu/agzak-app/test/backend
+# 2) 절대 경로로 ssh 호출
+/usr/bin/ssh -o StrictHostKeyChecking=no -i "\$SSH_KEY" "\$SSH_USER@$DEPLOY_HOST" "TEST_IMAGE=${testImage} DOCKER_USER=\$DOCKER_USER DOCKER_PWD=\$DOCKER_PWD bash -s" <<'ENDSSH'
+  set -eux
+  cd /home/ubuntu/agzak-app/test/backend
 
-      # 태그를 먼저 시도, 없으면 latest 폴백(재시작 시 유용)
-      if ! docker pull "\$TEST_IMAGE"; then
-        echo "WARN: \$TEST_IMAGE not found. Fallback to :latest"
-        TEST_IMAGE="\${TEST_IMAGE%:*}:latest"
-        docker pull "\$TEST_IMAGE"
-      fi
+  # 태그를 먼저 시도, 없으면 latest 폴백(재시작 시 유용)
+  if ! docker pull "\$TEST_IMAGE"; then
+    echo "WARN: \$TEST_IMAGE not found. Fallback to :latest"
+    TEST_IMAGE="\${TEST_IMAGE%:*}:latest"
+    docker pull "\$TEST_IMAGE"
+  fi
 
-      sed -i '/^TEST_IMAGE=/d' .env
-      sed -i '/^PROJECT=/d' .env
-      echo "TEST_IMAGE=\$TEST_IMAGE" >> .env
-      echo "PROJECT=test" >> .env
+  sed -i '/^TEST_IMAGE=/d' .env
+  sed -i '/^PROJECT=/d' .env
+  echo "TEST_IMAGE=\$TEST_IMAGE" >> .env
+  echo "PROJECT=test" >> .env
 
-      echo "\$DOCKER_PWD" | docker login -u "\$DOCKER_USER" --password-stdin || true
-      make -C .. up-be
+  echo "\$DOCKER_PWD" | docker login -u "\$DOCKER_USER" --password-stdin || true
+  make -C .. up-be
 
-      for i in \$(seq 1 12); do
-        status=\$(docker inspect --format '{{.State.Health.Status}}' test-app-server 2>/dev/null || echo "unhealthy")
-        echo "Current status: \$status"
-        [ "\$status" = "healthy" ] && { echo "Container is healthy."; exit 0; }
-        echo "Waiting for container to be healthy... (\$i/12)"
-        sleep 5
-      done
+  for i in \$(seq 1 12); do
+    status=\$(docker inspect --format '{{.State.Health.Status}}' test-app-server 2>/dev/null || echo "unhealthy")
+    echo "Current status: \$status"
+    [ "\$status" = "healthy" ] && { echo "Container is healthy."; exit 0; }
+    echo "Waiting for container to be healthy... (\$i/12)"
+    sleep 5
+  done
 
-      echo "Container did not become healthy in time." >&2
-      exit 1
-    ENDSSH
-    """
+  echo "Container did not become healthy in time." >&2
+  exit 1
+ENDSSH
+"""
           }
         }
       }
     }
 
-
+  } // <<<<<< 이 줄: stages 블록 닫기 (누락되어 있었던 부분)
 
   post {
     success {
@@ -183,7 +183,6 @@ command -v /kaniko/executor >/dev/null || { echo "kaniko executor not found"; ex
         def payload = [
           text: "빌드 성공: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${env.AUTHOR_NAME}(${env.AUTHOR_MAIL}) (<${env.BUILD_URL}|상세 보기>)"
         ]
-        // HTTP Request Plugin 사용 (샌드박스 안전)
         httpRequest(
           httpMode: 'POST',
           url: env.WEBHOOK_URL,
@@ -191,10 +190,6 @@ command -v /kaniko/executor >/dev/null || { echo "kaniko executor not found"; ex
           requestBody: groovy.json.JsonOutput.toJson(payload),
           validResponseCodes: '100:599'
         )
-        // 만약 플러그인이 없다면 아래 대안(활성화 시 윗줄 대신 사용):
-        // sh """curl -fsS -X POST -H 'Content-Type: application/json' \\
-        //   --data '${groovy.json.JsonOutput.toJson(payload).replace("'", "'\\''")}' \\
-        //   '${env.WEBHOOK_URL}' || true"""
       }
     }
     failure {
@@ -209,10 +204,6 @@ command -v /kaniko/executor >/dev/null || { echo "kaniko executor not found"; ex
           requestBody: groovy.json.JsonOutput.toJson(payload),
           validResponseCodes: '100:599'
         )
-        // (대안) curl one-liner:
-        // sh """curl -fsS -X POST -H 'Content-Type: application/json' \\
-        //   --data '${groovy.json.JsonOutput.toJson(payload).replace("'", "'\\''")}' \\
-        //   '${env.WEBHOOK_URL}' || true"""
       }
     }
   }
