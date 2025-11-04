@@ -12,6 +12,7 @@ import com.ssafy.agzak.domain.guest.dto.GuestProfile;
 import com.ssafy.agzak.domain.member.dto.response.MemberInfoResponse;
 import com.ssafy.agzak.domain.member.service.MemberService;
 import com.ssafy.agzak.global.security.AuthMemberProvider;
+import io.swagger.v3.oas.annotations.Hidden;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -62,11 +63,13 @@ public class FortuneController implements FortuneApiDocs {
         return ResponseEntity.ok().body(fortuneTypeService.getFortuneType(fortuneTypeId));
     }
 
+    @Hidden
     @PostMapping("/test")
     public ResponseEntity<AiPromptData> test(@RequestBody BirthDataInput test) {
         return ResponseEntity.ok().body(astrologyCalculationService.generateAiPromptData(test));
     }
 
+    @Hidden
     @GetMapping("/city")
     public ResponseEntity<KakaoAddressResponse.Document> testMap(@RequestParam String city) {
         return ResponseEntity.ok().body(geocodingService.getCoordinates(city));

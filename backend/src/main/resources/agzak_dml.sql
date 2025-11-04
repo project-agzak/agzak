@@ -1,3 +1,7 @@
+SET NAMES utf8mb4;
+SET CHARACTER SET utf8mb4;
+SET collation_connection = 'utf8mb4_0900_ai_ci';
+
 INSERT INTO fortune_type (fortune_type_id, name) VALUES
                                                      (1, '소'),
                                                      (2, '쥐'),
