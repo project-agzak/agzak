@@ -41,12 +41,12 @@ const fortune: FortuneData | null =
         </div>
 
         {/* 칠판 달력 */}
-        <div className="px-3 pt-3">
+        <div className="flex items-center justify-center w-full max-w-[320px] mx-auto mt-2">
           <BlackboardCalendar onSelectDate={handleSelectDate} />
         </div>
 
         {/* 금주의 운세 변동 */}
-        <div className="px-3">
+        <div className="flex items-center justify-center w-full max-w-[320px] mx-auto mt-2">
           <WeeklyFortuneCard />
         </div>
         {/* bottom sheet */}

@@ -28,8 +28,9 @@ export function OvenAspectPanel({
   return (
     <div
       className="
-        grid grid-cols-3 gap-x-4 gap-y-3 justify-items-center mt-2
+        grid grid-cols-3 gap-x-4 gap-y-3 justify-items-center
         w-full max-w-[360px] mx-auto
+        [grid-auto-rows:84px]
       "
     >
       {/* 1행: 금전, 애정, (액운은 오른쪽에 세로로 배치하기 때문에 여기선 건너뜀) */}
@@ -49,11 +50,11 @@ export function OvenAspectPanel({
       />
 
       {/* 액운 상승: 오른쪽 세로 긴 버튼 (2행 차지) */}
-      <div className="row-span-2 self-stretch flex flex-col items-center">
+      <div className="row-span-2 flex flex-col items-center w-[100px]">
         <button
           onClick={() => onSelect("MISFORTUNE")}
           disabled={disabled}
-          className="w-[88px] h-[145px] disabled:opacity-60"
+          className="w-[100px] h-[140px] disabled:opacity-60"
         >
           <img
             src={misfortune}
@@ -99,8 +100,13 @@ function AspectBtn({
   disabled?: boolean
 }) {
   return (
-    <div className="flex flex-col items-center w-[92px]">
-      <button onClick={onClick} disabled={disabled} className="w-[100px] h-[60px] disabled:opacity-60">
+    <div className="flex flex-col items-center w-[100px]">
+      <button
+        onClick={onClick}
+        disabled={disabled}
+        className="w-full h-[60px] disabled:opacity-60"
+        aria-label={label}
+      >
         <img
           src={img}
           alt={label}

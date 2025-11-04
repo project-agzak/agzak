@@ -11,6 +11,7 @@ import cookieMoney from "@/assets/Cookies/money-cookie.svg"
 import cookieRotten from "@/assets/Cookies/rotten-cookie.svg"
 import speechBubble from "@/assets/ui/speech-bubble.svg"
 import { Button_L } from "@/components/atoms/Button_L"
+import { useEffect } from "react"
 
 
 const mockFortuneCookie: FortuneCookieResult = {
@@ -57,9 +58,15 @@ export default function OvenResult({
     { label: "금전운", value: cookie.money },
   ].filter((s) => s.value !== 0)
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "auto" })
+    document.documentElement.scrollTop = 0
+    document.body.scrollTop = 0
+  }, [])
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
-      <p className="font-galmuri-small mb-1 text-left w-full pl-6">
+      <p className="font-galmuri-small mb-1 text-left w-full pl-20">
         오븐에서 나온 건...
       </p>
       <p className="font-bitbit-large text-lg text-[#1f1f1f]">
