@@ -69,4 +69,8 @@ public class FortuneCookie {
     public void updateStatus() {
         this.status = CookieStatus.USED;
     }
+
+    public int getTotalScore() {
+        return health + love + achievement + money;
+    }
 }

@@ -9,10 +9,12 @@ import com.ssafy.agzak.domain.inventory.entity.FortuneCookie;
 import com.ssafy.agzak.domain.inventory.repository.FortuneCookieRepository;
 import com.ssafy.agzak.domain.member.exception.NoFortuneFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -51,6 +53,26 @@ public class CookieService {
         cookie.updateStatus();
         int sum = cookie.getAchievement() + cookie.getMoney() + cookie.getHealth() + cookie.getLove();
         fortune.updateScore(sum);
+    }
+
+    public List<CookieResponse> getFortuneCookie(Long memberId, String sortType) {
+        List<FortuneCookie> cookies = fortuneCookieRepository.findAllByMember(memberId);
+        return switch (sortType.toLowerCase()) {
+            case "score" -> cookies.stream()
+                    .sorted(Comparator.comparingInt(FortuneCookie::getTotalScore).reversed())
+                    .map(CookieResponse::fromEntity)
+                    .toList();
+
+            case "category" -> cookies.stream()
+                    .sorted(Comparator.comparing(fortuneCookie -> fortuneCookie.getType().name(), Comparator.nullsLast(String::compareToIgnoreCase)))
+                    .map(CookieResponse::fromEntity)
+                    .toList();
+
+            default -> cookies.stream()
+                    .sorted(Comparator.comparing(FortuneCookie::getCreatedAt).reversed())
+                    .map(CookieResponse::fromEntity)
+                    .toList();
+        };
     }
 
 }
