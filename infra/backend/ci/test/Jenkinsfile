@@ -94,56 +94,69 @@ export DOCKER_CONFIG="${DOCKERCFG}"
 
     stage('Deploy') {
       steps {
-        script {
-          def repo = (env.REGISTRY?.trim() && env.REGISTRY != 'docker.io') ? "${env.REGISTRY}/${env.IMAGE_NAME}" : "docker.io/${env.IMAGE_NAME}"
-          def tag = "${env.TARGET_BRANCH}-${env.BUILD_NUMBER}"
-          def testImage = "${repo}:${tag}"
+        withCredentials([
+          sshUserPrivateKey(credentialsId: 'deploy-ssh',
+                            keyFileVariable: 'SSH_KEY',
+                            usernameVariable: 'SSH_USER'),
+          usernamePassword(credentialsId: 'dockerhub-cred',
+                           usernameVariable: 'DOCKER_USER',
+                           passwordVariable: 'DOCKER_PWD')
+        ]) {
+          script {
+            def repo = (env.REGISTRY?.trim() && env.REGISTRY != 'docker.io')
+              ? "${env.REGISTRY}/${env.IMAGE_NAME}"
+              : "docker.io/${env.IMAGE_NAME}"
+            def tag = "${env.TARGET_BRANCH}-${env.BUILD_NUMBER}"
+            def testImage = "${repo}:${tag}"
 
-          def remote = [
-            name: 'deploy-host',
-            host: env.DEPLOY_HOST,
-            user: env.DEPLOY_USER,
-            credentialId: 'deploy-ssh',
-            port: 22,
-            timeout: 0
-          ]
+            // ✅ 핵심: 단일따옴표로 감싼 셸 스크립트 + 필요한 값만 export
+            sh 'set -euo pipefail; set -x; ' +
+               "export TEST_IMAGE='${testImage}'; " +  // Groovy에서 값만 주입
+               '''
+    export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
-          sshCommand remote: remote, command: """
-set -eux
-cd /home/ubuntu/agzak-app/test/backend
+    # ssh 바이너리 존재 확인 (없으면 설치) — 여긴 런타임 셸에서 평가됨
+    if ! /usr/bin/ssh -V >/dev/null 2>&1; then
+      echo "ssh client not found; installing..."
+      sudo apt-get update && sudo apt-get install -y openssh-client
+    fi
 
-if ! docker pull '${testImage}'; then
-  echo 'WARN: ${testImage} not found. Fallback to :latest'
-  TEST_IMAGE='${repo}:latest'
-  docker pull "\${TEST_IMAGE}"
-else
-  TEST_IMAGE='${testImage}'
-fi
+    # ✅ 여기부터는 모든 $ENV 가 셸 변수로만 해석됨(Groovy 보간 불가)
+    #    DOCKER_USER/DOCKER_PWD는 withCredentials로 ENV에 이미 바인딩됨
+    /usr/bin/ssh -o StrictHostKeyChecking=no -i "$SSH_KEY" "$SSH_USER@$DEPLOY_HOST" "TEST_IMAGE=$TEST_IMAGE DOCKER_USER=$DOCKER_USER DOCKER_PWD=$DOCKER_PWD bash -s" <<'ENDSSH'
+      set -eux
+      cd /home/ubuntu/agzak-app/test/backend
 
-sed -i '/^TEST_IMAGE=/d' .env
-sed -i '/^PROJECT=/d' .env
-echo "TEST_IMAGE=\${TEST_IMAGE}" >> .env
-echo "PROJECT=test" >> .env
+      if ! docker pull "$TEST_IMAGE"; then
+        echo "WARN: $TEST_IMAGE not found. Fallback to :latest"
+        TEST_IMAGE="${TEST_IMAGE%:*}:latest"
+        docker pull "$TEST_IMAGE"
+      fi
 
-/usr/bin/env bash -lc 'echo "$DOCKER_PWD" | docker login -u "$DOCKER_USER" --password-stdin || true'
+      sed -i '/^TEST_IMAGE=/d' .env
+      sed -i '/^PROJECT=/d' .env
+      echo "TEST_IMAGE=$TEST_IMAGE" >> .env
+      echo "PROJECT=test" >> .env
 
-make -C .. up-be
+      echo "$DOCKER_PWD" | docker login -u "$DOCKER_USER" --password-stdin || true
+      make -C .. up-be
 
-for i in \$(seq 1 12); do
-  status=\$(docker inspect --format '{{.State.Health.Status}}' test-app-server 2>/dev/null || echo "unhealthy")
-  echo "Current status: \$status"
-  [ "\$status" = "healthy" ] && { echo "Container is healthy."; exit 0; }
-  echo "Waiting for container to be healthy... (\$i/12)"
-  sleep 5
-done
+      for i in $(seq 1 12); do
+        status=$(docker inspect --format '{{.State.Health.Status}}' test-app-server 2>/dev/null || echo "unhealthy")
+        echo "Current status: $status"
+        [ "$status" = "healthy" ] && { echo "Container is healthy."; exit 0; }
+        echo "Waiting for container to be healthy... ($i/12)"
+        sleep 5
+      done
 
-echo "Container did not become healthy in time." >&2
-exit 1
-"""
+      echo "Container did not become healthy in time." >&2
+      exit 1
+    ENDSSH
+    '''
+          }
         }
       }
     }
-  } // stages
 
   post {
     success {
