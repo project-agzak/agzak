@@ -12,7 +12,7 @@ import lombok.*;
 @Table(
         name = "inventory",
         uniqueConstraints = {
-                @UniqueConstraint(name = "UQ_inventory_member", columnNames = {"member_id", "inventory_id"})
+                @UniqueConstraint(name = "UQ_inventory_member", columnNames = {"member_id"})
         }
 )
 public class Inventory {
