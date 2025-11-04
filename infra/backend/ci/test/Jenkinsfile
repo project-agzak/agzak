@@ -1,5 +1,3 @@
-// Jenkinsfile (sandbox-safe; POSIX sh only; no java.net.URL, no nohup)
-
 pipeline {
   agent any
   options {
@@ -26,8 +24,6 @@ pipeline {
                                            usernameVariable: 'SSH_USER')]) {
           sh '''
             set -eux
-            # sh 환경에서 절대경로 ssh 사용
-            export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
             /usr/bin/ssh -o StrictHostKeyChecking=no -i "$SSH_KEY" "$SSH_USER@$DEPLOY_HOST" "echo ssh ok"
           '''
         }
@@ -66,7 +62,6 @@ set -x
 
 TAG="${TARGET_BRANCH}-${BUILD_NUMBER}"
 
-# 목적지 레포 / 인증 레지스트리 (POSIX [ ] 사용)
 if [ -n "${REGISTRY}" ] && [ "${REGISTRY}" != "docker.io" ]; then
   DEST_REPO="${REGISTRY}/${IMAGE_NAME}"
   AUTH_REGISTRY="${REGISTRY}"
@@ -84,10 +79,8 @@ WORKDIR="$(pwd)"
 DF="${WORKDIR}/Dockerfile"
 export DOCKER_CONFIG="${DOCKERCFG}"
 
-# Kaniko 바이너리 확인
 /kaniko/executor version || true
 
-# 루트로 실행(권한 이슈 회피)
 /usr/bin/sudo -E /kaniko/executor \
   --context=dir://"${WORKDIR}" \
   --dockerfile="${DF}" \
@@ -124,17 +117,6 @@ export DOCKER_CONFIG="${DOCKERCFG}"
 set -euo pipefail
 set -x
 
-# PATH 보강 (재시작/리플레이 대비)
-export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-
-# ssh 존재 확인(정상이면 그냥 통과)
-if ! /usr/bin/ssh -V >/dev/null 2>&1; then
-  echo "ssh client not found; installing..."
-  sudo apt-get update && sudo apt-get install -y openssh-client
-fi
-
-# 원격에서 bash -s 사용 (원격은 Ubuntu라 bash 존재)
-# 로컬은 sh, 원격은 bash이므로 충돌 없음
 /usr/bin/ssh -o StrictHostKeyChecking=no -i "\$SSH_KEY" "\$SSH_USER@$DEPLOY_HOST" "TEST_IMAGE=${testImage} DOCKER_USER=\$DOCKER_USER DOCKER_PWD=\$DOCKER_PWD bash -s" <<'ENDSSH'
   set -eux
   cd /home/ubuntu/agzak-app/test/backend
