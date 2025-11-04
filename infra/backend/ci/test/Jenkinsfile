@@ -124,37 +124,58 @@ command -v /kaniko/executor >/dev/null || { echo "kaniko executor not found"; ex
             def tag = "${env.TARGET_BRANCH}-${env.BUILD_NUMBER}"
             def testImage = "${repo}:${tag}"
 
-            sh """
-set -eux
-ssh -o StrictHostKeyChecking=no -i "\$SSH_KEY" "\$SSH_USER@$DEPLOY_HOST" "TEST_IMAGE=${testImage} DOCKER_USER=\$DOCKER_USER DOCKER_PWD=\$DOCKER_PWD bash -s" <<'ENDSSH'
-  set -eux
-  cd /home/ubuntu/agzak-app/test/backend
+            sh """#!/usr/bin/env bash
+    set -euo pipefail
+    set -x
 
-  sed -i '/^TEST_IMAGE=/d' .env
-  sed -i '/^PROJECT=/d' .env
-  echo "TEST_IMAGE=\$TEST_IMAGE" >> .env
-  echo "PROJECT=test" >> .env
+    # 0) PATH를 확실히 지정 (재시작 시 PATH 누락 방지)
+    export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
-  echo "\$DOCKER_PWD" | docker login -u "\$DOCKER_USER" --password-stdin || true
-  make -C .. up-be
+    # 1) ssh 존재 확인, 없으면 즉시 설치
+    if ! command -v /usr/bin/ssh >/dev/null 2>&1; then
+      echo "ssh not found; installing openssh-client..."
+      sudo apt-get update
+      sudo apt-get install -y openssh-client
+    fi
 
-  for i in \$(seq 1 12); do
-    status=\$(docker inspect --format '{{.State.Health.Status}}' test-app-server 2>/dev/null || echo "unhealthy")
-    echo "Current status: \$status"
-    [ "\$status" = "healthy" ] && { echo "Container is healthy."; exit 0; }
-    echo "Waiting for container to be healthy... (\$i/12)"
-    sleep 5
-  done
+    # 2) 절대 경로로 ssh 호출
+    /usr/bin/ssh -o StrictHostKeyChecking=no -i "\$SSH_KEY" "\$SSH_USER@$DEPLOY_HOST" "TEST_IMAGE=${testImage} DOCKER_USER=\$DOCKER_USER DOCKER_PWD=\$DOCKER_PWD bash -s" <<'ENDSSH'
+      set -eux
+      cd /home/ubuntu/agzak-app/test/backend
 
-  echo "Container did not become healthy in time." >&2
-  exit 1
-ENDSSH
-"""
+      # 태그를 먼저 시도, 없으면 latest 폴백(재시작 시 유용)
+      if ! docker pull "\$TEST_IMAGE"; then
+        echo "WARN: \$TEST_IMAGE not found. Fallback to :latest"
+        TEST_IMAGE="\${TEST_IMAGE%:*}:latest"
+        docker pull "\$TEST_IMAGE"
+      fi
+
+      sed -i '/^TEST_IMAGE=/d' .env
+      sed -i '/^PROJECT=/d' .env
+      echo "TEST_IMAGE=\$TEST_IMAGE" >> .env
+      echo "PROJECT=test" >> .env
+
+      echo "\$DOCKER_PWD" | docker login -u "\$DOCKER_USER" --password-stdin || true
+      make -C .. up-be
+
+      for i in \$(seq 1 12); do
+        status=\$(docker inspect --format '{{.State.Health.Status}}' test-app-server 2>/dev/null || echo "unhealthy")
+        echo "Current status: \$status"
+        [ "\$status" = "healthy" ] && { echo "Container is healthy."; exit 0; }
+        echo "Waiting for container to be healthy... (\$i/12)"
+        sleep 5
+      done
+
+      echo "Container did not become healthy in time." >&2
+      exit 1
+    ENDSSH
+    """
           }
         }
       }
     }
-  }
+
+
 
   post {
     success {
