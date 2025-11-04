@@ -38,7 +38,7 @@ pipeline {
 
     TAG="${TARGET_BRANCH}-${BUILD_NUMBER}"
 
-    # 목적지 레포/인증 레지스트리
+    # 목적지 레포 / 인증 레지스트리
     if [[ -n "${REGISTRY}" && "${REGISTRY}" != "docker.io" ]]; then
       DEST_REPO="${REGISTRY}/${IMAGE_NAME}"
       AUTH_REGISTRY="${REGISTRY}"
@@ -47,27 +47,26 @@ pipeline {
       AUTH_REGISTRY="https://index.docker.io/v1/"
     fi
 
+    # Kaniko 인증 파일 (heredoc 대신 printf로 안전하게 생성)
     DOCKERCFG="${WORKSPACE}/kaniko-config"
     mkdir -p "${DOCKERCFG}"
     AUTH="$(printf "%s:%s" "${DOCKER_USER}" "${DOCKER_PWD}" | base64 | tr -d '\n')"
+    printf '{"auths":{"%s":{"auth":"%s"}}}\n' "${AUTH_REGISTRY}" "${AUTH}" > "${DOCKERCFG}/config.json"
 
-    cat > "${DOCKERCFG}/config.json" <<'EOF'
-    {
-      "auths": {
-        "__AUTH_REGISTRY__": { "auth": "__AUTH__" }
-      }
-    }
-    EOF
-    sed -i "s#__AUTH_REGISTRY__#${AUTH_REGISTRY}#g" "${DOCKERCFG}/config.json"
-    sed -i "s#__AUTH__#${AUTH}#g"               "${DOCKERCFG}/config.json"
-
+    # 경로/작업 디렉토리
     WORKDIR="$(pwd)"
     DF="${WORKDIR}/Dockerfile"
 
+    # Kaniko 작업 디렉토리 (쓰기 가능 경로)
     export DOCKER_CONFIG="${DOCKERCFG}"
     export KANIKO_DIR="${WORKSPACE}/.kaniko"
     mkdir -p "${KANIKO_DIR}"
 
+    # Kaniko 바이너리 확인 (없으면 즉시 실패)
+    command -v /kaniko/executor >/dev/null || { echo "kaniko executor not found"; exit 1; }
+    /kaniko/executor version || true
+
+    # 빌드 & 푸시
     /kaniko/executor \
       --context=dir://"${WORKDIR}" \
       --dockerfile="${DF}" \
@@ -78,6 +77,9 @@ pipeline {
       --single-snapshot \
       --cache=true \
       --cache-repo="${DEST_REPO}-cache"
+
+    # 완성 태그 확인 (옵션)
+    /kaniko/executor --no-push --digest-file "${WORKSPACE}/kaniko-digest.txt" || true
     '''
           }
         }
