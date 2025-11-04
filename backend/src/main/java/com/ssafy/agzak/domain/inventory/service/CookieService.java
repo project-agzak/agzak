@@ -51,8 +51,7 @@ public class CookieService {
         }
 
         cookie.updateStatus();
-        int sum = cookie.getAchievement() + cookie.getMoney() + cookie.getHealth() + cookie.getLove();
-        fortune.updateScore(sum);
+        fortune.updateScore(cookie.getTotalScore());
     }
 
     public List<CookieResponse> getFortuneCookie(Long memberId, String sortType) {
