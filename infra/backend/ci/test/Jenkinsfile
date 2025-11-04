@@ -53,16 +53,14 @@ pipeline {
       AUTH_REGISTRY="https://index.docker.io/v1/"
     fi
 
-    # -------- Kaniko 격리/권한 설정 (전부 Jenkins 워크스페이스 하위) --------
+    # ── Kaniko용 로컬 작업영역(모두 Jenkins 유저가 소유)
     BASE="${WORKSPACE}/.kaniko"
     CONF="${BASE}/config"
     CACHE="${BASE}/cache"
     HOME_DIR="${BASE}/home"
     TMP_DIR="${BASE}/tmp"
-    BUILD_ROOT="${BASE}/build"        # ⬅️ 이미지 루트FS를 여기에 구성
-    mkdir -p "${CONF}" "${CACHE}" "${HOME_DIR}" "${TMP_DIR}" "${BUILD_ROOT}"
-    # Jenkins 유저가 지우기/만들기 가능하도록 권한 완화
-    chmod 0777 "${BASE}" "${CACHE}" "${HOME_DIR}" "${TMP_DIR}" "${BUILD_ROOT}"
+    mkdir -p "${CONF}" "${CACHE}" "${HOME_DIR}" "${TMP_DIR}"
+    chmod 0777 "${BASE}" "${CACHE}" "${HOME_DIR}" "${TMP_DIR}"
 
     # Docker auth
     AUTH="$(printf "%s:%s" "${DOCKER_USER}" "${DOCKER_PWD}" | base64 | tr -d '\n')"
@@ -77,7 +75,7 @@ pipeline {
 
     /kaniko/executor version || true
 
-    # -------- 절대 sudo 금지. build-root 를 우리가 만든 경로로 지정 --------
+    # 중요: sudo 쓰지 않음. snapshot 모드/뉴런 설정으로 교체 충돌 완화
     /kaniko/executor \
       --context=dir://"${WORKDIR}" \
       --dockerfile="${DF}" \
@@ -85,8 +83,7 @@ pipeline {
       --destination="${DEST_REPO}:latest" \
       --cache=true \
       --cache-dir="${CACHE}" \
-      --build-root="${BUILD_ROOT}" \
-      --reproducible \
+      --snapshotMode=redo \
       --use-new-run=false \
       --cleanup
     '''
