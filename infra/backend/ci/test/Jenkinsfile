@@ -24,6 +24,7 @@ pipeline {
   }
 
   environment {
+    JAVA_TOOL_OPTIONS = '-Djava.io.tmpdir=/tmp'
     SUBDIR      = 'backend'
     IMAGE_NAME  = 'sso9594/agzak-app'
     REGISTRY    = 'docker.io'
