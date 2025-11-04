@@ -3,6 +3,7 @@ package com.ssafy.agzak.docs;
 import com.ssafy.agzak.domain.fortune.dto.request.GuestFortuneRequest;
 import com.ssafy.agzak.domain.fortune.dto.response.FinalFortuneResponse;
 import com.ssafy.agzak.domain.fortune.dto.response.FortuneTypeResponse;
+import com.ssafy.agzak.domain.inventory.dto.response.CookieResponse;
 import com.ssafy.agzak.domain.fortune.dto.response.GuestFortuneWithIdResponse;
 import com.ssafy.agzak.global.error.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
