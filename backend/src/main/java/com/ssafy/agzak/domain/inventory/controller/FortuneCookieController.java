@@ -3,6 +3,7 @@ package com.ssafy.agzak.domain.inventory.controller;
 import com.ssafy.agzak.docs.FortuneCookieApiDocs;
 import com.ssafy.agzak.domain.inventory.dto.response.CookieResponse;
 import com.ssafy.agzak.domain.inventory.service.CookieService;
+import com.ssafy.agzak.global.security.AuthMemberProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -19,9 +20,12 @@ import java.util.List;
 public class FortuneCookieController implements FortuneCookieApiDocs {
 
     private final CookieService cookieService;
+    private final AuthMemberProvider authMemberProvider;
 
     @PostMapping("/{cookieId}")
-    public ResponseEntity<?> useCookie(@PathVariable Long cookieId) {
+    public ResponseEntity<Void> useCookie(@PathVariable Long cookieId) {
+        Long memberId = authMemberProvider.currentMemberId();
+        cookieService.useCookie(memberId, cookieId);
         return ResponseEntity.ok().build();
     }
 

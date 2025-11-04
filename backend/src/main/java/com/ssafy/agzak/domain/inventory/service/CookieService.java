@@ -1,24 +1,52 @@
 package com.ssafy.agzak.domain.inventory.service;
 
+import com.ssafy.agzak.domain.fortune.entity.Fortune;
+import com.ssafy.agzak.domain.fortune.entity.FortuneAspect;
+import com.ssafy.agzak.domain.fortune.repository.FortuneAspectRepository;
+import com.ssafy.agzak.domain.fortune.repository.FortuneRepository;
 import com.ssafy.agzak.domain.inventory.dto.response.CookieResponse;
 import com.ssafy.agzak.domain.inventory.entity.FortuneCookie;
 import com.ssafy.agzak.domain.inventory.repository.FortuneCookieRepository;
-import com.ssafy.agzak.domain.member.repository.MemberRepository;
+import com.ssafy.agzak.domain.member.exception.NoFortuneFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class CookieService {
     private final FortuneCookieRepository fortuneCookieRepository;
-    private final MemberRepository memberRepository;
+    private final FortuneRepository fortuneRepository;
+    private final FortuneAspectRepository fortuneAspectRepository;
 
-    //TODO 쿠키 조회
-    public CookieResponse getCookieInfo(long cookieId) {
+    public CookieResponse getCookieInfo(Long cookieId) {
         FortuneCookie cookie = fortuneCookieRepository.findById(cookieId)
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 쿠키 아이디입니다."));
 
         return CookieResponse.fromEntity(cookie);
+    }
+
+    @Transactional
+    public void useCookie(Long memberId, Long cookieId) {
+        Fortune fortune = fortuneRepository.findByMember_MemberIdAndDate(memberId, LocalDate.now())
+                .orElseThrow(() -> new NoFortuneFoundException("오늘 운세가 존재하지 않습니다.", memberId, LocalDate.now()));
+        List<FortuneAspect> fortuneAspects = fortuneAspectRepository.findAllByFortune(fortune);
+
+        FortuneCookie cookie = fortuneCookieRepository.findById(cookieId)
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 쿠키 아이디입니다."));
+
+        for (FortuneAspect aspect : fortuneAspects) {
+            switch  (aspect.getName().name()) {
+                case "MONEY" -> aspect.updateScore(cookie.getMoney());
+                case "LOVE" -> aspect.updateScore(cookie.getLove());
+                case "ACHIEVEMENT" -> aspect.updateScore(cookie.getAchievement());
+                case "HEALTH" -> aspect.updateScore(cookie.getHealth());
+            }
+        }
+
     }
 
 }
