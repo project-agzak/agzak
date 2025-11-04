@@ -1,9 +1,9 @@
-// Jenkinsfile (stable, no ssh-agent / no nohup in post)
+// Jenkinsfile (stable: TMPDIR 고정, post에서 sh 제거, ssh-agent 미사용)
 
-// ── Webhook helper (Groovy HTTP; avoids shell/nohup) ───────────────────────────
+// ── Webhook helper (pure Groovy; shell/nojup 비사용) ─────────────────────────
 @NonCPS
-def sendWebhook(String urlStr, Map body) {
-  def url = new URL(urlStr)
+def postJson(String urlStr, Map body) {
+  def url  = new URL(urlStr)
   def conn = url.openConnection()
   conn.setRequestMethod('POST')
   conn.setDoOutput(true)
@@ -11,11 +11,13 @@ def sendWebhook(String urlStr, Map body) {
   def json = groovy.json.JsonOutput.toJson(body)
   conn.outputStream.withWriter('UTF-8'){ it << json }
   def code = conn.responseCode
-  def resp = (code >= 200 && code < 400) ? conn.inputStream.text : (conn.errorStream?.text ?: "")
-  echo "Webhook HTTP ${code}: ${resp}"
+  def stream = (code >= 200 && code < 400) ? conn.inputStream : conn.errorStream
+  def resp = stream ? stream.getText('UTF-8') : ''
+  // @NonCPS 내부에서 echo 호출을 피하고, 문자열로 반환
+  return "HTTP ${code}: ${resp}"
 }
 
-// ── Pipeline ───────────────────────────────────────────────────────────────────
+// ── Pipeline ─────────────────────────────────────────────────────────────────
 pipeline {
   agent any
   options {
@@ -24,7 +26,10 @@ pipeline {
   }
 
   environment {
+    // ★ 중요: durable-task/프로세스 spawn이 참조할 TMPDIR 고정
+    TMPDIR = '/tmp'
     JAVA_TOOL_OPTIONS = '-Djava.io.tmpdir=/tmp'
+
     SUBDIR      = 'backend'
     IMAGE_NAME  = 'sso9594/agzak-app'
     REGISTRY    = 'docker.io'
@@ -37,13 +42,17 @@ pipeline {
 
     stage('SSH smoke') {
       steps {
-        // ssh-agent 대신 직접 키 바인딩
+        // ssh-agent 대신 키 직접 바인딩
         withCredentials([sshUserPrivateKey(credentialsId: 'deploy-ssh',
                                            keyFileVariable: 'SSH_KEY',
                                            usernameVariable: 'SSH_USER')]) {
           sh '''
             set -eux
-            ssh -o StrictHostKeyChecking=no -i "$SSH_KEY" "$SSH_USER@$DEPLOY_HOST" "echo ssh ok"
+            ssh -i "$SSH_KEY" \
+                -o BatchMode=yes \
+                -o ServerAliveInterval=10 -o ServerAliveCountMax=3 \
+                -o StrictHostKeyChecking=no \
+                "$SSH_USER@$DEPLOY_HOST" "echo ssh ok"
           '''
         }
       }
@@ -58,7 +67,7 @@ pipeline {
             full = sh(returnStdout: true, script: 'git rev-parse --abbrev-ref HEAD').trim()
           }
           env.TARGET_BRANCH_FULL = full
-          env.TARGET_BRANCH = full.replaceAll('/', '-')
+          env.TARGET_BRANCH      = full.replaceAll('/', '-')
           echo "Target branch: ${env.TARGET_BRANCH_FULL} -> ${env.TARGET_BRANCH}"
         }
       }
@@ -78,7 +87,7 @@ set -x
 
 TAG="${TARGET_BRANCH}-${BUILD_NUMBER}"
 
-# 목적지 레포 / 인증 레지스트리
+# 목적지 레포/인증 레지스트리
 if [[ -n "${REGISTRY}" && "${REGISTRY}" != "docker.io" ]]; then
   DEST_REPO="${REGISTRY}/${IMAGE_NAME}"
   AUTH_REGISTRY="${REGISTRY}"
@@ -103,8 +112,8 @@ export DOCKER_CONFIG="${DOCKERCFG}"
 command -v /kaniko/executor >/dev/null || { echo "kaniko executor not found"; exit 1; }
 /kaniko/executor version || true
 
-# 루트 권한으로 실행하여 chown 오류 회피
-/usr/bin/sudo -E /kaniko/executor \
+# 루트 권한으로 실행하여 chown 오류 회피 (컨테이너 내부에서만 사용)
+sudo -E /kaniko/executor \
   --context=dir://"${WORKDIR}" \
   --dockerfile="${DF}" \
   --destination="${DEST_REPO}:${TAG}" \
@@ -138,7 +147,11 @@ command -v /kaniko/executor >/dev/null || { echo "kaniko executor not found"; ex
 
             sh """
 set -eux
-ssh -o StrictHostKeyChecking=no -i "\$SSH_KEY" "\$SSH_USER@$DEPLOY_HOST" "TEST_IMAGE=${testImage} DOCKER_USER=\$DOCKER_USER DOCKER_PWD=\$DOCKER_PWD bash -s" <<'ENDSSH'
+ssh -i "\$SSH_KEY" \\
+    -o BatchMode=yes \\
+    -o ServerAliveInterval=10 -o ServerAliveCountMax=3 \\
+    -o StrictHostKeyChecking=no \\
+    "\$SSH_USER@$DEPLOY_HOST" "TEST_IMAGE=${testImage} DOCKER_USER=\$DOCKER_USER DOCKER_PWD=\$DOCKER_PWD bash -s" <<'ENDSSH'
   set -eux
   cd /home/ubuntu/agzak-app/test/backend
 
@@ -171,20 +184,27 @@ ENDSSH
   post {
     success {
       script {
-        def authorId   = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
-        def authorMail = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
-        sendWebhook(env.WEBHOOK_URL, [
+        // author 정보를 shell 없이 가져오기 (SCM changeSets)
+        def items = currentBuild.changeSets?.collectMany { it.items } ?: []
+        def last  = items ? items[-1] : null
+        def authorId   = last?.author?.fullName ?: 'unknown'
+        def authorMail = (last?.authorEmail ?: '')
+        def res = postJson(env.WEBHOOK_URL, [
           text: "빌드 성공: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${authorId}(${authorMail}) (<${env.BUILD_URL}|상세 보기>)"
         ])
+        echo "Webhook result: ${res}"
       }
     }
     failure {
       script {
-        def authorId   = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
-        def authorMail = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
-        sendWebhook(env.WEBHOOK_URL, [
+        def items = currentBuild.changeSets?.collectMany { it.items } ?: []
+        def last  = items ? items[-1] : null
+        def authorId   = last?.author?.fullName ?: 'unknown'
+        def authorMail = (last?.authorEmail ?: '')
+        def res = postJson(env.WEBHOOK_URL, [
           text: "빌드 실패: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${authorId}(${authorMail}) (<${env.BUILD_URL}|상세 보기>)"
         ])
+        echo "Webhook result: ${res}"
       }
     }
   }
