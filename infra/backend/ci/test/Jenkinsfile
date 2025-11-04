@@ -1,58 +1,76 @@
+// Jenkinsfile (kaniko는 sudo 금지, 배포는 SSH 플러그인 사용)
+
 pipeline {
   agent any
-
-  options {
-    timestamps()
-    ansiColor('xterm')
-  }
+  options { timestamps(); ansiColor('xterm') }
 
   environment {
+    JAVA_TOOL_OPTIONS = '-Djava.io.tmpdir=/tmp'
     SUBDIR      = 'backend'
     IMAGE_NAME  = 'sso9594/agzak-app'
     REGISTRY    = 'docker.io'
     DEPLOY_USER = 'ubuntu'
     DEPLOY_HOST = 'k13b102.p.ssafy.io'
+    WEBHOOK_URL = 'https://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo'
   }
 
   stages {
+
     stage('Checkout') {
       steps {
         checkout scm
         script {
           def full = (env.GIT_BRANCH ?: '').replaceFirst(/^origin\//, '')
-          if (!full) {
-            full = sh(returnStdout: true, script: 'git rev-parse --abbrev-ref HEAD').trim()
-          }
+          if (!full) { full = sh(returnStdout: true, script: 'git rev-parse --abbrev-ref HEAD').trim() }
           env.TARGET_BRANCH_FULL = full
           env.TARGET_BRANCH = full.replaceAll('/', '-')
           echo "Target branch: ${env.TARGET_BRANCH_FULL} -> ${env.TARGET_BRANCH}"
+          env.AUTHOR_NAME = sh(returnStdout: true, script: 'git show -s --pretty=%an').trim()
+          env.AUTHOR_MAIL = sh(returnStdout: true, script: 'git show -s --pretty=%ae').trim()
         }
       }
     }
 
-    stage('Docker Build & Push') {
+    stage('Kaniko Build & Push') {
       steps {
         dir("${env.SUBDIR}") {
           withCredentials([usernamePassword(credentialsId: 'dockerhub-cred',
-              usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PWD')]) {
-            sh '''
-              set -eux
-              echo "$DOCKER_PWD" | docker login -u "$DOCKER_USER" --password-stdin ${REGISTRY}
-              export DOCKER_BUILDKIT=1
-              TAG="${TARGET_BRANCH}-${BUILD_NUMBER}"
+                                            usernameVariable: 'DOCKER_USER',
+                                            passwordVariable: 'DOCKER_PWD')]) {
+            sh '''#!/usr/bin/env sh
+set -euo pipefail
+set -x
 
-              if [ -n "${REGISTRY}" ] && [ "${REGISTRY}" != "docker.io" ]; then
-                REPO="${REGISTRY}/${IMAGE_NAME}"
-              else
-                REPO="${IMAGE_NAME}"
-              fi
+TAG="${TARGET_BRANCH}-${BUILD_NUMBER}"
 
-              docker build -t "${REPO}:${TAG}" .
-              docker push "${REPO}:${TAG}"
+if [ -n "${REGISTRY}" ] && [ "${REGISTRY}" != "docker.io" ]; then
+  DEST_REPO="${REGISTRY}/${IMAGE_NAME}"
+  AUTH_REGISTRY="${REGISTRY}"
+else
+  DEST_REPO="docker.io/${IMAGE_NAME}"
+  AUTH_REGISTRY="https://index.docker.io/v1/"
+fi
 
-              docker tag "${REPO}:${TAG}" "${REPO}:latest"
-              docker push "${REPO}:latest"
-            '''
+DOCKERCFG="${WORKSPACE}/kaniko-config"
+mkdir -p "${DOCKERCFG}"
+AUTH="$(printf "%s:%s" "${DOCKER_USER}" "${DOCKER_PWD}" | base64 | tr -d '\n')"
+printf '{"auths":{"%s":{"auth":"%s"}}}\n' "${AUTH_REGISTRY}" "${AUTH}" > "${DOCKERCFG}/config.json"
+
+WORKDIR="$(pwd)"
+DF="${WORKDIR}/Dockerfile"
+export DOCKER_CONFIG="${DOCKERCFG}"
+export HOME="${WORKSPACE}"     # kaniko의 홈 참조 안정화
+
+/kaniko/executor version || true
+
+/usr/bin/sudo -E /kaniko/executor \
+  --context=dir://"${WORKDIR}" \
+  --dockerfile="${DF}" \
+  --destination="${DEST_REPO}:${TAG}" \
+  --destination="${DEST_REPO}:latest" \
+  --cache=true \
+  --cache-repo="${DEST_REPO}-cache"
+'''
           }
         }
       }
@@ -60,47 +78,65 @@ pipeline {
 
     stage('Deploy') {
       steps {
-        sshagent (credentials: ['deploy-ssh']) {
-          withCredentials([usernamePassword(
-            credentialsId: 'dockerhub-cred',
-            usernameVariable: 'DOCKER_USER',
-            passwordVariable: 'DOCKER_PWD'
-          )]) {
-            script {
-              def repo = (env.REGISTRY?.trim() && env.REGISTRY != 'docker.io')
-                ? "${env.REGISTRY}/${env.IMAGE_NAME}"
-                : env.IMAGE_NAME
-              def tag = "${env.TARGET_BRANCH}-${env.BUILD_NUMBER}"
-              def testImage = "${repo}:${tag}"
+        withCredentials([
+          sshUserPrivateKey(credentialsId: 'deploy-ssh',
+                            keyFileVariable: 'SSH_KEY',
+                            usernameVariable: 'SSH_USER'),
+          usernamePassword(credentialsId: 'dockerhub-cred',
+                           usernameVariable: 'DOCKER_USER',
+                           passwordVariable: 'DOCKER_PWD')
+        ]) {
+          script {
+            def repo = (env.REGISTRY?.trim() && env.REGISTRY != 'docker.io')
+              ? "${env.REGISTRY}/${env.IMAGE_NAME}"
+              : "docker.io/${env.IMAGE_NAME}"
+            def tag = "${env.TARGET_BRANCH}-${env.BUILD_NUMBER}"
+            def testImage = "${repo}:${tag}"
 
-              sh """
-                set -eux
-                ssh -o StrictHostKeyChecking=no \\
-                  "$DEPLOY_USER@$DEPLOY_HOST" \\
-                  "TEST_IMAGE=${testImage} DOCKER_USER=${DOCKER_USER} DOCKER_PWD=${DOCKER_PWD} bash -s" <<'ENDSSH'
-                    set -eux
-                    cd /home/ubuntu/agzak-app/test/backend
+            sh(script: """
+    #!/usr/bin/env bash
+    set -euo pipefail
+    set -x
 
-                    echo "TEST_IMAGE=\$TEST_IMAGE" > .env
-                    echo "PROJECT=test" >> .env
+    export TEST_IMAGE='${testImage}'
+    export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
-                    echo "\$DOCKER_PWD" | docker login -u "\$DOCKER_USER" --password-stdin || true
+    # ssh 바이너리 확인(없으면 실패 메시지 보이게만 함)
+    if ! /usr/bin/ssh -V >/dev/null 2>&1; then
+      echo "ERROR: /usr/bin/ssh not found in Jenkins container" >&2
+      exit 127
+    fi
 
-                    make -C .. up-be
+    /usr/bin/ssh -o StrictHostKeyChecking=no -i "\$SSH_KEY" "\$SSH_USER@${env.DEPLOY_HOST}" "TEST_IMAGE=\$TEST_IMAGE DOCKER_USER=\$DOCKER_USER DOCKER_PWD=\$DOCKER_PWD bash -s" <<'ENDSSH'
+      set -eux
+      cd /home/ubuntu/agzak-app/test/backend
 
-                    for i in \$(seq 1 12); do
-                      status=\$(docker inspect --format '{{.State.Health.Status}}' test-app-server 2>/dev/null || echo "unhealthy")
-                      echo "Current status: \$status"
-                      [ "\$status" = "healthy" ] && { echo "Container is healthy."; exit 0; }
-                      echo "Waiting for container to be healthy... (\$i/12)"
-                      sleep 5
-                    done
+      if ! docker pull "\$TEST_IMAGE"; then
+        echo "WARN: \$TEST_IMAGE not found. Fallback to :latest"
+        TEST_IMAGE="\${TEST_IMAGE%:*}:latest"
+        docker pull "\$TEST_IMAGE"
+      fi
 
-                    echo "Container did not become healthy in time." >&2
-                    exit 1
-                ENDSSH
-              """
-            }
+      sed -i '/^TEST_IMAGE=/d' .env
+      sed -i '/^PROJECT=/d' .env
+      echo "TEST_IMAGE=\$TEST_IMAGE" >> .env
+      echo "PROJECT=test" >> .env
+
+      echo "\$DOCKER_PWD" | docker login -u "\$DOCKER_USER" --password-stdin || true
+      make -C .. up-be
+
+      for i in \$(seq 1 12); do
+        status=\$(docker inspect --format '{{.State.Health.Status}}' test-app-server 2>/dev/null || echo "unhealthy")
+        echo "Current status: \$status"
+        [ "\$status" = "healthy" ] && { echo "Container is healthy."; exit 0; }
+        echo "Waiting for container to be healthy... (\$i/12)"
+        sleep 5
+      done
+
+      echo "Container did not become healthy in time." >&2
+      exit 1
+    ENDSSH
+    """, shell: '/bin/bash')
           }
         }
       }
@@ -108,27 +144,19 @@ pipeline {
   }
 
   post {
-      success {
-        script {
-          def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
-          def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
-          sh """
-            curl -X POST -H 'Content-Type: application/json' \
-            -d '{"text":"빌드 성공: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name}) (<${env.BUILD_URL}|상세 보기>)"}' \
-            https://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo
-          """
-        }
+    success {
+      script {
+        def payload = [ text: "빌드 성공: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${env.AUTHOR_NAME}(${env.AUTHOR_MAIL}) (<${env.BUILD_URL}|상세 보기>)" ]
+        httpRequest(httpMode: 'POST', url: env.WEBHOOK_URL, contentType: 'APPLICATION_JSON',
+                    requestBody: groovy.json.JsonOutput.toJson(payload), validResponseCodes: '100:599')
       }
-      failure {
-        script {
-          def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
-          def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
-          sh """
-            curl -X POST -H 'Content-Type: application/json' \
-            -d '{"text":"빌드 실패: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name}) (<${env.BUILD_URL}|상세 보기>)"}' \
-            https://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo
-          """
-        }
+    }
+    failure {
+      script {
+        def payload = [ text: "빌드 실패: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${env.AUTHOR_NAME}(${env.AUTHOR_MAIL}) (<${env.BUILD_URL}|상세 보기>)" ]
+        httpRequest(httpMode: 'POST', url: env.WEBHOOK_URL, contentType: 'APPLICATION_JSON',
+                    requestBody: groovy.json.JsonOutput.toJson(payload), validResponseCodes: '100:599')
       }
+    }
   }
 }
