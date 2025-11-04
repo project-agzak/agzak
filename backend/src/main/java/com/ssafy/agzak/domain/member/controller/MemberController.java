@@ -52,7 +52,8 @@ public class MemberController implements MemberApiDocs {
 
     @GetMapping("/fortunes/{date}")
     public ResponseEntity<DetailFortuneDataResponse> getDetailData(@PathVariable LocalDate date) {
-        return ResponseEntity.ok().body(memberService.getMemberFortune(1L, date));
+        long memberId = authMemberProvider.currentMemberId();
+        return ResponseEntity.ok().body(memberService.getMemberFortune(memberId, date));
     }
 
 }

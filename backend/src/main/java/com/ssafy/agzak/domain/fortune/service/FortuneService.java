@@ -76,10 +76,10 @@ public class FortuneService {
         필수 출력 형식(키/타입 고정):
         {
           "total_score": number,
-          "romance_score": number,
-          "health_score": number,
-          "wealth_score": number,
-          "achievement_score": number,
+          "romance": number,
+          "health": number,
+          "wealth": number,
+          "achievement": number,
           "total_summary": string ("오늘의 총 운세 요약..."),
           "detailed_summaries": {
             "romance": "연애운 요약...",
@@ -196,10 +196,10 @@ public class FortuneService {
 
         fortuneRepository.save(fortune);
 
-        saveAspect(fortune, FortuneAspect.AspectName.LOVE, fortuneResponse.scores().romanceScore());
-        saveAspect(fortune, FortuneAspect.AspectName.MONEY, fortuneResponse.scores().wealthScore());
-        saveAspect(fortune, FortuneAspect.AspectName.HEALTH, fortuneResponse.scores().healthScore());
-        saveAspect(fortune, FortuneAspect.AspectName.ACHIEVEMENT, fortuneResponse.scores().achievementScore());
+        saveAspect(fortune, FortuneAspect.AspectName.LOVE, fortuneResponse.scores().romance());
+        saveAspect(fortune, FortuneAspect.AspectName.MONEY, fortuneResponse.scores().wealth());
+        saveAspect(fortune, FortuneAspect.AspectName.HEALTH, fortuneResponse.scores().health());
+        saveAspect(fortune, FortuneAspect.AspectName.ACHIEVEMENT, fortuneResponse.scores().achievement());
     }
 
     private void saveAspect(Fortune fortune, FortuneAspect.AspectName name, int score) {
@@ -247,10 +247,10 @@ public class FortuneService {
     }
 
     private FortuneType determineFortuneType(FortuneScoreResponse scores) {
-        int wealth = scores.wealthScore();
-        int health = scores.healthScore();
-        int romance = scores.romanceScore();
-        int achievement = scores.achievementScore();
+        int wealth = scores.wealth();
+        int health = scores.health();
+        int romance = scores.romance();
+        int achievement = scores.achievement();
 
         Map<String, Integer> scoreMap = Map.of(
                 "wealth", wealth,
