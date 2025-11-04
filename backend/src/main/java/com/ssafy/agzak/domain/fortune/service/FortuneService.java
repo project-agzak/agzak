@@ -17,6 +17,7 @@ import com.ssafy.agzak.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
@@ -100,7 +101,12 @@ public class FortuneService {
         - **JSON만 출력**, 따옴표로 감싸지 말 것, 코드블록(````), 주석, 추가 텍스트 금지.
         """;;
 
-    public FinalFortuneResponse getFortuneScores(BirthDataInput input) {
+    @Cacheable(
+            value = "fortuneCache",
+            key = "#root.methodName + ':' + #input.birthDate + 'T' + #input.birthTime + '::' + #city",
+            cacheManager = "cacheManager"
+    )
+    public FinalFortuneResponse getFortuneScores(BirthDataInput input, String city) {
         restClient = RestClient.builder()
                 .baseUrl(gmsBaseUrl)
                 .defaultHeaders(headers -> {
