@@ -1,4 +1,4 @@
-// Jenkinsfile (sandbox-safe; no runtime apt, no java.net.URL, no nohup, no OS ssh installs)
+// Jenkinsfile (kaniko는 sudo 금지, 배포는 SSH 플러그인 사용)
 
 pipeline {
   agent any
@@ -15,30 +15,16 @@ pipeline {
   }
 
   stages {
-    stage('SSH smoke') {
-      steps {
-        withCredentials([sshUserPrivateKey(credentialsId: 'deploy-ssh',
-                                           keyFileVariable: 'SSH_KEY',
-                                           usernameVariable: 'SSH_USER')]) {
-          sh '''
-            set -eux
-            # 절대경로 ssh 사용 (이미지에 미리 설치됨)
-            /usr/bin/ssh -o StrictHostKeyChecking=no -i "$SSH_KEY" "$SSH_USER@$DEPLOY_HOST" "echo ssh ok"
-          '''
-        }
-      }
-    }
 
     stage('Checkout') {
       steps {
         checkout scm
         script {
-          def full = (env.GIT_BRANCH ?: '').replaceFirst(/^origin\\//, '')
+          def full = (env.GIT_BRANCH ?: '').replaceFirst(/^origin\//, '')
           if (!full) { full = sh(returnStdout: true, script: 'git rev-parse --abbrev-ref HEAD').trim() }
           env.TARGET_BRANCH_FULL = full
           env.TARGET_BRANCH = full.replaceAll('/', '-')
           echo "Target branch: ${env.TARGET_BRANCH_FULL} -> ${env.TARGET_BRANCH}"
-
           env.AUTHOR_NAME = sh(returnStdout: true, script: 'git show -s --pretty=%an').trim()
           env.AUTHOR_MAIL = sh(returnStdout: true, script: 'git show -s --pretty=%ae').trim()
         }
@@ -51,7 +37,7 @@ pipeline {
           withCredentials([usernamePassword(credentialsId: 'dockerhub-cred',
                                             usernameVariable: 'DOCKER_USER',
                                             passwordVariable: 'DOCKER_PWD')]) {
-            sh '''
+            sh '''#!/usr/bin/env sh
 set -euo pipefail
 set -x
 
@@ -73,17 +59,16 @@ printf '{"auths":{"%s":{"auth":"%s"}}}\n' "${AUTH_REGISTRY}" "${AUTH}" > "${DOCK
 WORKDIR="$(pwd)"
 DF="${WORKDIR}/Dockerfile"
 export DOCKER_CONFIG="${DOCKERCFG}"
+export HOME="${WORKSPACE}"     # kaniko의 홈 참조 안정화
 
 /kaniko/executor version || true
 
-# 필요시 root로 실행 (이미지 권한/소유권 이슈 회피)
-# sudo 자체는 이미지에 내장되어 있음 (런타임 apt 금지)
-/usr/bin/sudo -E /kaniko/executor \
+# ✅ sudo 금지: 같은 컨테이너에서 root 승격으로 사이드이펙트 제거
+/kaniko/executor \
   --context=dir://"${WORKDIR}" \
   --dockerfile="${DF}" \
   --destination="${DEST_REPO}:${TAG}" \
   --destination="${DEST_REPO}:latest" \
-  --use-new-run \
   --single-snapshot \
   --cache=true \
   --cache-repo="${DEST_REPO}-cache"
@@ -95,61 +80,68 @@ export DOCKER_CONFIG="${DOCKERCFG}"
 
     stage('Deploy') {
       steps {
-        withCredentials([
-          sshUserPrivateKey(credentialsId: 'deploy-ssh',
-                            keyFileVariable: 'SSH_KEY',
-                            usernameVariable: 'SSH_USER'),
-          usernamePassword(credentialsId: 'dockerhub-cred',
-                           usernameVariable: 'DOCKER_USER',
-                           passwordVariable: 'DOCKER_PWD')
-        ]) {
-          script {
-            def repo = (env.REGISTRY?.trim() && env.REGISTRY != 'docker.io')
+        script {
+          def repo = (env.REGISTRY?.trim() && env.REGISTRY != 'docker.io')
               ? "${env.REGISTRY}/${env.IMAGE_NAME}"
               : "docker.io/${env.IMAGE_NAME}"
-            def tag = "${env.TARGET_BRANCH}-${env.BUILD_NUMBER}"
-            def testImage = "${repo}:${tag}"
+          def tag = "${env.TARGET_BRANCH}-${env.BUILD_NUMBER}"
+          def testImage = "${repo}:${tag}"
 
-            // 값 주입은 Groovy에서 단 한 번만 하고, 나머지는 셸에서만 해석
-            sh 'set -euo pipefail; set -x; ' +
-               "export TEST_IMAGE='${testImage}'; " +
-               '''
-    # ssh는 이미 이미지에 존재한다고 전제 (런타임 apt 금지)
-    /usr/bin/ssh -o StrictHostKeyChecking=no -i "$SSH_KEY" "$SSH_USER@$DEPLOY_HOST" "TEST_IMAGE=$TEST_IMAGE DOCKER_USER=$DOCKER_USER DOCKER_PWD=$DOCKER_PWD bash -s" <<'ENDSSH'
-      set -eux
-      cd /home/ubuntu/agzak-app/test/backend
+          def remote = [
+            name: 'deploy',
+            host: env.DEPLOY_HOST,
+            user: env.DEPLOY_USER,
+            // Jenkins Credentials에 등록된 SSH Key ID
+            identityFile: '',  // 비워두고 아래 credentialId 사용
+            allowAnyHosts: true
+          ]
 
-      if ! docker pull "$TEST_IMAGE"; then
-        echo "WARN: $TEST_IMAGE not found. Fallback to :latest"
-        TEST_IMAGE="${TEST_IMAGE%:*}:latest"
-        docker pull "$TEST_IMAGE"
-      fi
+          withCredentials([
+            sshUserPrivateKey(credentialsId: 'deploy-ssh',
+                              keyFileVariable: 'SSH_KEY',
+                              usernameVariable: 'SSH_USER'),
+            usernamePassword(credentialsId: 'dockerhub-cred',
+                             usernameVariable: 'DOCKER_USER',
+                             passwordVariable: 'DOCKER_PWD')
+          ]) {
+            // 플러그인이 키를 내부적으로 읽도록 credentialId만 넘김
+            sshCommand remote: remote + [credentialId: 'deploy-ssh'],
+              command: """
+                set -eux
+                cd /home/ubuntu/agzak-app/test/backend
 
-      sed -i '/^TEST_IMAGE=/d' .env
-      sed -i '/^PROJECT=/d' .env
-      echo "TEST_IMAGE=$TEST_IMAGE" >> .env
-      echo "PROJECT=test" >> .env
+                if ! docker pull '${testImage}'; then
+                  echo 'WARN: ${testImage} not found. Fallback to :latest'
+                  TEST_IMAGE='${repo}:latest'
+                  docker pull "$TEST_IMAGE"
+                else
+                  TEST_IMAGE='${testImage}'
+                fi
 
-      echo "$DOCKER_PWD" | docker login -u "$DOCKER_USER" --password-stdin || true
-      make -C .. up-be
+                sed -i '/^TEST_IMAGE=/d' .env
+                sed -i '/^PROJECT=/d' .env
+                echo "TEST_IMAGE=$TEST_IMAGE" >> .env
+                echo "PROJECT=test" >> .env
 
-      for i in $(seq 1 12); do
-        status=$(docker inspect --format '{{.State.Health.Status}}' test-app-server 2>/dev/null || echo "unhealthy")
-        echo "Current status: $status"
-        [ "$status" = "healthy" ] && { echo "Container is healthy."; exit 0; }
-        echo "Waiting for container to be healthy... ($i/12)"
-        sleep 5
-      done
+                echo '${DOCKER_PWD}' | docker login -u '${DOCKER_USER}' --password-stdin || true
+                make -C .. up-be
 
-      echo "Container did not become healthy in time." >&2
-      exit 1
-    ENDSSH
-    '''
+                for i in \$(seq 1 12); do
+                  status=\$(docker inspect --format '{{.State.Health.Status}}' test-app-server 2>/dev/null || echo "unhealthy")
+                  echo "Current status: \$status"
+                  [ "\$status" = "healthy" ] && { echo "Container is healthy."; exit 0; }
+                  echo "Waiting for container to be healthy... (\$i/12)"
+                  sleep 5
+                done
+
+                echo "Container did not become healthy in time." >&2
+                exit 1
+              """
           }
         }
       }
     }
-  } // stages
+  }
 
   post {
     success {
