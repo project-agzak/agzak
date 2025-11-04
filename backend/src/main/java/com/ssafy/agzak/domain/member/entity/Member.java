@@ -76,6 +76,10 @@ public class Member {
         this.nickname = nickname;
     }
 
+    public void updateBirthTime(LocalTime time) {
+        this.birthTime = time;
+    }
+
     public void deleteMember() {
         this.status = MemberStatus.WITHDRAWN;
     }

@@ -17,6 +17,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/fortune")
@@ -32,6 +34,7 @@ public class FortuneController implements FortuneApiDocs {
     @PostMapping
     public ResponseEntity<FinalFortuneResponse> postMemberTodayFortune() {
         long memberId = authMemberProvider.currentMemberId();
+        fortuneService.checkDuplicate(memberId, LocalDate.now());
         MemberInfoResponse response = memberService.getMemberInfo(memberId);
         BirthDataInput input = BirthDataInput.fromMemberInfo(response);
         FinalFortuneResponse result = fortuneService.getFortuneScores(input);

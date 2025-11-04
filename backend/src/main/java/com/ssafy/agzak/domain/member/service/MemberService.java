@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -79,7 +80,7 @@ public class MemberService {
     private record DateScore(int originalScore, int totalScore) { }
 
     @Transactional
-    public void editMemberInfo(long memberId, String nickname) {
+    public void editMemberInfo(long memberId, String nickname, LocalTime time) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 멤버 아이디입니다."));
 
@@ -88,6 +89,8 @@ public class MemberService {
         }
 
         member.updateNickname(nickname);
+        member.updateBirthTime(time);
+
     }
 
     @Transactional

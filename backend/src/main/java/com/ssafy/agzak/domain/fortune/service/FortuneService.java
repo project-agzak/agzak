@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -76,10 +77,10 @@ public class FortuneService {
         필수 출력 형식(키/타입 고정):
         {
           "total_score": number,
-          "romance_score": number,
-          "health_score": number,
-          "wealth_score": number,
-          "achievement_score": number,
+          "romance": number,
+          "health": number,
+          "wealth": number,
+          "achievement": number,
           "total_summary": string ("오늘의 총 운세 요약..."),
           "detailed_summaries": {
             "romance": "연애운 요약...",
@@ -196,10 +197,10 @@ public class FortuneService {
 
         fortuneRepository.save(fortune);
 
-        saveAspect(fortune, FortuneAspect.AspectName.LOVE, fortuneResponse.scores().romanceScore());
-        saveAspect(fortune, FortuneAspect.AspectName.MONEY, fortuneResponse.scores().wealthScore());
-        saveAspect(fortune, FortuneAspect.AspectName.HEALTH, fortuneResponse.scores().healthScore());
-        saveAspect(fortune, FortuneAspect.AspectName.ACHIEVEMENT, fortuneResponse.scores().achievementScore());
+        saveAspect(fortune, FortuneAspect.AspectName.LOVE, fortuneResponse.scores().romance());
+        saveAspect(fortune, FortuneAspect.AspectName.MONEY, fortuneResponse.scores().wealth());
+        saveAspect(fortune, FortuneAspect.AspectName.HEALTH, fortuneResponse.scores().health());
+        saveAspect(fortune, FortuneAspect.AspectName.ACHIEVEMENT, fortuneResponse.scores().achievement());
     }
 
     private void saveAspect(Fortune fortune, FortuneAspect.AspectName name, int score) {
@@ -247,10 +248,10 @@ public class FortuneService {
     }
 
     private FortuneType determineFortuneType(FortuneScoreResponse scores) {
-        int wealth = scores.wealthScore();
-        int health = scores.healthScore();
-        int romance = scores.romanceScore();
-        int achievement = scores.achievementScore();
+        int wealth = scores.wealth();
+        int health = scores.health();
+        int romance = scores.romance();
+        int achievement = scores.achievement();
 
         Map<String, Integer> scoreMap = Map.of(
                 "wealth", wealth,
@@ -304,5 +305,14 @@ public class FortuneService {
 
         return fortuneTypeRepository.findFortuneTypeByName(name)
                 .orElseThrow(() -> new IllegalArgumentException("일치하는 운세 타입 이름이 없습니다."));
+    }
+
+    public void checkDuplicate(long memberId, LocalDate date) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 회원 아이디입니다."));
+
+        if (fortuneRepository.existsByMemberAndDate(member, date)) {
+            throw new IllegalArgumentException("이미 조회한 운세 정보가 있습니다. 날짜 조회를 이용하세요");
+        }
     }
 }

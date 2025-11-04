@@ -32,7 +32,7 @@ public class MemberController implements MemberApiDocs {
     @PatchMapping
     public ResponseEntity<Void> editMemberInfo(@Valid @RequestBody MemberEditRequest request) {
         long memberId = authMemberProvider.currentMemberId();
-        memberService.editMemberInfo(memberId, request.nickname());
+        memberService.editMemberInfo(memberId, request.nickname(), request.birthTime());
         return ResponseEntity.ok().build();
     }
 
@@ -52,7 +52,8 @@ public class MemberController implements MemberApiDocs {
 
     @GetMapping("/fortunes/{date}")
     public ResponseEntity<DetailFortuneDataResponse> getDetailData(@PathVariable LocalDate date) {
-        return ResponseEntity.ok().body(memberService.getMemberFortune(1L, date));
+        long memberId = authMemberProvider.currentMemberId();
+        return ResponseEntity.ok().body(memberService.getMemberFortune(memberId, date));
     }
 
 }
