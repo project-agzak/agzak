@@ -33,50 +33,52 @@ pipeline {
             passwordVariable: 'DOCKER_PWD'
           )]) {
             sh '''#!/usr/bin/env bash
-            set -euo pipefail
-            set -x
+    set -euo pipefail
+    set -x
 
-            TAG="${TARGET_BRANCH}-${BUILD_NUMBER}"
+    TAG="${TARGET_BRANCH}-${BUILD_NUMBER}"
 
-            if [[ -n "${REGISTRY}" && "${REGISTRY}" != "docker.io" ]]; then
-              DEST_REPO="${REGISTRY}/${IMAGE_NAME}"
-              AUTH_REGISTRY="${REGISTRY}"
-            else
-              DEST_REPO="docker.io/${IMAGE_NAME}"
-              AUTH_REGISTRY="https://index.docker.io/v1/"
-            fi
+    # 목적지 레포/인증 레지스트리
+    if [[ -n "${REGISTRY}" && "${REGISTRY}" != "docker.io" ]]; then
+      DEST_REPO="${REGISTRY}/${IMAGE_NAME}"
+      AUTH_REGISTRY="${REGISTRY}"
+    else
+      DEST_REPO="docker.io/${IMAGE_NAME}"
+      AUTH_REGISTRY="https://index.docker.io/v1/"
+    fi
 
-            DOCKERCFG="${WORKSPACE}/kaniko-config"
-            mkdir -p "${DOCKERCFG}"
-            AUTH="$(printf "%s:%s" "${DOCKER_USER}" "${DOCKER_PWD}" | base64 | tr -d '\n')"
+    DOCKERCFG="${WORKSPACE}/kaniko-config"
+    mkdir -p "${DOCKERCFG}"
+    AUTH="$(printf "%s:%s" "${DOCKER_USER}" "${DOCKER_PWD}" | base64 | tr -d '\n')"
 
-            # ✅ EOF는 맨 앞열(공백/주석 X)
-            cat > "${DOCKERCFG}/config.json" <<EOF
-            {
-              "auths": {
-                "${AUTH_REGISTRY}": { "auth": "${AUTH}" }
-              }
-            }
-            EOF
+    cat > "${DOCKERCFG}/config.json" <<'EOF'
+    {
+      "auths": {
+        "__AUTH_REGISTRY__": { "auth": "__AUTH__" }
+      }
+    }
+    EOF
+    sed -i "s#__AUTH_REGISTRY__#${AUTH_REGISTRY}#g" "${DOCKERCFG}/config.json"
+    sed -i "s#__AUTH__#${AUTH}#g"               "${DOCKERCFG}/config.json"
 
-            WORKDIR="$(pwd)"
-            DF="${WORKDIR}/Dockerfile"
+    WORKDIR="$(pwd)"
+    DF="${WORKDIR}/Dockerfile"
 
-            export DOCKER_CONFIG="${DOCKERCFG}"
-            export KANIKO_DIR="${WORKSPACE}/.kaniko"
-            mkdir -p "${KANIKO_DIR}"
+    export DOCKER_CONFIG="${DOCKERCFG}"
+    export KANIKO_DIR="${WORKSPACE}/.kaniko"
+    mkdir -p "${KANIKO_DIR}"
 
-            /kaniko/executor \
-              --context=dir://"${WORKDIR}" \
-              --dockerfile="${DF}" \
-              --kaniko-dir="${KANIKO_DIR}" \
-              --destination="${DEST_REPO}:${TAG}" \
-              --destination="${DEST_REPO}:latest" \
-              --use-new-run \
-              --single-snapshot \
-              --cache=true \
-              --cache-repo="${DEST_REPO}-cache"
-            '''
+    /kaniko/executor \
+      --context=dir://"${WORKDIR}" \
+      --dockerfile="${DF}" \
+      --kaniko-dir="${KANIKO_DIR}" \
+      --destination="${DEST_REPO}:${TAG}" \
+      --destination="${DEST_REPO}:latest" \
+      --use-new-run \
+      --single-snapshot \
+      --cache=true \
+      --cache-repo="${DEST_REPO}-cache"
+    '''
           }
         }
       }
