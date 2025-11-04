@@ -1,4 +1,4 @@
-// Jenkinsfile (sandbox-safe; no runtime apt, no java.net.URL, no nohup, no OS ssh)
+// Jenkinsfile (sandbox-safe; no runtime apt, no java.net.URL, no nohup, no OS ssh installs)
 
 pipeline {
   agent any
@@ -17,13 +17,12 @@ pipeline {
   stages {
     stage('SSH smoke') {
       steps {
-        // 필요하면 이것도 sshCommand로 교체 가능:
-        // sshCommand remote: [name:'deploy', host:env.DEPLOY_HOST, user:env.DEPLOY_USER, credentialId:'deploy-ssh'], command: 'echo ssh ok'
         withCredentials([sshUserPrivateKey(credentialsId: 'deploy-ssh',
                                            keyFileVariable: 'SSH_KEY',
                                            usernameVariable: 'SSH_USER')]) {
           sh '''
             set -eux
+            # 절대경로 ssh 사용 (이미지에 미리 설치됨)
             /usr/bin/ssh -o StrictHostKeyChecking=no -i "$SSH_KEY" "$SSH_USER@$DEPLOY_HOST" "echo ssh ok"
           '''
         }
@@ -39,6 +38,7 @@ pipeline {
           env.TARGET_BRANCH_FULL = full
           env.TARGET_BRANCH = full.replaceAll('/', '-')
           echo "Target branch: ${env.TARGET_BRANCH_FULL} -> ${env.TARGET_BRANCH}"
+
           env.AUTHOR_NAME = sh(returnStdout: true, script: 'git show -s --pretty=%an').trim()
           env.AUTHOR_MAIL = sh(returnStdout: true, script: 'git show -s --pretty=%ae').trim()
         }
@@ -76,7 +76,8 @@ export DOCKER_CONFIG="${DOCKERCFG}"
 
 /kaniko/executor version || true
 
-# sudo를 쓰지 않도록 이미지를 준비해두는게 최선이지만, 필요 시에만 사용
+# 필요시 root로 실행 (이미지 권한/소유권 이슈 회피)
+# sudo 자체는 이미지에 내장되어 있음 (런타임 apt 금지)
 /usr/bin/sudo -E /kaniko/executor \
   --context=dir://"${WORKDIR}" \
   --dockerfile="${DF}" \
@@ -109,20 +110,11 @@ export DOCKER_CONFIG="${DOCKERCFG}"
             def tag = "${env.TARGET_BRANCH}-${env.BUILD_NUMBER}"
             def testImage = "${repo}:${tag}"
 
-            // ✅ 핵심: 단일따옴표로 감싼 셸 스크립트 + 필요한 값만 export
+            // 값 주입은 Groovy에서 단 한 번만 하고, 나머지는 셸에서만 해석
             sh 'set -euo pipefail; set -x; ' +
-               "export TEST_IMAGE='${testImage}'; " +  // Groovy에서 값만 주입
+               "export TEST_IMAGE='${testImage}'; " +
                '''
-    export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-
-    # ssh 바이너리 존재 확인 (없으면 설치) — 여긴 런타임 셸에서 평가됨
-    if ! /usr/bin/ssh -V >/dev/null 2>&1; then
-      echo "ssh client not found; installing..."
-      sudo apt-get update && sudo apt-get install -y openssh-client
-    fi
-
-    # ✅ 여기부터는 모든 $ENV 가 셸 변수로만 해석됨(Groovy 보간 불가)
-    #    DOCKER_USER/DOCKER_PWD는 withCredentials로 ENV에 이미 바인딩됨
+    # ssh는 이미 이미지에 존재한다고 전제 (런타임 apt 금지)
     /usr/bin/ssh -o StrictHostKeyChecking=no -i "$SSH_KEY" "$SSH_USER@$DEPLOY_HOST" "TEST_IMAGE=$TEST_IMAGE DOCKER_USER=$DOCKER_USER DOCKER_PWD=$DOCKER_PWD bash -s" <<'ENDSSH'
       set -eux
       cd /home/ubuntu/agzak-app/test/backend
@@ -157,6 +149,7 @@ export DOCKER_CONFIG="${DOCKERCFG}"
         }
       }
     }
+  } // stages
 
   post {
     success {
