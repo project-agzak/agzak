@@ -30,7 +30,6 @@ export function FortuneBubble({
 
     const rect = el.getBoundingClientRect();
     const vw = window.innerWidth;
-    const vh = window.innerHeight;
 
     // 기본값
     let shouldFlipX = false;
