@@ -9,7 +9,6 @@ import com.ssafy.agzak.domain.inventory.entity.FortuneCookie;
 import com.ssafy.agzak.domain.inventory.repository.FortuneCookieRepository;
 import com.ssafy.agzak.domain.member.exception.NoFortuneFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -73,5 +72,4 @@ public class CookieService {
                     .toList();
         };
     }
-
 }
