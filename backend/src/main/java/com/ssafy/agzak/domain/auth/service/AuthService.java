@@ -9,6 +9,8 @@ import com.ssafy.agzak.domain.auth.dto.response.TokenResponse;
 import com.ssafy.agzak.domain.fortune.dto.response.KakaoAddressResponse;
 import com.ssafy.agzak.domain.fortune.service.GeocodingService;
 import com.ssafy.agzak.domain.guest.support.GuestProfileStore;
+import com.ssafy.agzak.domain.inventory.entity.Inventory;
+import com.ssafy.agzak.domain.inventory.repository.InventoryRepository;
 import com.ssafy.agzak.domain.member.entity.Member;
 import com.ssafy.agzak.domain.member.repository.MemberRepository;
 import com.ssafy.agzak.global.security.JwtProvider;
@@ -38,17 +40,26 @@ import java.time.LocalTime;
 @Service
 @RequiredArgsConstructor
 public class AuthService {
-    private final MemberRepository members;
+
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwt;
-    private final RefreshTokenStore refreshStore;
-    private final TokenRevocationService revoke;
-    private final GeocodingService geocodingService;
-    private final GuestProfileStore guestStore;
+    private final TokenRevocationService revokeService;
     private final KakaoApiClient kakao;
     private final KakaoOAuthClient kakaoOAuth;
-    private final OAuthIdentityRepository oauthRepo;
+    private final GeocodingService geocodingService;
+    private final RefreshTokenStore refreshStore;
+    private final GuestProfileStore guestStore;
     private final SocialSignupTicketStore ticketStore;
+    private final MemberRepository memberRepo;
+    private final OAuthIdentityRepository oauthRepo;
+    private final InventoryRepository inventoryRepo;
+
+    private void ensureInventory(Member m) {
+        inventoryRepo.findByMember(m)
+                .orElseGet(() -> inventoryRepo.save(
+                        Inventory.builder().member(m).build()
+                ));
+    }
 
     private TokenResponse issueTokens(Long memberId) {
         String access = jwt.createAccess(memberId);
@@ -93,7 +104,7 @@ public class AuthService {
 
             String nickname = gp.nickname() != null ? gp.nickname() :
                     (kakaoNick != null ? kakaoNick : "user");
-            if (members.existsByNickname(nickname)) {
+            if (memberRepo.existsByNickname(nickname)) {
                 nickname = nickname + "_" + (int)(Math.random()*900+100);
             }
 
@@ -109,7 +120,9 @@ public class AuthService {
                     .longitude(gp.longitude())
                     .status(Member.MemberStatus.ACTIVE)
                     .build();
-            members.save(m);
+            memberRepo.save(m);
+
+            ensureInventory(m);
 
             oauthRepo.save(OAuthIdentity.builder()
                     .id(OAuthIdentityId.builder().provider(OAuthProvider.KAKAO).sub(sub).build())
@@ -152,7 +165,7 @@ public class AuthService {
         KakaoAddressResponse.Document geo = geocodingService.getCoordinates(req.birthCity());
 
         String nickname = req.nickname();
-        if (members.existsByNickname(nickname)) {
+        if (memberRepo.existsByNickname(nickname)) {
             nickname = nickname + "_" + (int)(Math.random()*900+100);
         }
 
@@ -168,7 +181,9 @@ public class AuthService {
                 .longitude(geo.longitude())
                 .status(Member.MemberStatus.ACTIVE)
                 .build();
-        members.save(m);
+        memberRepo.save(m);
+
+        ensureInventory(m);
 
         oauthRepo.save(OAuthIdentity.builder()
                 .id(OAuthIdentityId.builder()
@@ -184,14 +199,14 @@ public class AuthService {
 
     @Transactional
     public void register(RegisterRequest req) {
-        if (members.existsByEmail(req.email()))
+        if (memberRepo.existsByEmail(req.email()))
             throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 가입된 이메일입니다.");
-        if (members.existsByNickname(req.nickname()))
+        if (memberRepo.existsByNickname(req.nickname()))
             throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 사용중인 닉네임입니다.");
 
         KakaoAddressResponse.Document geo = geocodingService.getCoordinates(req.birthCity());
 
-        members.save(Member.builder()
+        var m = memberRepo.save(Member.builder()
                 .email(req.email())
                 .password(passwordEncoder.encode(req.password()))
                 .nickname(req.nickname())
@@ -203,11 +218,13 @@ public class AuthService {
                 .longitude(geo.longitude())
                 .status(Member.MemberStatus.ACTIVE)
                 .build());
+
+        ensureInventory(m);
     }
 
     @Transactional(readOnly = true)
     public TokenResponse login(LoginRequest req) {
-        var m = members.findByEmail(req.email())
+        var m = memberRepo.findByEmail(req.email())
                 .orElseThrow(() -> new BadCredentialsException("이메일 또는 비밀번호가 올바르지 않습니다."));
         if (m.getStatus() != Member.MemberStatus.ACTIVE)
             throw new BadCredentialsException("비활성화된 계정입니다.");
@@ -221,20 +238,20 @@ public class AuthService {
     public void logout(Long memberId, String accessToken) {
         refreshStore.delete(memberId);
         if (accessToken != null) {
-            revoke.revoke(accessToken, Duration.ofMinutes(jwt.getAccessExpMinutes()));
+            revokeService.revoke(accessToken, Duration.ofMinutes(jwt.getAccessExpMinutes()));
         }
     }
 
     @Transactional
     public TokenResponse registerWithGuest(RegisterWithGuestRequest req) {
-        if (members.existsByEmail(req.email()))
+        if (memberRepo.existsByEmail(req.email()))
             throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 가입된 이메일입니다.");
 
         var gp = guestStore.find(req.guestId());
         if (gp == null) throw new BadCredentialsException("게스트 정보가 만료되었거나 없습니다.");
 
         String nickname = gp.nickname();
-        if (members.existsByNickname(nickname)) {
+        if (memberRepo.existsByNickname(nickname)) {
             nickname = nickname + "_" + (int)(Math.random()*900+100);
         }
 
@@ -251,7 +268,9 @@ public class AuthService {
                 .status(Member.MemberStatus.ACTIVE)
                 .build();
 
-        members.save(m);
+        memberRepo.save(m);
+
+        ensureInventory(m);
 
         guestStore.delete(req.guestId());
 
@@ -259,7 +278,7 @@ public class AuthService {
     }
 
     public CheckEmailResponse checkEmail(String email) {
-        if(members.existsByEmail(email)) {
+        if(memberRepo.existsByEmail(email)) {
             return new CheckEmailResponse(email, false);
         }
 
