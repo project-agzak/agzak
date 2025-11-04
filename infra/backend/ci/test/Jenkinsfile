@@ -1,6 +1,27 @@
+// Jenkinsfile (stable, no ssh-agent / no nohup in post)
+
+// ── Webhook helper (Groovy HTTP; avoids shell/nohup) ───────────────────────────
+@NonCPS
+def sendWebhook(String urlStr, Map body) {
+  def url = new URL(urlStr)
+  def conn = url.openConnection()
+  conn.setRequestMethod('POST')
+  conn.setDoOutput(true)
+  conn.setRequestProperty('Content-Type','application/json')
+  def json = groovy.json.JsonOutput.toJson(body)
+  conn.outputStream.withWriter('UTF-8'){ it << json }
+  def code = conn.responseCode
+  def resp = (code >= 200 && code < 400) ? conn.inputStream.text : (conn.errorStream?.text ?: "")
+  echo "Webhook HTTP ${code}: ${resp}"
+}
+
+// ── Pipeline ───────────────────────────────────────────────────────────────────
 pipeline {
   agent any
-  options { timestamps(); ansiColor('xterm') }
+  options {
+    timestamps()
+    ansiColor('xterm')
+  }
 
   environment {
     SUBDIR      = 'backend'
@@ -8,15 +29,20 @@ pipeline {
     REGISTRY    = 'docker.io'
     DEPLOY_USER = 'ubuntu'
     DEPLOY_HOST = 'k13b102.p.ssafy.io'
+    WEBHOOK_URL = 'https://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo'
   }
 
   stages {
-    stage('sshagent smoke') {
+
+    stage('SSH smoke') {
       steps {
-        sshagent(credentials: ['deploy-ssh']) {
+        // ssh-agent 대신 직접 키 바인딩
+        withCredentials([sshUserPrivateKey(credentialsId: 'deploy-ssh',
+                                           keyFileVariable: 'SSH_KEY',
+                                           usernameVariable: 'SSH_USER')]) {
           sh '''
             set -eux
-            ssh -o StrictHostKeyChecking=no "$DEPLOY_USER@$DEPLOY_HOST" "echo ssh ok"
+            ssh -o StrictHostKeyChecking=no -i "$SSH_KEY" "$SSH_USER@$DEPLOY_HOST" "echo ssh ok"
           '''
         }
       }
@@ -26,8 +52,10 @@ pipeline {
       steps {
         checkout scm
         script {
-          def full = (env.GIT_BRANCH ?: '').replaceFirst(/^origin\//, '')
-          if (!full) { full = sh(returnStdout: true, script: 'git rev-parse --abbrev-ref HEAD').trim() }
+          def full = (env.GIT_BRANCH ?: '').replaceFirst(/^origin\\//, '')
+          if (!full) {
+            full = sh(returnStdout: true, script: 'git rev-parse --abbrev-ref HEAD').trim()
+          }
           env.TARGET_BRANCH_FULL = full
           env.TARGET_BRANCH = full.replaceAll('/', '-')
           echo "Target branch: ${env.TARGET_BRANCH_FULL} -> ${env.TARGET_BRANCH}"
@@ -38,16 +66,18 @@ pipeline {
     stage('Kaniko Build & Push') {
       steps {
         dir("${env.SUBDIR}") {
-          withCredentials([usernamePassword(credentialsId: 'dockerhub-cred',
-                                            usernameVariable: 'DOCKER_USER',
-                                            passwordVariable: 'DOCKER_PWD')]) {
+          withCredentials([usernamePassword(
+            credentialsId: 'dockerhub-cred',
+            usernameVariable: 'DOCKER_USER',
+            passwordVariable: 'DOCKER_PWD'
+          )]) {
             sh '''#!/usr/bin/env bash
 set -euo pipefail
 set -x
 
 TAG="${TARGET_BRANCH}-${BUILD_NUMBER}"
 
-# 목적지 레포/인증 레지스트리
+# 목적지 레포 / 인증 레지스트리
 if [[ -n "${REGISTRY}" && "${REGISTRY}" != "docker.io" ]]; then
   DEST_REPO="${REGISTRY}/${IMAGE_NAME}"
   AUTH_REGISTRY="${REGISTRY}"
@@ -61,13 +91,19 @@ DOCKERCFG="${WORKSPACE}/kaniko-config"
 mkdir -p "${DOCKERCFG}"
 AUTH="$(printf "%s:%s" "${DOCKER_USER}" "${DOCKER_PWD}" | base64 | tr -d '\n')"
 printf '{"auths":{"%s":{"auth":"%s"}}}\n' "${AUTH_REGISTRY}" "${AUTH}" > "${DOCKERCFG}/config.json"
-export DOCKER_CONFIG="${DOCKERCFG}"
 
 WORKDIR="$(pwd)"
 DF="${WORKDIR}/Dockerfile"
 
-# Kaniko 실행 (root로 실행해 chown 문제 회피)
-sudo -E /kaniko/executor \
+# Kaniko가 DOCKER_CONFIG 읽음
+export DOCKER_CONFIG="${DOCKERCFG}"
+
+# Kaniko 바이너리 확인
+command -v /kaniko/executor >/dev/null || { echo "kaniko executor not found"; exit 1; }
+/kaniko/executor version || true
+
+# 루트 권한으로 실행하여 chown 오류 회피
+/usr/bin/sudo -E /kaniko/executor \
   --context=dir://"${WORKDIR}" \
   --dockerfile="${DF}" \
   --destination="${DEST_REPO}:${TAG}" \
@@ -84,46 +120,47 @@ sudo -E /kaniko/executor \
 
     stage('Deploy') {
       steps {
-        sshagent (credentials: ['deploy-ssh']) {
-          withCredentials([usernamePassword(credentialsId: 'dockerhub-cred',
-                                            usernameVariable: 'DOCKER_USER',
-                                            passwordVariable: 'DOCKER_PWD')]) {
-            script {
-              def repo = (env.REGISTRY?.trim() && env.REGISTRY != 'docker.io')
-                ? "${env.REGISTRY}/${env.IMAGE_NAME}"
-                : "docker.io/${env.IMAGE_NAME}"
-              def tag = "${env.TARGET_BRANCH}-${env.BUILD_NUMBER}"
-              def testImage = "${repo}:${tag}"
+        withCredentials([
+          sshUserPrivateKey(credentialsId: 'deploy-ssh',
+                            keyFileVariable: 'SSH_KEY',
+                            usernameVariable: 'SSH_USER'),
+          usernamePassword(credentialsId: 'dockerhub-cred',
+                           usernameVariable: 'DOCKER_USER',
+                           passwordVariable: 'DOCKER_PWD')
+        ]) {
+          script {
+            def repo = (env.REGISTRY?.trim() && env.REGISTRY != 'docker.io')
+              ? "${env.REGISTRY}/${env.IMAGE_NAME}"
+              : "docker.io/${env.IMAGE_NAME}"
+            def tag = "${env.TARGET_BRANCH}-${env.BUILD_NUMBER}"
+            def testImage = "${repo}:${tag}"
 
-              // 주의: 여기서 Groovy 인터폴레이션은 tag/repo만. 비밀번호는 원격에서만 사용.
-              sh """
+            sh """
 set -eux
-ssh -o StrictHostKeyChecking=no "$DEPLOY_USER@$DEPLOY_HOST" "TEST_IMAGE=${testImage} DOCKER_USER=\$DOCKER_USER DOCKER_PWD=\$DOCKER_PWD bash -s" <<'ENDSSH'
-set -eux
-cd /home/ubuntu/agzak-app/test/backend
+ssh -o StrictHostKeyChecking=no -i "\$SSH_KEY" "\$SSH_USER@$DEPLOY_HOST" "TEST_IMAGE=${testImage} DOCKER_USER=\$DOCKER_USER DOCKER_PWD=\$DOCKER_PWD bash -s" <<'ENDSSH'
+  set -eux
+  cd /home/ubuntu/agzak-app/test/backend
 
-sed -i '/^TEST_IMAGE=/d' .env
-sed -i '/^PROJECT=/d' .env
-echo "TEST_IMAGE=\$TEST_IMAGE" >> .env
-echo "PROJECT=test" >> .env
+  sed -i '/^TEST_IMAGE=/d' .env
+  sed -i '/^PROJECT=/d' .env
+  echo "TEST_IMAGE=\$TEST_IMAGE" >> .env
+  echo "PROJECT=test" >> .env
 
-echo "\$DOCKER_PWD" | docker login -u "\$DOCKER_USER" --password-stdin || true
+  echo "\$DOCKER_PWD" | docker login -u "\$DOCKER_USER" --password-stdin || true
+  make -C .. up-be
 
-make -C .. up-be
+  for i in \$(seq 1 12); do
+    status=\$(docker inspect --format '{{.State.Health.Status}}' test-app-server 2>/dev/null || echo "unhealthy")
+    echo "Current status: \$status"
+    [ "\$status" = "healthy" ] && { echo "Container is healthy."; exit 0; }
+    echo "Waiting for container to be healthy... (\$i/12)"
+    sleep 5
+  done
 
-for i in \$(seq 1 12); do
-  status=\$(docker inspect --format '{{.State.Health.Status}}' test-app-server 2>/dev/null || echo "unhealthy")
-  echo "Current status: \$status"
-  [ "\$status" = "healthy" ] && { echo "Container is healthy."; exit 0; }
-  echo "Waiting for container to be healthy... (\$i/12)"
-  sleep 5
-done
-
-echo "Container did not become healthy in time." >&2
-exit 1
+  echo "Container did not become healthy in time." >&2
+  exit 1
 ENDSSH
 """
-            }
           }
         }
       }
@@ -133,28 +170,20 @@ ENDSSH
   post {
     success {
       script {
-        def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
-        def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
-        sh '''
-curl -sS -X POST -H 'Content-Type: application/json' \
-  https://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo \
-  --data-binary @- <<JSON
-{"text":"빌드 성공: '"${JOB_NAME}"' #'"${BUILD_NUMBER}"' by '"${Author_ID}"'('"${Author_Name}"') (<'"${BUILD_URL}"'|상세 보기>)"}
-JSON
-'''
+        def authorId   = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
+        def authorMail = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
+        sendWebhook(env.WEBHOOK_URL, [
+          text: "빌드 성공: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${authorId}(${authorMail}) (<${env.BUILD_URL}|상세 보기>)"
+        ])
       }
     }
     failure {
       script {
-        def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
-        def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
-        sh '''
-curl -sS -X POST -H 'Content-Type: application/json' \
-  https://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo \
-  --data-binary @- <<JSON
-{"text":"빌드 실패: '"${JOB_NAME}"' #'"${BUILD_NUMBER}"' by '"${Author_ID}"'('"${Author_Name}"') (<'"${BUILD_URL}"'|상세 보기>)"}
-JSON
-'''
+        def authorId   = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
+        def authorMail = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
+        sendWebhook(env.WEBHOOK_URL, [
+          text: "빌드 실패: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${authorId}(${authorMail}) (<${env.BUILD_URL}|상세 보기>)"
+        ])
       }
     }
   }
