@@ -17,6 +17,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 
 @Tag(name = "인증", description = "회원가입 / 로그인 / 로그아웃")
@@ -168,6 +169,54 @@ public interface AuthApiDocs {
             }
     )
     ResponseEntity<OkResponse> logout(String authHeader, Authentication authentication);
+
+    @Operation(
+            summary = "액세스 토큰 재발급 (Refresh)",
+            description = """
+    만료된 액세스 토큰을 **리프레시 토큰(헤더 X-Refresh-Token)** 으로 재발급합니다.
+
+    동작:
+    1) 서버 저장소의 최신 리프레시와 일치 확인(토큰 회전)
+    2) 회원 상태 ACTIVE 확인
+    3) 새 Access/Refresh 토큰 발급 및 저장소 갱신
+    """,
+            parameters = {
+                    @Parameter(
+                            name = "X-Refresh-Token",
+                            in = ParameterIn.HEADER,
+                            required = true,
+                            description = "리프레시 토큰(JWT)",
+                            example = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    )
+            },
+            responses = {
+                    @ApiResponse(
+                            responseCode = "200",
+                            description = "OK - 새 Access/Refresh 토큰 발급",
+                            content = @Content(schema = @Schema(implementation = TokenResponse.class),
+                                    examples = @ExampleObject(value = """
+                {
+                  "accessToken": "new-access-jwt",
+                  "refreshToken": "new-refresh-jwt",
+                  "accessExpiresIn": 3600
+                }
+                """))
+                    ),
+                    @ApiResponse(
+                            responseCode = "401",
+                            description = "리프레시 토큰 만료/무효/회수됨, 또는 탈퇴/비활성 회원",
+                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    ),
+                    @ApiResponse(
+                            responseCode = "400",
+                            description = "요청 형식 오류(헤더 누락 등)",
+                            content = @Content(schema = @Schema(implementation = ErrorResponse.class))
+                    )
+            }
+    )
+    ResponseEntity<TokenResponse> refresh(
+            @RequestHeader(name = "X-Refresh-Token", required = false) String refreshHeader
+    );
 
     @Operation(
             summary = "이메일 중복 확인",

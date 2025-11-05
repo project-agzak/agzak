@@ -17,7 +17,9 @@ import com.ssafy.agzak.domain.inventory.repository.FortuneCookieRepository;
 import com.ssafy.agzak.domain.inventory.repository.InventoryRepository;
 import com.ssafy.agzak.domain.member.entity.Member;
 import com.ssafy.agzak.domain.member.repository.MemberRepository;
+import com.ssafy.agzak.domain.ranking.controller.RankingController;
 import com.ssafy.agzak.global.security.AuthMemberProvider;
+import com.ssafy.agzak.global.time.DateProvider;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -27,8 +29,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.security.SecureRandom;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 
 @Service
 @RequiredArgsConstructor
@@ -41,18 +41,18 @@ public class CookieGameService {
     private final InventoryRepository inventoryRepository;
     private final FortuneCookieRepository fortuneCookieRepository;
     private final AuthMemberProvider authMemberProvider;
+    private final DateProvider date;
 
     private static final BigDecimal INIT_PROB = new BigDecimal("70.00");
     private static final int ATTEMPTS_LIMIT = 10;
     private static final int SESSIONS_PER_DAY = 3;
-    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
 
     public StartGameResponse startForCurrentUser() {
         Long memberId = authMemberProvider.currentMemberId();
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new EntityNotFoundException("member not found: " + memberId));
 
-        LocalDate today = LocalDate.now(KST);
+        LocalDate today = date.today();
 
         // 1) 오늘 진행 중 세션이 있으면 => "재개" 로직
         var inProgressOpt = gameSessionRepository
@@ -125,8 +125,8 @@ public class CookieGameService {
                 .status(GameSession.SessionStatus.IN_PROGRESS)
                 .initialSuccessProb(INIT_PROB)
                 .attemptsLimit(ATTEMPTS_LIMIT)
-                .createdAt(LocalDateTime.now(KST))
-                .updatedAt(LocalDateTime.now(KST))
+                .createdAt(date.todayTime())
+                .updatedAt(date.todayTime())
                 .build();
 
         GameSession saved = gameSessionRepository.save(session);
@@ -156,7 +156,7 @@ public class CookieGameService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new EntityNotFoundException("member not found: " + memberId));
 
-        LocalDate today = LocalDate.now(KST);
+        LocalDate today = date.today();
 
         GameSession session = gameSessionRepository
                 .findTopByMemberAndGameDateAndStatusOrderBySessionNoDesc(
@@ -229,7 +229,7 @@ public class CookieGameService {
                 .snapAchievement(snapAchievement)
                 .snapHealth(snapHealth)
                 .snapMisfortune(snapMisfortune)
-                .createdAt(LocalDateTime.now(KST))
+                .createdAt(date.todayTime())
                 .build();
         gameAttemptRepository.save(attempt);
 
@@ -237,7 +237,7 @@ public class CookieGameService {
         boolean completed = (nextAttemptNo >= ATTEMPTS_LIMIT);
         session = session.toBuilder()
                 .status(completed ? GameSession.SessionStatus.COMPLETED : GameSession.SessionStatus.IN_PROGRESS)
-                .updatedAt(LocalDateTime.now(KST))
+                .updatedAt(date.todayTime())
                 .build();
         gameSessionRepository.save(session);
 

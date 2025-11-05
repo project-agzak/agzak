@@ -1,5 +1,6 @@
 package com.ssafy.agzak.domain.ranking.support;
 
+import com.ssafy.agzak.global.time.DateProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisCallback;
@@ -16,7 +17,7 @@ import java.util.*;
 public class RedisRankingStore {
 
     private final RedisTemplate<String, String> redis;
-    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+    private final DateProvider date;
     private static final DateTimeFormatter DAY = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     private String key(LocalDate d, String suffix) { return "rank:" + d.format(DAY) + ":" + suffix; }
@@ -25,7 +26,7 @@ public class RedisRankingStore {
     public String zGain(LocalDate d)     { return key(d, "gain"); }
     public String hUser(LocalDate d, Long memberId){ return key(d, "user:"+memberId); }
 
-    public LocalDate today() { return LocalDate.now(KST); }
+    public LocalDate today() { return date.today(); }
 
     public void upsertTodayUser(Long memberId, String nickname, Integer total, Integer original) {
         LocalDate d = today();

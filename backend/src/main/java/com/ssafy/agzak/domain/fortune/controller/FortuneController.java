@@ -12,6 +12,7 @@ import com.ssafy.agzak.domain.guest.dto.GuestProfile;
 import com.ssafy.agzak.domain.member.dto.response.MemberInfoResponse;
 import com.ssafy.agzak.domain.member.service.MemberService;
 import com.ssafy.agzak.global.security.AuthMemberProvider;
+import com.ssafy.agzak.global.time.DateProvider;
 import io.swagger.v3.oas.annotations.Hidden;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +31,7 @@ public class FortuneController implements FortuneApiDocs {
     private final FortuneTypeService fortuneTypeService;
     private final MemberService memberService;
     private final AuthMemberProvider authMemberProvider;
+    private final DateProvider date;
 
     @PostMapping
     public ResponseEntity<FinalFortuneResponse> postMemberTodayFortune() {
@@ -37,7 +39,7 @@ public class FortuneController implements FortuneApiDocs {
         MemberInfoResponse response = memberService.getMemberInfo(memberId);
         BirthDataInput input = BirthDataInput.fromMemberInfo(response);
         FinalFortuneResponse result = fortuneService.getFortuneScores(input, response.birthCity());
-        if (fortuneService.checkDuplicate(memberId, LocalDate.now())) {
+        if (fortuneService.checkDuplicate(memberId, date.today())) {
             return ResponseEntity.ok().body(result);
         }
         fortuneService.saveFortune(memberId, result);

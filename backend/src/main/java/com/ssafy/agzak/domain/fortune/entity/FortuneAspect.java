@@ -6,6 +6,7 @@ import lombok.*;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder(toBuilder = true)
 @Entity
 @Table(
         name = "fortune_aspect",
@@ -35,14 +36,6 @@ public class FortuneAspect {
     private Integer originalScore;
 
     public enum AspectName { MONEY, LOVE, ACHIEVEMENT, HEALTH }
-
-    @Builder
-    public FortuneAspect(Fortune fortune, AspectName name, int score) {
-        this.fortune = fortune;
-        this.name = name;
-        this.score = score;
-        this.originalScore = score;
-    }
 
     public void updateScore(int score) {
         this.score += score;

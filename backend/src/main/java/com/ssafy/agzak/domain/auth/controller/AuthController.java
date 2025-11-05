@@ -73,6 +73,16 @@ public class AuthController implements AuthApiDocs {
         return ResponseEntity.ok(OkResponse.logoutSuccess());
     }
 
+    @PostMapping("/refresh")
+    public ResponseEntity<TokenResponse> refresh(
+            @RequestHeader(name = "X-Refresh-Token", required = false) String refreshHeader
+    ) {
+        if (refreshHeader == null || refreshHeader.isBlank()) {
+            throw new BadCredentialsException("리프레시 토큰이 없습니다.");
+        }
+        return ResponseEntity.ok(authService.refresh(refreshHeader));
+    }
+
     @GetMapping("/check-email")
     public ResponseEntity<CheckEmailResponse> checkEmailAvailability(@RequestParam String email) {
         return ResponseEntity.ok().body(authService.checkEmail(email));

@@ -9,6 +9,7 @@ import java.time.LocalDate;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder(toBuilder = true)
 @Entity
 @Table(
         name = "fortune",
@@ -46,16 +47,6 @@ public class Fortune {
 
     @Column(name = "original_total_score", nullable = false)
     private Integer originalTotalScore;
-
-    @Builder
-    public Fortune(Member member, FortuneType fortuneType, String description, int score) {
-        this.member = member;
-        this.date = LocalDate.now();
-        this.fortuneType = fortuneType;
-        this.description = description;
-        this.totalScore = score;
-        this.originalTotalScore = score;
-    }
 
     public void updateScore(int num) {
         this.totalScore += num;

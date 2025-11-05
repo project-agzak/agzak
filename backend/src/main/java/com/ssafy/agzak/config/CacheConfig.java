@@ -6,6 +6,9 @@ import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.time.Duration;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.concurrent.TimeUnit;
 
 @Configuration
@@ -35,10 +38,10 @@ public class CacheConfig {
     }
 
     private long nanosUntilNextMidnightKST() {
-        var zone = java.time.ZoneId.of("Asia/Seoul");
-        var now = java.time.ZonedDateTime.now(zone);
+        var zone = ZoneId.of("Asia/Seoul");
+        var now = ZonedDateTime.now(zone);
         var midnight = now.toLocalDate().plusDays(1).atStartOfDay(zone);
-        long seconds = java.time.Duration.between(now, midnight).getSeconds();
-        return java.util.concurrent.TimeUnit.SECONDS.toNanos(Math.max(seconds, 1));
+        long seconds = Duration.between(now, midnight).getSeconds();
+        return TimeUnit.SECONDS.toNanos(Math.max(seconds, 1));
     }
 }
