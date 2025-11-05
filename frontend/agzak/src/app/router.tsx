@@ -4,6 +4,9 @@ import { lazy, Suspense, type ReactNode } from 'react';
 import { createBrowserRouter, Outlet } from 'react-router-dom';
 import AppLayout from './layout';
 
+import { RequireAuth } from "@/components/templates/RequireAuth";
+
+
 // --- lazy pages ---
 const HomePage = lazy(() => import('@/pages/Home/HomePage'));
 const LoginPage = lazy(() => import('@/pages/Auth/LoginPage'));
@@ -44,16 +47,49 @@ export const router = createBrowserRouter([
           { path: 'result', element: suspense(<FortuneResultPage />) },
         ],
       },
-      {
-        path: 'enforce',
-        element: <EmptyLayout />,
-        children: [
-          { index: true, element: suspense(<EnforcePage />) },        ],
-      },
-      { path: 'cookies', element: suspense(<CookiesPage />) },
-      { path: 'calendar', element: suspense(<CalendarPage />) },
-      { path: 'my', element: suspense(<MyPage />) },
+
+     {
+      path: "enforce",
+      element: (
+        <RequireAuth>
+          <EmptyLayout />
+        </RequireAuth>
+      ),
+      children: [
+        { index: true, element: suspense(<EnforcePage />) },
+      
+      ],
+    },
+
+    {
+      path: "cookies",
+      element: (
+        <RequireAuth>
+          {suspense(<CookiesPage />)}
+        </RequireAuth>
+      ),
+    },
+
+    {
+      path: "calendar",
+      element: (
+        <RequireAuth>
+          {suspense(<CalendarPage />)}
+        </RequireAuth>
+      ),
+    },
+
+    {
+      path: "my",
+      element: (
+        <RequireAuth>
+          {suspense(<MyPage />)}
+        </RequireAuth>
+      ),
+    },
+
       { path: '*', element: suspense(<NotFoundPage />) },
-    ],
-  },
+  ],
+},
+
 ]);

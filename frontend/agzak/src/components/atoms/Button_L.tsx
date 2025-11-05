@@ -7,6 +7,7 @@ interface ButtonLProps {
   label?: string;
   width?: number;
   onClick?: () => void;       // ✅ 추가
+  
 }
 
 export function Button_L({ to, label = "확인", width = 260, onClick }: ButtonLProps) {
