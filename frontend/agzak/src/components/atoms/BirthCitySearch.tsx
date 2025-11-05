@@ -98,13 +98,21 @@ export function BirthCitySearch({
     },
     [ready]
   );
-
+ // 🔹 검색 버튼 / Enter 에서만 실제 검색 실행
+  const handleSearch = () => {
+    const keyword = q.trim();
+    if (!keyword) {
+      setList([]);
+      setOpen(false);
+      setStatus("");
+      return;
+    }
+    search(keyword);
+  };
   // 🔸 입력 감지 + 검색
   const onInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = e.target.value;
     setQ(v);
-    if (timer.current) window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => search(v), 180);
   };
 
   // ✅ 클릭 시 한 번에 반응하도록 수정
@@ -123,24 +131,34 @@ export function BirthCitySearch({
   };
 
   // ⌨️ 키보드 내비게이션
-  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+ const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      // 리스트 열려 있고, 활성 아이템 있으면 그걸 선택
+      if (open && activeIdx >= 0 && list[activeIdx]) {
+        commitSelect(list[activeIdx]);
+      } else {
+        // 아니면 그냥 검색 실행
+        handleSearch();
+      }
+      return;
+    }
+
     if (!open) return;
+
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setActiveIdx((i) => Math.min(i + 1, list.length - 1));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setActiveIdx((i) => Math.max(i - 1, 0));
-    } else if (e.key === "Enter" && activeIdx >= 0 && list[activeIdx]) {
-      e.preventDefault();
-      commitSelect(list[activeIdx]);
     } else if (e.key === "Escape") {
       setOpen(false);
     }
   };
 
   return (
-    <div ref={rootRef} className="relative w-[260px] overflow-visible">
+        <div ref={rootRef} className="relative w-[260px] overflow-visible">
       {/* 🔳 픽셀 프레임 유지 */}
       <img
         src="/images/Input.svg"
@@ -148,23 +166,28 @@ export function BirthCitySearch({
         className="pointer-events-none absolute inset-0"
       />
 
-      {/* 🔍 검색 입력창 */}
- <input
-  value={q}
-  onChange={onInput}
-  onFocus={() => q && setOpen(true)}
-  onKeyDown={onKeyDown}
-  placeholder={placeholder}
-  className="
-    birthcity-input           /* ← 전용 클래스 */
-    relative z-10 w-full h-[48px] px-4 pr-8
-    bg-transparent outline-none
-    font-galmuri text-[12px]  /* 유틸도 같이 */
-    placeholder:font-galmuri placeholder:text-[12px] placeholder:font-normal placeholder:text-[#121212]/60
-  "
-  aria-autocomplete="list"
-  aria-expanded={open}
-/>
+      {/* 🔍 입력 + 검색 버튼 한 줄 */}
+      <div className="relative z-10 flex items-center gap-2">
+        <input
+          value={q}
+          onChange={onInput}
+          onFocus={() => q && setOpen(true)}
+          onKeyDown={onKeyDown}
+          placeholder={placeholder}
+          className="
+            birthcity-input
+            flex-1 h-[48px] px-4
+            bg-transparent outline-none
+            font-galmuri text-[12px]
+            placeholder:font-galmuri placeholder:text-[12px] placeholder:font-normal placeholder:text-[#121212]/60
+          "
+          aria-autocomplete="list"
+          aria-expanded={open}
+        />
+
+
+      </div>
+
 
       {/* 📋 결과 패널 */}
       {open && (

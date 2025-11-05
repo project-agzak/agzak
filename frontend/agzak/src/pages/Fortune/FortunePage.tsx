@@ -368,24 +368,37 @@ const applyProfileToState = (data: Member) => {
           </div>
         </div>
 
-        {/* 태어난 도시 */}
-        <div className="flex max-w-[300px] flex-col gap-1">
-          <div className="mx-auto flex w-[230px] justify-between items-center">
-            <div className="w-[260px] text-left">
-              <label className="font-galmuri-small font-extrabold text-[#222]">
-                태어난 도시
-              </label>
-            </div>
-          </div>
+       {/* 태어난 도시 */}
+<div className="flex max-w-[300px] flex-col gap-1">
+  <div className="mx-auto flex w-[230px] justify-between items-center">
+    <div className="w-[260px] text-left">
+      <label className="font-galmuri-small font-extrabold text-[#222]">
+        태어난 도시
+      </label>
+    </div>
 
-          <div className="flex w-full justify-center">
-            <BirthCitySearch
-              value={birthCity}
-              onChange={(next) => setBirthCity(next)}
-              placeholder="태어난 도시 검색"
-            />
-          </div>
-        </div>
+    {/* 🔹 검색 버튼을 여기로 이동 */}
+   <button
+  type="button"
+  onClick={() => {
+    const el = document.querySelector<HTMLInputElement>("#birthcity-input");
+    if (el) el.focus();
+  }}
+  className="pixel-button-light"
+>
+  검색
+</button>
+  </div>
+
+  <div className="flex w-full justify-center">
+    <BirthCitySearch
+      value={birthCity}
+      onChange={(next) => setBirthCity(next)}
+      placeholder="태어난 도시 검색"
+    />
+  </div>
+</div>
+
 
         {/* 하단 버튼 */}
         <div className="mt-12 flex justify-center pb-15">
