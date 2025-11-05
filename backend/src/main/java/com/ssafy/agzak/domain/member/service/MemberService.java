@@ -6,6 +6,7 @@ import com.ssafy.agzak.domain.fortune.dto.response.FortuneAspectResponse;
 import com.ssafy.agzak.domain.fortune.dto.response.FortuneTypeResponse;
 import com.ssafy.agzak.domain.fortune.entity.Fortune;
 import com.ssafy.agzak.domain.fortune.entity.FortuneAspect;
+import com.ssafy.agzak.domain.member.dto.request.MemberEditRequest;
 import com.ssafy.agzak.domain.member.dto.response.MemberGraphResponse;
 import com.ssafy.agzak.domain.member.exception.IllegalFortuneAspectException;
 import com.ssafy.agzak.domain.member.exception.NoFortuneFoundException;
@@ -84,17 +85,20 @@ public class MemberService {
     private record DateScore(int originalScore, int totalScore) { }
 
     @Transactional
-    public void editMemberInfo(long memberId, String nickname, LocalTime time) {
+    public void editMemberInfo(long memberId, MemberEditRequest request) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 멤버 아이디입니다."));
 
-        if (memberRepository.existsByNickname(nickname) && !member.getNickname().equals(nickname)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 사용중인 닉네임입니다.");
+        if (request.nickname() != null) {
+            if (memberRepository.existsByNickname(request.nickname())) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 사용중인 닉네임입니다.");
+            }
+            member.updateNickname(request.nickname());
         }
 
-        member.updateNickname(nickname);
-        member.updateBirthTime(time);
-
+        if (request.birthTime() != null) {
+            member.updateBirthTime(request.birthTime());
+        }
     }
 
     @Transactional
