@@ -51,7 +51,7 @@ export function Button_M({
       />
 
       <button
-        type="button"
+        type={type}
         className="btnM-click font-galmuri"
         onClick={handleClick}
         onMouseDown={() => setPressed(true)}
