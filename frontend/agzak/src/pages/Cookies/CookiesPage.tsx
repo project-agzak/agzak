@@ -1,259 +1,197 @@
+// src/pages/Cookies/CookiesPage.tsx
 import * as React from "react";
-import Rainbow from "@/assets/Gifs/Rainbow.gif";
+import Pig from "@/assets/ui/MainPig.svg";
+import HealthGif from "@/assets/Gifs/health-cookie.gif";
+import AchievementGif from "@/assets/Gifs/achievement-cookie.gif";
+import LoveGif from "@/assets/Gifs/love-cookie.gif";
+import MoneyGif from "@/assets/Gifs/money-cookie.gif";
+import MixedGif from "@/assets/Gifs/mixed-cookie.gif";
+import RottenGif from "@/assets/Gifs/rotten-cookie.gif";
+
 import { ActionButton_M } from "@/components/atoms/ActionButton_M";
 import { FortuneGaugeList } from "@/components/molecules/FortuneGaugeList";
-import { CookieInventory, type CookieData } from "@/components/organisms/CookieInventory";
+import { CookieInventory } from "@/components/organisms/CookieInventory";
 import InventoryImg from "@/assets/ui/CookieInventory.svg";
 
-import HealthCookie from "@/assets/Cookies/health-cookie.svg";
-import AchievementCookie from "@/assets/Cookies/achievement-cookie.svg";
-import LoveCookie from "@/assets/Cookies/love-cookie.svg";
-import MoneyCookie from "@/assets/Cookies/money-cookie.svg";
-import MixedCookie from "@/assets/Cookies/mixed-cookie.svg";
-import RottenCookie from "@/assets/Cookies/rotten-cookie.svg";
+import { useFortuneStore } from "@/store/useFortuneStore";
+import { useCookiesStore } from "@/store/useCookiesStore";
+import { toGaugeStats } from "@/adapters/fortuneAdapter";
 
-// 데모 데이터: 실제로는 API에서 주입
-export const demoCookies: CookieData[] = [
-  {
-    id: "c1",
-    imgSrc: HealthCookie,
-    detail: {
-      title: "건강쿠키",
-      effects: [
-        { label: "건강운", value: +120 },
-        { label: "성취운", value: +20 },
-      ],
-    },
-    createdAt: Date.now() - 1_000,
-  },
-  {
-    id: "c2",
-    imgSrc: AchievementCookie,
-    detail: {
-      title: "성취쿠키",
-      effects: [
-        { label: "성취운", value: +140 },
-        { label: "금전운", value: +30 },
-      ],
-    },
-    createdAt: Date.now() - 2_000,
-  },
-  {
-    id: "c3",
-    imgSrc: LoveCookie,
-    detail: {
-      title: "애정쿠키",
-      effects: [
-        { label: "애정운", value: +110 },
-        { label: "건강운", value: +20 },
-      ],
-    },
-    createdAt: Date.now() - 3_000,
-  },
-  {
-    id: "c4",
-    imgSrc: MoneyCookie,
-    detail: {
-      title: "금전쿠키",
-      effects: [
-        { label: "금전운", value: +130 },
-        { label: "성취운", value: +15 },
-      ],
-    },
-    createdAt: Date.now() - 4_000,
-  },
-  {
-    id: "c5",
-    imgSrc: MixedCookie,
-    detail: {
-      title: "믹스쿠키",
-      effects: [
-        { label: "건강운", value: +40 },
-        { label: "성취운", value: +50 },
-        { label: "애정운", value: +30 },
-        { label: "금전운", value: +20 },
-      ],
-    },
-    createdAt: Date.now() - 5_000,
-  },
-  {
-    id: "c6",
-    imgSrc: RottenCookie,
-    detail: {
-      title: "시련쿠키",
-      effects: [
-        { label: "성취운", value: -30 },
-        { label: "금전운", value: -20 },
-      ],
-    },
-    createdAt: Date.now() - 6_000,
-  },
-  {
-    id: "c7",
-    imgSrc: HealthCookie,
-    detail: {
-      title: "건강쿠키",
-      effects: [
-        { label: "건강운", value: +90 },
-        { label: "애정운", value: +10 },
-      ],
-    },
-    createdAt: Date.now() - 7_000,
-  },
-  {
-    id: "c8",
-    imgSrc: AchievementCookie,
-    detail: {
-      title: "성취쿠키",
-      effects: [
-        { label: "성취운", value: +120 },
-        { label: "건강운", value: +10 },
-      ],
-    },
-    createdAt: Date.now() - 8_000,
-  },
-  {
-    id: "c9",
-    imgSrc: LoveCookie,
-    detail: {
-      title: "애정쿠키",
-      effects: [
-        { label: "애정운", value: +95 },
-        { label: "금전운", value: +10 },
-      ],
-    },
-    createdAt: Date.now() - 9_000,
-  },
-  {
-    id: "c10",
-    imgSrc: MoneyCookie,
-    detail: {
-      title: "금전쿠키",
-      effects: [
-        { label: "금전운", value: +100 },
-        { label: "성취운", value: +25 },
-      ],
-    },
-    createdAt: Date.now() - 10_000,
-  },
-  {
-    id: "c11",
-    imgSrc: MixedCookie,
-    detail: {
-      title: "믹스쿠키",
-      effects: [
-        { label: "성취운", value: +40 },
-        { label: "금전운", value: +40 },
-        { label: "애정운", value: +20 },
-      ],
-    },
-    createdAt: Date.now() - 11_000,
-  },
-  {
-    id: "c12",
-    imgSrc: RottenCookie,
-    detail: {
-      title: "시련쿠키",
-      effects: [
-        { label: "건강운", value: -25 },
-        { label: "애정운", value: -15 },
-      ],
-    },
-    createdAt: Date.now() - 12_000,
-  },
-  {
-    id: "c13",
-    imgSrc: HealthCookie,
-    detail: {
-      title: "건강쿠키",
-      effects: [
-        { label: "건강운", value: +110 },
-        { label: "성취운", value: +10 },
-      ],
-    },
-    createdAt: Date.now() - 13_000,
-  },
-  {
-    id: "c14",
-    imgSrc: MoneyCookie,
-    detail: {
-      title: "금전쿠키",
-      effects: [
-        { label: "금전운", value: +80 },
-        { label: "애정운", value: +10 },
-      ],
-    },
-    createdAt: Date.now() - 14_000,
-  },
-  {
-    id: "c15",
-    imgSrc: MixedCookie,
-    detail: {
-      title: "믹스쿠키",
-      effects: [
-        { label: "건강운", value: +30 },
-        { label: "성취운", value: +30 },
-        { label: "애정운", value: +30 },
-        { label: "금전운", value: +30 },
-      ],
-    },
-    createdAt: Date.now() - 15_000,
-  },
-];
+type ScoresLike = { health: number; achievement: number; love: number; money: number };
+
+const pickScores = (s: any): ScoresLike | undefined =>
+  !s ? undefined : ("scores" in s ? s.scores : s);
+
+const titleToGif: Record<string, string> = {
+  "건강쿠키": HealthGif,
+  "성취쿠키": AchievementGif,
+  "애정쿠키": LoveGif,
+  "금전쿠키": MoneyGif,
+  "믹스쿠키": MixedGif,
+  "시련쿠키": RottenGif,
+};
 
 export default function CookiesPage() {
-  const [selectedId, setSelectedId] = React.useState<string | null>(null);
-  const [cookies, setCookies] = React.useState<CookieData[]>(demoCookies);
+  // 총운
+  const scores = useFortuneStore((s) => s.scores); 
+  const totalScore = useFortuneStore((s) => {
+    const v = s.scores as any;
+    return (v ? ("scores" in v ? v.scores?.total_score : v.total_score) : null) ?? null;
+  });
+  const loadingFortune = useFortuneStore((s) => s.loading);
+  const errorFortune = useFortuneStore((s) => s.error);
+  const fetchToday = useFortuneStore((s) => s.fetchToday);
+  const addStats = useFortuneStore((s) => s.addStats);
 
-  const selectedCookie = cookies.find((c) => c.id === selectedId) || null;
+  // 게이지
+  const gaugeStats = React.useMemo(
+    () => toGaugeStats(pickScores(scores)),
+    [scores]
+  );
 
-  const eatSelected = () => {
+  // 쿠키 스토어
+  const items = useCookiesStore((s) => s.items);
+  const loadingCookies = useCookiesStore((s) => s.loading);
+  const errorCookies = useCookiesStore((s) => s.error);
+  const fetchCookies = useCookiesStore((s) => s.fetchCookies);
+
+  // 선택/상세
+  const selectedId = useCookiesStore((s) => s.selectedId);
+  const deletingId = useCookiesStore((s) => s.deletingId);
+  const deleteCookie = useCookiesStore((s) => s.deleteCookie);
+  const loadingDetailId = useCookiesStore((s) => s.loadingDetailId);
+  const open = useCookiesStore((s) => s.open);
+  const select = useCookiesStore((s) => s.select);
+
+  // 쿠키 먹기
+  const eatingId = useCookiesStore((s) => s.eatingId);
+  const eatCookie = useCookiesStore((s) => s.eatCookie);
+
+  const selectedCookie = useCookiesStore((s) =>
+    s.items.find((c) => c.id === s.selectedId) ?? null
+  );
+  const isDetailLoading = loadingDetailId === selectedId;
+
+  const isDeleting = deletingId === selectedId;  
+
+  const isEating = eatingId === selectedId;
+
+  // 돼지 이미지 전환 상태
+  const [pigSrc, setPigSrc] = React.useState<string>(Pig);
+
+  // 최초 총운 1회 호출 가드
+  React.useEffect(() => {
+    if (!loadingFortune && totalScore == null) fetchToday();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 쿠키 목록: 최신순 기본 호출
+  React.useEffect(() => {
+    fetchCookies("recent");
+  }, [fetchCookies]);
+
+  // 쿠키 먹기
+    const eatSelected = async () => {
     if (!selectedCookie) return;
-    // TODO: 게이지 반영 로직 (FortuneGaugeList와 상태 연동)
-    // 임시로 삭제와 동일 처리
-    setCookies((prev) => prev.filter((c) => c.id !== selectedCookie.id));
-    setSelectedId(null);
+
+    // 1) 돼지 GIF로 전환 (타입 매핑)
+    const gif = titleToGif[selectedCookie.detail.title] ?? MixedGif;
+    setPigSrc(gif);
+
+    // 2) 총운/게이지 낙관적 합산
+    //    effects[]: [{label, value}]
+    const delta = selectedCookie.detail.effects.reduce(
+      (acc, e) => {
+        if (e.label === "건강운") acc.health += e.value;
+        else if (e.label === "성취운") acc.achievement += e.value;
+        else if (e.label === "애정운") acc.love += e.value;
+        else if (e.label === "금전운") acc.money += e.value;
+        return acc;
+      },
+      { health: 0, achievement: 0, love: 0, money: 0 }
+    );
+    addStats(delta); // ✅ UI 즉시 반영
+
+    // 3) 서버 반영 (USED 처리) + 인벤토리에서 제거
+    await eatCookie(selectedCookie.id);
+
+    // 4) 5초 후 원복
+    setTimeout(() => setPigSrc(Pig), 5000);
   };
-
-  const removeSelected = () => {
-    if (!selectedCookie) return;
-    setCookies((prev) => prev.filter((c) => c.id !== selectedCookie.id));
-    setSelectedId(null);
+  const removeSelected = async () => {
+    if (!selectedId) return;
+    // (선택) 사용자 확인
+    if (!confirm("정말 이 쿠키를 삭제할까요? 복구할 수 없습니다.")) return;
+    await deleteCookie(selectedId); 
   };
 
   return (
     <main className="relative z-10 p-4 min-h-screen">
       <div className="flex flex-row justify-center items-center">
-        <img src={ Rainbow } alt="" className="w-1/2 max-w-[220px] h-auto mt-5"/>
+        <img src={pigSrc} alt="" className="w-1/2 max-w-[220px] h-auto mt-5" />
         <div className="flex flex-col items-center pr-2 w-1/2 max-w-[220px]">
-          <FortuneGaugeList />
+          <FortuneGaugeList stats={gaugeStats} max={250} />
         </div>
       </div>
 
-      <div className="flex flex-row items-center justify-center mt-4">
-        <p className="font-bitbit-large mr-5">NNN 점</p> 
-        <p className="font-bitbit"> +20 점</p>
+      <div className="flex flex-row  items-center justify-center mt-4 ml-10">
+        <p className="font-bitbit-large mr-5">
+          {errorFortune ? "—" : totalScore ?? (loadingFortune ? "..." : "—")} 점
+        </p>
       </div>
 
       <div className="flex justify-center pb-2 mt-4">
         <div className="flex w-fit gap-[10px]">
-          <ActionButton_M className="shrink-0 !mx-0" label="쿠키 먹기" onClick={eatSelected} disabled={!selectedCookie} />
-          <ActionButton_M className="shrink-0 !mx-0" label="삭제" onClick={removeSelected} disabled={!selectedCookie} />
+          <ActionButton_M
+            className="shrink-0 !mx-0"
+            label= "쿠키 먹기"
+            onClick={eatSelected}
+            disabled={!selectedCookie || isDetailLoading || isEating || isDeleting}
+          />
+          <ActionButton_M
+            className="shrink-0 !mx-0"
+            label= "쿠키 삭제"  
+            onClick={removeSelected}
+            disabled={!selectedCookie || isDeleting}
+          />
         </div>
       </div>
 
-      <div className="relative mt-5">
+      <div className="relative mt-5 min-h-[480px]">
         <img
           src={InventoryImg}
           alt=""
           className="absolute inset-0 w-full h-full object-cover object-top pointer-events-none pl-3 -z-10"
         />
-        <CookieInventory
-          items={cookies}
-          selectedId={selectedId}
-          onChangeSelected={setSelectedId}
-          className="relative translate-y-3"
-        />
+
+        {/* 로딩/에러/빈 목록 처리 */}
+        {loadingCookies ? (
+          <div className="h-[420px] flex items-center justify-center">
+            <p className="font-galmuri">불러오는 중…</p>
+          </div>
+        ) : errorCookies ? (
+          <div className="h-[420px] flex items-center justify-center">
+            <p className="text-red-500 font-galmuri-small">{errorCookies}</p>
+          </div>
+        ) : items.length === 0 ? (
+          <div className="h-[420px] flex items-center justify-center">
+            <p className="font-galmuri-small">사용 가능한 쿠키가 없습니다.</p>
+          </div>
+        ) : (
+          <CookieInventory
+            items={items}
+            selectedId={selectedId}
+            // ✅ 선택 토글: 선택하면 스토어의 open(id) 호출해서 상세 자동 로드
+            onChangeSelected={(id) => {
+              if (!id) {
+                select(null);
+              } else {
+                open(id);
+              }
+            }}
+            className="relative translate-y-3"
+          />
+        )}
       </div>
     </main>
   );

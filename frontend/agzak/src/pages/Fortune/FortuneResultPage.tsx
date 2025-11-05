@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { ExpandableFortune } from "@/components/molecules/ExpandableFortune";
 import { Button_L } from "@/components/atoms/Button_L";
 
@@ -8,9 +9,24 @@ import { PureFlipImage } from "@/components/molecules/PureFlipImage";
 import Front from "@/assets/Back/Front.svg";
 import BackCard from "@/components/atoms/BackCard";
 
+import { useFortuneStore } from "@/store/useFortuneStore";
+
 
 export default function FortuneResultPage() {
+  // 총운
+  const totalScore = useFortuneStore((s) => s.scores?.total_score ?? null);
+  const loadingFortune = useFortuneStore((s) => s.loading);
+  const errorFortune = useFortuneStore((s) => s.error);
+  const fetchToday = useFortuneStore((s) => s.fetchToday);
+
+
   const shareUrl = "https://www.agzak.co.kr/";
+
+  // 총운 1회 호출 가드
+  useEffect(() => {
+    if (!loadingFortune && totalScore == null) fetchToday();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <main className="relative z-10 p-4 min-h-screen">
@@ -25,7 +41,7 @@ export default function FortuneResultPage() {
 
       <div className="flex flex-col items-center">
         <p className="font-galmuri">오늘의 총운</p>
-        <p className="font-bitbit-xlarge">NNN점</p>
+        <p className="font-bitbit-xlarge">{errorFortune ? "—" : totalScore ?? (loadingFortune ? "..." : "—")} 점</p>
       </div>
       
       <div className="bg-[#FEFBF2] px-4 py-6 pt-5">
