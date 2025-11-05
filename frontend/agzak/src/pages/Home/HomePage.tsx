@@ -18,20 +18,23 @@ export default function HomePage() {
         <div className="flex flex-col items-center pr-5">
           <p className="font-galmuri">총운</p>
           <p className="font-bitbit-large">NNN 점</p>
+          <p className="font-galmuri-xsmall pt-0.5">강화 잔여 횟수: NN</p>
         </div>
       </div>
       <div>
-        <div className="flex flex-row pb-2">
-          <Button_M label="운세 상세" to="/calendar" />
-          <Button_M label="운세 강화" to="/enforce" />
+        <div className="flex justify-center pb-2">
+          <div className="flex w-fit gap-[10px]">
+            <Button_M className="shrink-0 !mx-0" label="운세 상세" to="/calendar" />
+            <Button_M className="shrink-0 !mx-0" label="운세 강화" to="/enforce" />
+          </div>
         </div>
         <ShareButton
-          label="공유하기"
+          label="공유하고 강화 횟수 얻기"
           url={shareUrl}
         />
       </div>
       
-      <div className="mt-2">
+      <div className="mt-1">
         <div className="relative mx-auto w-[min(320px,90%)]">
           <img 
           src={ RankingRibbon } 
@@ -41,10 +44,12 @@ export default function HomePage() {
           />
           <p className="absolute inset-0 flex items-center justify-center font-bitbit-large leading-none pb-5">오늘의 랭킹</p>
         </div>
-        <p className="text-center font-galmuri-xsmall"> KST 24:00 기준</p>
+        <p className="text-center font-galmuri-xsmall -translate-y-8"> KST 24:00 기준</p>
       </div>
-      <RankingList />
-
+      <div className="-translate-y-8">
+        <RankingList />
+      </div>
+    
     </main>
   );
 }

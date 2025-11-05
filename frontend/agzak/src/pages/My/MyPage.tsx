@@ -50,6 +50,7 @@ export default function MyPage() {
     );
     setBirthDate(data.birthDate ?? "");
 
+
     if (data.birthTime) {
       const [h, m] = data.birthTime.split(":");
       setHour(h);
@@ -88,7 +89,7 @@ export default function MyPage() {
       }
 
       // 없으면 서버에서 한번 조회
-      const res = await api.get<MemberProfile>("/api/v1/members");
+      const res = await api.get<MemberProfile>("/members");
 
       if (!res.ok || !res.data) {
         console.error("회원 정보 불러오기 실패:", res.error);
@@ -126,7 +127,7 @@ export default function MyPage() {
       const body = { nickname, birthTime };
 
 
-      const res = await api.patch<MemberProfile>("/api/v1/members", body);
+      const res = await api.patch<MemberProfile>("/members", body);
 
 
       if (!res.ok) {
@@ -160,7 +161,7 @@ export default function MyPage() {
     const confirmed = confirm("정말로 계정을 삭제하시겠습니까?");
     if (!confirmed) return;
 
-    const res = await api.del<null>("/api/v1/members");
+    const res = await api.del<null>("/members");
 
     if (!res.ok) {
       console.error("회원 탈퇴 실패:", res.error);

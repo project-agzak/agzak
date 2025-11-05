@@ -30,7 +30,7 @@ export default function Header() {
         nickname: string;
         gender?: string;
         birthDate?: string;
-      }>("/api/v1/members");
+      }>("/members");
 
       if (!res.ok || !res.data) {
         console.error("회원 정보 불러오기 실패:", res.error);
@@ -52,7 +52,7 @@ export default function Header() {
       return;
     }
 
-    const res = await api.post<null>("/api/v1/auth/logout");
+    const res = await api.post<null>("/auth/logout");
 
     if (!res.ok) {
       console.error("로그아웃 요청 실패:", res.error);
@@ -163,8 +163,7 @@ function SidebarContent({ isLoggedIn, nickname, onLogout }: SidebarContentProps)
               </div>
             </SheetClose>
             <p className="font-galmuri-small font-extrabold text-[#121212] text-center">
-              {displayName}님, <br />
-  별처럼 빛나는 하루 되세요 ✨
+              {displayName}님, <br />✨ 별처럼 빛나는 <br />하루 되세요 ✨
             </p>
           </>
         ) : (

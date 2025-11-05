@@ -74,7 +74,7 @@ export default function SignupPage() {
 
     setChecking(true);
 
-    const res = await api.get<CheckEmailResponse>("/api/v1/auth/check-email", {
+    const res = await api.get<CheckEmailResponse>("/auth/check-email", {
       params: { email },
     });
 
@@ -141,7 +141,7 @@ export default function SignupPage() {
 
     // 게스트인 경우 → with-guest 회원가입
     const res = await api.post<RegisterWithGuestResponse>(
-      "/api/v1/auth/register/with-guest",
+      "/auth/register/with-guest",
       {
         email,
         password,
@@ -170,7 +170,7 @@ export default function SignupPage() {
     alert("회원가입이 완료되었습니다!");
     navigate("/login");
   };
-  
+
   return (
     <main className="relative z-10 min-h-screen p-4">
       <div className="ml-2 mt-5 flex w-full justify-center">

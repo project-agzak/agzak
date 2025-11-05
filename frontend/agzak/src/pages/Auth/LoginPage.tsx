@@ -50,7 +50,7 @@ export default function LoginPage() {
       return;
     }
 
-    const res = await api.post<LoginResponse>("/api/v1/auth/login", {
+    const res = await api.post<LoginResponse>("/auth/login", {
       email,
       password,
     });
@@ -110,7 +110,7 @@ export default function LoginPage() {
 
     (async () => {
       const res = await api.post<KakaoLoginResponse>(
-        "/api/v1/auth/kakao/login",
+        "/auth/kakao/login",
         payload
       );
 
@@ -169,6 +169,7 @@ export default function LoginPage() {
   return (
     <main className="relative z-10 min-h-screen bg-[#FEFBF2] p-4">
       {/*  로고 */}
+
       <div className="ml-2 mt-5 flex w-full justify-center">
         <img src={Logo} alt="아그작 로고" className="mx-auto block" />
       </div>

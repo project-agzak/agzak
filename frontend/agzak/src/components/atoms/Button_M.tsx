@@ -5,7 +5,9 @@ import "@/styles/components.css";
 interface ButtonMProps {
   to?: string;               // ✅ 이동 경로 (선택사항으로 변경)
   label?: string;
+
   width?: number;            // 버튼 폭
+  className?: string;
   onClick?: () => void;      // ✅ 클릭 핸들러 추가
 }
 
@@ -13,8 +15,10 @@ export function Button_M({
   to,
   label = "다음",
   width = 130,
+  className,
   onClick,
 }: ButtonMProps) {
+
   const navigate = useNavigate();
   const [pressed, setPressed] = React.useState(false);
 
@@ -28,7 +32,7 @@ export function Button_M({
 
   return (
     <div
-      className={`btnM-wrap ${pressed ? "is-pressed" : ""}`}
+      className={`btnM-wrap ${pressed ? "is-pressed" : ""} ${className ?? ""}`}
       style={{ "--btn-width": `${width}px` } as React.CSSProperties}
     >
       <img

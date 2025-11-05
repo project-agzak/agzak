@@ -3,14 +3,14 @@
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import * as React from "react";
-
-type FortuneGaugeColor = "green" | "blue" | "pink" | "yellow";
+import type { FortuneGaugeColor } from "@/adapters/fortuneAdapter"
 
 const colorMap: Record<FortuneGaugeColor, string> = {
   green: "bg-[#559A2D]",   // 건강운
   blue: "bg-[#27B1EB]",    // 성취운
   pink: "bg-[#EF4F87]",    // 애정운
   yellow: "bg-[#FEDC00]",  // 금전운
+  gray: "bg-[#FAE8D0]",    // 바탕
 };
 
 interface FortuneGaugeProps {

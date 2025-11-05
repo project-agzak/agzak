@@ -40,7 +40,7 @@ async function fetchGuestFortune({
   birthTime: string;
   birthCity: string;
 }) {
-  const res = await api.post<any>("/api/v1/fortune/guest", {
+  const res = await api.post<any>("/fortune/guest", {
     nickname,
     gender: gender.toUpperCase(),
     birthDate,
@@ -140,7 +140,7 @@ export default function FortunePage() {
       }
 
       // 없으면 서버에서 한 번 조회
-      const res = await api.get<MemberProfile>("/api/v1/members");
+      const res = await api.get<MemberProfile>("/members");
 
       if (!res.ok || !res.data) {
         console.error("포춘 페이지용 프로필 조회 실패:", res.error);
@@ -180,7 +180,7 @@ export default function FortunePage() {
         accessToken: string;
         refreshToken: string;
         expiresIn: number;
-      }>("/api/v1/auth/kakao/complete", {
+      }>("/auth/kakao/complete", {
         ticket: kakaoTicket,
         nickname,
         gender: gender.toUpperCase(),
@@ -219,7 +219,7 @@ export default function FortunePage() {
     if (userInfoStr) {
       const { email, password } = JSON.parse(userInfoStr);
 
-      const res = await api.post<any>("/api/v1/auth/register", {
+      const res = await api.post<any>("/auth/register", {
         email,
         password,
         nickname,
