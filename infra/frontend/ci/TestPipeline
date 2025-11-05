@@ -36,25 +36,23 @@ pipeline {
     stage('Build FE Image') {
       steps {
         dir("${env.SUBDIR}/agzak") {
-          withCredentials([usernamePassword(credentialsId: 'dockerhub-cred',
-            usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PWD')]) {
+          withCredentials([
+            usernamePassword(credentialsId: 'dockerhub-cred', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PWD'),
+            file(credentialsId: 'agzak-fe-env', variable: 'VITE_ENV_FILE') // ⬅️ Secret file
+          ]) {
             sh '''
-              set -eux
-
+              set -eu   # -x 금지(비밀 노출 방지)
               echo "$DOCKER_PWD" | docker login -u "$DOCKER_USER" --password-stdin ${REGISTRY}
 
+              export DOCKER_BUILDKIT=1
               TAG="${TARGET_BRANCH}-${BUILD_NUMBER}"
               REPO="${FE_IMAGE_REPO}"
 
-              # 1) 프론트 이미지 빌드 (serve -s dist -l 5173 런타임)
-              docker build -t "${REPO}:${TAG}" -f Dockerfile .
+              docker build \
+                --secret id=vite_env,src="$VITE_ENV_FILE" \
+                -t "${REPO}:${TAG}" -f Dockerfile .
 
-              # 2) 푸시
               docker push "${REPO}:${TAG}"
-
-              # (선택) 테스트 최신 포인터도 갱신하고 싶다면 활성화
-              # docker tag  "${REPO}:${TAG}" "${REPO}:test"
-              # docker push "${REPO}:test"
             '''
           }
         }

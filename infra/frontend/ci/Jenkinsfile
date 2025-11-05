@@ -38,16 +38,33 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
-            steps {
-                sshagent (credentials: ['deploy-ssh']) {
-                    sh """
-                        set -eux
-                        rsync -avz --delete ${env.SUBDIR}/agzak/dist/ ${env.DEPLOY_USER}@${env.DEPLOY_HOST}:/home/ubuntu/agzak-app/deploy/infra/nginx/data/www/dist/
-                        ssh ${env.DEPLOY_USER}@${env.DEPLOY_HOST} "docker restart agzak-nginx"
-                    """
-                }
+        stage('Deploy (Atomic Symlink Swap)') {
+          steps {
+            sshagent (credentials: ['deploy-ssh']) {
+              sh """
+                set -eux
+                RELEASE_ID="`date +%Y-%m-%d_%H-%M-%S`-build-${BUILD_NUMBER}"
+                BASE="/home/ubuntu/agzak-app/deploy/infra/nginx/data/www"
+                NEW="$BASE/releases/$RELEASE_ID"
+
+                ssh ${DEPLOY_USER}@${DEPLOY_HOST} "mkdir -p \\$NEW"
+
+                rsync -avz --delete ${SUBDIR}/agzak/dist/ ${DEPLOY_USER}@${DEPLOY_HOST}:$NEW/
+
+                ssh ${DEPLOY_USER}@${DEPLOY_HOST} "BASE='\\$BASE' NEW='\\$NEW' JOB_NAME='${JOB_NAME}' BUILD_NUMBER='${BUILD_NUMBER}' GIT_COMMIT='${GIT_COMMIT}' bash -s" << 'ENDSSH'
+                set -Eeuo pipefail
+
+                echo "${JOB_NAME}#${BUILD_NUMBER}@${GIT_COMMIT}" > "$NEW/DEPLOY_VERSION.txt"
+
+                ln -sfn "$NEW" "$BASE/current"
+
+                docker exec agzak-nginx nginx -t && docker exec agzak-nginx nginx -s reload || true
+
+                cd "$BASE/releases" && ls -1t | tail -n +6 | xargs -r rm -rf
+                ENDSSH
+              """
             }
+          }
         }
     }
 
