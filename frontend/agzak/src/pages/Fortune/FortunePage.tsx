@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
-import { useAuthStore } from "@/store/useAuthStore";   // ★ 추가
+import { useAuthStore, type Member } from "@/store/useAuthStore";  // ★ 추가
 
 import FullnameLogo from "@/assets/Background/agzak-fullname.svg";
 import FortuneCookie from "@/assets/Gifs/FortuneCookie.gif";
@@ -14,17 +14,7 @@ import { MidImages34 } from "@/components/templates/MidImages34";
 import { DropDown } from "@/components/atoms/DropDown";
 
 // 로그인 유저 프로필 타입 (MyPage에서 쓰는 것과 동일하게 맞춰 줌)
-type MemberProfile = {
-  id: number;
-  email: string;
-  nickname: string;
-  gender: "MALE" | "FEMALE" | string;
-  birthDate: string | null;
-  birthTime: string | null;
-  birthCity: string | null;
-  latitude: number | null;
-  longitude: number | null;
-};
+
 
 // 게스트 운세 API 호출 (api 래퍼 사용)
 async function fetchGuestFortune({
@@ -88,71 +78,66 @@ export default function FortunePage() {
   } | null>(null);
 
   // 로그인 유저 프로필 → 폼 상태에 반영하는 함수
-  const applyProfileToState = (data: MemberProfile) => {
-    // 닉네임
-    setNickname(data.nickname ?? "");
+const applyProfileToState = (data: Member) => {
+  setNickname(data.nickname ?? "");
 
-    // 성별
-    setGender(
-      data.gender === "FEMALE"
-        ? "female"
-        : data.gender === "MALE"
-        ? "male"
-        : null
-    );
+  setGender(
+    data.gender === "FEMALE"
+      ? "female"
+      : data.gender === "MALE"
+      ? "male"
+      : null
+  );
 
-    // 생일
-    setBirthDate(data.birthDate ?? "");
+  setBirthDate(data.birthDate ?? "");
 
-    // 태어난 시각
-    if (data.birthTime) {
-      const [h, m] = data.birthTime.split(":");
-      setHour(h);
-      setMinute(m);
-      setUnknownTime(false);
-    } else {
-      setHour(null);
-      setMinute(null);
-      setUnknownTime(true);
+  if (data.birthTime) {
+    const [h, m] = data.birthTime.split(":");
+    setHour(h);
+    setMinute(m);
+    setUnknownTime(false);
+  } else {
+    setHour(null);
+    setMinute(null);
+    setUnknownTime(true);
+  }
+
+  if (data.birthCity) {
+    setBirthCity({
+      sido: data.birthCity,
+      address: data.birthCity,
+      lat: data.latitude ?? 0,
+      lng: data.longitude ?? 0,
+    });
+  }
+};
+  // ★ 로그인 한 유저라면, 내 정보로 폼을 미리 채워 넣기
+ useEffect(() => {
+  // 게스트 / 회원가입 진행 중(userId, kakao_ticket) 에서는 건드리지 않음
+  const kakaoTicket = sessionStorage.getItem("kakao_ticket");
+  const userInfoStr = localStorage.getItem("userId");
+  if (!isLoggedIn || kakaoTicket || userInfoStr) return;
+
+  const loadProfile = async () => {
+    // 이미 스토어에 member 있으면 그걸로만 세팅
+    if (member) {
+      applyProfileToState(member);
+      return;
     }
 
-    // 태어난 도시
-    if (data.birthCity) {
-      setBirthCity({
-        sido: data.birthCity,
-        address: data.birthCity,
-        lat: data.latitude ?? 0,
-        lng: data.longitude ?? 0,
-      });
+    const res = await api.get<Member>("/members");
+
+    if (!res.ok || !res.data) {
+      console.error("포춘 페이지용 프로필 조회 실패:", res.error);
+      return;
     }
+
+    setMember(res.data);
+    applyProfileToState(res.data);
   };
 
-  // ★ 로그인 한 유저라면, 내 정보로 폼을 미리 채워 넣기
-  useEffect(() => {
-    // 게스트 / 회원가입 진행 중(userId, kakao_ticket) 에서는 건드리지 않음
-    if (!isLoggedIn) return;
-
-    const loadProfile = async () => {
-      // 이미 스토어에 member가 있으면 그걸로만 세팅
-      if (member) {
-        applyProfileToState(member as MemberProfile);
-        return;
-      }
-
-      // 없으면 서버에서 한 번 조회
-      const res = await api.get<MemberProfile>("/members");
-
-      if (!res.ok || !res.data) {
-        console.error("포춘 페이지용 프로필 조회 실패:", res.error);
-        return;
-      }
-
-      setMember(res.data);
-      applyProfileToState(res.data);
-    };
-
-    loadProfile();
-  }, [isLoggedIn, member, setMember]);
+  loadProfile();
+}, [isLoggedIn, member, setMember]);
 
   const handleFortuneSubmit = async () => {
     const birthTime =
