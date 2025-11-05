@@ -1,5 +1,6 @@
-// src/lib/api.ts
-import type { AxiosRequestConfig } from "axios";
+
+import type { AxiosRequestConfig, AxiosResponse } from "axios";
+
 import { apiClient } from "./axios";
 
 export type ApiResponse<T> = {
@@ -10,8 +11,16 @@ export type ApiResponse<T> = {
 
 async function request<T>(config: AxiosRequestConfig): Promise<ApiResponse<T>> {
   try {
-    const { data } = await apiClient.request<T>(config);
-    return { ok: true, data };
+
+    const res: AxiosResponse<T> = await apiClient.request<T>(config);
+
+    //  204 No Content → 성공으로 간주
+    if (res.status === 204) {
+      return { ok: true, data: undefined };
+    }
+
+    return { ok: true, data: res.data };
+
   } catch (e: any) {
     const status = e?.response?.status;
     const message =

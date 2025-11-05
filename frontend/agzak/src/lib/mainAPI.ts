@@ -4,6 +4,7 @@ import { api } from "./api";
 // 예시 타입들 — Swagger 스키마 보고 실제로 맞춰주세요
 export type LoginReq = { email: string; password: string };
 export type LoginRes = { accessToken: string; refreshToken: string; userId: number };
+
 export type MemberGraphPoint = {
   date: string;            // "YYYY-MM-DD"
   originalScore: number;
@@ -28,6 +29,23 @@ export type FortuneDetail = {
   }>;
 };
 
+// 회원 정보 응답 (GET /members)
+export type Member = {
+  id: number;
+  email: string;
+  nickname: string;
+  gender: "MALE" | "FEMALE";  // Swagger 기준
+  birthDate: string;          // "YYYY-MM-DD"
+  birthHour: string | null;   // Swagger는 string, 없을 수 있으니 null 허용
+  latitude: number;
+  longitude: number;
+};
+
+// 회원 정보 수정 요청 (PATCH /members)
+export type UpdateMemberReq = {
+  nickname: string;
+};
+
 export const AuthAPI = {
   login: (body: LoginReq) => api.post<LoginRes>("/auth/login", body),
   me: () => api.get<{ id: number; nickname: string }>("/users/me"),
@@ -50,12 +68,23 @@ export const CookieAPI = {
   open: (cookieId: string) => api.post<{ reward: string }>(`/cookies/${cookieId}/open`),
 };
 
+
 // 과거 운세 조회 관련
 export const MemberAPI = {
   getGraphs: (startDate: string, endDate: string) =>
-    api.get<MemberGraphPoint[]>("members/graphs", {
+    api.get<MemberGraphPoint[]>("/members/graphs", {
       params: { startDate, endDate },
     }),
   getFortuneByDate: (date: string) =>
-    api.get<FortuneDetail>(`members/fortunes/${date}`),
+    api.get<FortuneDetail>(`/members/fortunes/${date}`),
+
+   getMe: () => api.get<Member>("/members"),
+
+  // ✅ 2. 닉네임 수정: PATCH /members
+  update: (body: UpdateMemberReq) =>
+    api.patch<Member>("/members", body),
+
+  // ✅ 3. 회원 탈퇴: DELETE /members
+  delete: () =>
+    api.del<void>("/members"),
 };

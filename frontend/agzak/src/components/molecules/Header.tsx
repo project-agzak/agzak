@@ -1,4 +1,9 @@
 // src/components/molecules/Header.tsx
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { api } from "@/lib/api";
+import { useAuthStore } from "@/store/useAuthStore";
+
 import { Button_M } from "@/components/atoms/Button_M";
 import { Button } from "@/components/ui/button";
 import {
@@ -6,9 +11,65 @@ import {
   SheetClose,
   SheetContent,
   SheetTrigger,
-} from "@/components/ui/sheet"; // ✅ SheetClose 추가
+} from "@/components/ui/sheet";
 
 export default function Header() {
+  const navigate = useNavigate();
+
+  // 전역 인증 상태
+  const { isLoggedIn, member, setMember, logout } = useAuthStore();
+
+  // 로그인 상태일 때 한 번만 내 정보 조회해서 스토어에 저장
+  useEffect(() => {
+    const fetchMember = async () => {
+      if (!isLoggedIn || member) return;
+
+      const res = await api.get<{
+        id: number;
+        email: string;
+        nickname: string;
+        gender?: string;
+        birthDate?: string;
+      }>("/members");
+
+      if (!res.ok || !res.data) {
+        console.error("회원 정보 불러오기 실패:", res.error);
+        return;
+      }
+
+      const data = res.data;
+      console.log("회원 정보 불러오기 성공:", data);
+      setMember(data);
+    };
+
+    fetchMember();
+  }, [isLoggedIn, member, setMember]);
+
+  // 로그아웃 처리
+  const handleLogout = async () => {
+    if (!isLoggedIn) {
+      alert("이미 로그아웃 상태입니다.");
+      return;
+    }
+
+    const res = await api.post<null>("/auth/logout");
+
+    if (!res.ok) {
+      console.error("로그아웃 요청 실패:", res.error);
+      // 서버 로그아웃 실패해도 클라이언트에서는 일단 로그아웃 처리
+    } else {
+      console.log("로그아웃 API 성공");
+    }
+
+    // 전역 인증 상태 및 토큰 정리
+    logout();
+
+    alert("로그아웃 되었습니다.");
+    navigate("/login");
+  };
+
+  const nickname = member?.nickname ?? "";
+
   return (
     <header className="fixed inset-x-0 top-0 z-50">
       <div className="mx-auto w-full max-w-[360px] bg-[#FEFBF2]">
@@ -34,7 +95,6 @@ export default function Header() {
                 </Button>
               </SheetTrigger>
 
-              {/* 사이드바 우측 출현 */}
               <SheetContent
                 side="right"
                 className="
@@ -43,7 +103,11 @@ export default function Header() {
                   sm:!w-[260px]
                 "
               >
-                <SidebarContent />
+                <SidebarContent
+                  isLoggedIn={isLoggedIn}
+                  nickname={nickname}
+                  onLogout={handleLogout}
+                />
               </SheetContent>
             </Sheet>
           </div>
@@ -68,8 +132,16 @@ function HamburgerIcon({ className = "w-6 h-6" }: { className?: string }) {
   );
 }
 
+type SidebarContentProps = {
+  isLoggedIn: boolean;
+  nickname: string;
+  onLogout: () => void;
+};
+
 /** 사이드바 내용 */
-function SidebarContent() {
+function SidebarContent({ isLoggedIn, nickname, onLogout }: SidebarContentProps) {
+  const displayName = nickname || "사용자";
+
   return (
     <div className="h-full flex flex-col">
       {/* 로고 */}
@@ -81,19 +153,34 @@ function SidebarContent() {
         />
       </div>
 
-      {/* 로그인 / 회원가입 버튼 */}
+      {/* 로그인 / 회원가입 or 로그아웃 + 환영 문구 */}
       <div className="px-3 py-5 flex flex-col items-center gap-3">
-        <SheetClose asChild>
-          <div>
-            <Button_M to="/login" label="로그인" width={170} />
-          </div>
-        </SheetClose>
+        {isLoggedIn ? (
+          <>
+            <SheetClose asChild>
+              <div>
+                <Button_M label="로그아웃" width={170} onClick={onLogout} />
+              </div>
+            </SheetClose>
+            <p className="font-galmuri-small font-extrabold text-[#121212] text-center">
+              {displayName}님, <br />✨ 별처럼 빛나는 <br />하루 되세요 ✨
+            </p>
+          </>
+        ) : (
+          <>
+            <SheetClose asChild>
+              <div>
+                <Button_M to="/login" label="로그인" width={170} />
+              </div>
+            </SheetClose>
 
-        <SheetClose asChild>
-          <div>
-            <Button_M to="/signup" label="회원가입" width={170} />
-          </div>
-        </SheetClose>
+            <SheetClose asChild>
+              <div>
+                <Button_M to="/signup" label="회원가입" width={170} />
+              </div>
+            </SheetClose>
+          </>
+        )}
       </div>
 
       {/* 메뉴 */}
