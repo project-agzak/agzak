@@ -181,6 +181,10 @@ type State = {
   select: (id: string | null) => void;         // 선택만
   open: (id: string) => Promise<void>;         // 선택 + 상세 필요 시 로드
   reset: () => void;
+
+  // 삭제
+  deletingId: string | null;
+  deleteCookie: (id: string) => Promise<void>;
 };
 
 export const useCookiesStore = create<State>((set, get) => ({
@@ -191,6 +195,8 @@ export const useCookiesStore = create<State>((set, get) => ({
   selectedId: null,
   loadingDetailId: null,
   cache: {},
+
+  deletingId: null,
 
   // 목록 조회
   fetchCookies: async (sortType = "recent") => {
@@ -285,4 +291,33 @@ export const useCookiesStore = create<State>((set, get) => ({
       loadingDetailId: null,
       cache: {},
     }),
+  
+  // ✅ 삭제 액션
+  deleteCookie: async (id) => {
+    if (!id) return;
+    try {
+      set({ deletingId: id, error: null });
+
+      // 1) 서버 삭제
+      await cookiesAPI.remove(Number(id));
+
+      // 2) 클라이언트 상태 정리 (목록/캐시/선택)
+      set((s) => {
+        const nextItems = s.items.filter((c) => c.id !== id);
+        const nextCache = { ...s.cache };
+        delete nextCache[id];
+        const nextSelected = s.selectedId === id ? null : s.selectedId;
+        return {
+          items: nextItems,
+          cache: nextCache,
+          selectedId: nextSelected,
+          deletingId: null,
+        };
+      });
+    } catch (e: any) {
+      const msg =
+        e?.response?.data?.message || e?.message || "쿠키 삭제에 실패했습니다.";
+      set({ deletingId: null, error: msg });
+    }
+  },
 }));

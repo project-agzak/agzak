@@ -29,12 +29,18 @@ export default function CookiesPage() {
 
   // 선택/상세
   const selectedId = useCookiesStore((s) => s.selectedId);
+  const deletingId = useCookiesStore((s) => s.deletingId);
+  const deleteCookie = useCookiesStore((s) => s.deleteCookie);
   const loadingDetailId = useCookiesStore((s) => s.loadingDetailId);
   const open = useCookiesStore((s) => s.open);
   const select = useCookiesStore((s) => s.select);
 
-  const selectedCookie = items.find((c) => c.id === selectedId) ?? null;
+  const selectedCookie = useCookiesStore((s) =>
+    s.items.find((c) => c.id === s.selectedId) ?? null
+  );
   const isDetailLoading = loadingDetailId === selectedId;
+
+  const isDeleting = deletingId === selectedId;  
 
   // 총운 1회 호출 가드
   React.useEffect(() => {
@@ -54,10 +60,11 @@ export default function CookiesPage() {
     select(null); // 화면 선택 해제
   };
 
-  const removeSelected = () => {
+  const removeSelected = async () => {
     if (!selectedId) return;
-    // TODO: 삭제 API
-    select(null);
+    // (선택) 사용자 확인
+    if (!confirm("정말 이 쿠키를 삭제할까요? 복구할 수 없습니다.")) return;
+    await deleteCookie(selectedId); 
   };
 
   return (
@@ -69,26 +76,25 @@ export default function CookiesPage() {
         </div>
       </div>
 
-      <div className="flex flex-row items-center justify-center mt-4">
+      <div className="flex flex-row  items-center justify-center mt-4 ml-10">
         <p className="font-bitbit-large mr-5">
           {errorFortune ? "—" : totalScore ?? (loadingFortune ? "..." : "—")} 점
         </p>
-        <p className="font-bitbit"> +20 점</p>
       </div>
 
       <div className="flex justify-center pb-2 mt-4">
         <div className="flex w-fit gap-[10px]">
           <ActionButton_M
             className="shrink-0 !mx-0"
-            label={isDetailLoading ? "쿠키 먹기" : "쿠키 먹기"}
+            label= "쿠키 먹기"
             onClick={eatSelected}
             disabled={!selectedCookie || isDetailLoading}
           />
           <ActionButton_M
             className="shrink-0 !mx-0"
-            label="삭제"
+            label= "쿠키 삭제"  
             onClick={removeSelected}
-            disabled={!selectedCookie || isDetailLoading}
+            disabled={!selectedCookie || isDeleting}
           />
         </div>
       </div>

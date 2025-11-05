@@ -1,4 +1,5 @@
 import { api } from "@/lib/api";
+import { apiClient } from "@/lib/axios";
 
 export type CookieDetail = {
   fortuneCookieId: number;
@@ -12,6 +13,10 @@ export type CookieDetail = {
 
 export type CookieSortType = "recent" | "score" | "category";
 
+async function remove(cookieId: number): Promise<void> {
+  await apiClient.delete(`/cookies/${cookieId}`, { withCredentials: false });
+}
+
 export const cookiesAPI = {
   /** 단일 상세 (GET) */
   getById: (cookieId: number) =>
@@ -24,4 +29,6 @@ export const cookiesAPI = {
   /** 보유 쿠키 목록 조회 */
   list: (sortType: CookieSortType = "recent") =>
     api.get<CookieDetail[]>("/cookies", { params: { sortType } }),
+
+  remove,
 };
