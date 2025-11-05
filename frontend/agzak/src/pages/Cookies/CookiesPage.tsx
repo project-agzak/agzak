@@ -8,13 +8,18 @@ import InventoryImg from "@/assets/ui/CookieInventory.svg";
 
 import { useFortuneStore } from "@/store/useFortuneStore";
 import { useCookiesStore } from "@/store/useCookiesStore";
+import { toGaugeStats } from "@/adapters/fortuneAdapter";
 
 export default function CookiesPage() {
   // 총운
+  const scores = useFortuneStore((s) => s.scores); 
   const totalScore = useFortuneStore((s) => s.scores?.total_score ?? null);
   const loadingFortune = useFortuneStore((s) => s.loading);
   const errorFortune = useFortuneStore((s) => s.error);
   const fetchToday = useFortuneStore((s) => s.fetchToday);
+
+  // 게이지
+  const gaugeStats = React.useMemo(() => toGaugeStats(scores), [scores]);
 
   // 쿠키 스토어
   const items = useCookiesStore((s) => s.items);
@@ -22,7 +27,7 @@ export default function CookiesPage() {
   const errorCookies = useCookiesStore((s) => s.error);
   const fetchCookies = useCookiesStore((s) => s.fetchCookies);
 
-  // ✅ 선택/상세: 스토어 사용
+  // 선택/상세
   const selectedId = useCookiesStore((s) => s.selectedId);
   const loadingDetailId = useCookiesStore((s) => s.loadingDetailId);
   const open = useCookiesStore((s) => s.open);
@@ -60,7 +65,7 @@ export default function CookiesPage() {
       <div className="flex flex-row justify-center items-center">
         <img src={Pig} alt="" className="w-1/2 max-w-[220px] h-auto mt-5" />
         <div className="flex flex-col items-center pr-2 w-1/2 max-w-[220px]">
-          <FortuneGaugeList />
+          <FortuneGaugeList stats={gaugeStats} max={250} />
         </div>
       </div>
 

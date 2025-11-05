@@ -39,3 +39,22 @@ export function toFortuneData(api: FortuneDetail): FortuneData {
     }
   }
   
+type ScoresLike = {
+  health?: number;
+  achievement?: number;
+  love?: number;
+  money?: number;
+};
+
+export function toGaugeStats(scores?: ScoresLike) {
+  const h = scores?.health ?? 0;
+  const a = scores?.achievement ?? 0;
+  const l = scores?.love ?? 0;
+  const m = scores?.money ?? 0;
+  return [
+    { label: "건강운", value: h, color: "green" as const },
+    { label: "성취운", value: a, color: "blue" as const },
+    { label: "애정운", value: l, color: "pink" as const },
+    { label: "금전운", value: m, color: "yellow" as const },
+  ];
+}
