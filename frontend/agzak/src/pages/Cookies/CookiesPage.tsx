@@ -17,6 +17,11 @@ import { useFortuneStore } from "@/store/useFortuneStore";
 import { useCookiesStore } from "@/store/useCookiesStore";
 import { toGaugeStats } from "@/adapters/fortuneAdapter";
 
+type ScoresLike = { health: number; achievement: number; love: number; money: number };
+
+const pickScores = (s: any): ScoresLike | undefined =>
+  !s ? undefined : ("scores" in s ? s.scores : s);
+
 const titleToGif: Record<string, string> = {
   "건강쿠키": HealthGif,
   "성취쿠키": AchievementGif,
@@ -29,14 +34,20 @@ const titleToGif: Record<string, string> = {
 export default function CookiesPage() {
   // 총운
   const scores = useFortuneStore((s) => s.scores); 
-  const totalScore = useFortuneStore((s) => s.scores?.total_score ?? null);
+  const totalScore = useFortuneStore((s) => {
+    const v = s.scores as any;
+    return (v ? ("scores" in v ? v.scores?.total_score : v.total_score) : null) ?? null;
+  });
   const loadingFortune = useFortuneStore((s) => s.loading);
   const errorFortune = useFortuneStore((s) => s.error);
   const fetchToday = useFortuneStore((s) => s.fetchToday);
   const addStats = useFortuneStore((s) => s.addStats);
 
   // 게이지
-  const gaugeStats = React.useMemo(() => toGaugeStats(scores), [scores]);
+  const gaugeStats = React.useMemo(
+    () => toGaugeStats(pickScores(scores)),
+    [scores]
+  );
 
   // 쿠키 스토어
   const items = useCookiesStore((s) => s.items);
