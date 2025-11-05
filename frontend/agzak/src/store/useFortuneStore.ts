@@ -183,4 +183,6 @@ export const useFortuneStore = create<FortuneState>((set, get) => ({
       return { scores: next as typeof state.scores };
     });
   },
+
 }))
+

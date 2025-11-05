@@ -5,19 +5,8 @@ import { Button_L } from "@/components/atoms/Button_L";
 import { TimeDropDown } from "@/components/atoms/TimeDropDown";
 import { api } from "@/lib/api";
 import { useNavigate } from "react-router-dom";
-import { useAuthStore } from "@/store/useAuthStore";
+import { useAuthStore, type Member } from "@/store/useAuthStore"; 
 
-type MemberProfile = {
-  id: number;
-  email: string;
-  nickname: string;
-  gender: "MALE" | "FEMALE" | string;
-  birthDate: string | null;
-  birthTime: string | null;
-  birthCity: string | null;
-  latitude: number | null;
-  longitude: number | null;
-};
 
 export default function MyPage() {
   const navigate = useNavigate();
@@ -39,7 +28,7 @@ export default function MyPage() {
   } | null>(null);
 
   // 서버에서 받은 프로필을 로컬 상태에 반영하는 함수
-  const applyProfileToState = (data: MemberProfile) => {
+  const applyProfileToState = (data: Member) => {
     setNickname(data.nickname ?? "");
     setGender(
       data.gender === "FEMALE"
@@ -84,12 +73,12 @@ export default function MyPage() {
 
       // 이미 스토어에 member가 있으면 그걸로 화면만 세팅
       if (member) {
-        applyProfileToState(member as MemberProfile);
+        applyProfileToState(member as Member);
         return;
       }
 
       // 없으면 서버에서 한번 조회
-      const res = await api.get<MemberProfile>("/members");
+      const res = await api.get<Member>("/members");
 
       if (!res.ok || !res.data) {
         console.error("회원 정보 불러오기 실패:", res.error);
@@ -116,43 +105,54 @@ export default function MyPage() {
     fetchProfile();
   }, [isLoggedIn, member, setMember, navigate]);
 
-  const handleEditToggle = async () => {
-  if (isEdit) {
-    try {
-      const birthTime =
-        unknownTime || !hour || !minute
-          ? null
-          : `${hour.padStart(2, "0")}:${minute.padStart(2, "0")}`;
-
-      const body = { nickname, birthTime };
-
-
-      const res = await api.patch<MemberProfile>("/members", body);
-
-
-      if (!res.ok) {
-        alert(res.error?.message ?? "회원 정보 수정 중 오류가 발생했습니다.");
-        return;
-      }
-
-      alert("회원 정보가 성공적으로 수정되었습니다.");
-
-      if (res.data) {
-        setMember({
-          ...res.data,
-          birthDate: res.data.birthDate ?? undefined,
-        });
-        applyProfileToState(res.data);
-      }
-
-      setIsEdit(false);
-    } catch (err: any) {
-      alert("회원 정보 수정 중 문제가 발생했습니다.");
-    }
-  } else {
+const handleEditToggle = async () => {
+  // 보기 모드 → 수정 모드 진입
+  if (!isEdit) {
     setIsEdit(true);
+    return;
+  }
+
+  // 여기부터는 "수정 완료" 클릭 시
+  try {
+    const birthTime =
+      unknownTime || !hour || !minute
+        ? null
+        : `${hour.padStart(2, "0")}:${minute.padStart(2, "0")}`;
+
+    const body = { nickname, birthTime };
+
+    // 1) PATCH 요청 (성공/실패 여부는 우선 기록만)
+    const res = await api.patch("/members", body);
+    console.log("PATCH /members:", res);
+
+    if (!res.ok) {
+      console.error("회원 정보 수정 실패:", res.error);
+      alert(res.error?.message ?? "회원 정보 수정 중 오류가 발생했습니다.");
+      // ❗ 실패해도 아래에서 한 번 /members로 동기화 시도
+    } else {
+      alert("회원 정보가 성공적으로 수정되었습니다.");
+    }
+
+    // 2) 서버 기준 최신 프로필로 한 번 더 동기화
+    const profileRes = await api.get<Member>("/members");
+    console.log("GET /members after patch:", profileRes);
+
+    if (profileRes.ok && profileRes.data) {
+      const latest = profileRes.data;
+      // 전역 스토어 업데이트
+      setMember(latest);
+      // 이 페이지 로컬 상태 업데이트
+      applyProfileToState(latest);
+    }
+
+    // 3) 수정 모드 종료
+    setIsEdit(false);
+  } catch (err) {
+    console.error(err);
+    alert("회원 정보 수정 중 문제가 발생했습니다.");
   }
 };
+
 
 
 

@@ -1,13 +1,46 @@
 // src/store/useAuthStore.ts
 import { create } from "zustand";
 
-type Member = {
+export type Member = {
   id: number;
   email: string;
   nickname: string;
-  gender?: string;
-  birthDate?: string | null;
+  gender: "MALE" | "FEMALE" | string;
+  birthDate: string | null;
+  birthTime: string | null;
+   birthHour?: string | null;
+  birthCity: string | null;
+  latitude: number | null;
+  longitude: number | null;
 };
+
+// 초기 member 로딩
+function loadInitialMember(): Member | null {
+  const raw = localStorage.getItem("member");
+  if (!raw) return null;
+
+  try {
+    const parsed = JSON.parse(raw);
+
+    const initial: Member = {
+      id: parsed.id,
+      email: parsed.email,
+      nickname: parsed.nickname,
+      gender: parsed.gender ?? "",
+      birthDate: parsed.birthDate ?? null,
+        birthTime: parsed.birthTime ?? parsed.birthHour ?? null,
+      birthHour: parsed.birthHour ?? null,
+      birthCity: parsed.birthCity ?? null,
+      latitude: parsed.latitude ?? null,
+      longitude: parsed.longitude ?? null,
+    };
+
+    return initial;
+  } catch {
+    localStorage.removeItem("member");
+    return null;
+  }
+}
 
 interface AuthState {
   isLoggedIn: boolean;
@@ -24,7 +57,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   isLoggedIn: !!localStorage.getItem("access_token"),
   accessToken: localStorage.getItem("access_token"),
   refreshToken: localStorage.getItem("refresh_token"),
-  member: JSON.parse(localStorage.getItem("member") || "null"),
+  member: loadInitialMember(),
 
   setTokens: (access, refresh) => {
     localStorage.setItem("access_token", access);
@@ -42,31 +75,27 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ member });
   },
 
-logout: () => {
-  // 모든 관련 키 정리
-  const keysToRemove = [
-    "access_token",
-    "refresh_token",
-    "accessToken",
-    "refreshToken",
-    "accessTokenExpiresAt",
-    "access_token_expires_at",
-    "member",
-    "userId",
-    "guestId",
-  ];
-  keysToRemove.forEach((k) => localStorage.removeItem(k));
+  logout: () => {
+    const keysToRemove = [
+      "access_token",
+      "refresh_token",
+      "accessToken",
+      "refreshToken",
+      "accessTokenExpiresAt",
+      "access_token_expires_at",
+      "member",
+      "userId",
+      "guestId",
+    ];
+    keysToRemove.forEach((k) => localStorage.removeItem(k));
 
-  // 세션 스토리지도 혹시 쓰는 중이면 함께 정리
-  sessionStorage.clear();
+    sessionStorage.clear();
 
-  // 상태 초기화
-  set({
-    accessToken: null,
-    refreshToken: null,
-    member: null,
-    isLoggedIn: false,
-  });
-},
-
+    set({
+      accessToken: null,
+      refreshToken: null,
+      member: null,
+      isLoggedIn: false,
+    });
+  },
 }));

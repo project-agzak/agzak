@@ -65,6 +65,7 @@ export type ApiErrorBody = {
 
 export const fortuneAPI = {
   /** 인증된 회원의 오늘 운세 생성/조회 */
+
   createOrFetchToday: () => api.post<FortuneResponse>("/fortune"),
 
   /** 게스트 운세 조회(계산 후 guestId 발급) */
@@ -74,4 +75,5 @@ export const fortuneAPI = {
   /** 운세 타입 상세 조회 */  
   getTypeDetail: (fortuneTypeId: number) =>
     api.get<FortuneTypeDetail>(`/fortune/fortuneType/${fortuneTypeId}`),
+
 };
