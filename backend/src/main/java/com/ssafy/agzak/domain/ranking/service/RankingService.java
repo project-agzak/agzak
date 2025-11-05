@@ -85,8 +85,6 @@ public class RankingService {
                 .build();
     }
 
-    // TODO : 특정 회원이 쿠키 먹고 행운 점수 올리는 서비스에 먼저 점수 갱신 후 반영 필요
-    // rankingService.refreshTodayForMember(memberId);
     @Transactional
     public void refreshTodayForMember(Long memberId) {
         LocalDate d = redisStore.today();
