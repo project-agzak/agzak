@@ -13,8 +13,14 @@ export type CookieDetail = {
 
 export type CookieSortType = "recent" | "score" | "category";
 
+// 쿠키 삭제
 async function remove(cookieId: number): Promise<void> {
   await apiClient.delete(`/cookies/${cookieId}`, { withCredentials: false });
+}
+
+// 쿠키 먹기
+async function useCookie(cookieId: number): Promise<void> {
+  await apiClient.post(`/cookies/${cookieId}`); 
 }
 
 export const cookiesAPI = {
@@ -31,4 +37,6 @@ export const cookiesAPI = {
     api.get<CookieDetail[]>("/cookies", { params: { sortType } }),
 
   remove,
+  useCookie,
 };
+

@@ -185,6 +185,10 @@ type State = {
   // 삭제
   deletingId: string | null;
   deleteCookie: (id: string) => Promise<void>;
+
+  // 쿠키 먹기 
+  eatingId: string | null;
+  eatCookie: (id: string) => Promise<void>;
 };
 
 export const useCookiesStore = create<State>((set, get) => ({
@@ -197,6 +201,8 @@ export const useCookiesStore = create<State>((set, get) => ({
   cache: {},
 
   deletingId: null,
+
+  eatingId: null,
 
   // 목록 조회
   fetchCookies: async (sortType = "recent") => {
@@ -318,6 +324,26 @@ export const useCookiesStore = create<State>((set, get) => ({
       const msg =
         e?.response?.data?.message || e?.message || "쿠키 삭제에 실패했습니다.";
       set({ deletingId: null, error: msg });
+    }
+  },
+
+  eatCookie: async (id) => {
+    if (!id) return;
+    try {
+      set({ eatingId: id, error: null });
+      await cookiesAPI.useCookie(Number(id)); 
+
+      // 성공 시: 목록/캐시/선택 정리
+      set((s) => {
+        const nextItems = s.items.filter((c) => c.id !== id);
+        const nextCache = { ...s.cache };
+        delete nextCache[id];
+        const nextSelected = s.selectedId === id ? null : s.selectedId;
+        return { items: nextItems, cache: nextCache, selectedId: nextSelected, eatingId: null };
+      });
+    } catch (e: any) {
+      const msg = e?.response?.data?.message || e?.message || "쿠키 사용에 실패했습니다.";
+      set({ eatingId: null, error: msg });
     }
   },
 }));

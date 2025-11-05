@@ -10,6 +10,14 @@ import {
   type FortuneTypeDetail,
 } from "@/lib/fortuneAPI";
 
+type Scores = {
+  total_score: number;
+  health: number;
+  achievement: number;
+  love: number;
+  money: number;
+};
+
 type FortuneState = {
   // data
   scores: FortuneScores | null;
@@ -30,7 +38,12 @@ type FortuneState = {
   fetchGuest: (payload: GuestFortuneReq) => Promise<void>;
   fetchTypeDetail: (fortuneTypeId: number, force?: boolean) => Promise<FortuneTypeDetail | null>;
   reset: () => void;
+
+  // 쿠키 효과 합산
+  addStats: (delta: Partial<Omit<Scores, "total_score">>) => void;
 };
+
+
 
 export const useFortuneStore = create<FortuneState>((set, get) => ({
   scores: null,
@@ -103,4 +116,23 @@ export const useFortuneStore = create<FortuneState>((set, get) => ({
       loading: false,
       error: null,
     }),
+
+  addStats: (delta) => {
+    const cur = get().scores;
+    if (!cur) return;
+    const h = cur.health + (delta.health ?? 0);
+    const a = cur.achievement + (delta.achievement ?? 0);
+    const l = cur.love + (delta.love ?? 0);
+    const m = cur.money + (delta.money ?? 0);
+    set({
+      scores: {
+        ...cur,
+        health: h,
+        achievement: a,
+        love: l,
+        money: m,
+        total_score: cur.total_score + (delta.health ?? 0) + (delta.achievement ?? 0) + (delta.love ?? 0) + (delta.money ?? 0),
+      },
+    });
+  },
 }));
