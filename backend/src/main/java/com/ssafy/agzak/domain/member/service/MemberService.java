@@ -1,5 +1,6 @@
 package com.ssafy.agzak.domain.member.service;
 
+import com.ssafy.agzak.domain.auth.repository.OAuthIdentityRepository;
 import com.ssafy.agzak.domain.fortune.dto.response.DetailFortuneDataResponse;
 import com.ssafy.agzak.domain.fortune.dto.response.FortuneAspectResponse;
 import com.ssafy.agzak.domain.fortune.dto.response.FortuneTypeResponse;
@@ -13,6 +14,7 @@ import com.ssafy.agzak.domain.fortune.repository.FortuneRepository;
 import com.ssafy.agzak.domain.member.dto.response.MemberInfoResponse;
 import com.ssafy.agzak.domain.member.entity.Member;
 import com.ssafy.agzak.domain.member.repository.MemberRepository;
+import com.ssafy.agzak.global.security.RefreshTokenStore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -32,6 +34,8 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final FortuneRepository fortuneRepository;
     private final FortuneAspectRepository fortuneAspectRepository;
+    private final OAuthIdentityRepository oauthRepo;
+    private final RefreshTokenStore  refreshStore;
 
     public MemberInfoResponse getMemberInfo(Long memberId) {
         Member member = memberRepository.findById(memberId)
@@ -84,7 +88,7 @@ public class MemberService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 멤버 아이디입니다."));
 
-        if (memberRepository.existsByNickname(nickname)) {
+        if (memberRepository.existsByNickname(nickname) && !member.getNickname().equals(nickname)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 사용중인 닉네임입니다.");
         }
 
@@ -97,7 +101,8 @@ public class MemberService {
     public void deleteMember(long memberId) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 멤버 아이디입니다."));
-
+        oauthRepo.deleteAllByMember(member);
+        refreshStore.delete(memberId);
         member.deleteMember();
     }
 
