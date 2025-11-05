@@ -11,11 +11,12 @@ import com.ssafy.agzak.domain.inventory.entity.Inventory;
 import com.ssafy.agzak.domain.inventory.repository.FortuneCookieRepository;
 import com.ssafy.agzak.domain.member.entity.Member;
 import com.ssafy.agzak.domain.member.exception.NoFortuneFoundException;
+import com.ssafy.agzak.domain.ranking.service.RankingService;
+import com.ssafy.agzak.global.time.DateProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -35,22 +36,33 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class CookieServiceTest {
 
-    @InjectMocks
     private CookieService cookieService;
-
 
     @Mock private FortuneRepository fortuneRepository;
     @Mock private FortuneAspectRepository fortuneAspectRepository;
     @Mock private FortuneCookieRepository fortuneCookieRepository;
+    @Mock private RankingService rankingService;
+    @Mock private DateProvider date;
 
     private Fortune fortune;
     private List<FortuneAspect> aspects;
     private FortuneCookie cookie;
-
     private List<FortuneCookie> sampleCookies;
+
+    private final LocalDate FIXED_TODAY = LocalDate.of(2025, 1, 1);
 
     @BeforeEach
     void setUp() {
+        cookieService = new CookieService(
+                fortuneCookieRepository,
+                fortuneRepository,
+                fortuneAspectRepository,
+                rankingService,
+                date
+        );
+
+        lenient().when(date.today()).thenReturn(FIXED_TODAY);
+
         sampleCookies = List.of(
                 FortuneCookie.builder()
                         .fortuneCookieId(1L)
@@ -72,10 +84,9 @@ class CookieServiceTest {
                         .love(15).money(15).achievement(10).health(10)
                         .status(FortuneCookie.CookieStatus.AVAILABLE)
                         .createdAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")).minusDays(2))
-                        .build());
+                        .build()
+        );
 
-
-        // 오늘 운세 (총점 200 가정)
         Member member = Member.builder()
                 .memberId(10L)
                 .email("test@naver.com")
@@ -87,9 +98,15 @@ class CookieServiceTest {
                 .fortuneTypeId(1L)
                 .build();
 
-        fortune = new Fortune(member, fortuneType, "운세", 200);
+        fortune = Fortune.builder()
+                .member(member)
+                .fortuneType(fortuneType)
+                .date(FIXED_TODAY)
+                .description("운세")
+                .originalTotalScore(200)
+                .totalScore(200)
+                .build();
 
-        // 세부 항목: MONEY 40, LOVE 50, ACHIEVEMENT 60, HEALTH 50
         aspects = List.of(
                 FortuneAspect.builder().fortune(fortune).name(FortuneAspect.AspectName.MONEY).score(40).build(),
                 FortuneAspect.builder().fortune(fortune).name(FortuneAspect.AspectName.LOVE).score(50).build(),
@@ -97,7 +114,6 @@ class CookieServiceTest {
                 FortuneAspect.builder().fortune(fortune).name(FortuneAspect.AspectName.HEALTH).score(50).build()
         );
 
-        // 먹을 쿠키: love +20, money -10, achievement +5, health +0
         cookie = FortuneCookie.builder()
                 .fortuneCookieId(99L)
                 .inventory(Inventory.builder().inventoryId(7L).build())
@@ -109,10 +125,6 @@ class CookieServiceTest {
     }
 
     @Test
-    void useCookie() {
-    }
-
-    @Test
     @DisplayName("최신순 정렬")
     void sortByRecent() {
         when(fortuneCookieRepository.findAllByMember(1L))
@@ -120,11 +132,9 @@ class CookieServiceTest {
 
         List<CookieResponse> result = cookieService.getFortuneCookie(1L, "recent");
 
-        // createdAt 기준 최신순 (2 → 1 → 3)
         assertThat(result).extracting(CookieResponse::fortuneCookieId)
                 .containsExactly(2L, 1L, 3L);
     }
-
 
     @Test
     @DisplayName("점수 내림차순 정렬")
@@ -134,8 +144,7 @@ class CookieServiceTest {
 
         List<CookieResponse> result = cookieService.getFortuneCookie(1L, "score");
 
-        assertThat(result).extracting(cookieResponse -> cookieResponse.achievement() + cookieResponse.health()
-                        + cookieResponse.love() + cookieResponse.money())
+        assertThat(result).extracting(r -> r.achievement() + r.health() + r.love() + r.money())
                 .isSortedAccordingTo(Comparator.reverseOrder());
     }
 
@@ -147,47 +156,35 @@ class CookieServiceTest {
 
         List<CookieResponse> result = cookieService.getFortuneCookie(1L, "category");
 
-        // ACHIEVEMENT → LOVE → MONEY
-        assertThat(result).extracting(cookieResponse -> cookieResponse.type())
+        assertThat(result).extracting(CookieResponse::type)
                 .containsExactly("ACHIEVEMENT", "LOVE", "MONEY");
     }
 
     @Test
     @DisplayName("쿠키를 사용하면 각 Aspect 점수 가산, 쿠키 상태 USED, 총점 가산")
     void useCookie_success() {
-        // given
         Long memberId = 1L;
         Long cookieId = 99L;
 
-        given(fortuneRepository.findByMember_MemberIdAndDate(memberId, LocalDate.now(ZoneId.of("Asia/Seoul"))))
+        given(fortuneRepository.findByMember_MemberIdAndDate(memberId, FIXED_TODAY))
                 .willReturn(Optional.of(fortune));
         given(fortuneAspectRepository.findAllByFortune(fortune))
                 .willReturn(aspects);
         given(fortuneCookieRepository.findById(cookieId))
                 .willReturn(Optional.of(cookie));
 
-        int deltaTotal = cookie.getTotalScore(); // 20 + (-10) + 5 + 0 = 15
+        int deltaTotal = cookie.getTotalScore();
 
-        // when
         cookieService.useCookie(memberId, cookieId);
 
-        // then: 각 항목 점수 가산
-        // MONEY: 40 + (-10) = 30
         assertThat(get(aspects, FortuneAspect.AspectName.MONEY).getScore()).isEqualTo(30);
-        // LOVE: 50 + 20 = 70
         assertThat(get(aspects, FortuneAspect.AspectName.LOVE).getScore()).isEqualTo(70);
-        // ACHIEVEMENT: 60 + 5 = 65
         assertThat(get(aspects, FortuneAspect.AspectName.ACHIEVEMENT).getScore()).isEqualTo(65);
-        // HEALTH: 50 + 0 = 50
         assertThat(get(aspects, FortuneAspect.AspectName.HEALTH).getScore()).isEqualTo(50);
 
-        // 쿠키 상태 USED
         assertThat(cookie.getStatus()).isEqualTo(FortuneCookie.CookieStatus.USED);
-
-        // 총점 가산
         assertThat(fortune.getTotalScore()).isEqualTo(200 + deltaTotal);
 
-        // 저장 호출은 안 해도 됨(더티체킹) — 호출 유무를 굳이 검증하고 싶다면 아래처럼도 가능
         verify(fortuneAspectRepository, never()).saveAll(anyList());
         verify(fortuneCookieRepository, never()).save(any());
         verify(fortuneRepository, never()).save(any());
@@ -196,11 +193,9 @@ class CookieServiceTest {
     @Test
     @DisplayName("오늘 운세가 없으면 NoFortuneFoundException")
     void useCookie_noFortune() {
-        // given
-        given(fortuneRepository.findByMember_MemberIdAndDate(anyLong(), any()))
+        given(fortuneRepository.findByMember_MemberIdAndDate(anyLong(), any(LocalDate.class)))
                 .willReturn(Optional.empty());
 
-        // when/then
         assertThatThrownBy(() -> cookieService.useCookie(1L, 99L))
                 .isInstanceOf(NoFortuneFoundException.class);
     }
@@ -208,15 +203,13 @@ class CookieServiceTest {
     @Test
     @DisplayName("쿠키 ID가 없으면 IllegalArgumentException")
     void useCookie_invalidCookieId() {
-        // given
-        given(fortuneRepository.findByMember_MemberIdAndDate(anyLong(), any()))
+        given(fortuneRepository.findByMember_MemberIdAndDate(anyLong(), eq(FIXED_TODAY)))
                 .willReturn(Optional.of(fortune));
         given(fortuneAspectRepository.findAllByFortune(fortune))
                 .willReturn(aspects);
         given(fortuneCookieRepository.findById(anyLong()))
                 .willReturn(Optional.empty());
 
-        // when/then
         assertThatThrownBy(() -> cookieService.useCookie(1L, 404L))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("유효하지 않은 쿠키 아이디");
