@@ -3,61 +3,81 @@ package com.ssafy.agzak.docs;
 import com.ssafy.agzak.domain.inventory.dto.response.CookieResponse;
 import com.ssafy.agzak.global.error.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
+@Tag(name = "포춘 쿠키", description = "포춘 쿠키(보유/사용/조회) API")
+@SecurityRequirement(name = "BearerAuth") // /api/v1/cookies 전체는 인증 필요
 public interface FortuneCookieApiDocs {
 
     @Operation(
             summary = "쿠키 상세 조회",
-            description = "특정 쿠키 상세 조회"
+            description = "쿠키 ID로 단일 쿠키의 상세 정보를 조회합니다."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "쿠키 조회 성공",
+            @ApiResponse(responseCode = "200", description = "조회 성공",
                     content = @Content(schema = @Schema(implementation = CookieResponse.class))),
+            @ApiResponse(responseCode = "404", description = "존재하지 않는 쿠키",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    public ResponseEntity<CookieResponse> getCookieInfo(@PathVariable Long cookieId);
+    ResponseEntity<CookieResponse> getCookieInfo(
+            @Parameter(description = "쿠키 ID", example = "1")
+            @PathVariable Long cookieId
+    );
 
     @Operation(
-            summary = "쿠키 상세 조회",
-            description = "특정 쿠키 상세 조회"
+            summary = "쿠키 사용",
+            description = """
+                오늘자 회원 운세에 쿠키 효과를 적용합니다.<br/>
+                • 성공 시: 각 영역 점수 및 총점이 쿠키 수치만큼 반영되고, 쿠키 상태가 <code>USED</code>로 변경됩니다.
+                """
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "쿠키 사용 성공"),
-            @ApiResponse(responseCode = "404", description = "오늘 조회한 운세 없음",
+            @ApiResponse(responseCode = "404", description = "오늘 운세 없음 또는 쿠키 미존재",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    public ResponseEntity<?> useCookie(@PathVariable Long cookieId);
-
+    ResponseEntity<Void> useCookie(
+            @Parameter(description = "사용할 쿠키 ID", example = "1")
+            @PathVariable Long cookieId
+    );
 
     @Operation(
             summary = "보유 쿠키 목록 조회",
             description = """
-        사용자가 보유한 쿠키 목록을 조회합니다.
-        <br><br>
-        <b>정렬 기준(sortType):</b><br>
-        • <code>recent</code> : 최신순 (기본값)<br>
-        • <code>score</code> : 운세 총점 높은 순<br>
-        • <code>category</code> : 카테고리명 가나다순<br>
-        """
+                사용자가 보유한 쿠키(사용 가능 상태만)를 조회합니다.<br/><br/>
+                <b>정렬 기준(sortType)</b><br/>
+                • <code>recent</code> : 생성 최신순 (기본값)<br/>
+                • <code>score</code> : 쿠키 총점 높은 순<br/>
+                • <code>category</code> : 쿠키 타입명(카테고리) 가나다순
+                """
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공",
                     content = @Content(
                             mediaType = "application/json",
                             array = @ArraySchema(schema = @Schema(implementation = CookieResponse.class))
-                    )
-            ),
-            @ApiResponse(responseCode = "401", description = "인증되지 않은 사용자"),
-            @ApiResponse(responseCode = "500", description = "서버 오류")
+                    )),
+            @ApiResponse(responseCode = "401", description = "인증 실패",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    public ResponseEntity<List<CookieResponse>> getInventory(@RequestParam(defaultValue = "recent") String sortType);
+    ResponseEntity<List<CookieResponse>> getInventory(
+            @Parameter(
+                    description = "정렬 기준",
+                    example = "recent",
+                    schema = @Schema(allowableValues = {"recent", "score", "category"}, defaultValue = "recent")
+            )
+            @RequestParam(defaultValue = "recent") String sortType
+    );
 }

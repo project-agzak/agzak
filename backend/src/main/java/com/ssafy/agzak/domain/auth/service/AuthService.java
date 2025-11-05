@@ -8,6 +8,7 @@ import com.ssafy.agzak.domain.auth.dto.request.RegisterWithGuestRequest;
 import com.ssafy.agzak.domain.auth.dto.response.TokenResponse;
 import com.ssafy.agzak.domain.fortune.dto.response.KakaoAddressResponse;
 import com.ssafy.agzak.domain.fortune.service.GeocodingService;
+import com.ssafy.agzak.domain.guest.dto.GuestProfile;
 import com.ssafy.agzak.domain.guest.support.GuestProfileStore;
 import com.ssafy.agzak.domain.inventory.entity.Inventory;
 import com.ssafy.agzak.domain.inventory.repository.InventoryRepository;
@@ -36,6 +37,7 @@ import java.util.HashMap;
 
 import java.time.Duration;
 import java.time.LocalTime;
+import java.util.function.Function;
 
 @Service
 @RequiredArgsConstructor
@@ -71,7 +73,8 @@ public class AuthService {
     // === 카카오 로그인 메인 진입 ===
     @Transactional
     public SocialLoginResponse kakaoLogin(KakaoLoginRequest req) {
-        if (req.authCode() == null || req.authCode().isBlank() || req.redirectUri() == null || req.redirectUri().isBlank()) {
+        if (req.authCode() == null || req.authCode().isBlank()
+                || req.redirectUri() == null || req.redirectUri().isBlank()) {
             throw new BadCredentialsException("authCode와 redirectUri가 필요합니다.");
         }
 
@@ -87,27 +90,18 @@ public class AuthService {
         if (me == null || me.getId() == null) throw new BadCredentialsException("카카오 인증 실패");
 
         String sub = String.valueOf(me.getId());
+        String kakaoEmail = me.email();     // null 가능
+        String kakaoNick  = me.nickname();  // null 가능
+
         var existing = oauthRepo.findByIdProviderAndIdSub(OAuthProvider.KAKAO, sub);
-        if (existing.isPresent()) {
-            // 기존 회원 → 바로 로그인
-            return SocialLoginResponse.ok(issueTokens(existing.get().getMember().getMemberId()));
-        }
 
-        // (선택) 이메일 동의값 가공
-        String kakaoEmail = me.email();      // null 가능
-        String kakaoNick  = me.nickname();   // null 가능
-
-        // 3) 게스트 즉시 전환 경로
-        if (req.guestId() != null && !req.guestId().isBlank()) {
-            var gp = guestStore.find(req.guestId());
-            if (gp == null) throw new BadCredentialsException("게스트 정보가 만료되었거나 없습니다.");
-
-            String nickname = gp.nickname() != null ? gp.nickname() :
-                    (kakaoNick != null ? kakaoNick : "user");
+        // 공통: 게스트 즉시 전환 함수
+        Function<GuestProfile, TokenResponse> signupFromGuest = gp -> {
+            String nickname = gp.nickname() != null ? gp.nickname()
+                    : (kakaoNick != null && !kakaoNick.isBlank() ? kakaoNick : "user");
             if (memberRepo.existsByNickname(nickname)) {
                 nickname = nickname + "_" + (int)(Math.random()*900+100);
             }
-
             var m = Member.builder()
                     .email(kakaoEmail)
                     .password(null)
@@ -121,26 +115,66 @@ public class AuthService {
                     .status(Member.MemberStatus.ACTIVE)
                     .build();
             memberRepo.save(m);
-
             ensureInventory(m);
 
+            // 현 시점의 sub를 새 회원에 바인딩
             oauthRepo.save(OAuthIdentity.builder()
                     .id(OAuthIdentityId.builder().provider(OAuthProvider.KAKAO).sub(sub).build())
                     .member(m)
                     .build());
 
-            guestStore.delete(req.guestId());
-            return SocialLoginResponse.ok(issueTokens(m.getMemberId()));
+            return issueTokens(m.getMemberId());
+        };
+
+        // (1) 기존 연동이 있는 경우
+        if (existing.isPresent()) {
+            var linked = existing.get().getMember();
+
+            if (linked.getStatus() == Member.MemberStatus.ACTIVE) {
+                // A) 기존 활성 회원 → 즉시 로그인
+                return SocialLoginResponse.ok(issueTokens(linked.getMemberId()));
+            }
+
+            // B) 기존 연결이 탈퇴 회원 → 연동 제거 후 새 가입 흐름
+            oauthRepo.delete(existing.get()); // 고유키 충돌 방지 위해 바로 삭제
+
+            if (req.guestId() != null && !req.guestId().isBlank()) {
+                var gp = guestStore.find(req.guestId());
+                if (gp == null) throw new BadCredentialsException("게스트 정보가 만료되었거나 없습니다.");
+
+                // 게스트 즉시 전환 가입 + 토큰 발급
+                var tokens = signupFromGuest.apply(gp);
+                guestStore.delete(req.guestId());
+                return SocialLoginResponse.ok(tokens);
+            } else {
+                // 게스트가 없으면 → 티켓 발급 후 추가정보 단계
+                var payload = new HashMap<String, String>();
+                payload.put("provider", OAuthProvider.KAKAO.name());
+                payload.put("sub", sub);
+                if (kakaoEmail != null) payload.put("email", kakaoEmail);
+
+                String ticket = ticketStore.create(payload);
+                return SocialLoginResponse.needInfo(ticket, kakaoEmail, kakaoNick);
+            }
         }
 
-        // 4) 신규 & 게스트 아님 → 추가정보 필요 (티켓 발급)
-        var payload = new HashMap<String, String>();
-        payload.put("provider", OAuthProvider.KAKAO.name());
-        payload.put("sub", sub);
-        if (kakaoEmail != null) payload.put("email", kakaoEmail);
+        // (2) 연동 자체가 없을 때
+        if (req.guestId() != null && !req.guestId().isBlank()) {
+            var gp = guestStore.find(req.guestId());
+            if (gp == null) throw new BadCredentialsException("게스트 정보가 만료되었거나 없습니다.");
 
-        String ticket = ticketStore.create(payload);
-        return SocialLoginResponse.needInfo(ticket, kakaoEmail, kakaoNick);
+            var tokens = signupFromGuest.apply(gp);
+            guestStore.delete(req.guestId());
+            return SocialLoginResponse.ok(tokens);
+        } else {
+            var payload = new HashMap<String, String>();
+            payload.put("provider", OAuthProvider.KAKAO.name());
+            payload.put("sub", sub);
+            if (kakaoEmail != null) payload.put("email", kakaoEmail);
+
+            String ticket = ticketStore.create(payload);
+            return SocialLoginResponse.needInfo(ticket, kakaoEmail, kakaoNick);
+        }
     }
 
     // === 카카오 완료: 티켓 + 추가정보로 가입 완료 ===

@@ -8,6 +8,7 @@ import com.ssafy.agzak.domain.inventory.dto.response.CookieResponse;
 import com.ssafy.agzak.domain.inventory.entity.FortuneCookie;
 import com.ssafy.agzak.domain.inventory.repository.FortuneCookieRepository;
 import com.ssafy.agzak.domain.member.exception.NoFortuneFoundException;
+import com.ssafy.agzak.domain.ranking.service.RankingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +24,7 @@ public class CookieService {
     private final FortuneCookieRepository fortuneCookieRepository;
     private final FortuneRepository fortuneRepository;
     private final FortuneAspectRepository fortuneAspectRepository;
+    private final RankingService rankingService;
 
     public CookieResponse getCookieInfo(Long cookieId) {
         FortuneCookie cookie = fortuneCookieRepository.findById(cookieId)
@@ -51,6 +53,7 @@ public class CookieService {
 
         cookie.updateStatus();
         fortune.updateScore(cookie.getTotalScore());
+        rankingService.refreshTodayForMember(memberId);
     }
 
     public List<CookieResponse> getFortuneCookie(Long memberId, String sortType) {

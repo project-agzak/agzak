@@ -33,8 +33,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/register", "/api/v1/auth/login").permitAll()
                         .requestMatchers("/api/v1/auth/register/with-guest", "/api/v1/auth/check-email").permitAll()
                         .requestMatchers("/api/v1/auth/kakao/login", "/api/v1/auth/kakao/complete").permitAll()
-                        // 게스트 운세 조회/좌표 조회 등 비회원 접근
+                        // 게스트 운세 조회/좌표/랭킹 조회 등 비회원 접근
                         .requestMatchers("/api/v1/fortune/guest", "/api/v1/fortune/city").permitAll()
+                        .requestMatchers("/api/v1/rankings/today", "/api/v1/rankings/{date}").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
