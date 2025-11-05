@@ -35,5 +35,13 @@ export default defineConfig({
       },
     }),
   ],
-
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://k13b102.p.ssafy.io:18082',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
 });

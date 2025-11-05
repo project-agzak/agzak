@@ -1,4 +1,3 @@
-// 변경점: 선택 시 테두리 제거 + 통통 튀는 애니메이션 적용
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { FortuneBubble } from "@/components/atoms/FortuneBubble";
