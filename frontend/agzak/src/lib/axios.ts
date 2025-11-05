@@ -3,13 +3,10 @@ import axios, { AxiosError } from "axios";
 
 export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
-  timeout: Number(import.meta.env.VITE_API_TIMEOUT ?? 10000),
-  withCredentials: true, // 서버에서 쿠키 인증을 쓴다면 유지
-  headers: {
-    "Content-Type": "application/json",
-    Accept: "application/json",
-  },
+  withCredentials: true,           // 쿠키 인증이면 유지, JWT만 쓰면 있어도 무방
+  headers: { "Content-Type": "application/json" },
 });
+
 
 // ✅ 요청 인터셉터: 토큰 붙이기
 apiClient.interceptors.request.use((config) => {

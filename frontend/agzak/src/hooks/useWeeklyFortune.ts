@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from "react"
 import { useMembersStore } from "@/store/useMembersStore"
-import type { MemberGraphPoint } from "@/lib/mainAPI"
+import type { MemberGraphPoint } from "@/types/fortune"
 
 export type WeeklyBarData = { day: string; base: number; enhanced: number }
 

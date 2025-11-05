@@ -1,41 +1,73 @@
 // src/adapters/fortuneAdapter.ts
-import type { FortuneDetail } from "@/lib/mainAPI"
-
-export type FortuneGaugeColor = "green" | "blue" | "pink" | "yellow" | "gray"
-export type FortuneData = {
-    title: string
-    cardName: string
-    imgSrc: string
-    desc: string
-    stats: { label: string; value: number; color: FortuneGaugeColor }[]
-}
-    
-export const COLOR_MAP: Record<string, FortuneGaugeColor> = {
-    "건강": "green", "건강운": "green",
-    "성취": "blue",  "성취운": "blue",
-    "애정": "pink",  "애정운": "pink",
-    "금전": "yellow","금전운": "yellow",
-}
+import type { FortuneData, AspectKey, FortuneAspectUI, FortuneDetail } from "@/types/fortune";
   
-const CARD_IMG_BY_TYPE: Record<string, string> = {
-  "건강": "/images/fortune-cards/health.png",
-  "성취": "/images/fortune-cards/achievement.png",
-  "애정": "/images/fortune-cards/love.png",
-  "금전": "/images/fortune-cards/money.png",
+export type FortuneGaugeColor = "green" | "blue" | "pink" | "yellow";
+export const COLOR_MAP: Record<string, FortuneGaugeColor> = {
+  건강운: "green",
+  성취운: "blue",
+  애정운: "pink",
+  금전운: "yellow",
+};
+const META: Record<AspectKey, { label: string; colorClass: string }> = {
+  money:       { label: "금전운",  colorClass: "bg-[#F4C542]" },
+  love:        { label: "애정운",  colorClass: "bg-[#F48BA0]" },
+  achievement: { label: "성취운",  colorClass: "bg-[#6CA7FF]" },
+  health:      { label: "건강운",  colorClass: "bg-[#59CC8B]" },
 }
-    
-export function toFortuneData(api: FortuneDetail): FortuneData {
-    const typeName = api.fortuneType?.name ?? "오늘의 운세"
-    return {
-      title: typeName,
-      cardName: "포춘 쿠키",
-      imgSrc: CARD_IMG_BY_TYPE[typeName] ?? "/images/fortune-cards/default.png",
-      desc: api.description ?? "",
-      stats: (api.fortuneAspects ?? []).map(a => ({
-        label: `${a.name}운`,
-        value: a.score ?? 0,
-        color: COLOR_MAP[a.name] ?? "gray",
-      })),
+
+const ORDER: AspectKey[] = ["health", "achievement", "love", "money"];
+      
+export function toFortuneData(detail: FortuneDetail): FortuneData {
+  const map = new Map<AspectKey, FortuneAspectUI>();
+  // API가 한글 이름을 보낼 경우를 위한 매핑
+  const nameMap: Record<string, AspectKey> = {
+    "금전": "money", "금전운": "money",
+    "애정": "love", "애정운": "love",
+    "성취": "achievement", "성취운": "achievement",
+    "건강": "health", "건강운": "health",
+  };
+
+  detail.fortuneAspects?.forEach(a => {
+    const mappedName = nameMap[a.name] || a.name;
+    const key = mappedName as AspectKey;
+    if (!key || !(key in META)) return;
+    const m = META[key];
+    if (!m) return;
+    map.set(key, { key, label: m.label, colorClass: m.colorClass,
+      score: Number(a.score) || 0, original: Number(a.original) || 0 });
+  });
+
+  ORDER.forEach(k => {
+    if (!map.has(k)) {
+      const m = META[k];
+      map.set(k, { key: k, label: m.label, colorClass: m.colorClass, score: 0, original: 0 });
     }
+  });
+
+  return {
+    totalScore: Number(detail.totalScore) || 0,
+    originalTotalScore: Number(detail.originalTotalScore) || 0,
+    aspects: ORDER.map(k => map.get(k)!),
+    description: detail.description ?? "",
+  };
   }
   
+type ScoresLike = {
+  health?: number;
+  achievement?: number;
+  love?: number;
+  money?: number;
+};
+
+export function toGaugeStats(scores?: ScoresLike) {
+  const h = scores?.health ?? 0;
+  const a = scores?.achievement ?? 0;
+  const l = scores?.love ?? 0;
+  const m = scores?.money ?? 0;
+  return [
+    { label: "건강운", value: h, color: "green" as const },
+    { label: "성취운", value: a, color: "blue" as const },
+    { label: "애정운", value: l, color: "pink" as const },
+    { label: "금전운", value: m, color: "yellow" as const },
+  ];
+}

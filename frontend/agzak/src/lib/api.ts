@@ -3,10 +3,11 @@ import type { AxiosRequestConfig, AxiosResponse } from "axios";
 
 import { apiClient } from "./axios";
 
+export type ApiError = { status?: number; code?: string | number; message: string; raw?: any };
 export type ApiResponse<T> = {
   ok: boolean;
-  data?: T;
-  error?: { code?: string | number; message: string };
+  data?: T | undefined;
+  error?: ApiError;
 };
 
 async function request<T>(config: AxiosRequestConfig): Promise<ApiResponse<T>> {
@@ -23,12 +24,11 @@ async function request<T>(config: AxiosRequestConfig): Promise<ApiResponse<T>> {
 
   } catch (e: any) {
     const status = e?.response?.status;
-    const message =
-      e?.response?.data?.message ||
-      e?.message ||
-      "요청 처리 중 오류가 발생했습니다.";
-    return { ok: false, error: { code: status, message } };
-  }
+    const raw = e?.response?.data;
+    const message = raw?.message ?? e?.message ?? "Unexpected error";
+    console.warn("[API ERROR]", status, raw);
+      return { ok: false, error: { status, code: status, message, raw } };
+    }
 }
 
 export const api = {

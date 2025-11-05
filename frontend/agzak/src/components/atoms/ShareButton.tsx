@@ -9,70 +9,88 @@ type ShareButtonProps = {
   text?: string;           // 공유 본문
   url?: string;            // 공유 링크 (기본: 현재 주소)
   files?: File[];          // Web Share Level 2 (선택)
-  onShared?: () => void;   // 성공 콜백(선택)
+  onShared?: () => void;   // ✅ 성공 콜백(네이티브/복사 모두)
+  className?: string;      // 선택: 추가 클래스
 };
 
 export default function ShareButton({
   label = "공유하기",
   width = 260,
-  title = "내 운세 결과",
-  text = "오늘의 운세 결과를 공유해요.",
+  title = "아그작",
+  text = "아그작에서 오늘의 운세를 확인해보세요!",
   url = typeof window !== "undefined" ? window.location.href : "",
   files,
   onShared,
+  className,
 }: ShareButtonProps) {
   const [pressed, setPressed] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
 
+  // 타입 안전한 가드
+  const canNativeShare = typeof navigator !== "undefined" && !!(navigator as any).share;
+  const canShareFiles =
+    typeof navigator !== "undefined" &&
+    !!(navigator as any).canShare &&
+    files?.length &&
+    (navigator as any).canShare({ files });
+
   const shareOrCopy = async () => {
-    const nav: any = navigator;
-    const canWebShare = typeof navigator !== "undefined" && "share" in navigator;
-
+    if (busy) return; // 중복 클릭 방지
+    setBusy(true);
     try {
-      setBusy(true);
-
-      // 파일 공유 가능하면 파일 포함
-      if (files?.length && nav?.canShare?.({ files })) {
-        await nav.share({ title, text, files });
-        onShared?.();
+      // 1) 파일까지 포함 가능한 경우
+      if (canShareFiles) {
+        await (navigator as any).share({ title, text, files });
+        onShared?.(); // ✅ 보상
         return;
       }
 
-      // 일반 공유
-      if (canWebShare) {
+      // 2) 일반 네이티브 공유
+      if (canNativeShare) {
         await (navigator as any).share({ title, text, url });
-        onShared?.();
+        onShared?.(); // ✅ 보상
         return;
       }
 
-      // 폴백: 링크 복사
+      // 3) 폴백: 링크 복사
       await navigator.clipboard.writeText(url);
+      // 사용자 알림(선호에 따라 제거 가능)
       alert("이 브라우저는 시스템 공유를 지원하지 않아 링크를 복사했어요.");
+      onShared?.(); // ✅ 폴백 성공도 보상
     } catch (err: any) {
-      // 사용자가 취소하면 조용히 무시, 그 외엔 마지막 폴백
-      if (err?.name !== "AbortError") {
-        try {
-          await navigator.clipboard.writeText(url);
-          alert("공유 중 오류가 있어 링크를 복사했어요.");
-        } catch {
-          prompt("공유가 지원되지 않아 아래 링크를 복사해 주세요:", url);
-        }
+      // 사용자가 네이티브 공유를 취소(Abort)한 경우엔 조용히 종료
+      if (err?.name === "AbortError") return;
+
+      // 마지막 폴백 재시도(클립보드)
+      try {
+        await navigator.clipboard.writeText(url);
+        alert("공유 중 오류가 있어 링크를 복사했어요.");
+        onShared?.(); // ✅ 폴백 성공 보상
+      } catch {
+        // 정말 복사도 실패하면 사용자가 직접 복사하도록 안내
+        // (prompt는 일부 환경에서 차단될 수 있음)
+        // 보상은 부여하지 않음
+        prompt("공유가 지원되지 않아 아래 링크를 복사해 주세요:", url);
       }
     } finally {
       setBusy(false);
+      setPressed(false);
     }
   };
 
   return (
     <div
-      className={`btnL-wrap ${pressed ? "is-pressed" : ""}`}
+      className={`btnL-wrap ${pressed ? "is-pressed" : ""} ${className ?? ""}`}
       style={{ "--btn-width": `${width}px` } as React.CSSProperties}
+      aria-busy={busy}
+      aria-live="polite"
     >
       <img
         src="/images/Button_Large.svg"
-        alt="Button Large"
+        alt=""
         className="btnL-img"
         draggable={false}
+        aria-hidden="true"
       />
       <button
         type="button"
@@ -82,6 +100,7 @@ export default function ShareButton({
         onMouseUp={() => setPressed(false)}
         onMouseLeave={() => setPressed(false)}
         disabled={busy}
+        aria-disabled={busy}
       >
         {busy ? "공유 준비중…" : label}
       </button>

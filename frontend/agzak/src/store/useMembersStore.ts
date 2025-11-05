@@ -1,7 +1,8 @@
 // src/stores/calendarStore.ts
 import { create } from "zustand"
-import { MemberAPI, type MemberGraphPoint } from "@/lib/mainAPI"
-import { toFortuneData, type FortuneData } from "@/adapters/fortuneAdapter"
+import { MemberAPI } from "@/lib/mainAPI"
+import { toFortuneData } from "@/adapters/fortuneAdapter"
+import type { FortuneData, MemberGraphPoint } from "@/types/fortune";
 
 /** 유틸: 날짜 포맷/계산 */
 function fmt(d: Date) {
@@ -20,11 +21,11 @@ type MembersState = {
 
   // fortunes (날짜별 캐시)
   fortuneCache: Record<string, FortuneData | null>
-  fortuneLoading: boolean
-  fortuneError: string | null
+  fortuneLoading: Record<string, boolean>
+  fortuneError: Record<string, string | null>
 
   fetchGraphsLast7Days: () => Promise<void>
-  fetchFortuneByDate: (date: string) => Promise<FortuneData | null>
+  fetchFortuneByDate: (date: string, opts?: { noCache?: boolean }) => Promise<FortuneData | null>
 }
 
 export const useMembersStore = create<MembersState>((set, get) => ({
@@ -34,8 +35,8 @@ export const useMembersStore = create<MembersState>((set, get) => ({
   graphsError: null,
 
   fortuneCache: {},
-  fortuneLoading: false,
-  fortuneError: null,
+  fortuneLoading: {},
+  fortuneError: {},
 
   // actions - graphs
   fetchGraphsLast7Days: async () => {
@@ -44,38 +45,38 @@ export const useMembersStore = create<MembersState>((set, get) => ({
 
     set({ graphsLoading: true, graphsError: null })
     const res = await MemberAPI.getGraphs(startDate, endDate)
-    if (res.ok) set({ graphs: res.data!, graphsLoading: false })
+    if (res.ok) set({ graphs: res.data, graphsLoading: false })
     else set({ graphsLoading: false, graphsError: res.error?.message ?? "운세 그래프 조회 실패" })
   },
 
   // actions - fortunes (with cache)
-  fetchFortuneByDate: async (date) => {
-    const hit = get().fortuneCache[date]
-    if (hit !== undefined) return hit
+  fetchFortuneByDate: async (date, opts) => {
+    const key = date.length === 10 ? date : new Date(date).toISOString().slice(0,10)
 
-    set({ fortuneLoading: true, fortuneError: null })
-    const res = await MemberAPI.getFortuneByDate(date)
+    if (!opts?.noCache) {
+      const hit = get().fortuneCache[key]
+      if (hit !== undefined) return hit
+    }
+    set(s => ({
+      fortuneLoading: { ...s.fortuneLoading, [key]: true },
+      fortuneError: { ...s.fortuneError, [key]: null },
+    }))
+
+    const res = await MemberAPI.getFortuneByDate(key)
 
     if (res.ok) {
-      const ui = toFortuneData(res.data!)
+      const ui = res.data ? toFortuneData(res.data) : null
       set(s => ({
-        fortuneLoading: false,
-        fortuneCache: { ...s.fortuneCache, [date]: ui },
+        fortuneCache: { ...s.fortuneCache, [key]: ui },
+        fortuneLoading: { ...s.fortuneLoading, [key]: false },
       }))
       return ui
     }
-
-    // 404 → 운세 없음으로 캐시
-    const status = (res as any)?.error?.code
-    if (status === 404) {
-      set(s => ({
-        fortuneLoading: false,
-        fortuneCache: { ...s.fortuneCache, [date]: null },
-      }))
-      return null
-    }
-
-    set({ fortuneLoading: false, fortuneError: res.error?.message ?? "운세 조회 실패" })
+    set(s => ({
+      fortuneLoading: { ...s.fortuneLoading, [key]: false },
+      fortuneError: { ...s.fortuneError, [key]: res.error?.message ?? "운세 조회 실패" },
+    }))
     return null
+
   },
 }))
