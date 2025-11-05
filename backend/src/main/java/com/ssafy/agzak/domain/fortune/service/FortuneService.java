@@ -14,6 +14,8 @@ import com.ssafy.agzak.domain.guest.dto.GuestProfile;
 import com.ssafy.agzak.domain.guest.support.GuestProfileStore;
 import com.ssafy.agzak.domain.member.entity.Member;
 import com.ssafy.agzak.domain.member.repository.MemberRepository;
+import com.ssafy.agzak.domain.ranking.service.RankingService;
+import com.ssafy.agzak.global.time.DateProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,17 +30,21 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static com.ssafy.agzak.global.tx.TxAfterCommit.afterCommit;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class FortuneService {
     private RestClient restClient;
     private final AstrologyCalculationService calculationService;
+    private final RankingService rankingService;
     private final FortuneTypeRepository fortuneTypeRepository;
     private final MemberRepository memberRepository;
     private final FortuneRepository fortuneRepository;
     private final FortuneAspectRepository fortuneAspectRepository;
     private final GuestProfileStore guestStore;
+    private final DateProvider date;
 
     @Value("${gms.base-url}")
     private String gmsBaseUrl;
@@ -194,14 +200,19 @@ public class FortuneService {
         FortuneType fortuneType = fortuneTypeRepository.findFortuneTypeByFortuneTypeId(fortuneResponse.type().id())
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 운세 타입입니다."));
 
+        LocalDate today = date.today();
+
         Fortune fortune = Fortune.builder()
                 .member(member)
                 .fortuneType(fortuneType)
+                .date(today)
                 .description(fortuneResponse.scores().totalSummary())
-                .score(fortuneResponse.scores().totalScore())
+                .originalTotalScore(fortuneResponse.scores().totalScore())
+                .totalScore(fortuneResponse.scores().totalScore())
                 .build();
 
         fortuneRepository.save(fortune);
+        afterCommit(() -> rankingService.refreshTodayForMember(memberId));
 
         saveAspect(fortune, FortuneAspect.AspectName.LOVE, fortuneResponse.scores().love());
         saveAspect(fortune, FortuneAspect.AspectName.MONEY, fortuneResponse.scores().money());

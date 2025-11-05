@@ -9,6 +9,7 @@ import com.ssafy.agzak.domain.inventory.entity.FortuneCookie;
 import com.ssafy.agzak.domain.inventory.repository.FortuneCookieRepository;
 import com.ssafy.agzak.domain.member.exception.NoFortuneFoundException;
 import com.ssafy.agzak.domain.ranking.service.RankingService;
+import com.ssafy.agzak.global.time.DateProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
+
+import static com.ssafy.agzak.global.tx.TxAfterCommit.afterCommit;
 
 @Service
 @Transactional(readOnly = true)
@@ -25,6 +28,7 @@ public class CookieService {
     private final FortuneRepository fortuneRepository;
     private final FortuneAspectRepository fortuneAspectRepository;
     private final RankingService rankingService;
+    private final DateProvider date;
 
     public CookieResponse getCookieInfo(Long cookieId) {
         FortuneCookie cookie = fortuneCookieRepository.findById(cookieId)
@@ -35,8 +39,8 @@ public class CookieService {
 
     @Transactional
     public void useCookie(Long memberId, Long cookieId) {
-        Fortune fortune = fortuneRepository.findByMember_MemberIdAndDate(memberId, LocalDate.now())
-                .orElseThrow(() -> new NoFortuneFoundException("오늘 운세가 존재하지 않습니다.", memberId, LocalDate.now()));
+        Fortune fortune = fortuneRepository.findByMember_MemberIdAndDate(memberId, date.today())
+                .orElseThrow(() -> new NoFortuneFoundException("오늘 운세가 존재하지 않습니다.", memberId, date.today()));
         List<FortuneAspect> fortuneAspects = fortuneAspectRepository.findAllByFortune(fortune);
 
         FortuneCookie cookie = fortuneCookieRepository.findById(cookieId)
@@ -53,7 +57,7 @@ public class CookieService {
 
         cookie.updateStatus();
         fortune.updateScore(cookie.getTotalScore());
-        rankingService.refreshTodayForMember(memberId);
+        afterCommit(() -> rankingService.refreshTodayForMember(memberId));
     }
 
     public List<CookieResponse> getFortuneCookie(Long memberId, String sortType) {

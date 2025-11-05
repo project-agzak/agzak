@@ -21,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -56,21 +57,21 @@ class CookieServiceTest {
                         .type(FortuneCookie.CookieType.LOVE)
                         .love(10).money(20).achievement(30).health(40)
                         .status(FortuneCookie.CookieStatus.AVAILABLE)
-                        .createdAt(LocalDateTime.now().minusDays(1))
+                        .createdAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")).minusDays(1))
                         .build(),
                 FortuneCookie.builder()
                         .fortuneCookieId(2L)
                         .type(FortuneCookie.CookieType.MONEY)
                         .love(5).money(10).achievement(15).health(20)
                         .status(FortuneCookie.CookieStatus.AVAILABLE)
-                        .createdAt(LocalDateTime.now().minusHours(1))
+                        .createdAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")).minusHours(1))
                         .build(),
                 FortuneCookie.builder()
                         .fortuneCookieId(3L)
                         .type(FortuneCookie.CookieType.ACHIEVEMENT)
                         .love(15).money(15).achievement(10).health(10)
                         .status(FortuneCookie.CookieStatus.AVAILABLE)
-                        .createdAt(LocalDateTime.now().minusDays(2))
+                        .createdAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")).minusDays(2))
                         .build());
 
 
@@ -103,7 +104,7 @@ class CookieServiceTest {
                 .type(FortuneCookie.CookieType.MIXED)
                 .love(20).money(-10).achievement(5).health(0)
                 .status(FortuneCookie.CookieStatus.AVAILABLE)
-                .createdAt(LocalDateTime.now())
+                .createdAt(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
                 .build();
     }
 
@@ -158,7 +159,7 @@ class CookieServiceTest {
         Long memberId = 1L;
         Long cookieId = 99L;
 
-        given(fortuneRepository.findByMember_MemberIdAndDate(memberId, LocalDate.now()))
+        given(fortuneRepository.findByMember_MemberIdAndDate(memberId, LocalDate.now(ZoneId.of("Asia/Seoul"))))
                 .willReturn(Optional.of(fortune));
         given(fortuneAspectRepository.findAllByFortune(fortune))
                 .willReturn(aspects);
