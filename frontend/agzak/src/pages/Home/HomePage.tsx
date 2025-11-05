@@ -15,9 +15,6 @@ export default function HomePage() {
   const error = useFortuneStore((s) => s.error);     // string | null (없으면 무시 가능)
   const fetchToday = useFortuneStore((s) => s.fetchToday);
 
-  // --- 최초 1회만 호출되도록 가드 ---
-  // 1) 오늘 데이터가 없을 때만 호출
-  // 2) 이미 호출/로딩 중이면 재호출 방지
   useEffect(() => {
     let cancelled = false;
     (async () => {
