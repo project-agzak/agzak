@@ -10,7 +10,6 @@ const colorMap: Record<FortuneGaugeColor, string> = {
   blue: "bg-[#27B1EB]",    // 성취운
   pink: "bg-[#EF4F87]",    // 애정운
   yellow: "bg-[#FEDC00]",  // 금전운
-  gray: "bg-[#FAE8D0]",    // 바탕
 };
 
 interface FortuneGaugeProps {
@@ -22,6 +21,8 @@ interface FortuneGaugeProps {
   color?: FortuneGaugeColor;
   /** 바깥 클래스 */
   className?: string;
+  /** 라벨에 적용할 클래스 */
+  labelClassName?: string;
   /** 라벨 우측에 들어갈 요소 (ex. 토글 아이콘) */
   rightSlot?: React.ReactNode;
 }
@@ -31,6 +32,7 @@ export function FortuneGauge({
   value,
   color = "green",
   className,
+  labelClassName,
   rightSlot,
 }: FortuneGaugeProps) {
   // 0~250 범위 강제
@@ -40,7 +42,7 @@ export function FortuneGauge({
     <div className={cn("w-full space-y-1", className)}>
       {/* 라벨 줄 */}
       <div className="flex items-center justify-between">
-        <span className="text-[15px] font-galmuri-small font-bold text-[#2E2E2E] leading-none">
+        <span className={cn("text-[15px] font-galmuri-small font-bold text-[#2E2E2E] leading-none", labelClassName)}>
           {label}
         </span>
         {rightSlot ? rightSlot : null}
