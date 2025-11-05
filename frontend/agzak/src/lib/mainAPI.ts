@@ -1,6 +1,6 @@
 // src/lib/mainAPI.ts
 import { api, type ApiResponse } from "./api";
-import type { OvenAttemptRequest, OvenAttemptResponse } from "@/types/oven";
+import type { OvenAttemptRequest, OvenAttemptResponse, GameSessionStart } from "@/types/oven";
 import type { FortuneDetail, MemberGraphPoint } from "@/types/fortune";
 
 // 예시 타입들 — Swagger 스키마 보고 실제로 맞춰주세요
@@ -75,7 +75,13 @@ export const MemberAPI = {
 
 // 게임
 export const GameAPI = {
-  /** 한 번의 시도 */
-  attempt: (body: OvenAttemptRequest) =>
-    api.post<OvenAttemptResponse>("/game/attempts", body),
+  /** 세션 시작/재개: 진행 중이면 그 상태 그대로 반환 */
+  startSession: async (): Promise<ApiResponse<GameSessionStart>> => {
+    return await api.post<GameSessionStart>("/game/sessions/start");
+  },
+
+  /** 강화 1회 시도 */
+  attempt: async (body: OvenAttemptRequest): Promise<ApiResponse<OvenAttemptResponse>> => {
+    return await api.post<OvenAttemptResponse>("/game/attempts", body);
+  },
 };
