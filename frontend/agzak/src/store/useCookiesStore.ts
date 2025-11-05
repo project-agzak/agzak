@@ -163,29 +163,126 @@ const mapRaw = (r: CookieDetail): CookieData => {
 };
 
 type State = {
+  // 목록 + 공통 상태
   items: CookieData[];
   loading: boolean;
   error: string | null;
+
+  // 선택/상세 상태
+  selectedId: string | null;
+  loadingDetailId: string | null;
+  cache: Record<string, CookieDetail | null>; // id → 원본 DTO 캐시
+
+  // 목록
   fetchCookies: (sortType?: "recent" | "score" | "category") => Promise<void>;
+
+  // 상세
+  fetchCookieDetail: (id: string, force?: boolean) => Promise<CookieData | null>;
+  select: (id: string | null) => void;         // 선택만
+  open: (id: string) => Promise<void>;         // 선택 + 상세 필요 시 로드
+  reset: () => void;
 };
 
-export const useCookiesStore = create<State>((set) => ({
+export const useCookiesStore = create<State>((set, get) => ({
   items: [],
   loading: false,
   error: null,
+
+  selectedId: null,
+  loadingDetailId: null,
+  cache: {},
+
+  // 목록 조회
   fetchCookies: async (sortType = "recent") => {
     try {
       set({ loading: true, error: null });
-      const { data } = await cookiesAPI.list(sortType);
-      set({
-        items: (data ?? []).map(mapRaw),
-        loading: false,
-        error: null,
-      });
+      const { data } = await cookiesAPI.list(sortType); // axios 스타일 가정
+      const items = (data ?? []).map(mapRaw);
+      set({ items, loading: false, error: null });
     } catch (e: any) {
       const msg =
         e?.response?.data?.message || e?.message || "쿠키 목록 조회 실패";
       set({ loading: false, error: msg });
     }
   },
+
+  // 상세 조회 (캐시 우선)
+  fetchCookieDetail: async (id, force = false) => {
+    const { cache, items } = get();
+
+    // 캐시가 있으면(성공 or 실패) 우선 판단
+    if (!force && Object.prototype.hasOwnProperty.call(cache, id)) {
+      const cached = cache[id];
+      if (!cached) return null; // 이전 실패 캐시
+      // 성공 캐시 → items에 반영 보장
+      const mapped = mapRaw(cached);
+      // 목록에 있으면 업데이트, 없으면 추가
+      const idx = items.findIndex((c) => c.id === id);
+      if (idx >= 0) {
+        const next = items.slice();
+        next[idx] = { ...next[idx], ...mapped };
+        set({ items: next });
+      } else {
+        set({ items: [mapped, ...items] });
+      }
+      return mapped;
+    }
+
+    try {
+      set({ loadingDetailId: id, error: null });
+      const { data } = await cookiesAPI.getById(Number(id));
+      // 성공 응답 캐시
+      set((s) => ({ cache: { ...s.cache, [id]: data ?? null } }));
+
+      if (!data) {
+        set({ loadingDetailId: null });
+        return null;
+      }
+
+      const mapped = mapRaw(data);
+
+      // 목록에 반영(있으면 교체, 없으면 prepend)
+      const idx = get().items.findIndex((c) => c.id === id);
+      if (idx >= 0) {
+        const next = get().items.slice();
+        next[idx] = { ...next[idx], ...mapped };
+        set({ items: next, loadingDetailId: null });
+      } else {
+        set({ items: [mapped, ...get().items], loadingDetailId: null });
+      }
+      return mapped;
+    } catch (e: any) {
+      const msg =
+        e?.response?.data?.message || e?.message || "쿠키 상세 조회 실패";
+      // 실패도 캐시에 남겨 중복 호출 방지(원하면 제거)
+      set((s) => ({
+        cache: { ...s.cache, [id]: null },
+        loadingDetailId: null,
+        error: msg,
+      }));
+      return null;
+    }
+  },
+
+  // 선택만 변경
+  select: (id) => set({ selectedId: id }),
+
+  // 선택 + 상세 없으면 로드
+  open: async (id) => {
+    set({ selectedId: id });
+    const hasCache = Object.prototype.hasOwnProperty.call(get().cache, id);
+    if (!hasCache) {
+      await get().fetchCookieDetail(id);
+    }
+  },
+
+  reset: () =>
+    set({
+      items: [],
+      loading: false,
+      error: null,
+      selectedId: null,
+      loadingDetailId: null,
+      cache: {},
+    }),
 }));

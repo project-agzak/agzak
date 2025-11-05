@@ -1,4 +1,3 @@
-// src/lib/apis/cookiesAPI.ts
 import { api } from "@/lib/api";
 
 export type CookieDetail = {
