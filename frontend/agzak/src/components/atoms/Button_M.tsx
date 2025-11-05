@@ -19,7 +19,6 @@ export function Button_M({
   className,
   onClick,
   disabled = false,
-  type = "button",
 }: ButtonMProps) {
 
   const navigate = useNavigate();

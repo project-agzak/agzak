@@ -49,7 +49,9 @@ export const useRankingStore = create<RankingState>((set, get) => ({
   fetchToday: async (limit) => {
     const finalLimit = limit ?? get().limit;
     set({ loading: true, error: null });
+
     const res = await RankingAPI.getToday(finalLimit);
+
     if (res.ok && res.data) {
       const d = res.data;
       set({
@@ -60,7 +62,10 @@ export const useRankingStore = create<RankingState>((set, get) => ({
         loading: false,
       });
     } else {
-      set({ loading: false, error: res.error ?? "랭킹을 불러오지 못했습니다." });
+      set({
+        loading: false,
+        error: res.error?.message ?? "랭킹을 불러오지 못했습니다.",
+      });
     }
   },
 
@@ -68,7 +73,9 @@ export const useRankingStore = create<RankingState>((set, get) => ({
   fetchByDate: async (date, limit) => {
     const finalLimit = limit ?? get().limit;
     set({ loading: true, error: null });
+
     const res = await RankingAPI.getByDate(date, finalLimit);
+
     if (res.ok && res.data) {
       const d = res.data;
       set({
@@ -79,31 +86,53 @@ export const useRankingStore = create<RankingState>((set, get) => ({
         loading: false,
       });
     } else {
-      set({ loading: false, error: res.error ?? "스냅샷 랭킹을 불러오지 못했습니다." });
+      set({
+        loading: false,
+        error: res.error?.message ?? "스냅샷 랭킹을 불러오지 못했습니다.",
+      });
     }
   },
 
   // --- 내 랭킹(스냅샷)
   fetchMyByDate: async (date) => {
     set({ loading: true, error: null });
+
     const res = await RankingAPI.getMineByDate(date);
+
     if (res.ok && res.data) {
       const { date: myDate, ...me } = res.data as MyRankingRes;
-      set({ myDate, myRanking: me, loading: false });
+      set({
+        myDate,
+        myRanking: me, // LeaderboardItem 형태
+        loading: false,
+      });
     } else {
-      set({ loading: false, error: res.error ?? "내 랭킹을 불러오지 못했습니다." });
+      set({
+        loading: false,
+        error: res.error?.message ?? "내 랭킹을 불러오지 못했습니다.",
+      });
     }
   },
 
   // --- 내 랭킹(오늘)
   fetchMyToday: async () => {
     set({ loading: true, error: null });
-    const res = await RankingAPI.getMineToday();
+
+    // 🔥 여기!! 함수 이름 RankingAPI.getMineToDay 로 맞춰줌
+    const res = await RankingAPI.getMineToDay();
+
     if (res.ok && res.data) {
       const { date: myDate, ...me } = res.data as MyRankingRes;
-      set({ myDate, myRanking: me, loading: false });
+      set({
+        myDate,
+        myRanking: me,
+        loading: false,
+      });
     } else {
-      set({ loading: false, error: res.error ?? "오늘의 내 랭킹을 불러오지 못했습니다." });
+      set({
+        loading: false,
+        error: res.error?.message ?? "오늘의 내 랭킹을 불러오지 못했습니다.",
+      });
     }
   },
 
