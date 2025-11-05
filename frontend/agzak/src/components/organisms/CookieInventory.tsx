@@ -1,5 +1,5 @@
 import { CookieCloverItem } from "@/components/molecules/CookieCloverItem";
-
+import type { FortuneCookieDetail } from "@/types/cookies";
 
 export type CookieData = {
   id: string;

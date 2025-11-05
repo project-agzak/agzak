@@ -38,17 +38,21 @@ function Trend({ pct }: { pct: number }) {
   }
 
   const up = pct > 0;
+  // 🔹 소수점 한 자리로 제한 (예: 18.887 → 18.9%)
+  const displayPct = Math.abs(pct).toFixed(1);
+
   return (
     <div
       className={`flex items-center gap-1 ${
         up ? "text-red-500" : "text-blue-600"
       }`}
     >
-      <span className="font-bitbit">{Math.abs(pct)}%</span>
+      <span className="font-bitbit">{displayPct}%</span>
       <span className="text-xl leading-none">{up ? "↑" : "↓"}</span>
     </div>
   );
 }
+
 
 function ScoreBadge({ score }: { score: number }) {
   return (

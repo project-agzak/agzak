@@ -1,4 +1,6 @@
+
 import  { useEffect } from "react";
+
 import { ExpandableFortune } from "@/components/molecules/ExpandableFortune";
 import { Button_L } from "@/components/atoms/Button_L";
 
