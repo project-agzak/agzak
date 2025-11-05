@@ -11,17 +11,60 @@ import OvenLoading from "@/components/templates/OvenLoading"
 import OvenResult from "@/components/templates/OvenResult"
 import { useOvenGame } from "@/hooks/useOvenGame"
 import { useState } from "react"
+import { Button_L } from "@/components/atoms/Button_L"
 
 export default function EnforcePage() {
   const [helpOpen, setHelpOpen] = useState(false)
-  const game = useOvenGame()
   const [shakeKey, setShakeKey] = useState(0)
   const [view, setView] = useState<"game" | "loading" | "result">("game")
+  const game = useOvenGame()
+  
+  {view === "result" && (
+    <div className="flex flex-col">
+      <OvenResult cookie={game.lastCookie ?? undefined} />
+    </div>
+  )}  
+
+  if (game.initLoading) {
+    return (
+      <main className="min-h-screen py-4">
+        <section className="w-full max-w-[420px] mx-auto px-4"><OvenLoading /></section>
+      </main>
+    );
+  }
+
+  if (game.blocked === "LIMIT") {
+    return (
+       <main className="min-h-screen grid place-items-center">
+         <section className="w-full max-w-[420px] px-4 text-center">
+           <p className="font-galmuri-small mx-4">오늘의 세션 3회를 모두 사용했어요<br /> 내일 다시 도전해봐요!</p>
+           <Button_L label="쿠키 먹으러 가기" to="/cookies" />
+         </section>
+       </main>
+    );
+  }
+  if (game.blocked === "NO_MEMBER") {
+    return (
+      <main className="min-h-screen py-4">
+        <section className="w-full max-w-[420px] mx-auto px-4 text-center">
+          <OvenHeader onHelp={() => setHelpOpen(true)} />
+          <p className="font-galmuri mt-6">로그인이 필요합니다.</p>
+        </section>
+      </main>
+    );
+  }
 
   const handleCook = () => {
+    if (!game.isCompleted) return;      // 안전 가드
     setView("loading")
     setTimeout(() => setView("result"), 3000)
   }
+
+  if (game.initLoading) return (
+    <main className="min-h-screen py-4">
+      <section className="w-full max-w-[420px] mx-auto px-4"><OvenLoading /></section>
+    </main>
+  );
 
   return (
     <main className="min-h-screen py-4">
@@ -47,10 +90,7 @@ export default function EnforcePage() {
                 }}
                 disabled={game.isCompleted || game.loading}
               />
-              <OvenCookButton
-                enabled={game.isCompleted}
-                onClick={handleCook} 
-              />
+            <OvenCookButton enabled={game.isCompleted} onClick={handleCook} />
           <OvenHelpSheet open={helpOpen} onClose={() => setHelpOpen(false)} />
         </div>
       )}
@@ -61,7 +101,7 @@ export default function EnforcePage() {
       )}
       {view === "result" && (
         <div className="flex flex-col">
-          <OvenResult />
+          <OvenResult cookie={game.lastCookie ?? undefined} />
         </div>
       )}
       </section>

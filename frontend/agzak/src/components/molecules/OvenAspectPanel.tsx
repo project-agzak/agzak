@@ -114,7 +114,7 @@ function AspectBtn({
         />
       </button>
       <div className="mt-1 text-xs font-galmuri font-bold text-[#1f1f1f]">
-        +{value}
+        {value > 0 ? `+${value}` : value}
       </div>
     </div>
   )

@@ -1,4 +1,35 @@
 // src/types/oven.ts
+// 세션 상태
+export type GameSessionStatus = "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+
+/** POST /game/sessions/start 응답 */
+export interface GameSessionStart {
+  gameSessionDbId: number;   // int64
+  memberId: number;          // int64
+  gameDate: string;          // "YYYY-MM-DD" (KST)
+  sessionNo: number;         // int32 - 오늘의 회차 (1..3)
+  initialSuccessProb: number;// number - 세션 시작 기준 확률(%)
+  attemptsLimit: number;     // int32 - 한 세션 최대 시도수(=10)
+  status: GameSessionStatus; // "IN_PROGRESS" | "COMPLETED" | "CANCELLED"
+  nextAttemptNo: number;     // int32 - 다음 시도 번호 (1..10)
+  currentBaseProb: number;   // number - 현재 기준 성공확률(%)
+  snapLove: number;          // int32
+  snapMoney: number;         // int32
+  snapAchievement: number;   // int32
+  snapHealth: number;        // int32
+  snapMisfortune: number;    // int32
+}
+
+// 공통 스냅 타입 (UI용)
+export interface OvenSnap {
+  snapLove: number;
+  snapMoney: number;
+  snapAchievement: number;
+  snapHealth: number;
+  snapMisfortune: number;
+}
+
+
 export type OvenAspectName =
   | "MONEY"       // 금전
   | "LOVE"        // 애정
@@ -59,12 +90,4 @@ export interface OvenErrorResponse {
   code: string
   message: string
   path: string
-}
-
-export interface OvenSnap {
-  snapLove: number
-  snapMoney: number
-  snapAchievement: number
-  snapHealth: number
-  snapMisfortune: number
 }

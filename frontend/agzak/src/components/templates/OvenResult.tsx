@@ -11,21 +11,21 @@ import cookieMoney from "@/assets/Cookies/money-cookie.svg"
 import cookieRotten from "@/assets/Cookies/rotten-cookie.svg"
 import speechBubble from "@/assets/ui/speech-bubble.svg"
 import { Button_L } from "@/components/atoms/Button_L"
-import { useEffect } from "react"
+import { useEffect, useMemo } from "react";
 
-
+// 기본값(미연동 테스트)
 const mockFortuneCookie: FortuneCookieResult = {
   fortuneCookieId: 99,
   inventoryId: 15,
   gameSessionId: 42,
-  type: "HEALTH", // 예: 건강 쿠키
+  type: "HEALTH",
   love: 10,
   money: -5,
   achievement: 12,
   health: 48,
   total: 65,
   message: "오늘은 몸과 마음이 모두 건강한 하루네요!",
-}
+};
 
 const cookieImageMap: Record<FortuneCookieResult["type"], string> = {
   HEALTH: cookieHealth,
@@ -42,21 +42,38 @@ const labelMap: Record<FortuneCookieResult["type"], string> = {
   MONEY: "황금색 금전쿠키",
   ACHIEVEMENT: "푸르른 성취쿠키",
   MIXED: "영롱한 믹스쿠키",
-  ROTTEN: "새까만 상한쿠키",
+  ROTTEN: "새까만 실연쿠키",
 }
+
+// 항목별 컬러(양/음 구분)
+const colorByLabel = (label: string, v: number) => {
+  const base =
+    label === "건강운" ? "text-emerald-600" :
+    label === "성취운" ? "text-sky-600"    :
+    label === "애정운" ? "text-pink-600"   :
+    label === "금전운" ? "text-amber-600"  : "text-gray-700";
+
+  if (v === 0) return "text-gray-500";
+  return v > 0 ? base : "text-rose-600";
+};
 
 export default function OvenResult({
   cookie = mockFortuneCookie,
 }: {
-  cookie?: FortuneCookieResult
+  cookie?: FortuneCookieResult;
 }) {
   const imgSrc = cookieImageMap[cookie.type] ?? cookieMixed
-  const stats = [
-    { label: "건강운", value: cookie.health },
-    { label: "성취운", value: cookie.achievement },
-    { label: "애정운", value: cookie.love },
-    { label: "금전운", value: cookie.money },
-  ].filter((s) => s.value !== 0)
+  const stats = useMemo(() => {
+    return [
+      { label: "건강운", value: cookie.health },
+      { label: "성취운", value: cookie.achievement },
+      { label: "애정운", value: cookie.love },
+      { label: "금전운", value: cookie.money },
+    ]
+      .filter((s) => s.value !== 0)
+      .sort((a, b) => Math.abs(b.value) - Math.abs(a.value));
+  }, [cookie]);
+
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "auto" })
@@ -84,9 +101,9 @@ export default function OvenResult({
         {stats.map((s) => (
           <li
             key={s.label}
-            className="font-galmuri text-sm text-[#1f1f1f] leading-none"
-          >
-            {s.label}{" "}
+            className={`font-galmuri text-sm leading-none ${colorByLabel(s.label, s.value)}`}
+            >
+            {s.label} 
             <span >
               {s.value > 0 ? `+${s.value}` : s.value}
             </span>
