@@ -14,9 +14,11 @@ export type FortuneStat = {
 export function FortuneGaugeList({
   stats = [],
   max = 250,
+  labelClassName,
 }: {
   stats?: FortuneStat[],
   max?: number,
+  labelClassName?: string,
 }) {
   return (
     <div className="w-full space-y-2">
@@ -39,6 +41,7 @@ export function FortuneGaugeList({
               label={label}
               value={safe}
               color={c}
+              labelClassName={labelClassName}
             />
           )
         })

@@ -3,15 +3,8 @@
 
 import parchmentFrame from "@/assets/ui/parchment-frame.png";
 import { FortuneGaugeList } from "@/components/molecules/FortuneGaugeList";
-import type { FortuneGaugeColor } from "@/adapters/fortuneAdapter"
-
-type FortuneData = {
-  title: string
-  cardName: string
-  imgSrc: string
-  desc: string
-  stats: { label: string; value: number; color: FortuneGaugeColor }[]
-}
+import { COLOR_MAP } from "@/adapters/fortuneAdapter"
+import type { FortuneData } from "@/types/fortune";
 
 type Props = {
   isOpen: boolean
@@ -76,32 +69,23 @@ export function FortuneBottomSheet({
 
           {/* 콘텐츠 */}
           {fortune ? (
-            <div className="flex gap-3 px-4 pb-5 pt-3">
-              {/* 카드 이미지 */}
-              <div className="w-[110px] h-[150px] bg-[#f1e2c6] border-2 border-[#b0754c] rounded-md flex items-center justify-center overflow-hidden">
-                <img
-                  src={fortune.imgSrc}
-                  alt={fortune.cardName}
-                  className="w-full h-full object-cover"
+            <div className="flex gap-3 px-4 pb-3 pt-1 mx-3">
+              {/* 수치 바 */}
+              <div className="flex-1 space-y-2 font-galmuri-xsmall">
+                <FortuneGaugeList 
+                  stats={fortune.aspects.map(a => ({
+                    label: a.label,
+                    value: a.score,
+                    color: COLOR_MAP[a.label] || "green"
+                  }))} 
+                  labelClassName="font-galmuri-xsmall font-bold"
                 />
               </div>
 
-              {/* 텍스트 영역 */}
-                  <div className="flex-1 min-w-0 flex flex-col gap-2 overflow-y-auto">
-                    <p className="font-galmuri-xsmall text-[#3f3429] leading-tight">
-                      {fortune.title}{" "}
-                      <span className="text-[#6d5a42]">
-                        ({fortune.cardName})
-                      </span>
-                    </p>
-
-                {/* 수치 바 */}
-                <div className="space-y-2 font-galmuri-xsmall">
-                  <FortuneGaugeList stats={fortune.stats} />
-                </div>
-
-                <p className="text-[#3f3429] leading-snug">
-                  {fortune.desc}
+              {/* 설명 텍스트 */}
+              <div className="flex-1 min-w-0 flex flex-col gap-2 overflow-y-auto">
+                <p className="text-[#3f3429] leading-snug font-galmuri-condensed-small">
+                  {fortune.description || ""}
                 </p>
               </div>
             </div>
@@ -110,8 +94,8 @@ export function FortuneBottomSheet({
                 <div className="h-full flex items-center align-middle px-7 mb-30 p-3">
                   <p className="text-sm text-[#3f3429] font-galmuri-xsmall leading-snug pl-3">
                     {selectedDate
-                      ? `${selectedDate.split("-")[2]}일에는 운세를 확인하지 않았습니다.`
-                      : "해당 날짜엔 운세를 확인하지 않았습니다."}
+                      ? `${selectedDate.split("-")[2]}일에는 운세가 없습니다.`
+                      : "해당 날짜엔 운세가 없습니다."}
                   </p>
             </div>
           )}

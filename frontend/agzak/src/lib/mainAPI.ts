@@ -1,32 +1,11 @@
 // src/lib/mainAPI.ts
-import { api } from "./api";
+import { api, type ApiResponse } from "./api";
+import type { OvenAttemptRequest, OvenAttemptResponse } from "@/types/oven";
+import type { FortuneDetail, MemberGraphPoint } from "@/types/fortune";
 
 // 예시 타입들 — Swagger 스키마 보고 실제로 맞춰주세요
 export type LoginReq = { email: string; password: string };
 export type LoginRes = { accessToken: string; refreshToken: string; userId: number };
-export type MemberGraphPoint = {
-  date: string;            // "YYYY-MM-DD"
-  originalScore: number;
-  totalScore: number;
-};
-
-export type FortuneDetail = {
-  fortuneId: number;
-  description: string;
-  totalScore: number;
-  originalTotalScore: number;
-  fortuneType: {
-    id: number;
-    name: string;
-    goodWithId: number;
-    badWithId: number;
-  };
-  fortuneAspects: Array<{
-    name: string;
-    score: number;
-    original: number;
-  }>;
-};
 
 export const AuthAPI = {
   login: (body: LoginReq) => api.post<LoginRes>("/auth/login", body),
@@ -52,10 +31,33 @@ export const CookieAPI = {
 
 // 과거 운세 조회 관련
 export const MemberAPI = {
-  getGraphs: (startDate: string, endDate: string) =>
-    api.get<MemberGraphPoint[]>("members/graphs", {
+  getGraphs: async (
+    startDate: string,
+    endDate: string
+  ): Promise<ApiResponse<MemberGraphPoint[]>> => {
+    const res = await api.get<MemberGraphPoint[]>("/members/graphs", {
       params: { startDate, endDate },
-    }),
-  getFortuneByDate: (date: string) =>
-    api.get<FortuneDetail>(`members/fortunes/${date}`),
+    });
+    if (res.ok) {
+      const list = Array.isArray(res.data) ? res.data : [];
+      return { ok: true, data: list };
+    }
+    return res;
+  },
+  getFortuneByDate: async (
+    date: string
+  ): Promise<ApiResponse<FortuneDetail | null>> => {
+    const res = await api.get<FortuneDetail>(`/members/fortunes/${date}`);
+    if (res.ok) return res;
+    const status = res.error?.status ?? res.error?.code;
+    if (status === 404) return { ok: true, data: null }; // 해당 날짜 운세 없음
+    return res;
+  },
+};
+
+// 게임
+export const GameAPI = {
+  /** 한 번의 시도 */
+  attempt: (body: OvenAttemptRequest) =>
+    api.post<OvenAttemptResponse>("/game/attempts", body),
 };
