@@ -6,14 +6,16 @@ type KakaoStatus =
   | "ENV_MISSING"
   | "NETWORK_ERROR"
   | "TIMEOUT"
-  | "DOMAIN_OR_KEY_MISMATCH" // 401/403
+  | "DOMAIN_OR_KEY_MISMATCH" // 401/403 느낌
   | "LOADING"
   | "READY";
 
 export function useKakaoSdk(appKeyRaw?: string) {
   const appKey = (appKeyRaw ?? "").trim();
   const [ready, setReady] = useState(false);
-  const [status, setStatus] = useState<KakaoStatus>(appKey ? "LOADING" : "ENV_MISSING");
+  const [status, setStatus] = useState<KakaoStatus>(
+    appKey ? "LOADING" : "ENV_MISSING"
+  );
 
   useEffect(() => {
     const w = window as any;
@@ -23,57 +25,56 @@ export function useKakaoSdk(appKeyRaw?: string) {
       return;
     }
 
-    // 이미 로드되어 있으면 통과
+    // 이미 kakao.maps.services 가 있으면 바로 성공 처리
     if (w.kakao?.maps?.services) {
       setReady(true);
       setStatus("READY");
       return;
     }
 
-    // 중복 스크립트 대응: 기존 태그를 재사용하고, load/error 이벤트를 꼭 건다
-    let script = document.getElementById("kakao-sdk") as HTMLScriptElement | null;
-    if (!script) {
-      script = document.createElement("script");
-      script.id = "kakao-sdk";
-      script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${appKey}&libraries=services&autoload=false`;
-      script.async = true;
-      script.crossOrigin = "anonymous";
-      document.head.appendChild(script);
-    }
+    let script = document.getElementById("kakao-sdk") as
+      | HTMLScriptElement
+      | null;
 
     const onLoad = () => {
-      if (!w.kakao?.maps) return; // 아직 파싱 전일 수 있음
+      if (!w.kakao?.maps) return;
+
       w.kakao.maps.load(() => {
         if (w.kakao?.maps?.services) {
           setReady(true);
           setStatus("READY");
         } else {
-          // services 라이브러리 누락 or 도메인 문제일 때 여기까지도 못 오는 경우가 많음
           setReady(false);
           setStatus("DOMAIN_OR_KEY_MISMATCH");
         }
       });
     };
 
-    const onError = async () => {
-  try {
-    await fetch(
-      `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${appKey}&libraries=services&autoload=false`,
-      { method: "GET", mode: "no-cors" }
-    );
-    // no-cors 상태에서는 성공/실패 구분 불가, 일단 네트워크 요청 시도 성공으로 간주
-    
-  } catch (e) {
-    setStatus("NETWORK_ERROR");
-  }
-};
+    const onError = () => {
+      setReady(false);
+      setStatus("NETWORK_ERROR");
+    };
 
+    if (!script) {
+      // 처음 로드
+      script = document.createElement("script");
+      script.id = "kakao-sdk";
+      script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${appKey}&libraries=services&autoload=false`;
+      script.async = true;
+      // ❌ CORS 터트리던 원인이라 제거
+      // script.crossOrigin = "anonymous";
+      document.head.appendChild(script);
+    }
+
+    // 새로 만들었든, 이미 있던 태그든 이벤트만 걸어두기
     script.addEventListener("load", onLoad);
     script.addEventListener("error", onError);
 
-    // 8초 타임아웃: 보통 401/403/차단 시 여기서 멈춤
+    // 8초 타임아웃
     const timer = setTimeout(() => {
-      if (!ready) setStatus("TIMEOUT");
+      if (!ready && status === "LOADING") {
+        setStatus("TIMEOUT");
+      }
     }, 8000);
 
     return () => {
