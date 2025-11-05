@@ -31,7 +31,7 @@ public class MemberController implements MemberApiDocs {
     @PatchMapping
     public ResponseEntity<Void> editMemberInfo(@Valid @RequestBody MemberEditRequest request) {
         long memberId = authMemberProvider.currentMemberId();
-        memberService.editMemberInfo(memberId, request.nickname(), request.birthTime());
+        memberService.editMemberInfo(memberId, request);
         return ResponseEntity.ok().build();
     }
 
