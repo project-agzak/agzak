@@ -99,7 +99,7 @@ public class FortuneService {
         
         아래 규칙을 마지막으로 한 번 더 상기:
         - **JSON만 출력**, 따옴표로 감싸지 말 것, 코드블록(````), 주석, 추가 텍스트 금지.
-        """;;
+        """;
 
     @Cacheable(
             value = "fortuneCache",
@@ -313,12 +313,10 @@ public class FortuneService {
                 .orElseThrow(() -> new IllegalArgumentException("일치하는 운세 타입 이름이 없습니다."));
     }
 
-    public void checkDuplicate(long memberId, LocalDate date) {
+    public boolean checkDuplicate(long memberId, LocalDate date) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 회원 아이디입니다."));
 
-        if (fortuneRepository.existsByMemberAndDate(member, date)) {
-            throw new IllegalArgumentException("이미 조회한 운세 정보가 있습니다. 날짜 조회를 이용하세요");
-        }
+        return fortuneRepository.existsByMemberAndDate(member, date);
     }
 }
