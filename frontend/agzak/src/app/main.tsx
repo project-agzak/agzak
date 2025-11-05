@@ -12,16 +12,19 @@ declare global {
   }
 }
 
-// 🔹 카카오 SDK 초기화
-const KAKAO_JS_KEY = import.meta.env.VITE_KAKAO_LOGIN_JS_KEY as string;
+// 🔹 카카오 JS SDK 초기화 (로그인용)
+const rawKey = import.meta.env.VITE_KAKAO_LOGIN_JS_KEY;
+const KAKAO_JS_KEY = (rawKey ?? "").trim();
 
-if (window.Kakao) {
+if (!KAKAO_JS_KEY) {
+  console.error(" VITE_KAKAO_LOGIN_JS_KEY가 비어있어요. .env 설정 확인 필요");
+} else if (window.Kakao) {
   if (!window.Kakao.isInitialized()) {
     window.Kakao.init(KAKAO_JS_KEY);
-    console.log("Kakao initialized:", window.Kakao.isInitialized());
+    console.log(" Kakao initialized:", window.Kakao.isInitialized());
   }
 } else {
-  console.warn("Kakao SDK not found on window. Check index.html script tag.");
+  console.warn(" window.Kakao가 없습니다. index.html에 로그인 SDK 스크립트 추가됐는지 확인해주세요.");
 }
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
