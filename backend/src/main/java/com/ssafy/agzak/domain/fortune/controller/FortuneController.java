@@ -34,10 +34,12 @@ public class FortuneController implements FortuneApiDocs {
     @PostMapping
     public ResponseEntity<FinalFortuneResponse> postMemberTodayFortune() {
         long memberId = authMemberProvider.currentMemberId();
-        fortuneService.checkDuplicate(memberId, LocalDate.now());
         MemberInfoResponse response = memberService.getMemberInfo(memberId);
         BirthDataInput input = BirthDataInput.fromMemberInfo(response);
         FinalFortuneResponse result = fortuneService.getFortuneScores(input, response.birthCity());
+        if (fortuneService.checkDuplicate(memberId, LocalDate.now())) {
+            return ResponseEntity.ok().body(result);
+        }
         fortuneService.saveFortune(memberId, result);
         return ResponseEntity.ok().body(result);
     }
