@@ -17,8 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
-@Tag(name = "포춘 쿠키", description = "포춘 쿠키(보유/사용/조회) API")
-@SecurityRequirement(name = "BearerAuth") // /api/v1/cookies 전체는 인증 필요
+@Tag(name = "포춘 쿠키", description = "포춘 쿠키(보유/사용/조회/삭제) API")
 public interface FortuneCookieApiDocs {
 
     @Operation(
@@ -79,5 +78,29 @@ public interface FortuneCookieApiDocs {
                     schema = @Schema(allowableValues = {"recent", "score", "category"}, defaultValue = "recent")
             )
             @RequestParam(defaultValue = "recent") String sortType
+    );
+
+    @Operation(
+            summary = "쿠키 삭제",
+            description = """
+                본인 소유이며 <code>AVAILABLE</code> 상태인 쿠키만 삭제합니다.<br/>
+                • 성공 시: 204 No Content<br/>
+                • 제약: 사용된 쿠키(<code>USED</code>)는 삭제 불가
+                """
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "삭제 성공(내용 없음)"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청(쿠키 ID 등)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "본인 소유가 아닌 쿠키 삭제 시도",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "쿠키 미존재",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "409", description = "사용된 쿠키 삭제 시도(상태 충돌)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    ResponseEntity<Void> deleteCookie(
+            @Parameter(description = "삭제할 쿠키 ID", example = "1")
+            @PathVariable Long cookieId
     );
 }

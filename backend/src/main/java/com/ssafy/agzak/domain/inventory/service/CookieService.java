@@ -79,4 +79,21 @@ public class CookieService {
                     .toList();
         };
     }
+
+    @Transactional
+    public void deleteCookie(Long memberId, Long cookieId) {
+        FortuneCookie cookie = fortuneCookieRepository.findById(cookieId)
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 쿠키 아이디입니다."));
+
+        Long ownerId = cookie.getInventory().getMember().getMemberId();
+        if (!ownerId.equals(memberId)) {
+            throw new IllegalArgumentException("본인 소유의 쿠키만 삭제할 수 있습니다.");
+        }
+
+        if (cookie.getStatus() != FortuneCookie.CookieStatus.AVAILABLE) {
+            throw new IllegalStateException("사용된 쿠키는 삭제할 수 없습니다.");
+        }
+
+        fortuneCookieRepository.delete(cookie);
+    }
 }

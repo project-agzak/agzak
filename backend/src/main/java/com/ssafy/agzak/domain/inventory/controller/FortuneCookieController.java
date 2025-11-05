@@ -4,8 +4,6 @@ import com.ssafy.agzak.docs.FortuneCookieApiDocs;
 import com.ssafy.agzak.domain.inventory.dto.response.CookieResponse;
 import com.ssafy.agzak.domain.inventory.service.CookieService;
 import com.ssafy.agzak.global.security.AuthMemberProvider;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +19,7 @@ public class FortuneCookieController implements FortuneCookieApiDocs {
     private final AuthMemberProvider authMemberProvider;
 
     @PostMapping("/{cookieId}")
+    @Override
     public ResponseEntity<Void> useCookie(@PathVariable Long cookieId) {
         Long memberId = authMemberProvider.currentMemberId();
         cookieService.useCookie(memberId, cookieId);
@@ -28,17 +27,25 @@ public class FortuneCookieController implements FortuneCookieApiDocs {
     }
 
     @GetMapping("/{cookieId}")
+    @Override
     public ResponseEntity<CookieResponse> getCookieInfo(@PathVariable Long cookieId) {
-        return ResponseEntity.ok().body(cookieService.getCookieInfo(cookieId));
+        return ResponseEntity.ok(cookieService.getCookieInfo(cookieId));
     }
 
     @GetMapping
-    public ResponseEntity<List<CookieResponse>> getInventory(@Parameter(
-            description = "정렬 기준 (recent=최신순, score=총점 높은 순, category=카테고리 가나다순)",
-            example = "recent",
-            schema = @Schema(defaultValue = "recent", allowableValues = {"recent", "score", "category"})
-    ) String sortType) {
+    @Override
+    public ResponseEntity<List<CookieResponse>> getInventory(
+            @RequestParam(defaultValue = "recent") String sortType
+    ) {
         Long memberId = authMemberProvider.currentMemberId();
-        return ResponseEntity.ok().body(cookieService.getFortuneCookie(memberId, sortType));
+        return ResponseEntity.ok(cookieService.getFortuneCookie(memberId, sortType));
+    }
+
+    @DeleteMapping("/{cookieId}")
+    @Override
+    public ResponseEntity<Void> deleteCookie(@PathVariable Long cookieId) {
+        Long memberId = authMemberProvider.currentMemberId();
+        cookieService.deleteCookie(memberId, cookieId);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -225,6 +225,7 @@ public class FortuneService {
                 .fortune(fortune)
                 .name(name)
                 .score(score)
+                .originalScore(score)
                 .build();
         fortuneAspectRepository.save(aspect);
     }
