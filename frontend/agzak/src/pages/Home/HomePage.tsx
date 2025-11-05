@@ -1,11 +1,40 @@
+import { useEffect } from "react";
 import Pig from "@/assets/ui/MainPig.svg";
 import RankingRibbon from "@/assets/ui/RankingRibbon.svg";
 import { Button_M } from "@/components/atoms/Button_M";
 import ShareButton from "@/components/atoms/ShareButton";
 import RankingList from "@/components/molecules/RankingList"
 
+import { useFortuneStore } from "@/store/useFortuneStore";
+
 export default function HomePage() {
   const shareUrl = "https://www.agzak.co.kr/";
+
+  const totalScore = useFortuneStore((s) => s.scores?.total_score ?? null);
+  const loading = useFortuneStore((s) => s.loading); // boolean (없으면 무시 가능)
+  const error = useFortuneStore((s) => s.error);     // string | null (없으면 무시 가능)
+  const fetchToday = useFortuneStore((s) => s.fetchToday);
+
+  // --- 최초 1회만 호출되도록 가드 ---
+  // 1) 오늘 데이터가 없을 때만 호출
+  // 2) 이미 호출/로딩 중이면 재호출 방지
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        if (!loading && totalScore == null) {
+          await fetchToday(); // 내부에서 POST /api/v1/fortune 호출
+        }
+      } catch {
+        /* 에러는 스토어가 들고 있게 놔둠 */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // totalScore가 아직 null일 때만 최초 1회 동작
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <main className="relative z-10 p-4 min-h-screen">
@@ -17,7 +46,7 @@ export default function HomePage() {
         <img src={ Pig } alt="메인 돼지" className="w-1/2 max-w-[220px] h-auto"/>
         <div className="flex flex-col items-center pr-5">
           <p className="font-galmuri">총운</p>
-          <p className="font-bitbit-large">NNN 점</p>
+          <p className="font-bitbit-large">{error ? "—" : totalScore ?? (loading ? "..." : "—")} 점</p>
           <p className="font-galmuri-xsmall pt-0.5">강화 잔여 횟수: NN</p>
         </div>
       </div>
