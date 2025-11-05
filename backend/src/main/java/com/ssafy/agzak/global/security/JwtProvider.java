@@ -58,6 +58,12 @@ public class JwtProvider {
         return Long.valueOf(c.getSubject());
     }
 
+    public Long parseRefreshUserId(String token) {
+        Claims c = parse(token);
+        if (!"refresh".equals(c.get("t"))) throw new IllegalArgumentException("refresh 토큰 아님");
+        return Long.valueOf(c.getSubject());
+    }
+
     private Claims parse(String token) {
         return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
     }

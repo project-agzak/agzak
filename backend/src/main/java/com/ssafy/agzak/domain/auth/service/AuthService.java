@@ -311,6 +311,32 @@ public class AuthService {
         return issueTokens(m.getMemberId());
     }
 
+    @Transactional(readOnly = true)
+    public TokenResponse refresh(String refreshToken) {
+        Long memberId;
+        try {
+            memberId = jwt.parseRefreshUserId(refreshToken);
+        } catch (Exception e) {
+            throw new BadCredentialsException("유효하지 않은 리프레시 토큰입니다.");
+        }
+
+        // 서버 저장소(redis)에 보관된 최신 리프레시와 일치하는지 확인 (토큰 회전 보안)
+        var saved = refreshStore.get(memberId).orElse(null);
+        if (saved == null || !saved.equals(refreshToken)) {
+            throw new BadCredentialsException("리프레시 토큰이 만료되었거나 회수되었습니다.");
+        }
+
+        // 회원 상태 체크 (탈퇴자는 갱신 불가)
+        var m = memberRepo.findById(memberId)
+                .orElseThrow(() -> new BadCredentialsException("회원 정보를 찾을 수 없습니다."));
+        if (m.getStatus() != Member.MemberStatus.ACTIVE) {
+            throw new BadCredentialsException("비활성화된 계정입니다.");
+        }
+
+        // 토큰 회전(rotate): 새 access/refresh 발급 + 기존 refresh 대체 저장
+        return issueTokens(memberId);
+    }
+
     public CheckEmailResponse checkEmail(String email) {
         if(memberRepo.existsByEmail(email)) {
             return new CheckEmailResponse(email, false);

@@ -73,6 +73,18 @@ public class AuthController implements AuthApiDocs {
         return ResponseEntity.ok(OkResponse.logoutSuccess());
     }
 
+    @PostMapping("/refresh")
+    public ResponseEntity<TokenResponse> refresh(
+            @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authHeader,
+            @RequestHeader(name = "X-Refresh-Token", required = false) String refreshHeader
+    ) {
+        // 권장: Refresh는 httpOnly 쿠키로 운용. 예시에서는 헤더로 받음.
+        if (refreshHeader == null || refreshHeader.isBlank()) {
+            throw new BadCredentialsException("리프레시 토큰이 없습니다.");
+        }
+        return ResponseEntity.ok(authService.refresh(refreshHeader));
+    }
+
     @GetMapping("/check-email")
     public ResponseEntity<CheckEmailResponse> checkEmailAvailability(@RequestParam String email) {
         return ResponseEntity.ok().body(authService.checkEmail(email));
