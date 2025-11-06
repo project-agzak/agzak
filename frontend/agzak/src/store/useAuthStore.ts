@@ -41,41 +41,32 @@ function loadInitialMember(): Member | null {
     return null;
   }
 }
+// 토큰 만료 체크 + 초기 auth 상태 정리
+function getInitialAuthState() {
+  const accessToken = localStorage.getItem("access_token");
+  const refreshToken = localStorage.getItem("refresh_token");
+  const expiresRaw =
+    localStorage.getItem("access_token_expires_at") ??
+    localStorage.getItem("accessTokenExpiresAt");
 
-interface AuthState {
-  isLoggedIn: boolean;
-  accessToken: string | null;
-  refreshToken: string | null;
-  member: Member | null;
+  const member = loadInitialMember();
 
-  setTokens: (access: string, refresh?: string) => void;
-  setMember: (member: Member | null) => void;
-  logout: () => void;
-}
+  // 만료 시간 정보 없으면: 토큰만 있으면 로그인된 걸로 보되,
+  // 필요하면 여기서도 그냥 무효 처리해도 됨.
+  if (!accessToken || !expiresRaw) {
+    return {
+      isLoggedIn: false,
+      accessToken: null,
+      refreshToken: null,
+      member: null,
+    };
+  }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  isLoggedIn: !!localStorage.getItem("access_token"),
-  accessToken: localStorage.getItem("access_token"),
-  refreshToken: localStorage.getItem("refresh_token"),
-  member: loadInitialMember(),
+  const expiresAt = Number(expiresRaw);
+  const now = Date.now();
 
-  setTokens: (access, refresh) => {
-    localStorage.setItem("access_token", access);
-    if (refresh) localStorage.setItem("refresh_token", refresh);
-    set({
-      accessToken: access,
-      refreshToken: refresh ?? null,
-      isLoggedIn: true,
-    });
-  },
-
-  setMember: (member) => {
-    if (member) localStorage.setItem("member", JSON.stringify(member));
-    else localStorage.removeItem("member");
-    set({ member });
-  },
-
-  logout: () => {
+  // 이미 만료된 토큰이면 다 지움
+  if (!Number.isFinite(expiresAt) || now >= expiresAt) {
     const keysToRemove = [
       "access_token",
       "refresh_token",
@@ -88,14 +79,80 @@ export const useAuthStore = create<AuthState>((set) => ({
       "guestId",
     ];
     keysToRemove.forEach((k) => localStorage.removeItem(k));
-
     sessionStorage.clear();
 
-    set({
+    return {
+      isLoggedIn: false,
       accessToken: null,
       refreshToken: null,
       member: null,
-      isLoggedIn: false,
-    });
-  },
-}));
+    };
+  }
+
+  // 유효한 토큰이면 그대로 씀
+  return {
+    isLoggedIn: true,
+    accessToken,
+    refreshToken,
+    member,
+  };
+}
+
+interface AuthState {
+  isLoggedIn: boolean;
+  accessToken: string | null;
+  refreshToken: string | null;
+  member: Member | null;
+
+  setTokens: (access: string, refresh?: string) => void;
+  setMember: (member: Member | null) => void;
+  logout: () => void;
+}
+
+export const useAuthStore = create<AuthState>((set) => {
+  const initial = getInitialAuthState();
+
+  return {
+    ...initial,
+
+    setTokens: (access, refresh) => {
+      localStorage.setItem("access_token", access);
+      if (refresh) localStorage.setItem("refresh_token", refresh);
+      set({
+        accessToken: access,
+        refreshToken: refresh ?? null,
+        isLoggedIn: true,
+      });
+    },
+
+    setMember: (member) => {
+      if (member) localStorage.setItem("member", JSON.stringify(member));
+      else localStorage.removeItem("member");
+      set({ member });
+    },
+
+    logout: () => {
+      const keysToRemove = [
+        "access_token",
+        "refresh_token",
+        "accessToken",
+        "refreshToken",
+        "accessTokenExpiresAt",
+        "access_token_expires_at",
+        "member",
+        "userId",
+        "guestId",
+      ];
+      keysToRemove.forEach((k) => localStorage.removeItem(k));
+
+      sessionStorage.clear();
+
+      set({
+        accessToken: null,
+        refreshToken: null,
+        member: null,
+        isLoggedIn: false,
+      });
+    },
+  };
+});
