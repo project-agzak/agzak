@@ -73,10 +73,37 @@ body {
   --font-galmuri: "Galmuri", system-ui, sans-serif;
   --font-bitbit: "DNF", system-ui, sans-serif;
   --font-galmuri-condensed: "Galmuri-Condensed", "Galmuri", system-ui, sans-serif;
+  
+  /* 애니메이션 keyframes */
+  --animate-shake: shake 0.4s ease-in-out;
+}
+
+/* shake 애니메이션 keyframes 정의 */
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  20% {
+    transform: translateX(-5px);
+  }
+  40% {
+    transform: translateX(5px);
+  }
+  60% {
+    transform: translateX(-3px);
+  }
+  80% {
+    transform: translateX(3px);
+  }
 }
 
 @layer utilities {
   .pixelated { image-rendering: pixelated; }
+  
+  /* shake 애니메이션 클래스 */
+  .animate-shake {
+    animation: shake 0.4s ease-in-out;
+  }
 }
 
 /* ===== Galmuri (5종) ===== */
