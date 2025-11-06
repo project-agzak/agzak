@@ -1,5 +1,4 @@
-
-import  { useEffect } from "react";
+import { useEffect } from "react";
 
 import { ExpandableFortune } from "@/components/molecules/ExpandableFortune";
 import { Button_L } from "@/components/atoms/Button_L";
@@ -7,7 +6,7 @@ import { Button_L } from "@/components/atoms/Button_L";
 import ShareButton from "@/components/atoms/ShareButton";
 import { PureFlipImage } from "@/components/molecules/PureFlipImage";
 import BackCard from "@/components/atoms/BackCard";
-
+import { useAuthStore } from "@/store/useAuthStore";
 import { useFortuneStore } from "@/store/useFortuneStore";
 
 import FrontCat from "@/assets/FrontCard/FrontCat.webp";
@@ -36,6 +35,7 @@ import FriendSheep from "@/assets/Friends/FriendSheep.webp";
 import FriendSnake from "@/assets/Friends/FriendSnake.webp";
 import FriendTiger from "@/assets/Friends/FriendTiger.webp";
 
+/** 앞면 카드: 이름 → 이미지 */
 const FRONT_BY_TYPE: Record<string, string> = {
   "쥐": FrontMouse,
   "소": FrontCow,
@@ -51,76 +51,54 @@ const FRONT_BY_TYPE: Record<string, string> = {
   "고양이": FrontCat,
 };
 
-const FRIEND_BY_TYPE: Record<string, string> = {
-  "쥐": FriendMouse,
-  "소": FriendCow,
-  "호랑이": FriendTiger,
-  "토끼": FriendRabbit,
-  "뱀": FriendSnake,
-  "말": FriendHorse,
-  "양": FriendSheep,
-  "원숭이": FriendMonkey,
-  "닭": FriendChicken,
-  "개": FriendDog,
-  "용": FriendDragon,
-  "고양이": FriendCat,
+/** 단짝/천적: 타입 id → 친구 이미지 (DB 테이블 기준) */
+const FRIEND_BY_ID: Record<number, string> = {
+  1: FriendCow,      // 소
+  2: FriendMouse,    // 쥐
+  3: FriendDragon,   // 용
+  4: FriendRabbit,   // 토끼
+  5: FriendSheep,    // 양
+  6: FriendCat,      // 고양이
+  7: FriendTiger,    // 호랑이
+  8: FriendHorse,    // 말
+  9: FriendChicken,  // 닭
+  10: FriendDog,     // 개
+  11: FriendSnake,   // 뱀
+  12: FriendMonkey,  // 원숭이
 };
 
 const getFrontByTypeName = (name?: string | null) =>
   name ? FRONT_BY_TYPE[name] : undefined;
 
-export default function FortuneResultPage() { 
-  // 총운
-  const totalScore = useFortuneStore((s) => s.scores?.total_score ?? null);
+export default function FortuneResultPage() {
+  const { isLoggedIn } = useAuthStore();
+
+  // 기본 운세 데이터
+  const totalScore     = useFortuneStore((s) => s.scores?.total_score ?? null);
   const loadingFortune = useFortuneStore((s) => s.loading);
-  const errorFortune = useFortuneStore((s) => s.error);
-  const typeName   = useFortuneStore((s) => s.typeInfo?.name ?? null);
-  const fetchToday = useFortuneStore((s) => s.fetchToday);
+  const errorFortune   = useFortuneStore((s) => s.error);
+  const typeInfo       = useFortuneStore((s) => s.typeInfo);
+  const typeName       = typeInfo?.name ?? null;
+  const fetchToday     = useFortuneStore((s) => s.fetchToday);
   const getDetailSummary = useFortuneStore((s) => s.getDetailSummary);
-  const getScoreValue = useFortuneStore((s) => s.getScoreValue);
-
-  const typeInfo = useFortuneStore((s) => s.typeInfo);
-  const fetchTypeDetail = useFortuneStore((s) => s.fetchTypeDetail);
-  const goodWithId = typeInfo?.goodWithId ?? null;
-  const BadWithId = typeInfo?.badWithId ?? null;
-
-  // 궁합 캐시에 있으면 바로 읽기
-  const goodWithDetail = useFortuneStore((s) =>
-    goodWithId ? s.typeDetails[goodWithId] : undefined
-  );
-  const BadWithDetail = useFortuneStore((s) =>
-    BadWithId ? s.typeDetails[BadWithId] : undefined
-  );
+  const getScoreValue    = useFortuneStore((s) => s.getScoreValue);
 
   const shareUrl = "https://www.agzak.co.kr/";
 
-  // 총운 1회 호출 가드
+  // 🔥 로그인 유저일 때만 /fortune 호출
+  //   - 게스트는 FortunePage에서 이미 fetchGuest로 store 채워놓은 상태
   useEffect(() => {
-    if (!loadingFortune && totalScore == null) fetchToday();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (!isLoggedIn) return;
+    if (loadingFortune || totalScore != null) return;
+    fetchToday();
+  }, [isLoggedIn, loadingFortune, totalScore, fetchToday]);
 
-  // 궁합 캐시에 없을 때만 조회
-  useEffect(() => {
-    if (goodWithId && !goodWithDetail) {
-      fetchTypeDetail(goodWithId);
-    }
-  }, [goodWithId, goodWithDetail, fetchTypeDetail]);
+  // 🔥 단짝/천적: 추가 API 없이 goodWithId/badWithId로 바로 이미지 찾기
+  const goodWithId = typeInfo?.goodWithId ?? null;
+  const badWithId  = typeInfo?.badWithId ?? null;
 
-  useEffect(() => {
-    if (BadWithId && !BadWithDetail) {
-      fetchTypeDetail(BadWithId);
-    }
-  }, [BadWithId, BadWithDetail, fetchTypeDetail]);
-
-  // 궁합 아이콘 src
-  const bestieName = goodWithDetail?.name;
-  const bestieSrc =
-    (bestieName && FRIEND_BY_TYPE[bestieName]);
-  
-  const enemyName = BadWithDetail?.name;
-  const enemySrc = 
-    (enemyName && FRIEND_BY_TYPE[enemyName]);
+  const bestieSrc = goodWithId ? FRIEND_BY_ID[goodWithId] : undefined;
+  const enemySrc  = badWithId  ? FRIEND_BY_ID[badWithId]  : undefined;
 
   return (
     <main className="relative z-10 p-4 min-h-screen">
@@ -179,7 +157,7 @@ export default function FortuneResultPage() {
         <div className="flex justify-center w-full min-w-0">
           <img
             src={bestieSrc}
-            alt={bestieName ?? "bestie"}
+            alt="bestie"
             className="w-[42%] max-w-[140px] h-auto object-contain min-w-0"
           />
         </div>
@@ -187,7 +165,7 @@ export default function FortuneResultPage() {
         <div className="flex justify-center w-full min-w-0">
           <img
             src={enemySrc}
-            alt={enemyName ?? "enemy"}
+            alt="enemy"
             className="w-[42%] max-w-[140px] h-auto object-contain min-w-0"
           />
         </div>
