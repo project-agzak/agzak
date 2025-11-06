@@ -76,7 +76,7 @@ export default function BlackboardCalendar({ className, onSelectDate }: Props) {
                     onClick={() => handleDayClick(num)}
                     disabled={num === null}
                     className={cn(
-                      "flex items-center justify-center",
+                      "flex items-center justify-center cursor-pointer",
                       // 빈칸은 클릭 불가 & 투명
                       num === null && "cursor-default"
                     )}

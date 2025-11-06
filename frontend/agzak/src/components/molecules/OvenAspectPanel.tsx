@@ -28,7 +28,7 @@ export function OvenAspectPanel({
   return (
     <div
       className="
-        grid grid-cols-3 gap-x-4 gap-y-3 justify-items-center
+        grid grid-cols-3 gap-x-1 gap-y-3 justify-items-center
         w-full max-w-[360px] mx-auto
         [grid-auto-rows:84px]
       "
@@ -54,7 +54,7 @@ export function OvenAspectPanel({
         <button
           onClick={() => onSelect("MISFORTUNE")}
           disabled={disabled}
-          className="w-[100px] h-[140px] disabled:opacity-60"
+          className="w-[100px] h-[140px] disabled:opacity-60 cursor-pointer"
         >
           <img
             src={misfortune}
@@ -63,7 +63,7 @@ export function OvenAspectPanel({
           />
         </button>
         <div className="mt-1 text-xs font-galmuri font-bold text-[#1f1f1f]">
-          +{snap.snapMisfortune}
+          {snap.snapMisfortune > 0 ? `+${snap.snapMisfortune}` : snap.snapMisfortune}
         </div>
       </div>
 
@@ -104,7 +104,7 @@ function AspectBtn({
       <button
         onClick={onClick}
         disabled={disabled}
-        className="w-full h-[60px] disabled:opacity-60"
+        className="w-full h-[60px] disabled:opacity-6 cursor-pointer"
         aria-label={label}
       >
         <img
@@ -113,7 +113,7 @@ function AspectBtn({
           className="w-full h-full object-contain pointer-events-none select-none"
         />
       </button>
-      <div className="mt-1 text-xs font-galmuri font-bold text-[#1f1f1f]">
+      <div className="mt-1 text-xs font-galmuri font-bold text-[#121212]">
         {value > 0 ? `+${value}` : value}
       </div>
     </div>
