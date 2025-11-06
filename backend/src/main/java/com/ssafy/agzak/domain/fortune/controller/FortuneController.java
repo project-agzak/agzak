@@ -18,8 +18,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
-
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/fortune")
@@ -78,7 +76,7 @@ public class FortuneController implements FortuneApiDocs {
 
     @Hidden
     @GetMapping("/city")
-    public ResponseEntity<KakaoAddressResponse.Document> testMap(@RequestParam String city) {
+    public ResponseEntity<LatLng> testMap(@RequestParam String city) {
         return ResponseEntity.ok().body(geocodingService.getCoordinates(city));
     }
 }
