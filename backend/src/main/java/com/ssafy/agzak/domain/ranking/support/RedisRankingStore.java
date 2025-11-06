@@ -21,6 +21,48 @@ public class RedisRankingStore {
     private static final DateTimeFormatter DAY = DateTimeFormatter.ofPattern("yyyyMMdd");
 
     private String key(LocalDate d, String suffix) { return "rank:" + d.format(DAY) + ":" + suffix; }
+
+    public Long zcard(String zset) {
+        try {
+            return redis.opsForZSet().zCard(zset);
+        } catch (Exception e) {
+            return null; // Redis 다운 등
+        }
+    }
+
+    public boolean exists(String key) {
+        try {
+            return redis.hasKey(key);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public void bulkUpsertTodayUsers(List<UserRow> rows) {
+        LocalDate d = today();
+        String zTotal = zTotal(d);
+        String zOriginal = zOriginal(d);
+        String zGain = zGain(d);
+
+        redis.executePipelined((RedisCallback<Object>) connection -> {
+            HashOperations<String, String, String> h = redis.opsForHash();
+            ZSetOperations<String, String> z = redis.opsForZSet();
+
+            for (UserRow r : rows) {
+                String hUser = hUser(d, r.memberId());
+                if (r.nickname() != null) h.put(hUser, "nickname", r.nickname());
+                if (r.total() != null)    h.put(hUser, "total", String.valueOf(r.total()));
+                if (r.original() != null) h.put(hUser, "original", String.valueOf(r.original()));
+
+                double gain = RankCalculator.increasePct(r.original(), r.total());
+                if (r.total() != null)    z.add(zTotal, String.valueOf(r.memberId()), r.total().doubleValue());
+                if (r.original() != null) z.add(zOriginal, String.valueOf(r.memberId()), r.original().doubleValue());
+                z.add(zGain, String.valueOf(r.memberId()), gain);
+            }
+            return null;
+        });
+    }
+
     public String zTotal(LocalDate d)    { return key(d, "total"); }
     public String zOriginal(LocalDate d) { return key(d, "original"); }
     public String zGain(LocalDate d)     { return key(d, "gain"); }

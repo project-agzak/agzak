@@ -8,6 +8,7 @@ import com.ssafy.agzak.domain.ranking.support.MysqlRankingStore;
 import com.ssafy.agzak.domain.ranking.support.RedisRankingStore;
 import com.ssafy.agzak.domain.ranking.support.RankCalculator;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +16,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -23,30 +25,75 @@ public class RankingService {
     private final RedisRankingStore redisStore;
     private final MysqlRankingStore mysqlStore;
 
+    /**
+     * MySQL의 오늘 fortune → Redis에 리씨드
+     * - Redis가 죽어있으면 NPE/Conn 에러 등 발생 가능하니 try/catch
+     * - 비교 기준: ZCARD(total) vs MySQL 행 수. 차이나면 리씨드
+     */
+    @Transactional
+    public void reseedRedisFromMysqlToday() {
+        LocalDate today = redisStore.today();
+        var fortunes = mysqlStore.fortunes(today);
+
+        // MySQL이 비어있으면 Redis 비움(선택) or noop
+        if (fortunes.isEmpty()) return;
+
+        // Redis 상태/규모 확인
+        Long zcard = redisStore.zcard(redisStore.zTotal(today));
+        boolean needsReseed = (zcard == null) || (zcard.intValue() != fortunes.size());
+
+        // 필요 없으면 스킵 (옵션)
+        if (!needsReseed) return;
+
+        // 변환 후 일괄 업서트
+        List<RedisRankingStore.UserRow> rows = fortunes.stream()
+                .map(f -> new RedisRankingStore.UserRow(
+                        f.getMember().getMemberId(),
+                        f.getMember().getNickname(),
+                        f.getTotalScore(),
+                        f.getOriginalTotalScore()
+                ))
+                .toList();
+
+        try {
+            redisStore.bulkUpsertTodayUsers(rows);
+        } catch (Exception e) {
+            log.warn("Redis reseed failed: {}", e.getMessage());
+        }
+    }
+
     // ===== 읽기: 오늘(REDIS) =====
     public RankingListDto getTodayTopN(int limit) {
         LocalDate d = redisStore.today();
+        try {
+            var total    = redisStore.readTop(d, redisStore.zTotal(d),    limit);
+            var original = redisStore.readTop(d, redisStore.zOriginal(d), limit);
+            var gain     = redisStore.readTop(d, redisStore.zGain(d),     limit);
 
-        var total    = redisStore.readTop(d, redisStore.zTotal(d),    limit);
-        var original = redisStore.readTop(d, redisStore.zOriginal(d), limit);
-        var gain     = redisStore.readTop(d, redisStore.zGain(d),     limit);
+            if ((total == null || total.isEmpty()) &&
+                    (original == null || original.isEmpty()) &&
+                    (gain == null || gain.isEmpty())) {
+                // Redis 비어있음 → MySQL 스냅샷 fallback
+                return getSnapshotTopN(d, limit);
+            }
 
-        // 증가율 계산
-        var totalDtos = fillRanks(total);
-        var origDtos  = fillRanks(original);
-        var gainDtos  = fillRanks(gain);
+            var totalDtos = fillRanks(Objects.requireNonNull(total));
+            var origDtos  = fillRanks(Objects.requireNonNull(original));
+            var gainDtos  = fillRanks(gain);
+            setListRanks(totalDtos, RankBasis.TOTAL);
+            setListRanks(origDtos,  RankBasis.ORIGINAL);
+            setListRanks(gainDtos,  RankBasis.GAIN);
 
-        // 각각 리스트 내에서 1-base 인덱싱으로 랭크 번호 부여
-        setListRanks(totalDtos,   RankBasis.TOTAL);
-        setListRanks(origDtos,    RankBasis.ORIGINAL);
-        setListRanks(gainDtos,    RankBasis.GAIN);
-
-        return RankingListDto.builder()
-                .date(d)
-                .totalLeaderboard(totalDtos)
-                .originalLeaderboard(origDtos)
-                .increaseLeaderboard(gainDtos)
-                .build();
+            return RankingListDto.builder()
+                    .date(d)
+                    .totalLeaderboard(totalDtos)
+                    .originalLeaderboard(origDtos)
+                    .increaseLeaderboard(gainDtos)
+                    .build();
+        } catch (Exception e) {
+            // Redis 접속 오류 → MySQL 스냅샷 fallback
+            return getSnapshotTopN(d, limit);
+        }
     }
 
     // ===== 읽기: 과거일자(MYSQL) =====
