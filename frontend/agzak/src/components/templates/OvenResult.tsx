@@ -3,13 +3,13 @@
 
 import type { FortuneCookieResult } from "@/types/oven"
 
-import cookieAchievement from "@/assets/Cookies/achievement-cookie.svg"
-import cookieHealth from "@/assets/Cookies/health-cookie.svg"
-import cookieLove from "@/assets/Cookies/love-cookie.svg"
-import cookieMixed from "@/assets/Cookies/mixed-cookie.svg"
-import cookieMoney from "@/assets/Cookies/money-cookie.svg"
-import cookieRotten from "@/assets/Cookies/rotten-cookie.svg"
-import speechBubble from "@/assets/ui/speech-bubble.svg"
+import cookieAchievement from "@/assets/Cookies/achievement-cookie.webp"
+import cookieHealth from "@/assets/Cookies/health-cookie.webp"
+import cookieLove from "@/assets/Cookies/love-cookie.webp"
+import cookieMixed from "@/assets/Cookies/mixed-cookie.webp"
+import cookieMoney from "@/assets/Cookies/money-cookie.webp"
+import cookieRotten from "@/assets/Cookies/rotten-cookie.webp"
+import speechBubble from "@/assets/ui/speech-bubble.webp"
 import { Button_L } from "@/components/atoms/Button_L"
 import { useEffect, useMemo } from "react";
 
