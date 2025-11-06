@@ -10,31 +10,31 @@ import BackCard from "@/components/atoms/BackCard";
 
 import { useFortuneStore } from "@/store/useFortuneStore";
 
-import FrontCat from "@/assets/FrontCard/FrontCat.svg";
-import FrontChicken from "@/assets/FrontCard/FrontChicken.svg";
-import FrontCow from "@/assets/FrontCard/FrontCow.svg";
-import FrontDog from "@/assets/FrontCard/FrontDog.svg";
-import FrontDragon from "@/assets/FrontCard/FrontDragon.svg";
-import FrontHorse from "@/assets/FrontCard/FrontHorse.svg";
-import FrontMonkey from "@/assets/FrontCard/FrontMonkey.svg";
-import FrontMouse from "@/assets/FrontCard/FrontMouse.svg";
-import FrontRabbit from "@/assets/FrontCard/FrontRabbit.svg";
-import FrontSheep from "@/assets/FrontCard/FrontSheep.svg";
-import FrontSnake from "@/assets/FrontCard/FrontSnake.svg";
-import FrontTiger from "@/assets/FrontCard/FrontTiger.svg";
+import FrontCat from "@/assets/FrontCard/FrontCat.webp";
+import FrontChicken from "@/assets/FrontCard/FrontChicken.webp";
+import FrontCow from "@/assets/FrontCard/FrontCow.webp";
+import FrontDog from "@/assets/FrontCard/FrontDog.webp";
+import FrontDragon from "@/assets/FrontCard/FrontDragon.webp";
+import FrontHorse from "@/assets/FrontCard/FrontHorse.webp";
+import FrontMonkey from "@/assets/FrontCard/FrontMonkey.webp";
+import FrontMouse from "@/assets/FrontCard/FrontMouse.webp";
+import FrontRabbit from "@/assets/FrontCard/FrontRabbit.webp";
+import FrontSheep from "@/assets/FrontCard/FrontSheep.webp";
+import FrontSnake from "@/assets/FrontCard/FrontSnake.webp";
+import FrontTiger from "@/assets/FrontCard/FrontTiger.webp";
 
-import FriendCat from "@/assets/Friends/FriendCat.svg";
-import FriendChicken from "@/assets/Friends/FriendChicken.svg";
-import FriendCow from "@/assets/Friends/FriendCow.svg";
-import FriendDog from "@/assets/Friends/FriendDog.svg";
-import FriendDragon from "@/assets/Friends/FriendDragon.svg";
-import FriendHorse from "@/assets/Friends/FriendHorse.svg";
-import FriendMonkey from "@/assets/Friends/FriendMonkey.svg";
-import FriendMouse from "@/assets/Friends/FriendMouse.svg";
-import FriendRabbit from "@/assets/Friends/FriendRabbit.svg";
-import FriendSheep from "@/assets/Friends/FriendSheep.svg";
-import FriendSnake from "@/assets/Friends/FriendSnake.svg";
-import FriendTiger from "@/assets/Friends/FriendTiger.svg";
+import FriendCat from "@/assets/Friends/FriendCat.webp";
+import FriendChicken from "@/assets/Friends/FriendChicken.webp";
+import FriendCow from "@/assets/Friends/FriendCow.webp";
+import FriendDog from "@/assets/Friends/FriendDog.webp";
+import FriendDragon from "@/assets/Friends/FriendDragon.webp";
+import FriendHorse from "@/assets/Friends/FriendHorse.webp";
+import FriendMonkey from "@/assets/Friends/FriendMonkey.webp";
+import FriendMouse from "@/assets/Friends/FriendMouse.webp";
+import FriendRabbit from "@/assets/Friends/FriendRabbit.webp";
+import FriendSheep from "@/assets/Friends/FriendSheep.webp";
+import FriendSnake from "@/assets/Friends/FriendSnake.webp";
+import FriendTiger from "@/assets/Friends/FriendTiger.webp";
 
 const FRONT_BY_TYPE: Record<string, string> = {
   "쥐": FrontMouse,

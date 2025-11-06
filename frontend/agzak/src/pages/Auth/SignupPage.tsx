@@ -41,7 +41,9 @@ export default function SignupPage() {
 
   // 비밀번호 형식 검사 (8자 이상, 영문+숫자)
   const validatePassword = (value: string) => {
-    const regex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,100}$/;
+    //  영문 + 숫자 + 특수문자 허용 (8자 이상 100자 이하)
+const regex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=\[{\]};:'",<.>/?`~\\|])[A-Za-z\d!@#$%^&*()_\-+=\[{\]};:'",<.>/?`~\\|]{8,100}$/;
+
     setPasswordValid(regex.test(value));
   };
 
