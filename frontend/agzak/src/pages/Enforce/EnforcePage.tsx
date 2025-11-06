@@ -38,6 +38,7 @@ export default function EnforcePage() {
        <main className="min-h-screen grid place-items-center">
          <section className="w-full max-w-[420px] px-4 text-center">
            <p className="font-galmuri-small mx-4">오늘의 세션 3회를 모두 사용했어요<br /> 내일 다시 도전해봐요!</p>
+           <br />
            <Button_L label="쿠키 먹으러 가기" to="/cookies" />
          </section>
        </main>

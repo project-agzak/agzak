@@ -39,6 +39,15 @@ export function useOvenGame() {
 
     (async () => {
       setInitLoading(true);
+      
+      // 먼저 오늘의 할당량을 체크
+      const quotaRes = await GameAPI.getToday();
+      if (quotaRes.ok && quotaRes.data.cap === quotaRes.data.used) {
+        setBlocked("LIMIT");
+        setInitLoading(false);
+        return;
+      }
+
       const res = await GameAPI.startSession();
       if (res.ok) {
         const s = res.data ?? null;
