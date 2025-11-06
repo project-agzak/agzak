@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import { ExpandableFortune } from "@/components/molecules/ExpandableFortune";
 import { Button_L } from "@/components/atoms/Button_L";
@@ -8,6 +8,7 @@ import { PureFlipImage } from "@/components/molecules/PureFlipImage";
 import BackCard from "@/components/atoms/BackCard";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useFortuneStore } from "@/store/useFortuneStore";
+import { fortuneAPI, type MemberFortuneDetail } from "@/lib/fortuneAPI";
 
 import FrontCat from "@/assets/FrontCard/FrontCat.webp";
 import FrontChicken from "@/assets/FrontCard/FrontChicken.webp";
@@ -70,9 +71,26 @@ const FRIEND_BY_ID: Record<number, string> = {
 const getFrontByTypeName = (name?: string | null) =>
   name ? FRONT_BY_TYPE[name] : undefined;
 
+//  /members/fortunes/{date} 응답을 store가 쓰는 형태로 변환하는 헬퍼
+const mapMemberDetailToScores = (detail: MemberFortuneDetail) => {
+  const aspects = detail.fortuneAspects ?? [];
+
+  const findScore = (name: string) =>
+    aspects.find((a) => a.name === name)?.score ?? 0;
+
+  return {
+    total_score: detail.totalScore,
+    health: findScore("health"),
+    achievement: findScore("achievement"),
+    love: findScore("love"),
+    money: findScore("money"),
+    // 상세 요약 텍스트는 이 엔드포인트에서 안 주면 undefined로 놔둠
+  } as any;
+};
+
 export default function FortuneResultPage() {
   const { isLoggedIn } = useAuthStore();
-
+const scores        = useFortuneStore((s) => s.scores);
   // 기본 운세 데이터
   const totalScore     = useFortuneStore((s) => s.scores?.total_score ?? null);
   const loadingFortune = useFortuneStore((s) => s.loading);
@@ -85,13 +103,58 @@ export default function FortuneResultPage() {
 
   const shareUrl = "https://www.agzak.co.kr/";
 
+    const hasRequestedTodayRef = useRef(false);
+    
   // 🔥 로그인 유저일 때만 /fortune 호출
   //   - 게스트는 FortunePage에서 이미 fetchGuest로 store 채워놓은 상태
-  useEffect(() => {
+ useEffect(() => {
     if (!isLoggedIn) return;
-    if (loadingFortune || totalScore != null) return;
-    fetchToday();
-  }, [isLoggedIn, loadingFortune, totalScore, fetchToday]);
+
+    // 이미 운세가 store에 있으면 그대로 사용 (재요청 안 함)
+    if (scores) return;
+
+    if (hasRequestedTodayRef.current) return;
+    hasRequestedTodayRef.current = true;
+
+    const loadTodayFortune = async () => {
+      const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+    const today = kst.toISOString().slice(0, 10); // "YYYY-MM-DD"
+
+      const res = await fortuneAPI.getMemberFortuneByDate(today);
+
+      if (res.ok && res.data) {
+        const detail = res.data as MemberFortuneDetail;
+
+        const mappedScores = mapMemberDetailToScores(detail);
+        const mappedTypeInfo = detail.fortuneType;
+
+        useFortuneStore.setState({
+          scores: mappedScores,
+          typeInfo: mappedTypeInfo,
+        });
+
+        return;
+      }
+
+
+      // 404: "해당 멤버의 해당 날짜의 운세가 존재하지 않습니다."
+      // => 아직 오늘 운세가 없으니 POST /fortune으로 생성
+      if (res.error?.status === 404 || res.error?.code === "NOT_FOUND") {
+        if (!loadingFortune) {
+          await fetchToday();
+        }
+        return;
+      }
+
+      // 그 외 에러는 콘솔만 찍고, 화면에서는 기존 에러 처리 로직 유지
+      if (res.error) {
+        console.error("오늘 운세 상세 조회 실패:", res.error);
+      }
+    };
+
+    void loadTodayFortune();
+  }, [isLoggedIn, scores, loadingFortune, fetchToday]);
+
 
   // 🔥 단짝/천적: 추가 API 없이 goodWithId/badWithId로 바로 이미지 찾기
   const goodWithId = typeInfo?.goodWithId ?? null;

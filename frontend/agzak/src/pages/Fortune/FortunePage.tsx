@@ -13,7 +13,7 @@ import { MidImages34 } from "@/components/templates/MidImages34";
 import { DropDown } from "@/components/atoms/DropDown";
 import { useFortuneStore } from "@/store/useFortuneStore";
 import type { GuestFortuneReq } from "@/lib/fortuneAPI"
-
+import AppLoader from "@/components/ui/AppLoader";
 
 
 export default function FortunePage() {
@@ -28,7 +28,10 @@ export default function FortunePage() {
   const [gender, setGender] = useState<"male" | "female" | null>(null);
   const [birthCity, setBirthCity] = useState<BirthCity | null>(null);
 
+    const [submitting, setSubmitting] = useState(false);
+
     const handleFortuneSubmit = async () => {
+      if (submitting) return; // 중복 제출 방지
     const birthTime =
       unknownTime || !hour || !minute
         ? "00:00"
@@ -49,6 +52,7 @@ export default function FortunePage() {
     const userInfoStr = localStorage.getItem("userId");
 
     try {
+      setSubmitting(true);
       // 1) 카카오 추가정보 플로우
       if (kakaoTicket) {
         const res = await api.post<{
@@ -136,10 +140,19 @@ return;
       console.error(e);
       alert("운세 계산 중 오류가 발생했습니다.");
     }
+     finally {
+      setSubmitting(false);   // ✅ 성공/실패 상관없이 로딩 종료
+    }
   };
 
   return (
-    <main className="relative z-10 p-4 min-h-screen">
+      <main className="relative z-10 p-4 min-h-screen bg-[#FEFBF2]">
+        {/*  전체 화면 로딩 오버레이 */}
+      {submitting && (
+        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40">
+          <AppLoader fullscreen label="운세를 계산하는 중..." />
+        </div>
+      )}
       {/* 중간 이미지 */}
       <div className="mt-1 flex justify-center bg-gradient-to-b from-[#fff8e7] via-[#121212] to-[#fff8e7] py-10">
         <MidImages34 itemWidth={300} whiteBg />
