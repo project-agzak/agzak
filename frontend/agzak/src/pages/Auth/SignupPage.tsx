@@ -41,11 +41,10 @@ export default function SignupPage() {
 
   // 비밀번호 형식 검사 (8자 이상, 영문+숫자)
   const validatePassword = (value: string) => {
-    //  영문 + 숫자 + 특수문자 허용 (8자 이상 100자 이하)
-const regex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=\[{\]};:'",<.>/?`~\\|])[A-Za-z\d!@#$%^&*()_\-+=\[{\]};:'",<.>/?`~\\|]{8,100}$/;
-
-    setPasswordValid(regex.test(value));
-  };
+  // 영문 + 숫자 필수, 특수문자는 선택 (8~100자)
+  const regex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d!@#$%^&*()_\-+=\[{\]};:'",<.>/?`~\\|]{8,100}$/;
+  setPasswordValid(regex.test(value));
+};
 
   const handleEmailChange = (e: ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
