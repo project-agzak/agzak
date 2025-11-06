@@ -1,6 +1,6 @@
 // src/store/useCookiesStore.ts
 import { create } from "zustand";
-import { cookiesAPI, type CookieDetail } from "@/lib/cookiesAPI";
+import { cookiesAPI, deleteCookieAPI, type CookieDetail } from "@/lib/cookiesAPI";
 
 // type CookiesState = {
 //   // 캐시 (상세)
@@ -298,32 +298,32 @@ export const useCookiesStore = create<State>((set, get) => ({
       cache: {},
     }),
   
-  // ✅ 삭제 액션
-  deleteCookie: async (id) => {
-    if (!id) return;
+  // 삭제 액션
+  async deleteCookie(id: string) {
+    const prev = get().items;
+    // 목록에서 먼저 제거
+    const next = prev.filter((c) => c.id !== id);
+    set({ deletingId: id, items: next, error: null });
+
+    // 선택 중이던 항목이면 선택 해제
+    if (get().selectedId === id) {
+      set({ selectedId: null });
+    }
+
     try {
-      set({ deletingId: id, error: null });
-
-      // 1) 서버 삭제
-      await cookiesAPI.remove(Number(id));
-
-      // 2) 클라이언트 상태 정리 (목록/캐시/선택)
-      set((s) => {
-        const nextItems = s.items.filter((c) => c.id !== id);
-        const nextCache = { ...s.cache };
-        delete nextCache[id];
-        const nextSelected = s.selectedId === id ? null : s.selectedId;
-        return {
-          items: nextItems,
-          cache: nextCache,
-          selectedId: nextSelected,
-          deletingId: null,
-        };
-      });
+      await deleteCookieAPI(id); 
+      // 성공
     } catch (e: any) {
-      const msg =
-        e?.response?.data?.message || e?.message || "쿠키 삭제에 실패했습니다.";
-      set({ deletingId: null, error: msg });
+      // 실패: 롤백
+      set({
+        items: prev,
+        error:
+          e?.response?.status === 400
+            ? "삭제할 수 없는 쿠키입니다(이미 사용되었거나 잘못된 ID)."
+            : e?.message ?? "쿠키 삭제 중 오류가 발생했습니다.",
+      });
+    } finally {
+      set({ deletingId: null });
     }
   },
 

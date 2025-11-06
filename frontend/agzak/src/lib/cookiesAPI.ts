@@ -42,3 +42,12 @@ export const cookiesAPI = {
   remove,
   useCookie,
 };
+
+// 쿠키 삭제
+export async function deleteCookieAPI(cookieId: number | string): Promise<void> {
+  const id = Number(cookieId);
+  const { status } = await apiClient.delete(`/cookies/${id}`);
+  if (status !== 204) {
+    throw new Error(`삭제 실패(status: ${status})`);
+  }
+}
