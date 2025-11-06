@@ -119,12 +119,12 @@ export type CookieData = {
   createdAt: number;
 };
 
-import HealthCookie from "@/assets/Cookies/health-cookie.svg";
-import AchievementCookie from "@/assets/Cookies/achievement-cookie.svg";
-import LoveCookie from "@/assets/Cookies/love-cookie.svg";
-import MoneyCookie from "@/assets/Cookies/money-cookie.svg";
-import MixedCookie from "@/assets/Cookies/mixed-cookie.svg";
-import RottenCookie from "@/assets/Cookies/rotten-cookie.svg";
+import HealthCookie from "@/assets/Cookies/health-cookie.webp";
+import AchievementCookie from "@/assets/Cookies/achievement-cookie.webp";
+import LoveCookie from "@/assets/Cookies/love-cookie.webp";
+import MoneyCookie from "@/assets/Cookies/money-cookie.webp";
+import MixedCookie from "@/assets/Cookies/mixed-cookie.webp";
+import RottenCookie from "@/assets/Cookies/rotten-cookie.webp";
 
 const typeToMeta = (t: string) => {
   const key = t.toUpperCase();
