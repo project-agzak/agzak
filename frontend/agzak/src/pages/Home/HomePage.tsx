@@ -1,20 +1,21 @@
-import { useEffect } from "react";
 import Pig from "@/assets/ui/MainPig.svg";
 import RankingRibbon from "@/assets/ui/RankingRibbon.svg";
 import { Button_M } from "@/components/atoms/Button_M";
 import ShareButton from "@/components/atoms/ShareButton";
-import RankingList from "@/components/molecules/RankingList"
+import RankingList from "@/components/molecules/RankingList";
+import { useEffect } from "react";
 
-import { useFortuneStore } from "@/store/useFortuneStore";
 import { useEnforceStore } from "@/store/useEnforceStore";
+import { useMembersStore } from "@/store/useMembersStore";
 
 export default function HomePage() {
   const shareUrl = "https://www.agzak.co.kr/";
+  const today = new Date().toISOString().slice(0, 10);
 
-  const totalScore = useFortuneStore((s) => s.scores?.total_score ?? null);
-  const loading = useFortuneStore((s) => s.loading); // boolean (없으면 무시 가능)
-  const error = useFortuneStore((s) => s.error);     // string | null (없으면 무시 가능)
-  const fetchToday = useFortuneStore((s) => s.fetchToday);
+  const { fortuneCache, fortuneLoading, fortuneError, fetchFortuneByDate } = useMembersStore();
+  const totalScore = fortuneCache[today]?.totalScore ?? null;
+  const loading = fortuneLoading[today] ?? false;
+  const error = fortuneError[today] ?? null;
 
   // 강화
   const initEnforce = useEnforceStore((s) => s.init);
@@ -27,15 +28,10 @@ export default function HomePage() {
   }, [initEnforce]);
 
   useEffect(() => {
-    (async () => {
-      try {
-        if (!loading && totalScore == null) {
-          await fetchToday();
-        }
-      } catch {}
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (totalScore == null) {
+      fetchFortuneByDate(today);
+    }
+  }, [today, totalScore, fetchFortuneByDate]);
 
   return (
     <main className="relative z-10 p-4 min-h-screen">

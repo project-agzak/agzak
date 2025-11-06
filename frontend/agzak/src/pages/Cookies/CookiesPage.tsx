@@ -1,21 +1,22 @@
 // src/pages/Cookies/CookiesPage.tsx
-import * as React from "react";
-import Pig from "@/assets/ui/MainPig.svg";
-import HealthGif from "@/assets/Gifs/health-cookie.gif";
 import AchievementGif from "@/assets/Gifs/achievement-cookie.gif";
+import HealthGif from "@/assets/Gifs/health-cookie.gif";
 import LoveGif from "@/assets/Gifs/love-cookie.gif";
-import MoneyGif from "@/assets/Gifs/money-cookie.gif";
 import MixedGif from "@/assets/Gifs/mixed-cookie.gif";
+import MoneyGif from "@/assets/Gifs/money-cookie.gif";
 import RottenGif from "@/assets/Gifs/rotten-cookie.gif";
+import Pig from "@/assets/ui/MainPig.svg";
+import * as React from "react";
 
+import InventoryImg from "@/assets/ui/CookieInventory.svg";
 import { ActionButton_M } from "@/components/atoms/ActionButton_M";
 import { FortuneGaugeList } from "@/components/molecules/FortuneGaugeList";
 import { CookieInventory } from "@/components/organisms/CookieInventory";
-import InventoryImg from "@/assets/ui/CookieInventory.svg";
 
-import { useFortuneStore } from "@/store/useFortuneStore";
-import { useCookiesStore } from "@/store/useCookiesStore";
 import { toGaugeStats } from "@/adapters/fortuneAdapter";
+import { useCookiesStore } from "@/store/useCookiesStore";
+import { useFortuneStore } from "@/store/useFortuneStore";
+import { useMembersStore } from "@/store/useMembersStore";
 
 type ScoresLike = { health: number; achievement: number; love: number; money: number };
 
@@ -32,22 +33,29 @@ const titleToGif: Record<string, string> = {
 };
 
 export default function CookiesPage() {
-  // 총운
-  const scores = useFortuneStore((s) => s.scores); 
-  const totalScore = useFortuneStore((s) => {
-    const v = s.scores as any;
-    return (v ? ("scores" in v ? v.scores?.total_score : v.total_score) : null) ?? null;
-  });
-  const loadingFortune = useFortuneStore((s) => s.loading);
-  const errorFortune = useFortuneStore((s) => s.error);
-  const fetchToday = useFortuneStore((s) => s.fetchToday);
+  // 총운 (날짜별 조회 방식)
+  const scores = useFortuneStore((s) => s.scores);
+  const today = new Date().toISOString().slice(0, 10);
+  const { fortuneCache, fortuneLoading, fortuneError, fetchFortuneByDate } = useMembersStore();
+  const totalScore = fortuneCache[today]?.totalScore ?? null;
+  const loadingFortune = fortuneLoading[today] ?? false;
+  const errorFortune = fortuneError[today] ?? null;
   const addStats = useFortuneStore((s) => s.addStats);
 
-  // 게이지
-  const gaugeStats = React.useMemo(
-    () => toGaugeStats(pickScores(scores)),
-    [scores]
-  );
+  // 게이지 — 오늘 날짜 데이터가 있으면 날짜별 수치로, 없으면 기존 scores에서 추출
+  const todayData = fortuneCache[today] ?? null;
+  const gaugeStats = React.useMemo(() => {
+    if (todayData) {
+      const s: ScoresLike = { health: 0, achievement: 0, love: 0, money: 0 };
+      todayData.aspects.forEach((a) => {
+        // adapter에서 key는 AspectKey (health|achievement|love|money)
+        // @ts-ignore
+        s[a.key] = a.score ?? 0;
+      });
+      return toGaugeStats(s);
+    }
+    return toGaugeStats(pickScores(scores));
+  }, [todayData, scores]);
 
   // 쿠키 스토어
   const items = useCookiesStore((s) => s.items);
@@ -79,11 +87,12 @@ export default function CookiesPage() {
   // 돼지 이미지 전환 상태
   const [pigSrc, setPigSrc] = React.useState<string>(Pig);
 
-  // 최초 총운 1회 호출 가드
+  // 최초 총운 1회 호출 가드 (오늘 날짜 기준으로 fetch)
   React.useEffect(() => {
-    if (!loadingFortune && totalScore == null) fetchToday();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (totalScore == null) {
+      fetchFortuneByDate(today);
+    }
+  }, [today, totalScore, fetchFortuneByDate]);
 
   // 쿠키 목록: 최신순 기본 호출
   React.useEffect(() => {
@@ -112,10 +121,37 @@ export default function CookiesPage() {
     );
     addStats(delta); // ✅ UI 즉시 반영
 
-    // 3) 서버 반영 (USED 처리) + 인벤토리에서 제거
-    await eatCookie(selectedCookie.id);
+    // Optimistic: update today's cached fortune (so CookiesPage reflects change immediately)
+    try {
+      const state = useMembersStore.getState();
+      const cur = state.fortuneCache[today];
+      if (cur) {
+        const deltaSum = delta.health + delta.achievement + delta.love + delta.money;
+        const newAspects = cur.aspects.map((a) => {
+          const key = a.key as keyof ScoresLike;
+          const add = (delta as any)[key] ?? 0;
+          return { ...a, score: (a.score ?? 0) + add };
+        });
+        const newUi = { ...cur, aspects: newAspects, totalScore: (cur.totalScore ?? 0) + deltaSum };
+        useMembersStore.setState({ fortuneCache: { ...state.fortuneCache, [today]: newUi } });
+      }
+    } catch (e) {
+      // ignore optimistic update failures
+    }
 
-    // 4) 5초 후 원복
+    // 3) 서버 반영 (USED 처리) + 인벤토리에서 제거
+    try {
+      await eatCookie(selectedCookie.id);
+    } finally {
+      // 4) 서버 데이터로 강제 리프레시 (noCache) — 서버 반영이 늦어도 최종 일관성 확보
+      try {
+        await fetchFortuneByDate(today, { noCache: true });
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    // 5) 5초 후 원복
     setTimeout(() => setPigSrc(Pig), 5000);
   };
   const removeSelected = async () => {
