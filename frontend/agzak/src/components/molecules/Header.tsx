@@ -72,7 +72,7 @@ useEffect(() => {
             <img
               src="/agzak-logo.svg"
               alt="Agzak Logo"
-              className="h-10 object-contain"
+              className="h-10 object-contain cursor-pointer"
             />
           </a>
 
@@ -83,7 +83,7 @@ useEffect(() => {
                   size="icon"
                   variant="ghost"
                   aria-label="열기"
-                  className="rounded-full hover:bg-zinc-900/5"
+                  className="rounded-full hover:bg-zinc-900/5 cursor-pointer"
                 >
                   <HamburgerIcon className="w-7 h-7" />
                 </Button>
@@ -191,7 +191,7 @@ function SidebarContent({ isLoggedIn, nickname, onLogout }: SidebarContentProps)
         <SheetClose asChild>
           <button
             onClick={handleFortuneClick}
-            className="flex w-full items-center gap-2 rounded-md px-0 py-2 hover:bg-zinc-100 active:bg-zinc-200 transition-colors text-left"
+            className="flex w-full items-center gap-2 rounded-md px-0 py-2 hover:bg-zinc-100 active:bg-zinc-200 transition-colors text-left cursor-pointer"
           >
             <span>운세 보기</span>
           </button>

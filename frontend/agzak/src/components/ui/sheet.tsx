@@ -71,7 +71,7 @@ const SheetContent = React.forwardRef<
         className={cn(
           "absolute top-1/2 -translate-y-1/2 -left-6 sm:-left-7", // 패널 밖으로 살짝
           "grid place-items-center w-12 h-12 rounded-full",
-          "bg-[#FEFBF2] text-zinc-800 shadow"
+          "bg-[#FEFBF2] text-zinc-800 shadow cursor-pointer"
         )}
         aria-label="닫기"
       >
