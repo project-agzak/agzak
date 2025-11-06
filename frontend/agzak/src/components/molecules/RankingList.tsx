@@ -1,25 +1,24 @@
-// 예: src/components/ranking/RankingList.tsx
-
-import { useEffect, useState } from "react";
+// src/components/ranking/RankingList.tsx
+import { useEffect, useMemo, useState } from "react";
 import Rank1 from "@/assets/ui/Rank1.svg";
 import Rank2 from "@/assets/ui/Rank2.svg";
 import Rank3 from "@/assets/ui/Rank3.svg";
+import { RankingAPI, type TodayRankingRes } from "@/lib/rankingAPI";
 
-// 🔹 타입은 굳이 안 써도 되니까, 일단 RankingAPI만 import
-import { RankingAPI } from "@/lib/rankingAPI";
+type Category = "total" | "original" | "increase";
 
 type RankItem = {
   rank: number;
   name: string;
-  score: number;     // totalScore
-  changePct: number; // increasePercent (양수/음수)
+  score: number;       // 보여줄 점수 (카테고리별 다름)
+  scoreLabel: string;  // "총점" | "원점"
+  changePct: number;   // 증가율(우측 표시)
 };
 
 function RankMedal({ rank }: { rank: number }) {
   if (rank === 1) return <img src={Rank1} alt="1위" className="w-15 h-15" />;
   if (rank === 2) return <img src={Rank2} alt="2위" className="w-15 h-15" />;
   if (rank === 3) return <img src={Rank3} alt="3위" className="w-15 h-15" />;
-  // 4위+
   return (
     <span className="w-10 pl-5 font-bitbit text-center mr-5">
       {rank}
@@ -27,7 +26,8 @@ function RankMedal({ rank }: { rank: number }) {
   );
 }
 
-function Trend({ pct }: { pct: number }) {
+function Trend({ pct }: { pct?: number | null }) {
+  if (pct == null) return null;
   if (pct === 0) {
     return (
       <div className="flex items-center gap-1 text-gray-500">
@@ -36,91 +36,122 @@ function Trend({ pct }: { pct: number }) {
       </div>
     );
   }
-
   const up = pct > 0;
-  // 🔹 소수점 한 자리로 제한 (예: 18.887 → 18.9%)
   const displayPct = Math.abs(pct).toFixed(1);
-
   return (
-    <div
-      className={`flex items-center gap-1 ${
-        up ? "text-red-500" : "text-blue-600"
-      }`}
-    >
+    <div className={`flex items-center gap-1 ${up ? "text-red-500" : "text-blue-600"}`}>
       <span className="font-bitbit">{displayPct}%</span>
       <span className="text-xl leading-none">{up ? "↑" : "↓"}</span>
     </div>
   );
 }
 
-
-function ScoreBadge({ score }: { score: number }) {
+function ScoreBadge({ score, label }: { score: number; label: string }) {
   return (
-    <span
-      className="
-        inline-block mt-1 py-0.5
-        text-gray-900
-        font-galmuri-xsmall leading-none
-      "
-    >
-      {score}점
+    <span className="inline-block mt-1 py-0.5 text-gray-900 font-galmuri-xsmall leading-none">
+      {label} {score}점
     </span>
   );
 }
 
 export default function RankingList() {
-  const [ranking, setRanking] = useState<RankItem[]>([]);
+  const [active, setActive] = useState<Category>("total");
+  const [data, setData] = useState<TodayRankingRes | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // 오늘 랭킹 3종 한 번에 가져오기
   useEffect(() => {
     let cancelled = false;
-
-    async function fetchTodayRanking() {
+    (async () => {
       try {
         setLoading(true);
         setError(null);
-
-        // 🔥 여기 핵심: data를 구조 분해로 바로 꺼내옴
-      const { data } = await RankingAPI.getToday(100) as {
-  data: {
-    date: string;
-    totalLeaderboard: {
-      totalRank: number;
-      nickname: string;
-      totalScore: number;
-      increasePercent: number;
-    }[];
-  };
-};
-
-        // data.totalLeaderboard를 RankItem[]로 변환
-        const list: RankItem[] = data.totalLeaderboard.map((item) => ({
-          rank: item.totalRank,
-          name: item.nickname,
-          score: item.totalScore,
-          changePct: item.increasePercent,
-        }));
-
-        if (!cancelled) {
-          setRanking(list);
+        const res = await RankingAPI.getToday(100);
+        if (!res.ok || !res.data) {
+          throw new Error(res.error?.message ?? "랭킹을 불러오지 못했습니다.");
         }
-      } catch (e) {
-        console.error(e);
-        if (!cancelled) setError("랭킹을 불러오지 못했어요.");
+        if (!cancelled) setData(res.data);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (e: any) {
+        if (!cancelled) setError(e?.message ?? "랭킹을 불러오지 못했습니다.");
       } finally {
         if (!cancelled) setLoading(false);
       }
-    }
-
-    fetchTodayRanking();
+    })();
     return () => {
       cancelled = true;
     };
   }, []);
 
+  // 선택된 카테고리 리스트 뷰 모델로 변환
+  const list: RankItem[] = useMemo(() => {
+    if (!data) return [];
+
+    if (active === "total") {
+      return (data.totalLeaderboard ?? []).map((it, idx) => ({
+        rank: it.totalRank ?? idx + 1,
+        name: it.nickname,
+        score: it.totalScore,
+        scoreLabel: "총점",
+        changePct: it.increasePercent,
+      }));
+    }
+
+    if (active === "original") {
+      return (data.originalLeaderboard ?? []).map((it, idx) => ({
+        rank: it.originalRank ?? idx + 1,
+        name: it.nickname,
+        score: it.originalTotalScore,
+        scoreLabel: "원점",
+        changePct: it.increasePercent,
+      }));
+    }
+
+    // active === "increase"
+    return (data.increaseLeaderboard ?? []).map((it, idx) => ({
+      rank: it.increaseRank ?? idx + 1,
+      name: it.nickname,
+      // 증가율 랭킹에서도 좌측 배지는 현재 총점으로 보여줌
+      score: it.totalScore,
+      scoreLabel: "총점",
+      changePct: it.increasePercent,
+    }));
+  }, [active, data]);
+
   return (
     <div className="mt-3 w-[min(360px,92%)] mx-auto">
+      {/* 카테고리 탭 */}
+      <div role="tablist" aria-label="랭킹 카테고리" className="mb-2 grid grid-cols-3 gap-2">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={active === "total"}
+          onClick={() => setActive("total")}
+          className={`py-2 rounded-xl font-galmuri ${active === "total" ? "bg-black text-white" : "bg-gray-200 text-gray-800"}`}
+        >
+          총점
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={active === "original"}
+          onClick={() => setActive("original")}
+          className={`py-2 rounded-xl font-galmuri ${active === "original" ? "bg-black text-white" : "bg-gray-200 text-gray-800"}`}
+        >
+          원점
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={active === "increase"}
+          onClick={() => setActive("increase")}
+          className={`py-2 rounded-xl font-galmuri ${active === "increase" ? "bg-black text-white" : "bg-gray-200 text-gray-800"}`}
+        >
+          증가율
+        </button>
+      </div>
+
       {/* 로딩 */}
       {loading && (
         <div className="py-8 text-center text-sm text-gray-500">
@@ -130,41 +161,34 @@ export default function RankingList() {
 
       {/* 에러 */}
       {!loading && error && (
-        <div className="py-8 text-center text-sm text-red-500">
-          {error}
-        </div>
+        <div className="py-8 text-center text-sm text-red-500">{error}</div>
       )}
 
       {/* 데이터 없음 */}
-      {!loading && !error && ranking.length === 0 && (
+      {!loading && !error && list.length === 0 && (
         <div className="py-8 text-center text-sm text-gray-500">
-          오늘은 랭킹 데이터가 아직 없어요.
+          선택한 카테고리에 데이터가 아직 없어요.
         </div>
       )}
 
       {/* 리스트 */}
-      {!loading && !error && ranking.length > 0 && (
+      {!loading && !error && list.length > 0 && (
         <div className="max-h-[400px] overflow-y-auto overscroll-contain pr-2">
-          {ranking.map((item, idx) => (
-            <div key={item.rank}>
+          {list.map((item, idx) => (
+            <div key={`${active}-${item.rank}-${item.name}`}>
               <div className="flex items-center justify-between py-3">
                 {/* 왼쪽: 메달/순위/닉네임/점수 */}
                 <div className="flex items-center">
                   <RankMedal rank={item.rank} />
                   <div>
                     <p className="font-bitbit-small">{item.name}</p>
-                    <ScoreBadge score={item.score} />
+                    <ScoreBadge score={item.score} label={item.scoreLabel} />
                   </div>
                 </div>
-
-                {/* 오른쪽: 변동 퍼센트 */}
+                {/* 오른쪽: 증가율 */}
                 <Trend pct={item.changePct} />
               </div>
-
-              {/* 구분선 */}
-              {idx < ranking.length - 1 && (
-                <hr className="border-t border-gray-300" />
-              )}
+              {idx < list.length - 1 && <hr className="border-t border-gray-300" />}
             </div>
           ))}
         </div>
