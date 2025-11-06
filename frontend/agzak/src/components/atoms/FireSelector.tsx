@@ -49,6 +49,7 @@ export function FireSelector({ selected, onChange }: Props) {
       </div>
       <p className="mt-1 font-galmuri !text-[13px] text-center text-gray-500">
         선택한 불꽃이 이번 시도의 성공 확률에 반영됩니다.
+         약불 성공시 +7, 강불 성공시 +13
       </p>
     </div>
   )
