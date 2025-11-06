@@ -14,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 
@@ -46,17 +45,21 @@ public class CookieService {
         FortuneCookie cookie = fortuneCookieRepository.findById(cookieId)
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 쿠키 아이디입니다."));
 
+        final int CAP = 250;
+
+        int appliedSum = 0;
+
         for (FortuneAspect aspect : fortuneAspects) {
-            switch  (aspect.getName().name()) {
-                case "MONEY" -> aspect.updateScore(cookie.getMoney());
-                case "LOVE" -> aspect.updateScore(cookie.getLove());
-                case "ACHIEVEMENT" -> aspect.updateScore(cookie.getAchievement());
-                case "HEALTH" -> aspect.updateScore(cookie.getHealth());
+            switch (aspect.getName()) {
+                case MONEY -> appliedSum += aspect.increaseWithUpperCap(cookie.getMoney(), CAP);
+                case LOVE -> appliedSum += aspect.increaseWithUpperCap(cookie.getLove(), CAP);
+                case ACHIEVEMENT -> appliedSum += aspect.increaseWithUpperCap(cookie.getAchievement(), CAP);
+                case HEALTH -> appliedSum += aspect.increaseWithUpperCap(cookie.getHealth(), CAP);
             }
         }
 
         cookie.updateStatus();
-        fortune.updateScore(cookie.getTotalScore());
+        fortune.updateScore(appliedSum);
         afterCommit(() -> rankingService.refreshTodayForMember(memberId));
     }
 

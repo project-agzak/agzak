@@ -85,4 +85,4 @@ logging:
         SQL: debug
         orm:
           jdbc:
-            bind: trace
+            bind: debug
