@@ -13,7 +13,7 @@ import { MidImages34 } from "@/components/templates/MidImages34";
 import { DropDown } from "@/components/atoms/DropDown";
 import { useFortuneStore } from "@/store/useFortuneStore";
 import type { GuestFortuneReq } from "@/lib/fortuneAPI"
-import AppLoader from "@/components/ui/AppLoader";
+import FortuneLoading from "@/components/templates/FortuneLoading";
 
 
 export default function FortunePage() {
@@ -144,15 +144,18 @@ return;
       setSubmitting(false);   // ✅ 성공/실패 상관없이 로딩 종료
     }
   };
-
+  if (submitting) {
+    return (
+      <main className="min-h-screen py-4">
+        <section className="w-full max-w-[420px] mx-auto px-4">
+          <FortuneLoading />
+        </section>
+      </main>
+    );
+  }
   return (
       <main className="relative z-10 p-4 min-h-screen bg-[#FEFBF2]">
-        {/*  전체 화면 로딩 오버레이 */}
-      {submitting && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40">
-          <AppLoader fullscreen label="운세를 계산하는 중..." />
-        </div>
-      )}
+   
       {/* 중간 이미지 */}
       <div className="mt-1 flex justify-center bg-gradient-to-b from-[#fff8e7] via-[#121212] to-[#fff8e7] py-10">
         <MidImages34 itemWidth={300} whiteBg />
