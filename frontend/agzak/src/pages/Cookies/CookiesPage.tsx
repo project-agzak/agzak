@@ -1,4 +1,3 @@
-// src/pages/Cookies/CookiesPage.tsx
 import * as React from "react";
 import Pig from "@/assets/ui/MainPig.svg";
 import HealthGif from "@/assets/Gifs/health-cookie.gif";
@@ -16,11 +15,20 @@ import InventoryImg from "@/assets/ui/CookieInventory.svg";
 import { useFortuneStore } from "@/store/useFortuneStore";
 import { useCookiesStore } from "@/store/useCookiesStore";
 import { toGaugeStats } from "@/adapters/fortuneAdapter";
+import type { ScoresLike as AdapterScoresLike } from "@/adapters/fortuneAdapter";
 
-type ScoresLike = { health: number; achievement: number; love: number; money: number };
+const pickScores = (s: any): AdapterScoresLike | undefined => {
+  if (!s) return undefined;
+  const src = "scores" in s ? s.scores : s;
 
-const pickScores = (s: any): ScoresLike | undefined =>
-  !s ? undefined : ("scores" in s ? s.scores : s);
+  return {
+    health: src?.health ?? 0,
+    achievement: src?.achievement ?? 0,
+    love: src?.love ?? 0,
+    money: src?.money ?? 0,
+    total_score: (src?.total_score ?? src?.totalScore ?? 0) as number,
+  };
+};
 
 const titleToGif: Record<string, string> = {
   "건강쿠키": HealthGif,

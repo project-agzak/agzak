@@ -85,6 +85,7 @@ type FortuneState = {
   // 운세 상세 보기
   getDetailSummary: (key: ScoreKeys) => string | undefined;
   getScoreValue?: (key: ScoreKeys) => number;
+  getTotalSummary: () => string | undefined; 
 
   // actions
   fetchToday: () => Promise<void>;
@@ -104,6 +105,13 @@ const pickDetailSummary = (src: any, key: ScoreKeys): string | undefined => {
   const root = hasNestedScores(src) ? src.scores : src;
   const d = root?.detailed_summaries;
   const v = d?.[key];
+  return typeof v === "string" ? v : undefined;
+};
+
+const pickTotalSummary = (src: any): string | undefined => {
+  if (!src) return undefined;
+  const root = hasNestedScores(src) ? src.scores : src; // flat/nested 모두 대응
+  const v = root?.total_summary;
   return typeof v === "string" ? v : undefined;
 };
 
@@ -256,6 +264,11 @@ export const useFortuneStore = create<FortuneState>((set, get) => ({
     const root = hasNestedScores(s) ? (s as any).scores : (s as any);
     const n = root?.[key];
     return typeof n === "number" ? n : 0;
+  },
+
+  getTotalSummary: () => {
+    const s = get().scores;
+    return pickTotalSummary(s as any);
   },
 
 }));
