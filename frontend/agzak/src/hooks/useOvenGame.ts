@@ -1,16 +1,16 @@
 // src/hooks/useOvenGame.ts
 "use client"
 
-import { GameAPI } from "@/lib/mainAPI";
-import { useEffect, useRef, useState } from "react";
+import { GameAPI } from "@/lib/gameAPI";
 import type {
+  FortuneCookieResult,
+  GameSessionStart,
   OvenAspectName,
   OvenAttemptRequest,
   OvenFireType,
-  GameSessionStart,
   OvenSnap,
-  FortuneCookieResult,
 } from "@/types/oven";
+import { useEffect, useRef, useState } from "react";
 
 const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
 
