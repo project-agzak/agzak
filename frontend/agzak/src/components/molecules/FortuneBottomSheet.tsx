@@ -6,12 +6,44 @@ import { FortuneGaugeList } from "@/components/molecules/FortuneGaugeList";
 import { COLOR_MAP } from "@/adapters/fortuneAdapter"
 import type { FortuneData } from "@/types/fortune";
 
+import FrontCat from "@/assets/FrontCard/FrontCat.webp";
+import FrontChicken from "@/assets/FrontCard/FrontChicken.webp";
+import FrontCow from "@/assets/FrontCard/FrontCow.webp";
+import FrontDog from "@/assets/FrontCard/FrontDog.webp";
+import FrontDragon from "@/assets/FrontCard/FrontDragon.webp";
+import FrontHorse from "@/assets/FrontCard/FrontHorse.webp";
+import FrontMonkey from "@/assets/FrontCard/FrontMonkey.webp";
+import FrontMouse from "@/assets/FrontCard/FrontMouse.webp";
+import FrontRabbit from "@/assets/FrontCard/FrontRabbit.webp";
+import FrontSheep from "@/assets/FrontCard/FrontSheep.webp";
+import FrontSnake from "@/assets/FrontCard/FrontSnake.webp";
+import FrontTiger from "@/assets/FrontCard/FrontTiger.webp";
+
+const FRONT_BY_TYPE: Record<string, string> = {
+  "쥐": FrontMouse,
+  "소": FrontCow,
+  "호랑이": FrontTiger,
+  "토끼": FrontRabbit,
+  "뱀": FrontSnake,
+  "말": FrontHorse,
+  "양": FrontSheep,
+  "원숭이": FrontMonkey,
+  "닭": FrontChicken,
+  "개": FrontDog,
+  "용": FrontDragon,
+  "고양이": FrontCat,
+};
+
+const getFrontByTypeName = (name?: string | null) =>
+  name ? FRONT_BY_TYPE[name] : undefined;
+
 type Props = {
   isOpen: boolean
   onClose: () => void
   selectedDate: string | null
   fortune: FortuneData | null
 }
+
 
 export function FortuneBottomSheet({
   isOpen,
@@ -69,24 +101,32 @@ export function FortuneBottomSheet({
 
           {/* 콘텐츠 */}
           {fortune ? (
-            <div className="flex gap-3 px-4 pb-3 pt-1 mx-3">
-              {/* 수치 바 */}
-              <div className="flex-1 space-y-2 font-galmuri-xsmall">
-                <FortuneGaugeList 
-                  stats={fortune.aspects.map(a => ({
-                    label: a.label,
-                    value: a.score,
-                    color: COLOR_MAP[a.label] || "green"
-                  }))} 
-                  labelClassName="font-galmuri-xsmall font-bold"
-                />
-              </div>
+            <div className="px-4 pb-5 pt-1 mx-5">
+              <div className="grid grid-cols-2 gap-3 items-start">
 
-              {/* 설명 텍스트 */}
-              <div className="flex-1 min-w-0 flex flex-col gap-2 overflow-y-auto">
-                <p className="text-[#3f3429] leading-snug font-galmuri-condensed-small">
-                  {fortune.description || ""}
-                </p>
+                {/* 카드 이미지 영역 (우측) */}
+                <div className="w-full aspect-[2/3] relative">
+                  <img
+                    src={
+                      ((getFrontByTypeName(fortune.fortuneType?.name) as any)?.src) ??
+                      getFrontByTypeName(fortune.fortuneType?.name) ??
+                      ""
+                    }
+                    alt={fortune.fortuneType?.name ?? "fortune-card"}
+                    className="absolute inset-0 h-full w-full object-contain"
+                  />
+                </div>
+                {/* 게이지 영역 (좌측) */}
+                <div className="min-w-0 max-h-[170px] overflow-y-auto font-galmuri-xsmall">
+                  <FortuneGaugeList
+                    stats={fortune.aspects.map(a => ({
+                      label: a.label,
+                      value: a.score,
+                      color: COLOR_MAP[a.label] || "green",
+                    }))}
+                    labelClassName="font-galmuri-xsmall font-bold"
+                  />
+                </div>
               </div>
             </div>
           ) : (

@@ -50,6 +50,7 @@ export function toFortuneData(detail: FortuneDetail): FortuneData {
     originalTotalScore: Number(detail.originalTotalScore) || 0,
     aspects: ORDER.map(k => map.get(k)!),
     description: detail.description ?? "",
+    fortuneType : detail.fortuneType ?? null
   };
   }
   

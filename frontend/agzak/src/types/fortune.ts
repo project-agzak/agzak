@@ -22,6 +22,7 @@ export type FortuneData = {
   originalTotalScore: number;
   aspects: FortuneAspectUI[];
   description?: string;
+  fortuneType: { id: number; name: string; goodWithId: number; badWithId: number };
 };
 
 

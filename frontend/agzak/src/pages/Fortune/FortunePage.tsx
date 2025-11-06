@@ -1,6 +1,7 @@
 // src/pages/Fortune/FortunePage.tsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { api } from "@/lib/api";
 
 import FullnameLogo from "@/assets/Background/agzak-fullname.svg";
 import FortuneCookie from "@/assets/Gifs/FortuneCookie.gif";
@@ -27,7 +28,7 @@ export default function FortunePage() {
   const [gender, setGender] = useState<"male" | "female" | null>(null);
   const [birthCity, setBirthCity] = useState<BirthCity | null>(null);
 
-   const handleFortuneSubmit = async () => {
+    const handleFortuneSubmit = async () => {
     const birthTime =
       unknownTime || !hour || !minute
         ? "00:00"
@@ -44,8 +45,84 @@ export default function FortunePage() {
       return;
     }
 
+    const kakaoTicket = sessionStorage.getItem("kakao_ticket");
+    const userInfoStr = localStorage.getItem("userId");
+
     try {
-      // ✅ 게스트 운세를 store를 통해 호출(= POST /fortune/guest)
+      // 1) 카카오 추가정보 플로우
+      if (kakaoTicket) {
+        const res = await api.post<{
+          accessToken: string;
+          refreshToken: string;
+          expiresIn: number;
+        }>("/auth/kakao/complete", {
+          ticket: kakaoTicket,
+          nickname,
+          gender: gender.toUpperCase(), // "MALE"/"FEMALE"
+          birthDate,
+          birthTime,
+          birthCity: birthCity.address,
+        });
+
+        if (!res.ok || !res.data) {
+          console.error("카카오 회원가입(/auth/kakao/complete) 오류:", res.error);
+          alert(res.error?.message ?? "카카오 회원가입 중 오류가 발생했습니다.");
+          return;
+        }
+
+        const { accessToken, refreshToken, expiresIn } = res.data;
+        if (accessToken && refreshToken && expiresIn) {
+          localStorage.setItem("access_token", accessToken);
+          localStorage.setItem("refresh_token", refreshToken);
+          localStorage.setItem(
+            "access_token_expires_at",
+            String(Date.now() + expiresIn * 1000),
+          );
+        }
+
+        // 카카오용 임시 값 정리
+        sessionStorage.removeItem("kakao_ticket");
+        sessionStorage.removeItem("kakao_email");
+        sessionStorage.removeItem("kakao_suggestedNickname");
+
+        navigate("/fortune/result");
+        return;
+      }
+
+      // 2) 일반 회원가입 플로우 (이메일/비번 먼저 SignupPage에서 받아온 경우)
+      if (userInfoStr) {
+        const { email, password } = JSON.parse(userInfoStr) as {
+          email: string;
+          password: string;
+        };
+
+        const res = await api.post<any>("/auth/register", {
+          email,
+          password,
+          nickname,
+          birthDate,
+          gender: gender.toUpperCase(), // "MALE"/"FEMALE"
+          birthTime,
+          birthCity: birthCity.address,
+        });
+
+        if (!res.ok) {
+          console.error("회원가입(/auth/register) 오류:", res.error);
+          alert(res.error?.message ?? "회원가입 중 오류가 발생했습니다.");
+          return;
+        }
+
+        // 임시 저장한 userId 제거
+        localStorage.removeItem("userId");
+
+        
+        navigate("/login", {
+  state: { redirectTo: "/fortune/result" },
+});
+return;
+      }
+
+      // 3) 위 둘 다 없으면 → 순수 게스트 운세
       await fetchGuest({
         nickname,
         gender: gender.toUpperCase() as GuestFortuneReq["gender"], // "MALE" | "FEMALE"
@@ -54,7 +131,6 @@ export default function FortunePage() {
         birthCity: birthCity.address,
       });
 
-      // ✅ 성공 시 결과 페이지로 이동
       navigate("/fortune/result");
     } catch (e) {
       console.error(e);
