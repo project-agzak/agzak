@@ -50,7 +50,7 @@ export function CookieCloverItem({
         type="button"
         onClick={() => onSelect(id)}
         className={clsx(
-          "w-full aspect-square rounded-xl grid place-items-center",
+          "w-full aspect-square rounded-xl grid place-items-center cursor-pointer",
           "outline-none ring-0 focus:outline-none focus-visible:ring-0", // ✅ 테두리/포커스 링 제거
           // "active:translate-y-[1px]",
           selected && "" // ← 필요 없으면 제거해도 됨
