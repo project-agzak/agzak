@@ -10,12 +10,12 @@ import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.time.LocalDate;
@@ -31,12 +31,14 @@ public interface MemberApiDocs {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "회원 조회 완료",
                     content = @Content(schema = @Schema(implementation = MemberInfoResponse.class))),
+            @ApiResponse(responseCode = "401", description = "인증 필요",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    public ResponseEntity<MemberInfoResponse> getMemberInfo();
+    ResponseEntity<MemberInfoResponse> getMemberInfo();
 
     @Operation(
-            summary = "멤버 운세 확인",
-            description = "기존에 조회한 운세 확인"
+            summary = "멤버 운세 상세 조회",
+            description = "특정 날짜의 상세 운세를 조회합니다. 이미 해당 날짜에 운세가 생성되어 있어야 합니다."
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "운세 조회 완료",
@@ -82,6 +84,8 @@ public interface MemberApiDocs {
                     ))),
             @ApiResponse(responseCode = "404", description = "운세 조회 실패",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청(형식 오류 등)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     ResponseEntity<DetailFortuneDataResponse> getDetailData(@PathVariable LocalDate date);
 
@@ -132,9 +136,16 @@ public interface MemberApiDocs {
                                     ]
                                     """
                     ))
-            )
+            ),
+            @ApiResponse(responseCode = "401", description = "인증 필요",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청(형식 오류 등)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    ResponseEntity<List<MemberGraphResponse>> getGraphs(@RequestParam LocalDate startDate, @RequestParam LocalDate endDate);
+    ResponseEntity<List<MemberGraphResponse>> getGraphs(
+            @RequestParam LocalDate startDate,
+            @RequestParam LocalDate endDate
+    );
 
     @Operation(
             summary = "회원 정보 수정",
@@ -157,25 +168,28 @@ public interface MemberApiDocs {
                         """
     )
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "변경 완료"
-            ),
+            @ApiResponse(responseCode = "200", description = "변경 완료"),
+            @ApiResponse(responseCode = "401", description = "인증 필요",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "409", description = "닉네임 중복",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청(형식 오류 등)",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     ResponseEntity<Void> editMemberInfo(@RequestBody MemberEditRequest request);
 
 
     @Operation(
             summary = "회원 탈퇴",
-            description = "회원 탈퇴"
+            description = """
+                회원 상태를 WITHDRAWN으로 전환하고, 해당 회원의 모든 소셜 연동 및 리프레시 토큰을 정리합니다.
+                이후 토큰은 더 이상 유효하게 취급되지 않습니다.
+                """
     )
     @ApiResponses({
-            @ApiResponse(
-                    responseCode = "204",
-                    description = "탈퇴 완료"
-            )
+            @ApiResponse(responseCode = "204", description = "탈퇴 완료"),
+            @ApiResponse(responseCode = "401", description = "인증 필요",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     ResponseEntity<Void> deleteMember();
 }

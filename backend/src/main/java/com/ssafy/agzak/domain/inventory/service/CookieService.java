@@ -9,13 +9,15 @@ import com.ssafy.agzak.domain.inventory.entity.FortuneCookie;
 import com.ssafy.agzak.domain.inventory.repository.FortuneCookieRepository;
 import com.ssafy.agzak.domain.member.exception.NoFortuneFoundException;
 import com.ssafy.agzak.domain.ranking.service.RankingService;
+import com.ssafy.agzak.global.time.DateProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
+
+import static com.ssafy.agzak.global.tx.TxAfterCommit.afterCommit;
 
 @Service
 @Transactional(readOnly = true)
@@ -25,6 +27,7 @@ public class CookieService {
     private final FortuneRepository fortuneRepository;
     private final FortuneAspectRepository fortuneAspectRepository;
     private final RankingService rankingService;
+    private final DateProvider date;
 
     public CookieResponse getCookieInfo(Long cookieId) {
         FortuneCookie cookie = fortuneCookieRepository.findById(cookieId)
@@ -35,25 +38,29 @@ public class CookieService {
 
     @Transactional
     public void useCookie(Long memberId, Long cookieId) {
-        Fortune fortune = fortuneRepository.findByMember_MemberIdAndDate(memberId, LocalDate.now())
-                .orElseThrow(() -> new NoFortuneFoundException("오늘 운세가 존재하지 않습니다.", memberId, LocalDate.now()));
+        Fortune fortune = fortuneRepository.findByMember_MemberIdAndDate(memberId, date.today())
+                .orElseThrow(() -> new NoFortuneFoundException("오늘 운세가 존재하지 않습니다.", memberId, date.today()));
         List<FortuneAspect> fortuneAspects = fortuneAspectRepository.findAllByFortune(fortune);
 
         FortuneCookie cookie = fortuneCookieRepository.findById(cookieId)
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 쿠키 아이디입니다."));
 
+        final int CAP = 250;
+
+        int appliedSum = 0;
+
         for (FortuneAspect aspect : fortuneAspects) {
-            switch  (aspect.getName().name()) {
-                case "MONEY" -> aspect.updateScore(cookie.getMoney());
-                case "LOVE" -> aspect.updateScore(cookie.getLove());
-                case "ACHIEVEMENT" -> aspect.updateScore(cookie.getAchievement());
-                case "HEALTH" -> aspect.updateScore(cookie.getHealth());
+            switch (aspect.getName()) {
+                case MONEY -> appliedSum += aspect.increaseWithUpperCap(cookie.getMoney(), CAP);
+                case LOVE -> appliedSum += aspect.increaseWithUpperCap(cookie.getLove(), CAP);
+                case ACHIEVEMENT -> appliedSum += aspect.increaseWithUpperCap(cookie.getAchievement(), CAP);
+                case HEALTH -> appliedSum += aspect.increaseWithUpperCap(cookie.getHealth(), CAP);
             }
         }
 
         cookie.updateStatus();
-        fortune.updateScore(cookie.getTotalScore());
-        rankingService.refreshTodayForMember(memberId);
+        fortune.updateScore(appliedSum);
+        afterCommit(() -> rankingService.refreshTodayForMember(memberId));
     }
 
     public List<CookieResponse> getFortuneCookie(Long memberId, String sortType) {
@@ -74,5 +81,22 @@ public class CookieService {
                     .map(CookieResponse::fromEntity)
                     .toList();
         };
+    }
+
+    @Transactional
+    public void deleteCookie(Long memberId, Long cookieId) {
+        FortuneCookie cookie = fortuneCookieRepository.findById(cookieId)
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 쿠키 아이디입니다."));
+
+        Long ownerId = cookie.getInventory().getMember().getMemberId();
+        if (!ownerId.equals(memberId)) {
+            throw new IllegalArgumentException("본인 소유의 쿠키만 삭제할 수 있습니다.");
+        }
+
+        if (cookie.getStatus() != FortuneCookie.CookieStatus.AVAILABLE) {
+            throw new IllegalStateException("사용된 쿠키는 삭제할 수 없습니다.");
+        }
+
+        fortuneCookieRepository.delete(cookie);
     }
 }

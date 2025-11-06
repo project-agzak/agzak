@@ -6,6 +6,7 @@ import lombok.*;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder(toBuilder = true)
 @Entity
 @Table(
         name = "fortune_aspect",
@@ -36,15 +37,14 @@ public class FortuneAspect {
 
     public enum AspectName { MONEY, LOVE, ACHIEVEMENT, HEALTH }
 
-    @Builder
-    public FortuneAspect(Fortune fortune, AspectName name, int score) {
-        this.fortune = fortune;
-        this.name = name;
-        this.score = score;
-        this.originalScore = score;
-    }
-
-    public void updateScore(int score) {
-        this.score += score;
+    public int increaseWithUpperCap(int delta, int cap) {
+        if (delta <= 0) {
+            this.score += delta;
+            return delta;
+        }
+        int allowed = Math.max(0, cap - this.score);
+        int applied = Math.min(delta, allowed);
+        this.score += applied;
+        return applied;
     }
 }
