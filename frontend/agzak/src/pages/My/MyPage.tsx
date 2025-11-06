@@ -23,8 +23,6 @@ export default function MyPage() {
     sido: string;
     sgg?: string;
     address: string;
-    lat: number;
-    lng: number;
   } | null>(null);
 
   // 서버에서 받은 프로필을 로컬 상태에 반영하는 함수
@@ -55,8 +53,6 @@ export default function MyPage() {
       setBirthCity({
         sido: data.birthCity,
         address: data.birthCity,
-        lat: data.latitude ?? 0,
-        lng: data.longitude ?? 0,
       });
     }
   };

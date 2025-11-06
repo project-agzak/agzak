@@ -15,8 +15,7 @@ export type Member = {
   gender: "MALE" | "FEMALE";  // Swagger 기준
   birthDate: string;          // "YYYY-MM-DD"
   birthHour: string | null;   // Swagger는 string, 없을 수 있으니 null 허용
-  latitude: number;
-  longitude: number;
+  birthCity: string;         // "충청북도 청주시" 이런 문자열
 };
 
 // 회원 정보 수정 요청 (PATCH /members)

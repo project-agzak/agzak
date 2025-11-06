@@ -423,3 +423,34 @@ background: transparent;
 .input-field.input-editable {
   color: #121212 !important;
 }
+.pixel-button-light {
+  display: inline-block;
+  padding: 4px 14px;           /* ⬅ 가로 여백 증가 */
+  min-width: 64px;             /* ⬅ 최소 너비 확보 (줄바꿈 방지) */
+  text-align: center;
+  white-space: nowrap;         /* ⬅ 글자 줄바꿈 금지 */
+
+  font-family: "Galmuri9", monospace;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+
+  color: #121212;
+  background-color: #fff8e7;
+
+  border: 2px solid #000;
+  border-radius: 0;
+  box-shadow: 2px 2px 0 #000;
+
+  transition: all 0.1s ease-in-out;
+}
+
+.pixel-button-light:hover {
+  transform: translate(1px, 1px);
+  box-shadow: none;
+  background-color: #f4e9d3;
+}
+
+.pixel-button-light:active {
+  background-color: #e9dfc5;
+}
