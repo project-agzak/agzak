@@ -1,5 +1,7 @@
+
 import { api } from "@/lib/api";
 import { apiClient } from "@/lib/axios";
+
 
 export type CookieDetail = {
   fortuneCookieId: number;
@@ -12,6 +14,7 @@ export type CookieDetail = {
 };
 
 export type CookieSortType = "recent" | "score" | "category";
+
 
 // 쿠키 삭제
 async function remove(cookieId: number): Promise<void> {
@@ -39,4 +42,3 @@ export const cookiesAPI = {
   remove,
   useCookie,
 };
-

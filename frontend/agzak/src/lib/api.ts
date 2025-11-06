@@ -1,6 +1,6 @@
 
 import type { AxiosRequestConfig, AxiosResponse } from "axios";
-
+import { useAuthStore } from "@/store/useAuthStore";
 import { apiClient } from "./axios";
 
 export type ApiError = { status?: number; code?: string | number; message: string; raw?: any };
@@ -9,6 +9,13 @@ export type ApiResponse<T> = {
   data?: T | undefined;
   error?: ApiError;
 };
+
+function handleAuthError(status?: number) {
+  if (status === 401 || status === 403) {
+    useAuthStore.getState().logout();
+  }
+}
+
 
 async function request<T>(config: AxiosRequestConfig): Promise<ApiResponse<T>> {
   try {
@@ -26,7 +33,8 @@ async function request<T>(config: AxiosRequestConfig): Promise<ApiResponse<T>> {
     const status = e?.response?.status;
     const raw = e?.response?.data;
     const message = raw?.message ?? e?.message ?? "Unexpected error";
-    console.warn("[API ERROR]", status, raw);
+    
+      handleAuthError(status);
       return { ok: false, error: { status, code: status, message, raw } };
     }
 }

@@ -2,7 +2,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
-import { useAuthStore } from "@/store/useAuthStore";
+import { useAuthStore, type Member } from "@/store/useAuthStore";
 
 import { Button_M } from "@/components/atoms/Button_M";
 import { Button } from "@/components/ui/button";
@@ -19,31 +19,25 @@ export default function Header() {
   // 전역 인증 상태
   const { isLoggedIn, member, setMember, logout } = useAuthStore();
 
-  // 로그인 상태일 때 한 번만 내 정보 조회해서 스토어에 저장
-  useEffect(() => {
-    const fetchMember = async () => {
-      if (!isLoggedIn || member) return;
 
-      const res = await api.get<{
-        id: number;
-        email: string;
-        nickname: string;
-        gender?: string;
-        birthDate?: string;
-      }>("/members");
+useEffect(() => {
+  const fetchMember = async () => {
+    if (!isLoggedIn || member) return;
 
-      if (!res.ok || !res.data) {
-        console.error("회원 정보 불러오기 실패:", res.error);
-        return;
-      }
+    const res = await api.get<Member>("/members"); // ⬅ 전체 Member 타입으로 받기
 
-      const data = res.data;
-      console.log("회원 정보 불러오기 성공:", data);
-      setMember(data);
-    };
+    if (!res.ok || !res.data) {
+      console.error("회원 정보 불러오기 실패:", res.error);
+      return;
+    }
 
-    fetchMember();
-  }, [isLoggedIn, member, setMember]);
+    const data = res.data;
+    console.log("Header - 회원 정보 불러오기 성공:", data); // 여기 birthTime 나와야 함
+    setMember(data); // ⬅ 이제 birthTime까지 포함된 객체가 store에 저장됨
+  };
+
+  fetchMember();
+}, [isLoggedIn, member, setMember]);
 
   // 로그아웃 처리
   const handleLogout = async () => {
