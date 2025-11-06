@@ -121,36 +121,56 @@ export default function RankingList() {
 
   return (
     <div className="mt-3 w-[min(360px,92%)] mx-auto">
-      {/* 카테고리 탭 */}
-      <div role="tablist" aria-label="랭킹 카테고리" className="mb-2 grid grid-cols-3 gap-2">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={active === "total"}
-          onClick={() => setActive("total")}
-          className={`py-2 rounded-xl font-galmuri ${active === "total" ? "bg-black text-white" : "bg-gray-200 text-gray-800"}`}
-        >
-          총점
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={active === "original"}
-          onClick={() => setActive("original")}
-          className={`py-2 rounded-xl font-galmuri ${active === "original" ? "bg-black text-white" : "bg-gray-200 text-gray-800"}`}
-        >
-          원점
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={active === "increase"}
-          onClick={() => setActive("increase")}
-          className={`py-2 rounded-xl font-galmuri ${active === "increase" ? "bg-black text-white" : "bg-gray-200 text-gray-800"}`}
-        >
-          증가율
-        </button>
-      </div>
+     {/* 카테고리 탭 */}
+<div
+  role="tablist"
+  aria-label="랭킹 카테고리"
+  className="mb-3 flex items-center justify-center gap-3"
+>
+  <button
+    type="button"
+    role="tab"
+    aria-selected={active === "total"}
+    onClick={() => setActive("total")}
+    className={
+      "cursor-pointer font-galmuri-small font-extrabold transition-colors " +
+      (active === "total" ? "text-[#121212] border-b-2 border-[#121212] pb-0.5" : "text-[#888] hover:text-[#000]")
+    }
+  >
+    총점
+  </button>
+
+  <span className="text-[#888] font-galmuri-small select-none">|</span>
+
+  <button
+    type="button"
+    role="tab"
+    aria-selected={active === "original"}
+    onClick={() => setActive("original")}
+    className={
+      "cursor-pointer font-galmuri-small font-extrabold transition-colors " +
+      (active === "original" ? "text-[#121212] border-b-2 border-[#121212] pb-0.5" : "text-[#888] hover:text-[#000]")
+    }
+  >
+    원점
+  </button>
+
+  <span className="text-[#888] font-galmuri-small select-none">|</span>
+
+  <button
+    type="button"
+    role="tab"
+    aria-selected={active === "increase"}
+    onClick={() => setActive("increase")}
+    className={
+      "cursor-pointer font-galmuri-small font-extrabold transition-colors " +
+      (active === "increase" ? "text-[#121212] border-b-2 border-[#121212] pb-0.5" : "text-[#888] hover:text-[#000]")
+    }
+  >
+    증가율
+  </button>
+</div>
+
 
       {/* 로딩 */}
       {loading && (
