@@ -134,8 +134,16 @@ type SidebarContentProps = {
 
 /** 사이드바 내용 */
 function SidebarContent({ isLoggedIn, nickname, onLogout }: SidebarContentProps) {
+   const navigate = useNavigate();
   const displayName = nickname || "사용자";
 
+  const handleFortuneClick = () => {
+    if (isLoggedIn) {
+      navigate("/fortune/result"); // ✅ 로그인 시 바로 결과 페이지로 이동
+    } else {
+      navigate("/fortune"); // ✅ 비로그인 시 기존 폼 페이지
+    }
+  };
   return (
     <div className="h-full flex flex-col">
       {/* 로고 */}
@@ -178,14 +186,15 @@ function SidebarContent({ isLoggedIn, nickname, onLogout }: SidebarContentProps)
       </div>
 
       {/* 메뉴 */}
+       {/*  운세 보기 수정됨 */}
       <nav className="px-5 py-5 space-y-1 font-bitbit">
         <SheetClose asChild>
-          <a
-            href="/fortune"
-            className="flex items-center gap-2 rounded-md px-0 py-2 hover:bg-zinc-100 active:bg-zinc-200 transition-colors"
+          <button
+            onClick={handleFortuneClick}
+            className="flex w-full items-center gap-2 rounded-md px-0 py-2 hover:bg-zinc-100 active:bg-zinc-200 transition-colors text-left"
           >
             <span>운세 보기</span>
-          </a>
+          </button>
         </SheetClose>
 
         <SheetClose asChild>
