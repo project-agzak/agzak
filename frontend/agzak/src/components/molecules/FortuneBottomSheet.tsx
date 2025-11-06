@@ -18,7 +18,6 @@ import FrontRabbit from "@/assets/FrontCard/FrontRabbit.webp";
 import FrontSheep from "@/assets/FrontCard/FrontSheep.webp";
 import FrontSnake from "@/assets/FrontCard/FrontSnake.webp";
 import FrontTiger from "@/assets/FrontCard/FrontTiger.webp";
-import { fortuneAPI } from "@/lib/fortuneAPI";
 
 const FRONT_BY_TYPE: Record<string, string> = {
   "쥐": FrontMouse,
