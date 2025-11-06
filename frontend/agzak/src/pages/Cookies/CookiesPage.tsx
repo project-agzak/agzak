@@ -1,6 +1,3 @@
-import * as React from "react";
-import Pig from "@/assets/ui/MainPig.svg";
-import HealthGif from "@/assets/Gifs/health-cookie.gif";
 import AchievementGif from "@/assets/Gifs/achievement-cookie.gif";
 import HealthGif from "@/assets/Gifs/health-cookie.gif";
 import LoveGif from "@/assets/Gifs/love-cookie.gif";
@@ -14,9 +11,12 @@ import InventoryImg from "@/assets/ui/CookieInventory.svg";
 import { ActionButton_M } from "@/components/atoms/ActionButton_M";
 import { FortuneGaugeList } from "@/components/molecules/FortuneGaugeList";
 import { CookieInventory } from "@/components/organisms/CookieInventory";
+import { useCookiesStore } from "../../store/useCookiesStore";
+import { useFortuneStore } from "../../store/useFortuneStore";
+import { useMembersStore } from "../../store/useMembersStore";
 
-import { toGaugeStats } from "@/adapters/fortuneAdapter";
 import type { ScoresLike as AdapterScoresLike } from "@/adapters/fortuneAdapter";
+import { toGaugeStats } from "@/adapters/fortuneAdapter";
 
 const pickScores = (s: any): AdapterScoresLike | undefined => {
   if (!s) return undefined;
@@ -54,7 +54,7 @@ export default function CookiesPage() {
   const todayData = fortuneCache[today] ?? null;
   const gaugeStats = React.useMemo(() => {
     if (todayData) {
-      const s: ScoresLike = { health: 0, achievement: 0, love: 0, money: 0 };
+      const s: AdapterScoresLike = { total_score:0, health: 0, achievement: 0, love: 0, money: 0 };
       todayData.aspects.forEach((a) => {
         // adapter에서 key는 AspectKey (health|achievement|love|money)
         // @ts-ignore
@@ -136,7 +136,7 @@ export default function CookiesPage() {
       if (cur) {
         const deltaSum = delta.health + delta.achievement + delta.love + delta.money;
         const newAspects = cur.aspects.map((a) => {
-          const key = a.key as keyof ScoresLike;
+          const key = a.key as keyof AdapterScoresLike;
           const add = (delta as any)[key] ?? 0;
           return { ...a, score: (a.score ?? 0) + add };
         });
