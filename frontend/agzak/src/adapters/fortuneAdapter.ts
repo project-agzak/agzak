@@ -2,6 +2,7 @@
 import type { FortuneData, AspectKey, FortuneAspectUI, FortuneDetail } from "@/types/fortune";
   
 export type FortuneGaugeColor = "green" | "blue" | "pink" | "yellow";
+
 export const COLOR_MAP: Record<string, FortuneGaugeColor> = {
   건강운: "green",
   성취운: "blue",
@@ -52,11 +53,12 @@ export function toFortuneData(detail: FortuneDetail): FortuneData {
   };
   }
   
-type ScoresLike = {
-  health?: number;
-  achievement?: number;
-  love?: number;
-  money?: number;
+export type ScoresLike = {
+  total_score: number;
+  health: number;
+  achievement: number;
+  love: number;
+  money: number;
 };
 
 export function toGaugeStats(scores?: ScoresLike) {
@@ -70,4 +72,28 @@ export function toGaugeStats(scores?: ScoresLike) {
     { label: "애정운", value: l, color: "pink" as const },
     { label: "금전운", value: m, color: "yellow" as const },
   ];
+}
+
+// 회원용 응답
+export function adaptMember(res: any): ScoresLike {
+  const s = res?.fortune?.scores ?? res?.scores ?? {};
+  return {
+    total_score: Number(s.total_score ?? 0),
+    health: Number(s.health ?? 0),
+    achievement: Number(s.achievement ?? 0),
+    love: Number(s.love ?? 0),
+    money: Number(s.money ?? 0),
+  };
+}
+
+// 게스트용 응답
+export function adaptGuest(res: any): ScoresLike {
+  const s = res?.fortune?.scores ?? res?.scores ?? {};
+  return {
+    total_score: Number(s.total_score ?? 0),
+    health: Number(s.health ?? 0),
+    achievement: Number(s.achievement ?? 0),
+    love: Number(s.love ?? 0),
+    money: Number(s.money ?? 0),
+  };
 }

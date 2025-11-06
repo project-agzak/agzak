@@ -11,7 +11,6 @@ import {
 } from "@/lib/fortuneAPI";
 
 type ScoreKeys = "health" | "achievement" | "love" | "money";
-type DeltaScores = Partial<Record<ScoreKeys, number>>;
 
 const hasFlatScores = (v: any): v is Record<ScoreKeys, number> =>
   v && ["health", "achievement", "love", "money"].every((k) => typeof v[k] === "number");
@@ -31,7 +30,6 @@ const setScores = (obj: any, next: Record<ScoreKeys, number>) => {
   } else if (hasNestedScores(obj)) {
     obj.scores = { ...obj.scores, ...next };
   } else {
-    // shape를 모르면 평면형으로 정규화
     obj.health = next.health;
     obj.achievement = next.achievement;
     obj.love = next.love;
@@ -46,6 +44,21 @@ const setTotal = (obj: any, v: number) => {
   return obj;
 };
 
+// 응답이 회원/게스트 어느 쪽이든 scores/type을 공통으로 뽑아오는 헬퍼
+function pickScoresTypeGuestId(d: any): {
+  scores?: any;
+  type?: any;
+  guestId?: string | null;
+} {
+  // 회원 응답 예: { scores, type }
+  // 게스트 응답 예: { fortune: { scores, type }, guestId }
+  const fortune = d?.fortune ?? d;
+  const scores = fortune?.scores ?? d?.scores;
+  const type = fortune?.type ?? d?.type;
+  const guestId = d?.guestId ?? null;
+  return { scores, type, guestId };
+}
+
 type Scores = {
   total_score: number;
   health: number;
@@ -56,7 +69,7 @@ type Scores = {
 
 type FortuneState = {
   // data
-  scores: FortuneScores | null;
+  scores: FortuneScores | null; // 실제 런타임에서는 flat/nested 둘 다 허용(아래 유틸이 처리)
   typeInfo: FortuneTypeInfo | null;
 
   // 게스트 전용
@@ -68,6 +81,10 @@ type FortuneState = {
   // ui
   loading: boolean;
   error: string | null;
+
+  // 운세 상세 보기
+  getDetailSummary: (key: ScoreKeys) => string | undefined;
+  getScoreValue?: (key: ScoreKeys) => number;
 
   // actions
   fetchToday: () => Promise<void>;
@@ -82,47 +99,92 @@ type FortuneState = {
 const toErrorMsg = (e: unknown): string | undefined =>
   typeof e === "string" ? e : (e as any)?.message ?? undefined;
 
+const pickDetailSummary = (src: any, key: ScoreKeys): string | undefined => {
+  if (!src) return undefined;
+  const root = hasNestedScores(src) ? src.scores : src;
+  const d = root?.detailed_summaries;
+  const v = d?.[key];
+  return typeof v === "string" ? v : undefined;
+};
+
 export const useFortuneStore = create<FortuneState>((set, get) => ({
   scores: null,
   typeInfo: null,
-  guestId: null,
+  guestId: typeof window !== "undefined" ? localStorage.getItem("guest_id") : null,
 
   typeDetails: {},
 
   loading: false,
   error: null,
 
-  // 오늘의 운세
+  // 오늘의 운세 (회원/게스트 통합 진입점)
   fetchToday: async () => {
+    const { loading } = get();
+    if (loading) return;
+
     set({ loading: true, error: null });
-    const res = await fortuneAPI.createOrFetchToday();
-    if (res.ok && res.data) {
-      const d: FortuneResponse = res.data;
-      set({ scores: d.scores, typeInfo: d.type, loading: false });
-    } else {
+    try {
+      const res = await fortuneAPI.createOrFetchToday();
+      if (res.ok && res.data) {
+        const d: FortuneResponse | any = res.data;
+        const { scores, type, guestId } = pickScoresTypeGuestId(d);
+
+        if (guestId) {
+          set({ guestId });
+          try {
+            localStorage.setItem("guest_id", guestId);
+          } catch {}
+        }
+
+        set({ scores: scores ?? null, typeInfo: type ?? null, loading: false });
+      } else {
+        set({
+          loading: false,
+          error: toErrorMsg(res.error) ?? "오늘의 운세를 불러오지 못했습니다.",
+        });
+      }
+    } catch (e) {
       set({
         loading: false,
-        error: toErrorMsg(res.error) ?? "오늘의 운세를 불러오지 못했습니다.",
+        error: toErrorMsg(e) ?? "오늘의 운세를 불러오지 못했습니다.",
       });
     }
   },
 
-  // 게스트 운세
+  // 게스트 운세 (게스트 폼 제출 시 사용)
   fetchGuest: async (payload) => {
+    const { loading } = get();
+    if (loading) return; // ✅ 중복 호출 방지
+
     set({ loading: true, error: null });
-    const res = await fortuneAPI.createGuestFortune(payload);
-    if (res.ok && res.data) {
-      const d: GuestFortuneRes = res.data;
+    try {
+      const res = await fortuneAPI.createGuestFortune(payload);
+      if (res.ok && res.data) {
+        const d: GuestFortuneRes | any = res.data;
+        const { scores, type, guestId } = pickScoresTypeGuestId(d);
+
+        if (guestId) {
+          set({ guestId });
+          try {
+            localStorage.setItem("guest_id", guestId);
+          } catch {}
+        }
+
+        set({
+          scores: scores ?? null,
+          typeInfo: type ?? null,
+          loading: false,
+        });
+      } else {
+        set({
+          loading: false,
+          error: toErrorMsg(res.error) ?? "게스트 운세 계산에 실패했습니다.",
+        });
+      }
+    } catch (e) {
       set({
-        scores: d.fortune.scores,
-        typeInfo: d.fortune.type,
-        guestId: d.guestId,
         loading: false,
-      });
-    } else {
-      set({
-        loading: false,
-        error: toErrorMsg(res.error) ?? "게스트 운세 계산에 실패했습니다.",
+        error: toErrorMsg(e) ?? "게스트 운세 계산에 실패했습니다.",
       });
     }
   },
@@ -142,7 +204,6 @@ export const useFortuneStore = create<FortuneState>((set, get) => ({
       }));
       return detail;
     } else {
-      // 404: 운세 없음
       set((s) => ({
         typeDetails: { ...s.typeDetails, [fortuneTypeId]: undefined },
         loading: false,
@@ -165,7 +226,8 @@ export const useFortuneStore = create<FortuneState>((set, get) => ({
       error: null,
     }),
 
-  addStats: (delta: DeltaScores) => {
+  // 쿠키 효과 합산
+  addStats: (delta) => {
     set((state) => {
       const cur = state.scores;
       if (!cur) return {};
@@ -176,11 +238,25 @@ export const useFortuneStore = create<FortuneState>((set, get) => ({
       const m = getScore(cur, "money") + (delta.money ?? 0);
       const total = h + a + l + m;
 
-      // 원본 shape 유지하며 갱신
       const next: any = setScores({ ...(cur as any) }, { health: h, achievement: a, love: l, money: m });
       setTotal(next, total);
 
       return { scores: next as typeof state.scores };
     });
   },
-}))
+
+  getDetailSummary: (key: ScoreKeys) => {
+    const s = get().scores;
+    return pickDetailSummary(s as any, key);
+  },
+
+  getScoreValue: (key: ScoreKeys) => {
+    const s = get().scores;
+    if (!s) return 0;
+    const root = hasNestedScores(s) ? (s as any).scores : (s as any);
+    const n = root?.[key];
+    return typeof n === "number" ? n : 0;
+  },
+
+}));
+
