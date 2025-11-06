@@ -5,8 +5,9 @@ import PWABadge from '../pwa/PWABadge';
 export default function AppLayout() {
   return (
     <div className="app-shell">
+      <div className="app-bg" aria-hidden />
       <Header />
-      <main className="pt-16">
+      <main className="app-content pt-16"> 
         <Outlet />
       </main>
       <div className="pwa-badge-wrap">
