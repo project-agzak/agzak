@@ -84,10 +84,10 @@ public class FortuneService {
         필수 출력 형식(키/타입 고정):
         {
           "total_score": number,
-          "love": number,
-          "health": number,
-          "money": number,
-          "achievement": number,
+          "love": number (0~250),
+          "health": number (0~250),
+          "money": number (0~250),
+          "achievement": number (0~250),
           "total_summary": string ("오늘의 총 운세 요약..."),
           "detailed_summaries": {
             "love": "연애운 요약...",
@@ -137,6 +137,7 @@ public class FortuneService {
         String jsonRequestBody = """
             {
               "model": "%s",
+              "temperature": 0.2,
               "messages": [
                 {
                   "role": "developer",
