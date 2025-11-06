@@ -42,10 +42,10 @@ public class CookieGameService {
     private final FortuneCookieRepository fortuneCookieRepository;
     private final AuthMemberProvider authMemberProvider;
     private final DateProvider date;
+    private final RedisQuotaService quotaService;
 
     private static final BigDecimal INIT_PROB = new BigDecimal("70.00");
     private static final int ATTEMPTS_LIMIT = 10;
-    private static final int SESSIONS_PER_DAY = 3;
 
     public StartGameResponse startForCurrentUser() {
         Long memberId = authMemberProvider.currentMemberId();
@@ -101,14 +101,17 @@ public class CookieGameService {
                     .snapAchievement(snapAchievement)
                     .snapHealth(snapHealth)
                     .snapMisfortune(snapMisfortune)
+                    .remaining(calcRemaining(member.getMemberId()))
                     .build();
         }
 
         // 2) 진행 중 세션이 없다면 => "새로 생성" (쿼터 체크)
         long completedCount = gameSessionRepository.countByMemberAndGameDateAndStatus(
                 member, today, GameSession.SessionStatus.COMPLETED);
-        if (completedCount >= SESSIONS_PER_DAY) {
-            throw new DailyQuotaExceededException("오늘은 이미 3회 완료하여 더 이상 시작할 수 없습니다.");
+
+        int cap = quotaService.getTodayCap(memberId);
+        if (completedCount >= cap) {
+            throw new DailyQuotaExceededException("오늘은 이미 %d회 완료하여 더 이상 시작할 수 없습니다.".formatted(cap));
         }
 
         // 회차 결정(동일 날짜 최대 session_no 기반 +1, 단 1..3 범위)
@@ -116,7 +119,7 @@ public class CookieGameService {
         int maxExistingNo = gameSessionRepository.findTopByMemberAndGameDateOrderBySessionNoDesc(member, today)
                 .map(GameSession::getSessionNo)
                 .orElse(0);
-        int sessionNo = Math.max(baseSessionNo, Math.min(maxExistingNo + 1, SESSIONS_PER_DAY));
+        int sessionNo = Math.max(baseSessionNo, Math.min(maxExistingNo + 1, cap));
 
         GameSession session = GameSession.builder()
                 .member(member)
@@ -148,7 +151,15 @@ public class CookieGameService {
                 .snapAchievement(0)
                 .snapHealth(0)
                 .snapMisfortune(0)
+                .remaining(calcRemaining(memberId))
                 .build();
+    }
+
+    private int calcRemaining(Long memberId) {
+        int cap = quotaService.getTodayCap(memberId);
+        long used = gameSessionRepository.countByMember_MemberIdAndGameDateAndStatus(
+                memberId, date.today(), GameSession.SessionStatus.COMPLETED);
+        return Math.max(0, cap - (int) used);
     }
 
     public AttemptResponse attemptForCurrentUser(AttemptRequest req) {

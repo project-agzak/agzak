@@ -22,7 +22,9 @@ public record StartGameResponse(
         Integer snapMoney,
         Integer snapAchievement,
         Integer snapHealth,
-        Integer snapMisfortune
+        Integer snapMisfortune,
+
+        Integer remaining
 ) {
         public enum SessionStatus { IN_PROGRESS, COMPLETED, CANCELLED }
 }
