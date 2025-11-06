@@ -3,6 +3,19 @@ import clsx from "clsx";
 
 import { useFortuneStore } from "@/store/useFortuneStore";
 
+import BackCat from "@/assets/BackEmoji/BackCat.svg"
+import BackChicken from "@/assets/BackEmoji/BackChicken.svg";
+import BackCow from "@/assets/BackEmoji/BackCow.svg";
+import BackDog from "@/assets/BackEmoji/BackDog.svg";
+import BackDragon from "@/assets/BackEmoji/BackDragon.svg";
+import BackHorse from "@/assets/BackEmoji/BackHorse.svg";
+import BackMonkey from "@/assets/BackEmoji/BackMonkey.svg";
+import BackMouse from "@/assets/BackEmoji/BackMouse.svg";
+import BackRabbit from "@/assets/BackEmoji/BackRabbit.svg";
+import BackSheep from "@/assets/BackEmoji/BackSheep.svg";
+import BackSnake from "@/assets/BackEmoji/BackSnake.svg";
+import BackTiger from "@/assets/BackEmoji/BackTiger.svg";
+
 type SummaryKey = "total" | "health" | "achievement" | "love" | "money";
 
 type Props = {
@@ -11,6 +24,21 @@ type Props = {
   message?: string;
   summary?: SummaryKey; 
   animalSrc?: string;
+};
+
+const BACK_EMOJI_BY_TYPE: Record<string, string> = {
+  "쥐": BackMouse,
+  "소": BackCow,
+  "호랑이": BackTiger,
+  "토끼": BackRabbit,
+  "뱀": BackSnake,
+  "말": BackHorse,
+  "양": BackSheep,
+  "원숭이": BackMonkey,
+  "닭": BackChicken,
+  "개": BackDog,
+  "용": BackDragon,
+  "고양이": BackCat,
 };
 
 export default function BackCard({
@@ -23,6 +51,7 @@ export default function BackCard({
 
   const getTotalSummary = useFortuneStore((s) => s.getTotalSummary);
   const getDetailSummary = useFortuneStore((s) => s.getDetailSummary);
+  const typeName = useFortuneStore((s) => s.typeInfo?.name ?? null);
 
   const resolvedMessage =
     message ??
@@ -30,7 +59,7 @@ export default function BackCard({
       ? getTotalSummary() ?? ""
       : getDetailSummary(summary as Exclude<SummaryKey, "total">) ?? "");
 
-  const resolvedAnimal = animalSrc;
+  const resolvedAnimal = animalSrc || (typeName ? BACK_EMOJI_BY_TYPE[typeName] : BackRabbit);
 
   return (
     <div className={clsx("relative w-full h-full", className)}>
@@ -62,7 +91,7 @@ export default function BackCard({
         {/* 메시지 카드 */}
         <div className="w-full px-6 pb-8">
           <div className="bg-[#EED0A4]/90 rounded-md shadow-sm px-5 py-4">
-            <p className="font-galmuri-small text-[#121212] text-[14px] leading-[1.8]">
+            <p className="font-galmuri-condensed-small text-[#121212] leading-[1.8]">
               {resolvedMessage}
             </p>
           </div>
