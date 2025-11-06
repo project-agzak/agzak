@@ -16,6 +16,7 @@ import com.ssafy.agzak.domain.member.entity.Member;
 import com.ssafy.agzak.domain.member.repository.MemberRepository;
 import com.ssafy.agzak.domain.ranking.service.RankingService;
 import com.ssafy.agzak.global.time.DateProvider;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -71,9 +72,9 @@ public class FortuneService {
 
     private String systemPrompt = """
         시스템 지시사항
-        너는 제공된 출생 차트와 트랜싯 데이터를 바탕으로 5가지 영역의 '오늘의 운세 점수'를 계산하는 전문 점성가다.
+        너는 제공된 출생 차트와 트랜싯 데이터를 바탕으로 5가지 영역의 '오늘의 운세 점수'를 계산하는 '전문 점성가'다.
         반드시 **아래 키만 포함한 단일 JSON 객체**로만 출력한다. 어떠한 설명/문장/코드펜스/마크다운도 금지한다.
-        문자열로 감싸지 말고, JSON 최상위에 바로 객체를 출력한다. 답변은 반드시 한글로 줘
+        문자열로 감싸지 말고, JSON 최상위에 바로 객체를 출력한다. 답변은 반드시 한글로 줘 그리고 사용자 운세에 대해 설명해줘.
         
         제약:
         - 모든 점수는 0~250의 정수.
@@ -90,10 +91,10 @@ public class FortuneService {
           "achievement": number (0~250),
           "total_summary": string ("오늘의 총 운세 요약..."),
           "detailed_summaries": {
-            "love": "연애운 요약...",
-            "health": "건강운 요약...",
-            "money": "금전운 요약...",
-            "achievement": "성취운 요약..."
+            "love": "연애운 설명 요약...",
+            "health": "건강운 설명 요약...",
+            "money": "금전운 설명 요약...",
+            "achievement": "성취운 설명 요약..."
         }
         
         점수 계산 가이드라인:
@@ -103,9 +104,37 @@ public class FortuneService {
         - 성취운: Natal 태양/화성, 10하우스(MC), 관련 트랜싯 어스펙트.
         - 총운세: 긍/부정 어스펙트의 개수·강도 종합.
         
+            **[매우 중요] 요약 작성 가이드라인 (detailed_summaries)**
+                   \s
+                    - `total_summary`와 `detailed_summaries`의 모든 내용은 **점성술을 전혀 모르는 일반인 사용자**를 위한 것입니다.
+                    - 따라서, 요약 내용에는 **절대로** 다음과 같은 점성술 전문 용어를 사용하지 마세요:
+                      - **행성 이름** (예: 금성, 화성, Jupiter, Venus)
+                      - **어스펙트 이름** (예: Trine, Square, Opposition, 어스펙트)
+                      - **하우스** (예: 5하우스, 10하우스)
+                      - **기타 전문 용어** (예: Natal, Transit, 상승점, 중천점)
+                   \s
+                    - 점성술 데이터를 **"해석"**하여, 실제 생활과 밀접한 조언으로 풀어서 설명해야 합니다.
+                   \s
+                    - **(절대 금지 - 나쁜 예):** "Venus가 Natal Mars와 Square 어스펙트를 맺어 연애운이 나쁩니다."
+                    - **(권장 - 좋은 예):** "오늘은 연인과 사소한 오해가 생기기 쉬운 날입니다. 말을 한 번 더 생각하고 부드럽게 표현하려는 노력이 필요합니다."
+                   \s
+                    - **(절대 금지 - 나쁜 예):** "Jupiter와 Sun의 Trine으로 금전운이 좋습니다."
+                    - **(권장 - 좋은 예):** "금전적인 흐름이 매우 좋습니다. 예상치 못한 수입을 기대하거나, 계획했던 투자를 실행하기에 좋은 날입니다."
+        
         아래 규칙을 마지막으로 한 번 더 상기:
         - **JSON만 출력**, 따옴표로 감싸지 말 것, 코드블록(````), 주석, 추가 텍스트 금지.
         """;
+
+    @PostConstruct
+    private void initializeRestClient() {
+        this.restClient = RestClient.builder()
+                .baseUrl(gmsBaseUrl)
+                .defaultHeaders(headers -> {
+                    headers.setBearerAuth(gmsApiKey);
+                    headers.set("Content-Type", "application/json");
+                })
+                .build();
+    }
 
     @Cacheable(
             value = "fortuneCache",
@@ -113,13 +142,6 @@ public class FortuneService {
             cacheManager = "cacheManager"
     )
     public FinalFortuneResponse getFortuneScores(BirthDataInput input, String city) {
-        restClient = RestClient.builder()
-                .baseUrl(gmsBaseUrl)
-                .defaultHeaders(headers -> {
-                    headers.setBearerAuth(gmsApiKey);
-                    headers.set("Content-Type", "application/json");
-                })
-                .build();
 
         AiPromptData aiData = calculationService.generateAiPromptData(input);
 
@@ -137,7 +159,7 @@ public class FortuneService {
         String jsonRequestBody = """
             {
               "model": "%s",
-              "temperature": 0.2,
+              "temperature": 0.7,
               "messages": [
                 {
                   "role": "developer",
@@ -254,10 +276,14 @@ public class FortuneService {
         for (AspectInfo aspect : aspects) {
             String aspectType = aspect.aspectType();
             String mood = "[정보]";
-            if (aspectType.contains("Trine") || aspectType.contains("Sextile")) {
-                mood = "[긍정]";
-            } else if (aspectType.contains("Square") || aspectType.contains("Opposition")) {
-                mood = "[부정]";
+            if (aspectType.contains("Trine")) {
+                mood = "[매우 긍정적/조화]";
+            } else if (aspectType.contains("Sextile")) {
+                mood = "[긍정적/기회]";
+            } else if (aspectType.contains("Square")) {
+                mood = "[부정적/긴장]";
+            } else if (aspectType.contains("Opposition")) {
+                mood = "[부정적/대립]";
             }
 
             sb.append(String.format("* %s %s (Transit)이 %s (Natal)과 %s (오차: %.1f°)\n",

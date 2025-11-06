@@ -6,7 +6,7 @@ import com.ssafy.agzak.domain.auth.dto.request.RegisterRequest;
 import com.ssafy.agzak.domain.auth.dto.response.CheckEmailResponse;
 import com.ssafy.agzak.domain.auth.dto.request.RegisterWithGuestRequest;
 import com.ssafy.agzak.domain.auth.dto.response.TokenResponse;
-import com.ssafy.agzak.domain.fortune.dto.response.KakaoAddressResponse;
+import com.ssafy.agzak.domain.fortune.dto.response.LatLng;
 import com.ssafy.agzak.domain.fortune.service.GeocodingService;
 import com.ssafy.agzak.domain.guest.dto.GuestProfile;
 import com.ssafy.agzak.domain.guest.support.GuestProfileStore;
@@ -196,7 +196,7 @@ public class AuthService {
         }
 
         // 좌표 변환
-        KakaoAddressResponse.Document geo = geocodingService.getCoordinates(req.birthCity());
+        LatLng geo = geocodingService.getCoordinates(req.birthCity());
 
         String nickname = req.nickname();
         if (memberRepo.existsByNickname(nickname)) {
@@ -238,7 +238,7 @@ public class AuthService {
         if (memberRepo.existsByNickname(req.nickname()))
             throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 사용중인 닉네임입니다.");
 
-        KakaoAddressResponse.Document geo = geocodingService.getCoordinates(req.birthCity());
+        LatLng geo = geocodingService.getCoordinates(req.birthCity());
 
         var m = memberRepo.save(Member.builder()
                 .email(req.email())
