@@ -73,11 +73,13 @@ export default function CookiesPage() {
 
   // 선택/상세
   const selectedId = useCookiesStore((s) => s.selectedId);
-  const deletingId = useCookiesStore((s) => s.deletingId);
-  const deleteCookie = useCookiesStore((s) => s.deleteCookie);
   const loadingDetailId = useCookiesStore((s) => s.loadingDetailId);
   const open = useCookiesStore((s) => s.open);
   const select = useCookiesStore((s) => s.select);
+
+  // 쿠키 삭제
+  const deletingId = useCookiesStore((s) => s.deletingId);
+  const deleteCookie = useCookiesStore((s) => s.deleteCookie);
 
   // 쿠키 먹기
   const eatingId = useCookiesStore((s) => s.eatingId);
@@ -164,9 +166,8 @@ export default function CookiesPage() {
   };
   const removeSelected = async () => {
     if (!selectedId) return;
-    // (선택) 사용자 확인
     if (!confirm("정말 이 쿠키를 삭제할까요? 복구할 수 없습니다.")) return;
-    await deleteCookie(selectedId); 
+    await deleteCookie(selectedId);
   };
 
   return (
