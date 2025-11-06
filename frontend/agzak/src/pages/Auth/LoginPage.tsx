@@ -1,6 +1,6 @@
 // src/pages/Auth/LoginPage.tsx
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import {useLocation, useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/store/useAuthStore";
 
@@ -36,9 +36,14 @@ type LoginResponse = {
 
 export default function LoginPage() {
   const navigate = useNavigate();
-
+const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+
+  const state = location.state as { redirectTo?: string } | null;
+const redirectTo = state?.redirectTo ?? "/"; // 없으면 홈으로
+
 
   // 전역 인증 스토어
   const { setTokens } = useAuthStore();
@@ -72,7 +77,7 @@ export default function LoginPage() {
     setTokens(data.accessToken, data.refreshToken);
 
     alert("로그인 성공!");
-    navigate("/");
+     navigate(redirectTo, { replace: true });
   };
 
   // 회원가입 이동
