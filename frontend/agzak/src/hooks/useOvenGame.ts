@@ -11,6 +11,7 @@ import type {
   OvenSnap,
 } from "@/types/oven";
 import { useEffect, useRef, useState } from "react";
+import { useSessionQuotaStore } from "@/store/sessionQuotaStore";
 
 const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
 
@@ -31,6 +32,7 @@ export function useOvenGame() {
   const [lastCookie, setLastCookie] = useState<FortuneCookieResult | null>(null);
 
   const initialized = useRef(false);
+  const { refresh } = useSessionQuotaStore();
 
   // 페이지 진입 시 1회: 세션 시작/재개
   useEffect(() => {
@@ -44,6 +46,7 @@ export function useOvenGame() {
       const quotaRes = await GameAPI.getToday();
       if (quotaRes.ok && quotaRes.data.cap === quotaRes.data.used) {
         setBlocked("LIMIT");
+        refresh();
         setInitLoading(false);
         return;
       }
@@ -78,7 +81,7 @@ export function useOvenGame() {
       }
       setInitLoading(false);
     })();
-  }, []);
+  }, [refresh]);
 
   const isCompleted = (session?.status === "COMPLETED") || attempts >= attemptsLimit;
   const remaining = Math.max(0, attemptsLimit - attempts);
