@@ -12,6 +12,9 @@ pipeline {
     REGISTRY    = 'docker.io'
     DEPLOY_USER = 'ubuntu'
     DEPLOY_HOST = 'k13b102.p.ssafy.io'
+
+    EDGE_CONF   = '/home/ubuntu/agzak-app/deploy/infra/nginx/data/nginx/active_slot.conf'
+    BE_COMPOSE  = '/home/ubuntu/agzak-app/deploy/backend/agzak-app-server.yml'
   }
 
   stages {
@@ -61,7 +64,7 @@ pipeline {
       }
     }
 
-    stage('Deploy') {
+    stage('Deploy (Blue/Green)') {
       steps {
         sshagent (credentials: ['deploy-ssh']) {
           withCredentials([usernamePassword(
@@ -77,33 +80,43 @@ pipeline {
               def image = "${repo}:${tag}"
 
               sh """
-                set -eux
-                ssh -o StrictHostKeyChecking=no \\
-                  "$DEPLOY_USER@$DEPLOY_HOST" \\
-                  "IMAGE=${image} DOCKER_USER=${DOCKER_USER} DOCKER_PWD=${DOCKER_PWD} bash -s" <<'ENDSSH'
-                    set -eux
-                    cd /home/ubuntu/agzak-app/deploy/backend
+                set -Eeuo pipefail
+                ssh -o StrictHostKeyChecking=no "$DEPLOY_USER@$DEPLOY_HOST" \\
+                  "IMAGE='${image}' EDGE_CONF='${EDGE_CONF}' BE_COMPOSE='${BE_COMPOSE}' DOCKER_USER='${DOCKER_USER}' DOCKER_PWD='${DOCKER_PWD}' bash -s" << 'ENDSSH'
+                set -Eeuo pipefail
 
-                    sed -i '/^IMAGE=/d' .env
-                    sed -i '/^PROJECT=/d' .env
+                echo "\$DOCKER_PWD" | docker login -u "\$DOCKER_USER" --password-stdin || true
 
-                    echo "IMAGE=\$IMAGE" >> .env
-                    echo "PROJECT=deploy" >> .env
+                # 0) 현재 활성 슬롯 읽기 → 대기 슬롯 결정
+                CUR_SLOT=\$(grep -oE '(blue|green)' "\$EDGE_CONF" || echo blue)
+                if [ "\$CUR_SLOT" = "blue" ]; then IDLE_SLOT=green; else IDLE_SLOT=blue; fi
+                echo "Current=\$CUR_SLOT, Idle=\$IDLE_SLOT, IMAGE=\$IMAGE"
 
-                    echo "\$DOCKER_PWD" | docker login -u "\$DOCKER_USER" --password-stdin || true
+                export IMAGE
 
-                    make -C .. up-be
+                # 1) Idle 슬롯만 올리기/갱신
+                docker compose -f "\$BE_COMPOSE" up -d --no-deps "agzak-be-\$IDLE_SLOT"
 
-                    for i in \$(seq 1 12); do
-                      status=\$(docker inspect --format '{{.State.Health.Status}}' agzak-app-server 2>/dev/null || echo "unhealthy")
-                      echo "Current status: \$status"
-                      [ "\$status" = "healthy" ] && { echo "Container is healthy."; exit 0; }
-                      echo "Waiting for container to be healthy... (\$i/12)"
-                      sleep 5
-                    done
+                # 2) 헬스 체크(슬롯 컨테이너 대상으로)
+                for i in \$(seq 1 24); do
+                  status=\$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "agzak-be-\$IDLE_SLOT" 2>/dev/null || true)
+                  [ "\$status" = "healthy" ] && { echo "Idle slot healthy"; break; }
+                  echo "Waiting health (\$i/24): \$status"; sleep 5
+                done
+                status=\$(docker inspect --format='{{.State.Health.Status}}' "agzak-be-\$IDLE_SLOT" 2>/dev/null || echo "unknown")
+                [ "\$status" = "healthy" ] || { echo "Idle slot not healthy in time"; exit 1; }
 
-                    echo "Container did not become healthy in time." >&2
-                    exit 1
+                # 3) 업스트림 스위치 + Nginx reload (동시 배포 잠금)
+                flock -n /var/lock/agzak-be-deploy.lock -c '
+                  printf "set \\$slot %s;\\n" "\$IDLE_SLOT" > "\$EDGE_CONF"
+                  docker exec agzak-nginx nginx -t
+                  docker exec agzak-nginx nginx -s reload
+                '
+
+                # 4) (선택) 이전 슬롯 정리/중지는 운영 정책에 맞춰
+                # sleep 5
+                # docker compose -f "\$BE_COMPOSE" stop "agzak-be-\$CUR_SLOT" || true
+
                 ENDSSH
               """
             }
