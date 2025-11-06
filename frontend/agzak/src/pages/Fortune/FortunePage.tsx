@@ -11,47 +11,14 @@ import { TimeDropDown } from "@/components/atoms/TimeDropDown";
 import { BirthCitySearch, type BirthCity } from "@/components/atoms/BirthCitySearch";
 import { MidImages34 } from "@/components/templates/MidImages34";
 import { DropDown } from "@/components/atoms/DropDown";
+import { useFortuneStore } from "@/store/useFortuneStore";
+import type { GuestFortuneReq } from "@/lib/fortuneAPI"
 
-// 게스트 운세 API 호출
-async function fetchGuestFortune({
-  nickname,
-  gender,
-  birthDate,
-  birthTime,
-  birthCity,
-}: {
-  nickname: string;
-  gender: "male" | "female";
-  birthDate: string;
-  birthTime: string;
-  birthCity: string;
-}) {
-  const res = await api.post<any>("/fortune/guest", {
-    nickname,
-    gender: gender.toUpperCase(),
-    birthDate,
-    birthTime,
-    birthCity,
-  });
 
-  if (!res.ok) {
-    console.error("운세 요청 실패:", res.error);
-    alert(res.error?.message ?? "운세 정보를 불러오지 못했습니다.");
-    return;
-  }
-
-  const data = res.data;
-  console.log("게스트 운세 응답:", data);
-
-  if (data?.guestId) {
-    localStorage.setItem("guestId", data.guestId);
-  }
-
-  return data;
-}
 
 export default function FortunePage() {
   const navigate = useNavigate();
+  const fetchGuest = useFortuneStore((s) => s.fetchGuest);
 
   const [nickname, setNickname] = useState("");
   const [birthDate, setBirthDate] = useState<string>("");
@@ -61,7 +28,7 @@ export default function FortunePage() {
   const [gender, setGender] = useState<"male" | "female" | null>(null);
   const [birthCity, setBirthCity] = useState<BirthCity | null>(null);
 
-  const handleFortuneSubmit = async () => {
+   const handleFortuneSubmit = async () => {
     const birthTime =
       unknownTime || !hour || !minute
         ? "00:00"
@@ -78,17 +45,21 @@ export default function FortunePage() {
       return;
     }
 
-    // 항상 게스트 운세 호출
-    const result = await fetchGuestFortune({
-      nickname,
-      gender,
-      birthDate,
-      birthTime,
-      birthCity: birthCity.address,
-    });
+    try {
+      // ✅ 게스트 운세를 store를 통해 호출(= POST /fortune/guest)
+      await fetchGuest({
+        nickname,
+        gender: gender.toUpperCase() as GuestFortuneReq["gender"], // "MALE" | "FEMALE"
+        birthDate,
+        birthTime,
+        birthCity: birthCity.address,
+      });
 
-    if (result) {
+      // ✅ 성공 시 결과 페이지로 이동
       navigate("/fortune/result");
+    } catch (e) {
+      console.error(e);
+      alert("운세 계산 중 오류가 발생했습니다.");
     }
   };
 
