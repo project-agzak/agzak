@@ -1,16 +1,16 @@
 // src/hooks/useOvenGame.ts
 "use client"
 
-import { GameAPI } from "@/lib/mainAPI";
-import { useEffect, useRef, useState } from "react";
+import { GameAPI } from "@/lib/gameAPI";
 import type {
+  FortuneCookieResult,
+  GameSessionStart,
   OvenAspectName,
   OvenAttemptRequest,
   OvenFireType,
-  GameSessionStart,
   OvenSnap,
-  FortuneCookieResult,
 } from "@/types/oven";
+import { useEffect, useRef, useState } from "react";
 
 const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
 
@@ -39,6 +39,15 @@ export function useOvenGame() {
 
     (async () => {
       setInitLoading(true);
+      
+      // 먼저 오늘의 할당량을 체크
+      const quotaRes = await GameAPI.getToday();
+      if (quotaRes.ok && quotaRes.data.cap === quotaRes.data.used) {
+        setBlocked("LIMIT");
+        setInitLoading(false);
+        return;
+      }
+
       const res = await GameAPI.startSession();
       if (res.ok) {
         const s = res.data ?? null;

@@ -3,35 +3,71 @@ import RankingRibbon from "@/assets/ui/RankingRibbon.svg";
 import { Button_M } from "@/components/atoms/Button_M";
 import ShareButton from "@/components/atoms/ShareButton";
 import RankingList from "@/components/molecules/RankingList";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 
-import { useEnforceStore } from "@/store/useEnforceStore";
+import { useSessionQuotaStore } from "@/store/sessionQuotaStore";
 import { useMembersStore } from "@/store/useMembersStore";
+import { nanoid } from "nanoid";
 
 export default function HomePage() {
   const shareUrl = "https://www.agzak.co.kr/";
-  const today = new Date().toISOString().slice(0, 10);
+  
+  const today = useMemo(() => {
+    const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+    return kst.toISOString().slice(0, 10);
+  }, []);
+
 
   const { fortuneCache, fortuneLoading, fortuneError, fetchFortuneByDate } = useMembersStore();
   const totalScore = fortuneCache[today]?.totalScore ?? null;
   const loading = fortuneLoading[today] ?? false;
   const error = fortuneError[today] ?? null;
 
-  // 강화
-  const initEnforce = useEnforceStore((s) => s.init);
-  const remaining = useEnforceStore((s) => s.remaining);
-  const canEnforce = useEnforceStore((s) => s.canEnforce());
-  const addByShare = useEnforceStore((s) => s.addByShare);
+  // 강화 세션 쿼터
+  const { quota, loading: quotaLoading, error: quotaError, refresh, claim } = useSessionQuotaStore();
+  // 현재 사용 가능한 세션 정보
+  const remainingSessions = quota?.remaining ?? 0;
+  const canEnforce = remainingSessions > 0; // 세션이 남아야 강화 페이지 진입 허용
+  const canUnlockMore = quota?.unlockable ? quota.unlockable > 0 : false; // 더 획득 가능한지
 
   useEffect(() => {
-    initEnforce(); // KST 자정 기준 초기화
-  }, [initEnforce]);
+    refresh(); // KST 자정 기준 새로고침해도 여기서 갱신됨
+  }, [refresh]);
+
 
   useEffect(() => {
     if (totalScore == null) {
       fetchFortuneByDate(today);
     }
   }, [today, totalScore, fetchFortuneByDate]);
+
+  useEffect(() => {
+    if (totalScore == null) fetchFortuneByDate(today);
+  }, [today, totalScore, fetchFortuneByDate]);
+
+  // 공유 완료 시 → claim +1
+  const handleShared = async () => {
+    if (!quota?.unlockable || quota.unlockable <= 0) {
+      alert("오늘은 더 이상 세션을 획득할 수 없습니다.");
+      return;
+    }
+
+    // 실제론 광고 SDK 콜백/미션 코드/구매 영수증 등으로 채움
+    const req = {
+      type: "ad" as const,
+      proof: "sdk-server-callback-token",
+      idempotencyKey: `${new Date().toISOString()}:ad:${nanoid(6)}`
+    };
+    const r = await claim(req);
+    if (r.ok) {
+      // 최신 수치는 claim 응답에서 이미 반영됨. 혹시 몰라 재조회해도 OK
+      await refresh();
+    } else {
+      // 사용자에게 에러 메시지 표시
+      alert(r.error || "세션 획득에 실패했습니다.");
+      console.warn(r.error);
+    }
+  };
 
   return (
     <main className="relative z-10 p-4 min-h-screen">
@@ -44,20 +80,27 @@ export default function HomePage() {
         <div className="flex flex-col items-center pr-5">
           <p className="font-galmuri">현재 총운</p>
           <p className="font-bitbit-large">{error ? "—" : totalScore ?? (loading ? "..." : "—")} 점</p>
-          <p className="font-galmuri-xsmall pt-0.5">강화 잔여 횟수: {remaining}회</p>
+          <p className="font-galmuri-xsmall pt-0.5">
+            강화 잔여 횟수: {quotaError ? "—" : (quotaLoading ? "..." : remainingSessions)}회 <br />
+            {quota && (
+              <span className="text-gray-500">
+                (최대 {quota.cap}회)
+              </span>
+            )}
+          </p>
         </div>
       </div>
       <div>
         <div className="flex justify-center pb-2">
-          <div className="flex w-fit gap-[10px]">
-            <Button_M className="shrink-0 !mx-0" label="운세 상세" to="/calendar" />
-            <Button_M className="shrink-0 !mx-0" label="운세 강화" to="/enforce" disabled={!canEnforce} />
+          <div className="flex w-fit gap-2.5">
+            <Button_M className="shrink-0 mx-0!" label="운세 상세" to="/calendar" />
+            <Button_M className="shrink-0 mx-0!" label="운세 강화" to="/enforce" disabled={!canEnforce} />
           </div>
         </div>
         <ShareButton
-          label="공유하고 강화 횟수 얻기"
+          label={canUnlockMore ? "공유하고 강화 횟수 +1" : "오늘의 세션 한도 도달"}
           url={shareUrl}
-          onShared={() => addByShare(1)}
+          onShared={handleShared}
         />
       </div>
       
@@ -76,7 +119,6 @@ export default function HomePage() {
       <div className="-translate-y-8">
         <RankingList />
       </div>
-    
     </main>
   );
 }

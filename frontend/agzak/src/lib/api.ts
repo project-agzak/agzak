@@ -1,6 +1,6 @@
 
-import type { AxiosRequestConfig, AxiosResponse } from "axios";
 import { useAuthStore } from "@/store/useAuthStore";
+import type { AxiosRequestConfig, AxiosResponse } from "axios";
 import { apiClient } from "./axios";
 
 export type ApiError = { status?: number; code?: string | number; message: string; raw?: any };

@@ -62,8 +62,8 @@ export function OvenAspectPanel({
             className="w-full h-full object-contain pointer-events-none select-none"
           />
         </button>
-        <div className="mt-1 text-xs font-galmuri font-bold text-[#121212]">
-          +{snap.snapMisfortune}
+        <div className="mt-1 text-xs font-galmuri font-bold text-[#1f1f1f]">
+          {snap.snapMisfortune > 0 ? `+${snap.snapMisfortune}` : snap.snapMisfortune}
         </div>
       </div>
 

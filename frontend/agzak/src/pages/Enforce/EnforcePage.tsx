@@ -1,6 +1,7 @@
 // @/pages/Enforce/EnforcePage.tsx
 "use client"
 
+import { Button_L } from "@/components/atoms/Button_L"
 import { OvenCookButton } from "@/components/atoms/OvenCookButton"
 import { OvenHeader } from "@/components/atoms/OvenHeader"
 import OvenHelpSheet from "@/components/atoms/OvenHelpSheet"
@@ -11,7 +12,6 @@ import OvenLoading from "@/components/templates/OvenLoading"
 import OvenResult from "@/components/templates/OvenResult"
 import { useOvenGame } from "@/hooks/useOvenGame"
 import { useState } from "react"
-import { Button_L } from "@/components/atoms/Button_L"
 
 export default function EnforcePage() {
   const [helpOpen, setHelpOpen] = useState(false)
@@ -38,6 +38,7 @@ export default function EnforcePage() {
        <main className="min-h-screen grid place-items-center">
          <section className="w-full max-w-[420px] px-4 text-center">
            <p className="font-galmuri-small mx-4">오늘의 세션 3회를 모두 사용했어요<br /> 내일 다시 도전해봐요!</p>
+           <br />
            <Button_L label="쿠키 먹으러 가기" to="/cookies" />
          </section>
        </main>
