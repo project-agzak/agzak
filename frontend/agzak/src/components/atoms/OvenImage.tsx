@@ -32,7 +32,7 @@ export default function OvenImage({
       <img
         src={typeof oven === "string" ? oven : (oven as any).src}
         alt="강화 쿠키 오븐"
-        className={`w-[280px] h-auto select-none pointer-events-none transition-transform ${
+        className={`w-[280px] h-auto select-none pointer-events-none ${
           isShaking ? "animate-shake" : ""
         }`}
         draggable={false}
