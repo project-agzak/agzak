@@ -9,7 +9,7 @@ import cookieLove from "@/assets/Cookies/love-cookie.webp"
 import cookieMixed from "@/assets/Cookies/mixed-cookie.webp"
 import cookieMoney from "@/assets/Cookies/money-cookie.webp"
 import cookieRotten from "@/assets/Cookies/rotten-cookie.webp"
-import speechBubble from "@/assets/ui/speech-bubble.webp"
+import speechBubble from "@/assets/ui/speech-bubble.svg"
 import { Button_L } from "@/components/atoms/Button_L"
 import { useEffect, useMemo } from "react";
 
