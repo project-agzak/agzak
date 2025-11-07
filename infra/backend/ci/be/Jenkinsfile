@@ -79,22 +79,20 @@ pipeline {
               def tag   = "${env.TARGET_BRANCH}-${env.BUILD_NUMBER}"
               def image = "${repo}:${tag}"
 
-              // 셸에서 사용할 이미지 이름 env로 전달
               env.DEPLOY_IMAGE = image
 
-              // ⬇ 여기부터는 Groovy interpolation 없는 순수 셸 스크립트
+              // ⬇ 이 블록 안은 순수 bash. Groovy는 손 안 댐.
               sh '''#!/bin/bash
     set -Eeuo pipefail
 
-    ssh -o StrictHostKeyChecking=no "$DEPLOY_USER@$DEPLOY_HOST" \
-      IMAGE="$DEPLOY_IMAGE" \
-      EDGE_CONF="$EDGE_CONF" \
-      BE_COMPOSE="$BE_COMPOSE" \
-      DOCKER_USER="$DOCKER_USER" \
-      DOCKER_PWD="$DOCKER_PWD" \
-      bash -s << 'REMOTE'
-
+    ssh -o StrictHostKeyChecking=no "$DEPLOY_USER@$DEPLOY_HOST" << REMOTE
     set -Eeuo pipefail
+
+    IMAGE="$DEPLOY_IMAGE"
+    EDGE_CONF="$EDGE_CONF"
+    BE_COMPOSE="$BE_COMPOSE"
+    DOCKER_USER="$DOCKER_USER"
+    DOCKER_PWD="$DOCKER_PWD"
 
     echo "$DOCKER_PWD" | docker login -u "$DOCKER_USER" --password-stdin || true
 
