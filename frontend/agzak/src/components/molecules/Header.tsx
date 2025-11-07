@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/sheet";
 
 export default function Header() {
-  const navigate = useNavigate();
 
   // 전역 인증 상태
   const { isLoggedIn, member, setMember, logout } = useAuthStore();
