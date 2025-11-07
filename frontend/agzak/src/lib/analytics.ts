@@ -7,13 +7,13 @@ const ENABLE = String(import.meta.env.VITE_ENABLE_ANALYTICS).toLowerCase() === "
 /** 페이지 최초 1회 호출 */
 export function loadAnalytics() {
   if (!ENABLE) return;
-
+  
   // ========== GA4 loader ==========
   if (GA_ID && !window.gtag) {
-    // dataLayer
-    window.dataLayer = window.dataLayer || [];
-    // gtag shim
-    window.gtag = function () {
+      // dataLayer
+      window.dataLayer = window.dataLayer || [];
+      // gtag shim
+      window.gtag = function () {
       // @ts-ignore
       window.dataLayer.push(arguments);
     };

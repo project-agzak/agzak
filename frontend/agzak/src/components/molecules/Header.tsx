@@ -1,5 +1,5 @@
 // src/components/molecules/Header.tsx
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
 import { useAuthStore, type Member } from "@/store/useAuthStore";
@@ -134,8 +134,10 @@ type SidebarContentProps = {
 
 /** 사이드바 내용 */
 function SidebarContent({ isLoggedIn, nickname, onLogout }: SidebarContentProps) {
-   const navigate = useNavigate();
+  const navigate = useNavigate();
   const displayName = nickname || "사용자";
+
+  const [deferred, setDeferred] = useState<any>(null);
 
   const handleFortuneClick = () => {
     if (isLoggedIn) {
@@ -145,7 +147,35 @@ function SidebarContent({ isLoggedIn, nickname, onLogout }: SidebarContentProps)
     }
   };
 
-  
+
+  useEffect(() => {
+    // 처음 진입 시 전역에 저장된 게 있으면 사용
+    setDeferred((window as any).__pwaDeferredPrompt ?? null);
+
+    // PWABadge에서 브로드캐스트하는 이벤트를 구독
+    const onDeferred = (e: any) => setDeferred(e.detail ?? null);
+    const onConsumed = () => setDeferred(null);
+
+    window.addEventListener('pwa:beforeinstallprompt', onDeferred as any);
+    window.addEventListener('pwa:consumed', onConsumed);
+
+    return () => {
+      window.removeEventListener('pwa:beforeinstallprompt', onDeferred as any);
+      window.removeEventListener('pwa:consumed', onConsumed);
+    };
+  }, []);
+
+  const handleInstall = async () => {
+    const evt = (window as any).__pwaDeferredPrompt || deferred;
+    if (!evt) return;
+
+    await evt.prompt();
+    try { await evt.userChoice; } catch {}
+    (window as any).__pwaDeferredPrompt = null;
+    window.dispatchEvent(new CustomEvent('pwa:consumed'));
+    setDeferred(null);
+  };
+
 
   return (
     <div className="h-full flex flex-col">
@@ -234,6 +264,16 @@ function SidebarContent({ isLoggedIn, nickname, onLogout }: SidebarContentProps)
           >
             <span>마이페이지</span>
           </a>
+        </SheetClose>
+
+        <SheetClose asChild>
+          <button
+            onClick={handleInstall}
+            disabled={!deferred}   
+            className="flex w-full items-center gap-2 rounded-md px-0 py-2 hover:bg-zinc-100 active:bg-zinc-200 transition-colors text-left cursor-pointer"
+          >
+            <span>앱 설치하기</span>
+          </button>
         </SheetClose>
       </nav>
 
