@@ -92,7 +92,7 @@ CREATE TABLE `fortune_aspect` (
                                   `name`              VARCHAR(50) NOT NULL COMMENT 'ENUM(`MONEY`, `LOVE`, `ACHIEVEMENT`, `HEALTH`)',
                                   `score`             INT         NOT NULL,
                                   `original_score`    INT         NOT NULL,
-                                  `description`     VARCHAR(1000) NULL
+                                  `description`     VARCHAR(1000) NULL,
                                   PRIMARY KEY (`fortune_aspect_id`),
                                   UNIQUE KEY `UQ_aspect_per_fortune` (`fortune_id`, `name`),
                                   CONSTRAINT `FK_aspect_fortune`
