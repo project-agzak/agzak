@@ -59,7 +59,7 @@ useEffect(() => {
     logout();
 
     alert("로그아웃 되었습니다.");
-    navigate("/");
+     window.location.href = "/";
   };
 
   const nickname = member?.nickname ?? "";
