@@ -91,7 +91,7 @@ export default function HomePage() {
         <div className="flex flex-col items-center pr-5">
           <p className="font-galmuri">현재 총운</p>
           <p className="font-bitbit-large">{error ? "—" : totalScore ?? (loading ? "..." : "—")} 점</p>
-          <p className="font-galmuri-xsmall pt-0.5">
+          <p className="flex flex-col items-center font-galmuri-xsmall pt-0.5">
             강화 잔여 횟수: {quotaError ? "—" : (quotaLoading ? "..." : remainingSessions)}회 <br />
             {quota && (
               <span className="text-gray-500">

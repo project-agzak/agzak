@@ -78,7 +78,10 @@ export function FortuneBubble({
       <div className={cn("absolute top-0 left-0 w-full pt-4",
           flipX ? "text-right" : "pl-5"
       )}>
-        <h3 className="flex justify-center pr-4 pt-2 font-galmuri-small font-bold leading-none text-[#121212]">
+        <h3 className={cn("flex justify-center font-galmuri-small font-bold leading-none text-[#121212]",
+          flipX ? "items-end pr-3 text-right" : "pr-1"
+          )}
+        >
           {title}
         </h3>
       </div>

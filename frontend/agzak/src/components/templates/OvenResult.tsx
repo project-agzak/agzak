@@ -43,7 +43,7 @@ const labelMap: Record<FortuneCookieResult["type"], string> = {
   MONEY: "황금색 금전쿠키",
   ACHIEVEMENT: "푸르른 성취쿠키",
   MIXED: "영롱한 믹스쿠키",
-  ROTTEN: "새까만 실연쿠키",
+  ROTTEN: "새까만 시련쿠키",
 }
 
 // 항목별 컬러(양/음 구분)
@@ -113,9 +113,9 @@ export default function OvenResult({
             key={s.label}
             className={`font-galmuri text-sm leading-none ${colorByLabel(s.label, s.value)}`}
             >
-            {s.label} 
+            {s.label}
             <span >
-              {s.value > 0 ? `+${s.value}` : s.value}
+            {s.value > 0 ? `+${s.value}` : s.value}
             </span>
           </li>
         ))}
@@ -129,7 +129,7 @@ export default function OvenResult({
           draggable={false}
         />
         {/* 텍스트 오버레이 */}
-        <p className="absolute inset-0 flex items-center justify-center text-[#121212] font-galmuri-condensed-small not-first: px-5 pb-2 text-center whitespace-pre-line mx-6">
+        <p className="absolute inset-0 flex items-center justify-center text-[#121212] font-galmuri-condensed-small not-first: px-5 pb-2 text-center whitespace-pre-line mx-6 -translate-y-1">
           {cookie.message}
         </p>
       </div>

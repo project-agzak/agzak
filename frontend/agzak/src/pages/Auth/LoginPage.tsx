@@ -76,7 +76,7 @@ export default function LoginPage() {
   setTokens(accessToken, refreshToken, expiresInSeconds);
 
     alert("로그인 성공!");
-    navigate("/");
+    navigate("/home");
   };
 
   // 회원가입 이동
