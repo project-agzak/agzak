@@ -103,7 +103,9 @@ export default function FortuneResultPage() {
   return (
     <main className="relative z-10 p-4 min-h-screen">
 
-      <div className="flex justify-center pb-5">
+      <div className="flex flex-col justify-center items-center pb-5 gap-3">
+        <p className="font-galmuri-condensed-small animate-bounce motion-reduce:animate-none">
+          카드를 클릭해 뒤집어 보세요!</p>
         <PureFlipImage
           className="w-64 aspect-[2/3] cursor-pointer"
           frontSrc={getFrontByTypeName(typeName)}
