@@ -1,11 +1,12 @@
+import { trackError, trackEvent } from "@/lib/analytics";
+import { api } from "@/lib/api";
 import { useState, type ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { api } from "@/lib/api";
 
 import Logo from "@/assets/Background/agzak-logo.svg";
-import { Input } from "@/components/atoms/Input";
-import { Button_M } from "@/components/atoms/Button_M";
 import { Button_L } from "@/components/atoms/Button_L";
+import { Button_M } from "@/components/atoms/Button_M";
+import { Input } from "@/components/atoms/Input";
 
 type CheckEmailResponse = {
   exists: boolean;
@@ -168,6 +169,13 @@ const regex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=\[{\]};:'",<.>/?`~\\|
     }
 
     localStorage.removeItem("guestId");
+
+    // Analytics: 회원가입 완료
+    try {
+      trackEvent("auth_signup_complete", { method: guestId ? "with_guest" : "email" });
+    } catch (e) {
+      trackError("auth_signup_event_fail", (e as any)?.message ?? "event error");
+    }
 
     alert("회원가입이 완료되었습니다!");
     navigate("/login");

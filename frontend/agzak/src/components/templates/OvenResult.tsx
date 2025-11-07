@@ -11,7 +11,8 @@ import cookieMoney from "@/assets/Cookies/money-cookie.webp"
 import cookieRotten from "@/assets/Cookies/rotten-cookie.webp"
 import speechBubble from "@/assets/ui/speech-bubble.svg"
 import { Button_L } from "@/components/atoms/Button_L"
-import { useEffect, useMemo } from "react";
+import { trackEvent } from "@/lib/analytics"
+import { useEffect, useMemo } from "react"
 
 // 기본값(미연동 테스트)
 const mockFortuneCookie: FortuneCookieResult = {
@@ -81,6 +82,15 @@ export default function OvenResult({
     document.body.scrollTop = 0
   }, [])
 
+  useEffect(() => {
+    if (!cookie) return;
+    trackEvent("page_result_view", {
+      cookie_type: cookie.type,
+      total: cookie.total,
+    });
+  }, [cookie]);
+
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
       <p className="font-galmuri-small mb-1 text-left w-full pl-20">
@@ -123,7 +133,11 @@ export default function OvenResult({
           {cookie.message}
         </p>
       </div>
-      <Button_L label="쿠키 먹으러 가기" to="/cookies" />
+      <Button_L
+        label="쿠키 먹으러 가기"
+        to="/cookies"
+        onClick={() => trackEvent("cookie_consume_click", { cookie_type: cookie.type })}
+      />
     </div>
   )
 }

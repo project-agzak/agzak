@@ -1,8 +1,9 @@
 // src/stores/calendarStore.ts
-import { create } from "zustand"
-import { MemberAPI } from "@/lib/mainAPI"
-import { toFortuneData } from "@/adapters/fortuneAdapter"
+import { toFortuneData } from "@/adapters/fortuneAdapter";
+import { trackError, trackEvent } from "@/lib/analytics";
+import { MemberAPI } from "@/lib/mainAPI";
 import type { FortuneData, MemberGraphPoint } from "@/types/fortune";
+import { create } from "zustand";
 
 /** 유틸: 날짜 포맷/계산 */
 function fmt(d: Date) {
@@ -70,12 +71,17 @@ export const useMembersStore = create<MembersState>((set, get) => ({
         fortuneCache: { ...s.fortuneCache, [key]: ui },
         fortuneLoading: { ...s.fortuneLoading, [key]: false },
       }))
+      trackEvent("fortune_view", {
+        date,
+        total_score: ui?.totalScore,
+      });
       return ui
     }
     set(s => ({
       fortuneLoading: { ...s.fortuneLoading, [key]: false },
       fortuneError: { ...s.fortuneError, [key]: res.error?.message ?? "운세 조회 실패" },
     }))
+    trackError("fortune_fetch_error", res.error?.message ?? "unknown", { date });
     return null
 
   },

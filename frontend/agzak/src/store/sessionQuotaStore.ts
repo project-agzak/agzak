@@ -1,5 +1,6 @@
 "use client"
 
+import { trackError, trackEvent } from "@/lib/analytics"
 import { GameAPI } from "@/lib/gameAPI"
 import type { GameClaimRequest, GameClaimResponse, GameTodayQuota } from "@/types/game"
 import { create } from "zustand"
@@ -32,9 +33,23 @@ export const useSessionQuotaStore = create<State & Actions>((set) => ({
     const res = await GameAPI.claim(req)
     if (res.ok) {
       set({ quota: res.data, loading: false })
+      // Analytics: claim 성공
+      try {
+        trackEvent("game_claim", {
+          type: (req as any).type,
+          cap: res.data.cap,
+          used: res.data.used,
+          remaining: res.data.remaining,
+          unlockable: res.data.unlockable,
+        })
+      } catch (e) {
+        trackError("game_claim_event_fail", (e as any)?.message ?? "event error", { type: (req as any).type })
+      }
       return { ok: true, data: res.data }
     }
     const msg = res.error?.message ?? "증빙 처리 실패"
+    // Analytics: claim 실패
+    trackError("game_claim_fail", res.error?.message ?? "unknown", { type: (req as any).type })
     set({ loading: false, error: msg })
     return { ok: false, error: msg }
   },

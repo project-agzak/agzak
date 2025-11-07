@@ -1,3 +1,4 @@
+import { loadAnalytics } from "@/lib/analytics";
 import React, { Suspense } from "react";
 import ReactDOM from "react-dom/client";
 import { RouterProvider } from "react-router-dom";
@@ -26,6 +27,9 @@ if (!KAKAO_JS_KEY) {
 } else {
   console.warn(" window.Kakao가 없습니다. index.html에 로그인 SDK 스크립트 추가됐는지 확인해주세요.");
 }
+
+const ENABLE_ANALYTICS = String(import.meta.env.VITE_ENABLE_ANALYTICS).toLowerCase() === "true";
+if (ENABLE_ANALYTICS) loadAnalytics();
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>

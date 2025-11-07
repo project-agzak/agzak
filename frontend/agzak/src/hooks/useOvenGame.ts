@@ -1,7 +1,9 @@
 // src/hooks/useOvenGame.ts
 "use client"
 
+import { trackError, trackEvent } from "@/lib/analytics";
 import { GameAPI } from "@/lib/gameAPI";
+import { useSessionQuotaStore } from "@/store/sessionQuotaStore";
 import type {
   FortuneCookieResult,
   GameSessionStart,
@@ -11,7 +13,6 @@ import type {
   OvenSnap,
 } from "@/types/oven";
 import { useEffect, useRef, useState } from "react";
-import { useSessionQuotaStore } from "@/store/sessionQuotaStore";
 
 const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
 
@@ -48,11 +49,20 @@ export function useOvenGame() {
         setBlocked("LIMIT");
         refresh();
         setInitLoading(false);
+        trackEvent("game_session_blocked", {
+          reason: "DAILY_SESSION_LIMIT",
+        });
         return;
       }
 
       const res = await GameAPI.startSession();
       if (res.ok) {
+        trackEvent("game_session_start", {
+          session_no: res.data.sessionNo,
+          attempts_limit: res.data.attemptsLimit,
+          base_prob: res.data.initialSuccessProb,
+        });
+
         const s = res.data ?? null;
         if (!s) {
           setSession(null);
@@ -96,6 +106,7 @@ export function useOvenGame() {
 
     // 🔁 409(NO_ACTIVE_SESSION) 자동복구 1회
     if (!res.ok) {
+      
       const code = res.error?.status ?? res.error?.code;
       const apiCode = (res.error as any)?.code;
       if (code === 409 || apiCode === "NO_ACTIVE_SESSION") {
@@ -104,6 +115,10 @@ export function useOvenGame() {
           setSession(s.data);
           res = await GameAPI.attempt(payload); // 재시도
         } else {
+          trackError("game_attempt_fail", res.error.message ?? "unknown", {
+            status: res.error.status,
+            aspect: aspectName,
+          });
           setLoading(false);
           setBlocked(code === 409 ? "LIMIT" : blocked);
           return;
@@ -113,6 +128,19 @@ export function useOvenGame() {
   
     if (res.ok) {
       const d = res.data!;
+
+      // 이벤트: 각 강화 시도
+      trackEvent("game_attempt", {
+        attempt_no: Number(d.attemptNo),
+        aspect: d.aspectName,
+        fire: d.fireType,
+        base_prob: d.baseProb,
+        applied_prob: d.appliedProb,
+        success: d.success,
+        delta: d.deltaValue,
+        next_base_prob: d.nextBaseProb,
+      });
+
       setSnap({
         snapLove: Number(d.snapLove) || 0,
         snapMoney: Number(d.snapMoney) || 0,
@@ -121,25 +149,47 @@ export function useOvenGame() {
         snapMisfortune: Number(d.snapMisfortune) || 0,
       });
 
-      if (d.cookie) setLastCookie(d.cookie); // ← 새 state (아래 2번 참고)
-    // 시도 횟수/남은 횟수(= attemptsLimit - attempts)는 attempts 갱신으로 반영
-    setAttempts(prev => clamp(Number(d.attemptNo) || prev + 1, 0, attemptsLimit));
+      // 시도 횟수/남은 횟수(= attemptsLimit - attempts)는 attempts 갱신으로 반영
+      setAttempts(prev => clamp(Number(d.attemptNo) || prev + 1, 0, attemptsLimit));
 
-    // 성공 여부
-    setLastSuccess(Boolean(d.success));
+      // 성공 여부
+      setLastSuccess(Boolean(d.success));
 
-    // 다음 확률
-    const nextProb =
-      (Number(d.nextBaseProb) || 0) > 0 ? Number(d.nextBaseProb)
-      : (Number(d.appliedProb) || 0) > 0 ? Number(d.appliedProb)
-      : successProb;
-    setSuccessProb(nextProb);
+      // 다음 확률
+      const nextProb =
+        (Number(d.nextBaseProb) || 0) > 0 ? Number(d.nextBaseProb)
+        : (Number(d.appliedProb) || 0) > 0 ? Number(d.appliedProb)
+        : successProb;
+      setSuccessProb(nextProb);
 
-    // 보상 쿠키가 있으면 저장
-    if (d.cookie) setLastCookie(d.cookie);
+      // 보상 쿠키가 있으면 저장 및 관련 이벤트
+      if (d.cookie) {
+        setLastCookie(d.cookie);
+        // 세션 완료 시 쿠키 생성 이벤트는 아래 세션 완료 블록에서 중복 호출을 방지
+      }
+
+      // 세션 완료 판정: 서버의 attemptNo가 한도와 같거나 isCompleted 상태
+      const attemptNo = Number(d.attemptNo) || attempts + 1;
+      if (attemptNo >= attemptsLimit || isCompleted) {
+        trackEvent("game_session_complete", {
+          has_cookie: !!d.cookie,
+          success_attempts: d.success ? 1 : 0,
+        });
+
+        if (d.cookie) {
+          trackEvent("game_cookie_created", {
+            type: d.cookie.type,
+            total: d.cookie.total,
+            love: d.cookie.love,
+            money: d.cookie.money,
+            achievement: d.cookie.achievement,
+            health: d.cookie.health,
+          });
+        }
+      }
     } else {
       console.warn("[GAME] attempt error:", res.error);
-    }  
+    }
 
     setLoading(false);
   };

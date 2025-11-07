@@ -1,12 +1,13 @@
 // src/pages/Auth/LoginPage.tsx
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/store/useAuthStore";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import Logo from "@/assets/Background/agzak-logo.svg";
-import { Input } from "@/components/atoms/Input";
 import { Button_L } from "@/components/atoms/Button_L";
+import { Input } from "@/components/atoms/Input";
+import { trackError, trackEvent } from "@/lib/analytics";
 
 // 타입 정의
 type KakaoLoginOK = {
@@ -80,6 +81,8 @@ export default function LoginPage() {
 
   // 카카오 로그인 시작
   const handleKakaoLogin = () => {
+    // Analytics: 로그인 시도
+    trackEvent("auth_login_kakao_attempt");
     if (!window.Kakao || !window.Kakao.isInitialized()) {
       alert("카카오 SDK가 초기화되지 않았습니다. 새로고침 후 다시 시도해주세요.");
       return;
@@ -109,13 +112,11 @@ export default function LoginPage() {
     if (guestId) payload.guestId = guestId;
 
     (async () => {
-      const res = await api.post<KakaoLoginResponse>(
-        "/auth/kakao/login",
-        payload
-      );
+      const res = await api.post<KakaoLoginResponse>("/auth/kakao/login", payload);
 
       if (!res.ok || !res.data) {
         console.error("카카오 로그인 응답 에러:", res.error);
+        trackError("auth_login_kakao_fail", res.error?.message ?? "unknown");
         alert(res.error?.message ?? "카카오 로그인 중 서버 오류가 발생했습니다.");
         return;
       }
@@ -128,22 +129,18 @@ export default function LoginPage() {
 
       // 1) 기존 회원 / 게스트 이관 완료 → 로그인 성공
       if (data.success && data.reason === "OK") {
-        const {
-          accessToken,
-          refreshToken,
-          expiresInSeconds,
-        } = data.tokens;
+        const { accessToken, refreshToken, expiresInSeconds } = data.tokens;
 
         // 토큰은 스토어에만 세팅
         setTokens(accessToken, refreshToken);
 
         // 만료 시간은 따로 저장 (인터셉터용)
         if (typeof expiresInSeconds === "number" && expiresInSeconds > 0) {
-          localStorage.setItem(
-            "access_token_expires_at",
-            String(Date.now() + expiresInSeconds * 1000)
-          );
+          localStorage.setItem("access_token_expires_at", String(Date.now() + expiresInSeconds * 1000));
         }
+
+        // Analytics: 로그인 성공
+        trackEvent("auth_login_kakao_success", { guest_id: guestId ?? null });
 
         if (guestId) localStorage.removeItem("guestId");
         navigate("/");
@@ -153,13 +150,9 @@ export default function LoginPage() {
       // 2) 추가정보 필요 → fortune으로
       if (!data.success && data.reason === "NEED_ADDITIONAL_INFO") {
         sessionStorage.setItem("kakao_ticket", data.ticket);
-        if (data.email)
-          sessionStorage.setItem("kakao_email", data.email ?? "");
+        if (data.email) sessionStorage.setItem("kakao_email", data.email ?? "");
         if (data.suggestedNickname)
-          sessionStorage.setItem(
-            "kakao_suggestedNickname",
-            data.suggestedNickname ?? ""
-          );
+          sessionStorage.setItem("kakao_suggestedNickname", data.suggestedNickname ?? "");
 
         navigate("/fortune");
       }
