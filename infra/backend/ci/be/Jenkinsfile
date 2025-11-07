@@ -13,7 +13,7 @@ pipeline {
     DEPLOY_USER = 'ubuntu'
     DEPLOY_HOST = 'k13b102.p.ssafy.io'
 
-    EDGE_CONF   = '/home/ubuntu/agzak-app/deploy/infra/nginx/data/nginx/active_slot.conf'
+    EDGE_CONF   = '/home/ubuntu/agzak-app/deploy/infra/nginx/data/active_slot.conf'
     BE_COMPOSE  = '/home/ubuntu/agzak-app/deploy/backend/agzak-app-server.yml'
   }
 
