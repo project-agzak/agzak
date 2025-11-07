@@ -104,10 +104,11 @@ export default function HomePage() {
       <div>
         <div className="flex justify-center pb-2">
           <div className="flex w-fit gap-2.5">
+
             <Button_M
               label="운세 상세"
               to="/fortune/result"
-              onClick={() => trackEvent("cta_result_click")}
+              onClick={() => trackEvent("cta_result_click", { can_enforce: canEnforce })}
             />
 
             <Button_M
@@ -116,6 +117,7 @@ export default function HomePage() {
               disabled={!canEnforce}
               onClick={() => trackEvent("cta_enforce_click", { can_enforce: canEnforce })}
             />
+
           </div>
         </div>
         <ShareButton
