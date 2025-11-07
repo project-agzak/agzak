@@ -3,6 +3,7 @@ import RankingRibbon from "@/assets/ui/RankingRibbon.svg";
 import { Button_M } from "@/components/atoms/Button_M";
 import ShareButton from "@/components/atoms/ShareButton";
 import RankingList from "@/components/molecules/RankingList";
+import { trackEvent } from "@/lib/analytics";
 import { useEffect, useMemo } from "react";
 
 import { useSessionQuotaStore } from "@/store/sessionQuotaStore";
@@ -103,8 +104,20 @@ export default function HomePage() {
       <div>
         <div className="flex justify-center pb-2">
           <div className="flex w-fit gap-2.5">
-            <Button_M className="shrink-0 mx-0!" label="운세 상세" to="/calendar" disabled={!canEnforce}/>
-            <Button_M className="shrink-0 mx-0!" label="운세 강화" to="/enforce" disabled={!canEnforce} />
+
+            <Button_M
+              label="운세 상세"
+              to="/fortune/result"
+              onClick={() => trackEvent("cta_result_click", { can_enforce: canEnforce })}
+            />
+
+            <Button_M
+              label="운세 강화"
+              to="/enforce"
+              disabled={!canEnforce}
+              onClick={() => trackEvent("cta_enforce_click", { can_enforce: canEnforce })}
+            />
+
           </div>
         </div>
         <ShareButton
