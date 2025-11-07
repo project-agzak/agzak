@@ -8,22 +8,29 @@ export type ApiResponse<T> = {
   ok: boolean;
   data?: T | undefined;
   error?: ApiError;
+
 };
 
 
-function handleAuthError(status?: number) {
+function handleAuthError(status?: number, url?: string) {
   const { logout } = useAuthStore.getState();
 
-  if (status === 401) {
+  const isAuthRequest = !!url && url.startsWith("/auth/"); // /auth/* 는 건들지 않기
+
+  if (!isAuthRequest && status === 401) {
     logout("로그인 정보가 만료되었습니다. 다시 로그인해주세요.");
   }
 }
+
 async function request<T>(config: AxiosRequestConfig): Promise<ApiResponse<T>> {
   try {
 
-    const { accessToken, expiresAt, logout } = useAuthStore.getState();
+     const { accessToken, expiresAt, logout } = useAuthStore.getState();
+     
+     const url = typeof config.url === "string" ? config.url : "";
+    const isAuthRequest = url.startsWith("/auth/");
 
- if (accessToken) {
+if (!isAuthRequest && accessToken) {
       // 토큰 만료 체크 (프론트 기준)
       if (expiresAt && expiresAt <= Date.now()) {
         logout("세션이 만료되었습니다. 다시 로그인해주세요.");

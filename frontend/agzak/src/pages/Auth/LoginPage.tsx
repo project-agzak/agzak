@@ -104,6 +104,7 @@ export default function LoginPage() {
 
   // 카카오 OAuth 인가코드 처리
   useEffect(() => {
+    
     const url = new URL(window.location.href);
     const code = url.searchParams.get("code");
     if (!code) return;
