@@ -36,7 +36,7 @@ public class FortuneController implements FortuneApiDocs {
         long memberId = authMemberProvider.currentMemberId();
         MemberInfoResponse response = memberService.getMemberInfo(memberId);
         BirthDataInput input = BirthDataInput.fromMemberInfo(response);
-        FinalFortuneResponse result = fortuneService.getFortuneScores(input, response.birthCity());
+        FinalFortuneResponse result = fortuneService.getMemberFortune(memberId, input,response.birthCity());
         if (fortuneService.checkDuplicate(memberId, date.today())) {
             return ResponseEntity.ok().body(result);
         }
