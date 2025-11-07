@@ -121,7 +121,7 @@ const emailHelperText = (() => {
   // 형식은 맞고, 아직 중복 확인 전이면 → 아무 문구도 표시 안 함
   return "중복 확인 버튼을 눌러주세요.";
 })();
-
+const emailHasError = !emailValid || (email && !emailChecked);
 
   // 회원가입
   const handleRegister = async () => {
