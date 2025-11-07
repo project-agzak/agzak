@@ -35,6 +35,9 @@ public class FortuneAspect {
     @Column(name = "original_score", nullable = false)
     private Integer originalScore;
 
+    @Column(name = "description", length = 1000)
+    private String description;
+
     public enum AspectName { MONEY, LOVE, ACHIEVEMENT, HEALTH }
 
     public int increaseWithUpperCap(int delta, int cap) {
