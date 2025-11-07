@@ -89,6 +89,14 @@ export default function FortunePage() {
         sessionStorage.removeItem("kakao_email");
         sessionStorage.removeItem("kakao_suggestedNickname");
 
+await fetchGuest({
+        nickname,
+        gender: gender.toUpperCase() as GuestFortuneReq["gender"],
+        birthDate,
+        birthTime,
+        birthCity: birthCity.address,
+      });
+        
         navigate("/fortune/result");
         return;
       }
@@ -119,10 +127,15 @@ export default function FortunePage() {
         // 임시 저장한 userId 제거
         localStorage.removeItem("userId");
 
-        
-        navigate("/login", {
-  state: { redirectTo: "/fortune/result" },
-});
+        await fetchGuest({
+      nickname,
+      gender: gender.toUpperCase() as GuestFortuneReq["gender"], // "MALE" | "FEMALE"
+      birthDate,
+      birthTime,
+      birthCity: birthCity.address,
+    });
+    
+       navigate("/fortune/result");
 return;
       }
 
@@ -141,7 +154,7 @@ return;
       alert("운세 계산 중 오류가 발생했습니다.");
     }
      finally {
-      setSubmitting(false);   // ✅ 성공/실패 상관없이 로딩 종료
+      setSubmitting(false);   //  성공/실패 상관없이 로딩 종료
     }
   };
   if (submitting) {

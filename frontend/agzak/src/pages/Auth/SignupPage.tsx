@@ -8,7 +8,8 @@ import { Button_M } from "@/components/atoms/Button_M";
 import { Button_L } from "@/components/atoms/Button_L";
 
 type CheckEmailResponse = {
-  exists: boolean;
+  email: string;
+  available: boolean;
 };
 
 type RegisterWithGuestResponse = {
@@ -88,16 +89,19 @@ const regex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=\[{\]};:'",<.>/?`~\\|
       return;
     }
 
-    const { exists } = res.data;
-    console.log("이메일 중복확인 결과:", res.data);
+   //  여기부터 변경
+  const { available } = res.data;
+  console.log("이메일 중복확인 결과:", res.data);
 
-    if (exists) {
-      alert("이미 사용 중인 이메일입니다.");
-      setEmailChecked(false);
-    } else {
-      alert("사용 가능한 이메일입니다.");
-      setEmailChecked(true);
-    }
+  if (!available) {
+    // 이미 사용 중
+    alert("이미 사용 중인 이메일입니다.");
+    setEmailChecked(false);
+  } else {
+    // 사용 가능
+    alert("사용 가능한 이메일입니다.");
+    setEmailChecked(true);
+  }
   };
 const emailHelperText = (() => {
   if (!email) {
@@ -120,6 +124,8 @@ const emailHasError = !!email && !emailValid;
   // 회원가입
   const handleRegister = async () => {
     const guestId = localStorage.getItem("guestId");
+
+    console.log("[Signup] effective guestId used for register:", guestId);
 
     if (!email || !password || !passwordCheck) {
       alert("모든 항목을 입력해주세요.");

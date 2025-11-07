@@ -70,11 +70,11 @@ export default function FortuneLoading() {
 
   return (
     <div
-      className="
+       className="
         w-full max-w-[420px] px-4 mx-auto
+        self-stretch
         flex flex-col items-center justify-center
-        min-h-[400px] text-center pt-10
-        animate-fade-in
+        min-h-[400px] text-center animate-fade-in pt-10
       "
     >
       {/* 메인 로딩 GIF (AppLoader와 같은 FortuneCookie.gif 재사용) */}
@@ -86,20 +86,22 @@ export default function FortuneLoading() {
       />
 
       {/* 아그작 TMI 헤더 */}
-      <div className="flex flex-row items-center gap-2 mt-2 text-xs font-galmuri-small font-bold justify-center">
+      <div className="flex flex-row mt-4 text-xs font-galmuri-small font-bold justify-center">
         <img
           src={fortuneCookieGif}
           alt="Fortune Cookie"
-          className="w-[40px] h-auto object-contain"
+          className="w-[64px] h-auto object-contain"
           draggable={false}
         />
-        <span>아그작 tmi</span>
+        아그작 tmi
       </div>
 
       {/* 랜덤 TMI 텍스트 */}
-      <div className="mt-3 text-xs font-galmuri-xsmall text-gray-600 whitespace-pre-line">
+      <br />
+      <div className="mt-2 text-xs font-galmuri-xsmall text-gray-600 whitespace-pre-line">
         {tmi}
       </div>
+    
     </div>
   );
 }

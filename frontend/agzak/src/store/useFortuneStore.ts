@@ -118,7 +118,7 @@ const pickTotalSummary = (src: any): string | undefined => {
 export const useFortuneStore = create<FortuneState>((set, get) => ({
   scores: null,
   typeInfo: null,
-  guestId: typeof window !== "undefined" ? localStorage.getItem("guest_id") : null,
+  guestId: typeof window !== "undefined" ? localStorage.getItem("guestId") : null,
 
   typeDetails: {},
 
@@ -140,7 +140,7 @@ export const useFortuneStore = create<FortuneState>((set, get) => ({
         if (guestId) {
           set({ guestId });
           try {
-            localStorage.setItem("guest_id", guestId);
+            localStorage.setItem("guestId", guestId);
           } catch {}
         }
 
@@ -171,10 +171,12 @@ export const useFortuneStore = create<FortuneState>((set, get) => ({
         const d: GuestFortuneRes | any = res.data;
         const { scores, type, guestId } = pickScoresTypeGuestId(d);
 
+         console.log("[Fortune] guest fortune created:", { guestId, scores, type });
+         
         if (guestId) {
           set({ guestId });
           try {
-            localStorage.setItem("guest_id", guestId);
+            localStorage.setItem("guestId", guestId);
           } catch {}
         }
 
