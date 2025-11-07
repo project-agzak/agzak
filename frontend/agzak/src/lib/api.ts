@@ -26,7 +26,7 @@ async function request<T>(config: AxiosRequestConfig): Promise<ApiResponse<T>> {
   try {
 
      const { accessToken, expiresAt, logout } = useAuthStore.getState();
-     
+
      const url = typeof config.url === "string" ? config.url : "";
     const isAuthRequest = url.startsWith("/auth/");
 
@@ -66,8 +66,16 @@ if (!isAuthRequest && accessToken) {
     const raw = e?.response?.data;
     const message = raw?.message ?? e?.message ?? "Unexpected error";
     
-      handleAuthError(status);
-      return { ok: false, error: { status, code: status, message, raw } };
+      handleAuthError(status, config.url as string | undefined);
+
+        if (status === 500) {
+      console.error("서버 오류 감지됨. 홈으로 이동:", message);
+      alert("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+      window.location.replace("/"); // 새로고침 이동
+    }
+
+    
+    return { ok: false, error: { status, code: status, message, raw } };
     }
 }
 
