@@ -81,71 +81,70 @@ pipeline {
 
               env.DEPLOY_IMAGE = image
 
-              // ⬇ 이 블록 안은 순수 bash. Groovy는 손 안 댐.
+              // ⬇ 싱글쿼트 3개: Groovy interpolation OFF, 안쪽은 순수 bash
               sh '''#!/bin/bash
     set -Eeuo pipefail
 
-    ssh -o StrictHostKeyChecking=no "$DEPLOY_USER@$DEPLOY_HOST" << REMOTE
-    set -Eeuo pipefail
+    ssh -o StrictHostKeyChecking=no "$DEPLOY_USER@$DEPLOY_HOST" "
+      set -Eeuo pipefail
 
-    IMAGE="$DEPLOY_IMAGE"
-    EDGE_CONF="$EDGE_CONF"
-    BE_COMPOSE="$BE_COMPOSE"
-    DOCKER_USER="$DOCKER_USER"
-    DOCKER_PWD="$DOCKER_PWD"
+      IMAGE=\\"$DEPLOY_IMAGE\\"
+      EDGE_CONF=\\"$EDGE_CONF\\"
+      BE_COMPOSE=\\"$BE_COMPOSE\\"
+      DOCKER_USER=\\"$DOCKER_USER\\"
+      DOCKER_PWD=\\"$DOCKER_PWD\\"
 
-    echo "$DOCKER_PWD" | docker login -u "$DOCKER_USER" --password-stdin || true
+      echo \\"\\$DOCKER_PWD\\" | docker login -u \\"\\$DOCKER_USER\\" --password-stdin || true
 
-    # 0) active_slot.conf 없으면 기본 blue로 생성
-    if [ ! -f "$EDGE_CONF" ]; then
-      echo 'set $slot blue;' > "$EDGE_CONF"
-    fi
+      # 0) active_slot.conf 없으면 기본 blue로 생성
+      if [ ! -f \\"\\$EDGE_CONF\\" ]; then
+        echo 'set $slot blue;' > \\"\\$EDGE_CONF\\"
+      fi
 
-    # 1) 현재 활성 슬롯 읽기 → 대기 슬롯 결정
-    CUR_SLOT=$(grep -oE '(blue|green)' "$EDGE_CONF" || echo blue)
-    if [ "$CUR_SLOT" = "blue" ]; then
-      IDLE_SLOT=green
-    else
-      IDLE_SLOT=blue
-    fi
-    echo "Current=$CUR_SLOT, Idle=$IDLE_SLOT, IMAGE=$IMAGE"
+      # 1) 현재 활성 슬롯 읽기 → 대기 슬롯 결정
+      CUR_SLOT=\\$(grep -oE '(blue|green)' \\"\\$EDGE_CONF\\" || echo blue)
+      if [ \\"\\$CUR_SLOT\\" = \\"blue\\" ]; then
+        IDLE_SLOT=green
+      else
+        IDLE_SLOT=blue
+      fi
+      echo \\"Current=\\$CUR_SLOT, Idle=\\$IDLE_SLOT, IMAGE=\\$IMAGE\\"
 
-    export IMAGE
+      export IMAGE
 
-    # 2) Idle 슬롯 컨테이너 잔여분 있으면 제거
-    if docker ps -a --format '{{.Names}}' | grep -q "^agzak-be-$IDLE_SLOT$"; then
-      echo "Existing container agzak-be-$IDLE_SLOT found. Removing..."
-      docker rm -f "agzak-be-$IDLE_SLOT" || true
-    fi
+      # 2) Idle 슬롯 컨테이너 잔여분 있으면 제거
+      if docker ps -a --format '{{.Names}}' | grep -q \\"^agzak-be-\\$IDLE_SLOT$\\"; then
+        echo \\"Existing container agzak-be-\\$IDLE_SLOT found. Removing...\\"
+        docker rm -f \\"agzak-be-\\$IDLE_SLOT\\" || true
+      fi
 
-    # 3) Idle 슬롯만 올리기
-    docker compose -f "$BE_COMPOSE" up -d --no-deps "agzak-be-$IDLE_SLOT"
+      # 3) Idle 슬롯만 올리기
+      docker compose -f \\"\\$BE_COMPOSE\\" up -d --no-deps \\"agzak-be-\\$IDLE_SLOT\\"
 
-    # 4) 헬스 체크
-    for i in $(seq 1 24); do
-      status=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "agzak-be-$IDLE_SLOT" 2>/dev/null || true)
-      [ "$status" = "healthy" ] && { echo "Idle slot healthy"; break; }
-      echo "Waiting health ($i/24): $status"; sleep 5
-    done
+      # 4) 헬스 체크
+      for i in \$(seq 1 24); do
+        status=\\$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' \\"agzak-be-\\$IDLE_SLOT\\" 2>/dev/null || true)
+        [ \\"\\$status\\" = \\"healthy\\" ] && { echo \\"Idle slot healthy\\"; break; }
+        echo \\"Waiting health (\\$i/24): \\$status\\"; sleep 5
+      done
 
-    status=$(docker inspect --format='{{.State.Health.Status}}' "agzak-be-$IDLE_SLOT" 2>/dev/null || echo "unknown")
-    [ "$status" = "healthy" ] || { echo "Idle slot not healthy in time ($status)"; exit 1; }
+      status=\\$(docker inspect --format='{{.State.Health.Status}}' \\"agzak-be-\\$IDLE_SLOT\\" 2>/dev/null || echo \\"unknown\\")
+      [ \\"\\$status\\" = \\"healthy\\" ] || { echo \\"Idle slot not healthy in time (\\$status)\\"; exit 1; }
 
-    # 5) 업스트림 스위치 + Nginx reload (락)
-    (
-      flock -n 9 || { echo "Another deployment in progress"; exit 1; }
+      # 5) 업스트림 스위치 + Nginx reload (락)
+      (
+        flock -n 9 || { echo \\"Another deployment in progress\\"; exit 1; }
 
-      # literal $slot + 실제 IDLE_SLOT 값
-      echo "set \\$slot $IDLE_SLOT;" > "$EDGE_CONF"
+        # literal $slot + 실제 IDLE_SLOT 값
+        echo \\"set \\\\\\$slot \\$IDLE_SLOT;\\" > \\"\\$EDGE_CONF\\"
 
-      docker exec agzak-nginx nginx -t
-      docker exec agzak-nginx nginx -s reload
-    ) 9>/var/lock/agzak-be-deploy.lock
+        docker exec agzak-nginx nginx -t
+        docker exec agzak-nginx nginx -s reload
+      ) 9>/var/lock/agzak-be-deploy.lock
 
-    # 6) (옵션) 이전 슬롯 중지
-    # docker compose -f "$BE_COMPOSE" stop "agzak-be-$CUR_SLOT" || true
-
-    REMOTE
+      # 6) (옵션) 이전 슬롯 중지
+      # docker compose -f \\"\\$BE_COMPOSE\\" stop \\"agzak-be-\\$CUR_SLOT\\" || true
+    "
     '''
             }
           }
