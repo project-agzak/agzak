@@ -93,7 +93,7 @@ export function FortuneBottomSheet({
             </h2>
             <button
               onClick={onClose}
-              className="w-15 h-15 flex items-center justify-center rounded-full pr-6"
+              className="w-15 h-15 flex items-center justify-center rounded-full pr-6 cursor-pointer"
             >
               ✕
             </button>
