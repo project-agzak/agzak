@@ -32,13 +32,7 @@ public class FortuneAiService {
 
     private RestClient restClient;
     private final AstrologyCalculationService calculationService;
-    private final RankingService rankingService;
     private final FortuneTypeRepository fortuneTypeRepository;
-    private final MemberRepository memberRepository;
-    private final FortuneRepository fortuneRepository;
-    private final FortuneAspectRepository fortuneAspectRepository;
-    private final GuestProfileStore guestStore;
-    private final DateProvider date;
 
     @Value("${gms.base-url}")
     private String gmsBaseUrl;
