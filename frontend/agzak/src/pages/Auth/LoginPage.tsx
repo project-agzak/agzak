@@ -83,21 +83,21 @@ export default function LoginPage() {
   const handleSignupClick = () => navigate("/signup");
 
   // 카카오 로그인 시작
-  const handleKakaoLogin = () => {
-    // Analytics: 로그인 시도
-    trackEvent("auth_login_kakao_attempt");
-    if (!window.Kakao || !window.Kakao.isInitialized()) {
-      alert("카카오 SDK가 초기화되지 않았습니다. 새로고침 후 다시 시도해주세요.");
-      return;
-    }
+  // const handleKakaoLogin = () => {
+  //   // Analytics: 로그인 시도
+  //   trackEvent("auth_login_kakao_attempt");
+  //   if (!window.Kakao || !window.Kakao.isInitialized()) {
+  //     alert("카카오 SDK가 초기화되지 않았습니다. 새로고침 후 다시 시도해주세요.");
+  //     return;
+  //   }
 
-    const redirectUri = `${window.location.origin}${window.location.pathname}`;
+  //   const redirectUri = `${window.location.origin}${window.location.pathname}`;
 
-    window.Kakao.Auth.authorize({
-      redirectUri,
-      scope: "profile_nickname,account_email",
-    });
-  };
+  //   window.Kakao.Auth.authorize({
+  //     redirectUri,
+  //     scope: "profile_nickname,account_email",
+  //   });
+  // };
 
   // 로그인 없이 운세 보기
   const handleFortuneClick = () => navigate("/fortune");
@@ -196,7 +196,7 @@ export default function LoginPage() {
           <Button_L label="로그인" width={260} onClick={handleLogin} />
 
           {/* 카카오 로그인 */}
-          <button
+          {/* <button
             type="button"
             onClick={handleKakaoLogin}
             aria-label="카카오로 로그인"
@@ -208,7 +208,7 @@ export default function LoginPage() {
               className="block h-auto w-[270px] cursor-pointer transition"
               draggable={false}
             />
-          </button>
+          </button> */}
 
           {/* 회원가입 / 운세보기 */}
           <div className="mt-3 flex items-center justify-center gap-3">
