@@ -1,8 +1,8 @@
 // src/components/atoms/OvenCookButton.tsx
 "use client"
 
-import activeBtn from "@/assets/Game/activate-open-button.svg"
-import disabledBtn from "@/assets/Game/deactivate-open-button.svg"
+import activeBtn from "@/assets/Game/activate-open-button.webp"
+import disabledBtn from "@/assets/Game/deactivate-open-button.webp"
 
 type Props = {
   enabled: boolean

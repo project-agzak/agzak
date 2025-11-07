@@ -13,26 +13,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      manifest: {
-        name: 'Agzak',
-        short_name: 'Agzak',
-        start_url: '/',
-        display: 'standalone',
-        background_color: '#FAFAFA',
-        theme_color: '#FAFAFA',
-        // icons: [
-        //   {
-        //     src: '/agzak-192x192.png',
-        //     sizes: '192x192',
-        //     type: 'image/png',
-        //   },
-        //   {
-        //     src: '/agzak-512x512.png',
-        //     sizes: '512x512',
-        //     type: 'image/png',
-        //   },
-        // ],
-      },
+      manifest: false,
     }),
   ],
   server: {
