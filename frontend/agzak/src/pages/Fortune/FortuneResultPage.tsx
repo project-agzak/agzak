@@ -87,11 +87,13 @@ export default function FortuneResultPage() {
 
   // 🔥 로그인 유저일 때만 /fortune 호출
   //   - 게스트는 FortunePage에서 이미 fetchGuest로 store 채워놓은 상태
-  useEffect(() => {
-    if (!isLoggedIn) return;
-    if (loadingFortune || totalScore != null) return;
-    fetchToday();
-  }, [isLoggedIn, loadingFortune, totalScore, fetchToday]);
+useEffect(() => {
+  if (!isLoggedIn) return;
+
+  // 로그인 유저면 무조건 오늘 운세 한 번 시도
+  fetchToday();
+  console.log("오늘 운세 불러오기 호출");
+}, [isLoggedIn, fetchToday]);
 
   // 🔥 단짝/천적: 추가 API 없이 goodWithId/badWithId로 바로 이미지 찾기
   const goodWithId = typeInfo?.goodWithId ?? null;
