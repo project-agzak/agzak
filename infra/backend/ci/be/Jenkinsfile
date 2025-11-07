@@ -90,7 +90,7 @@ pipeline {
 
                 # 0) active_slot.conf 없으면 기본 blue로 생성
                 if [ ! -f "\$EDGE_CONF" ]; then
-                  printf 'set ${'$'}slot %s;\\n' "blue" > "\$EDGE_CONF"
+                  printf 'set \$slot %s;\\n' "blue" > "\$EDGE_CONF"
                 fi
 
                 # 1) 현재 활성 슬롯 읽기 → 대기 슬롯 결정
@@ -100,7 +100,7 @@ pipeline {
 
                 export IMAGE
 
-                # 2) Idle 슬롯 컨테이너가 이미 있으면 제거 (이전 잔여 컨테이너로 인한 Conflict 방지)
+                # 2) Idle 슬롯 컨테이너가 이미 있으면 제거 (잔여 컨테이너 Conflict 방지)
                 if docker ps -a --format '{{.Names}}' | grep -q "^agzak-be-\$IDLE_SLOT\$"; then
                   echo "Existing container agzak-be-\$IDLE_SLOT found. Removing..."
                   docker rm -f "agzak-be-\$IDLE_SLOT" || true
@@ -120,12 +120,12 @@ pipeline {
 
                 # 5) 업스트림 스위치 + Nginx reload (동시 배포 잠금)
                 flock -n /var/lock/agzak-be-deploy.lock -c "
-                  printf 'set ${'$'}slot %s;\\n' \"\$IDLE_SLOT\" > \"\$EDGE_CONF\"
+                  printf 'set \$slot %s;\\n' \"\$IDLE_SLOT\" > \"\$EDGE_CONF\"
                   docker exec agzak-nginx nginx -t
                   docker exec agzak-nginx nginx -s reload
                 "
 
-                # 6) (선택) 이전 슬롯 중지 (원하면 주석 해제)
+                # 6) (선택) 이전 슬롯 중지 (운영 정책에 따라)
                 # docker compose -f "\$BE_COMPOSE" stop "agzak-be-\$CUR_SLOT" || true
 
                 ENDSSH
