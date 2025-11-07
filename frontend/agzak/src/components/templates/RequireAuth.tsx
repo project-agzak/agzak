@@ -2,7 +2,7 @@
 import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/store/useAuthStore";
-import { isAccessTokenExpired } from "@/lib/authUtils";
+
 
 type RequireAuthProps = {
   children: ReactNode;
@@ -13,9 +13,9 @@ export function RequireAuth({ children }: RequireAuthProps) {
   const location = useLocation();
 
 
-  const expired = isAccessTokenExpired();
 
-   if (isLoggedIn && expired) {
+
+   if (isLoggedIn ) {
     logout();
     return <Navigate to="/" replace />;
   }
