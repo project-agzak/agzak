@@ -15,6 +15,9 @@ export default function PWABadge() {
     const onPrompt = (e: any) => {
       // 자동 프롬프트 막고, 우리가 제어
       e.preventDefault();
+      (window as any).__pwaDeferredPrompt = e;
+      window.dispatchEvent(new CustomEvent('pwa:beforeinstallprompt', { detail: e }));
+
       setDeferred(e);
       setShow(true); // 첫 방문에서만 배지 노출
     };
@@ -48,12 +51,12 @@ export default function PWABadge() {
               if (!deferred) return;
               await deferred.prompt();
               // 사용자의 선택 결과(accepted/dismissed). 성공/거절 상관없이 다시는 안 보이게 처리
-              try {
-                await deferred.userChoice;
-              } catch {}
-              localStorage.setItem(SEEN_KEY, '1');
+              try { await deferred.userChoice; } catch {}
+              (window as any).__pwaDeferredPrompt = null;
+              window.dispatchEvent(new CustomEvent('pwa:consumed'));
               setDeferred(null);
               setShow(false);
+              localStorage.setItem(SEEN_KEY, '1');
             }}
           >
             설치
