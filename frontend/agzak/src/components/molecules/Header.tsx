@@ -147,7 +147,7 @@ function SidebarContent({ isLoggedIn, nickname, onLogout }: SidebarContentProps)
   };
 
   // 강화 버튼 비활성화
-  const { quota, loading: quotaLoading, error: quotaError, refresh } = useSessionQuotaStore();
+  const { quota, refresh } = useSessionQuotaStore();
   const remainingSessions = quota?.remaining ?? 0;
   const canEnforce = remainingSessions > 0; 
 
