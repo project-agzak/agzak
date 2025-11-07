@@ -79,10 +79,9 @@ pipeline {
               def tag   = "${env.TARGET_BRANCH}-${env.BUILD_NUMBER}"
               def image = "${repo}:${tag}"
 
-              // 쉘에서 쓸 배포 이미지 환경변수
               env.DEPLOY_IMAGE = image
 
-              // ⚠ 여기서부터는 싱글쿼트 3개: Groovy interpolation 완전 OFF
+              // ⚠ 여기서부터는 절대 들여쓰기 하지 말 것 (heredoc/리터럴 그대로)
               sh '''#!/bin/bash
     set -Eeuo pipefail
 
@@ -100,7 +99,6 @@ pipeline {
 
     # 0) active_slot.conf 없으면 기본 blue로 생성
     if [ ! -f "$EDGE_CONF" ]; then
-      # Nginx에서 include해서 쓸 값: set $slot blue;
       echo 'set $slot blue;' > "$EDGE_CONF"
     fi
 
@@ -115,13 +113,13 @@ pipeline {
 
     export IMAGE
 
-    # 2) Idle 슬롯 컨테이너 잔여분 있으면 제거 (이름 Conflict 방지)
+    # 2) Idle 슬롯 컨테이너 잔여분 제거 (이름 충돌 방지)
     if docker ps -a --format '{{.Names}}' | grep -q "^agzak-be-$IDLE_SLOT$"; then
       echo "Existing container agzak-be-$IDLE_SLOT found. Removing..."
       docker rm -f "agzak-be-$IDLE_SLOT" || true
     fi
 
-    # 3) Idle 슬롯만 올리기/갱신
+    # 3) Idle 슬롯만 올리기
     docker compose -f "$BE_COMPOSE" up -d --no-deps "agzak-be-$IDLE_SLOT"
 
     # 4) 헬스 체크 (Idle 슬롯 컨테이너)
@@ -134,12 +132,11 @@ pipeline {
     status=$(docker inspect --format='{{.State.Health.Status}}' "agzak-be-$IDLE_SLOT" 2>/dev/null || echo "unknown")
     [ "$status" = "healthy" ] || { echo "Idle slot not healthy in time ($status)"; exit 1; }
 
-    # 5) 업스트림 스위치 + Nginx reload (동시 배포 잠금)
+    # 5) 업스트림 스위치 + Nginx reload (락)
     (
       flock -n 9 || { echo "Another deployment in progress"; exit 1; }
 
-      # 여기서 \$slot은 literal, IDLE_SLOT은 실제 값
-      # 결과: set $slot green; / set $slot blue;
+      # literal $slot + 실제 IDLE_SLOT 값
       echo "set \\$slot $IDLE_SLOT;" > "$EDGE_CONF"
 
       docker exec agzak-nginx nginx -t
