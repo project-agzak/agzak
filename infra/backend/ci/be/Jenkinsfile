@@ -108,7 +108,7 @@ pipeline {
 
                 # 3) 업스트림 스위치 + Nginx reload (동시 배포 잠금)
                 flock -n /var/lock/agzak-be-deploy.lock -c '
-                  printf "set \\\$slot %s;\n" "$IDLE_SLOT" > "$EDGE_CONF"
+                  printf "set \\$slot %s;\n" "\$IDLE_SLOT" > "\$EDGE_CONF"
                   docker exec agzak-nginx nginx -t
                   docker exec agzak-nginx nginx -s reload
                 '
