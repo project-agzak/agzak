@@ -88,7 +88,7 @@ export function FortuneBubble({
       <div
         className={cn(
           "absolute inset-0 flex flex-col justify-center h-full",
-          flipX ? "items-end pr-10 text-right" : "pl-6"
+          flipX ? "items-end pr-11" : "pl-7"
         )}
       >        
         <ul className="space-y-1 translate-x-1">
