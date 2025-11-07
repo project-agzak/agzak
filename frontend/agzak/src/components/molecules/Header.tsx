@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
 import { useAuthStore, type Member } from "@/store/useAuthStore";
-
+import { useSessionQuotaStore } from "@/store/sessionQuotaStore";
 import { Button_M } from "@/components/atoms/Button_M";
 import { Button } from "@/components/ui/button";
 import {
@@ -135,7 +135,7 @@ type SidebarContentProps = {
 function SidebarContent({ isLoggedIn, nickname, onLogout }: SidebarContentProps) {
   const navigate = useNavigate();
   const displayName = nickname || "사용자";
-
+  // 설치
   const [deferred, setDeferred] = useState<any>(null);
 
   const handleFortuneClick = () => {
@@ -146,6 +146,14 @@ function SidebarContent({ isLoggedIn, nickname, onLogout }: SidebarContentProps)
     }
   };
 
+  // 강화 버튼 비활성화
+  const { quota, loading: quotaLoading, error: quotaError, refresh } = useSessionQuotaStore();
+  const remainingSessions = quota?.remaining ?? 0;
+  const canEnforce = remainingSessions > 0; 
+
+  useEffect(() => {
+    refresh(); // 홈과 동일하게 진입 시 최신화
+  }, [refresh]);
 
   useEffect(() => {
     // 처음 진입 시 전역에 저장된 게 있으면 사용
@@ -230,12 +238,13 @@ function SidebarContent({ isLoggedIn, nickname, onLogout }: SidebarContentProps)
         </SheetClose>
 
         <SheetClose asChild>
-          <a
-            href="/enforce"
-            className="flex items-center gap-2 rounded-md px-0 py-2 hover:bg-zinc-100 active:bg-zinc-200 transition-colors"
+          <button
+            onClick={() => canEnforce && navigate("/enforce")}
+            disabled={!canEnforce}
+            className="flex items-center gap-2 rounded-md px-0 py-2 hover:bg-zinc-100 active:bg-zinc-200 transition-colors text-left cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <span>운세 강화</span>
-          </a>
+          </button>
         </SheetClose>
 
         <SheetClose asChild>
