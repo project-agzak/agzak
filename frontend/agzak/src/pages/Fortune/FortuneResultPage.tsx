@@ -119,7 +119,7 @@ export default function FortuneResultPage() {
       </div>
       
       <div className="bg-[#FEFBF2] px-4 py-6 pt-5">
-        <div className="space-y-3">
+        <div className="space-y-3 w-full max-w-[320px] mx-auto">
           <ExpandableFortune
             itemValue="health"
             label="건강운"
