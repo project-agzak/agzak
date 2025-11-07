@@ -37,6 +37,11 @@ export default function FortunePage() {
         ? "00:00"
         : `${hour.padStart(2, "0")}:${minute.padStart(2, "0")}`;
 
+            const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+if (!dateRegex.test(birthDate)) {
+  alert("생년월일은 YYYY-MM-DD 형식으로 입력해주세요. 예: 1999-08-15");
+  return;
+}
     if (
       !nickname ||
       !gender ||
@@ -47,6 +52,7 @@ export default function FortunePage() {
       alert("모든 필드를 입력해주세요!");
       return;
     }
+
  const kakaoTicket = sessionStorage.getItem("kakao_ticket");
     const userInfoStr = localStorage.getItem("userId");
 
