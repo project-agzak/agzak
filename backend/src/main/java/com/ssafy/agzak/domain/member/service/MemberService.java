@@ -15,6 +15,8 @@ import com.ssafy.agzak.domain.fortune.repository.FortuneRepository;
 import com.ssafy.agzak.domain.member.dto.response.MemberInfoResponse;
 import com.ssafy.agzak.domain.member.entity.Member;
 import com.ssafy.agzak.domain.member.repository.MemberRepository;
+import com.ssafy.agzak.domain.ranking.repository.RankingRepository;
+import com.ssafy.agzak.domain.ranking.service.RankingService;
 import com.ssafy.agzak.global.security.RefreshTokenStore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -28,6 +30,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.ssafy.agzak.global.tx.TxAfterCommit.afterCommit;
+
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -37,6 +41,7 @@ public class MemberService {
     private final FortuneAspectRepository fortuneAspectRepository;
     private final OAuthIdentityRepository oauthRepo;
     private final RefreshTokenStore  refreshStore;
+    private final RankingService rankingService;
 
     public MemberInfoResponse getMemberInfo(Long memberId) {
         Member member = memberRepository.findById(memberId)
@@ -94,6 +99,7 @@ public class MemberService {
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 사용중인 닉네임입니다.");
             }
             member.updateNickname(request.nickname());
+            afterCommit(() -> rankingService.refreshTodayForMember(memberId));
         }
 
         if (request.birthTime() != null) {
