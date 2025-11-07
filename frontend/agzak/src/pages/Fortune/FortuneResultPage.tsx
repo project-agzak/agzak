@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 import { ExpandableFortune } from "@/components/molecules/ExpandableFortune";
 import { Button_L } from "@/components/atoms/Button_L";
-import AppLoader from "@/components/ui/AppLoader";
+
 import ShareButton from "@/components/atoms/ShareButton";
 import { PureFlipImage } from "@/components/molecules/PureFlipImage";
 import BackCard from "@/components/atoms/BackCard";
@@ -100,21 +100,10 @@ export default function FortuneResultPage() {
   const bestieSrc = goodWithId ? FRIEND_BY_ID[goodWithId] : undefined;
   const enemySrc  = badWithId  ? FRIEND_BY_ID[badWithId]  : undefined;
 
-
-   if (isLoggedIn && loadingFortune && totalScore == null && !typeInfo) {
-    return (
-      <main className="relative z-10 min-h-screen">
-        <AppLoader fullscreen label="오늘의 운세를 불러오는 중..." />
-      </main>
-    );
-  }
-
   return (
     <main className="relative z-10 p-4 min-h-screen">
 
-      <div className="flex flex-col justify-center items-center pb-5 gap-3">
-        <p className="font-galmuri-condensed-small animate-bounce motion-reduce:animate-none">
-          카드를 클릭해 뒤집어 보세요!</p>
+      <div className="flex justify-center pb-5">
         <PureFlipImage
           className="w-64 aspect-[2/3] cursor-pointer"
           frontSrc={getFrontByTypeName(typeName)}
