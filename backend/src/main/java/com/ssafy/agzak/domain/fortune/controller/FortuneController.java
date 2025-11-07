@@ -1,10 +1,7 @@
 package com.ssafy.agzak.domain.fortune.controller;
 
 import com.ssafy.agzak.docs.FortuneApiDocs;
-import com.ssafy.agzak.domain.fortune.service.AstrologyCalculationService;
-import com.ssafy.agzak.domain.fortune.service.FortuneService;
-import com.ssafy.agzak.domain.fortune.service.FortuneTypeService;
-import com.ssafy.agzak.domain.fortune.service.GeocodingService;
+import com.ssafy.agzak.domain.fortune.service.*;
 import com.ssafy.agzak.domain.fortune.dto.request.BirthDataInput;
 import com.ssafy.agzak.domain.fortune.dto.request.GuestFortuneRequest;
 import com.ssafy.agzak.domain.fortune.dto.response.*;
@@ -30,6 +27,7 @@ public class FortuneController implements FortuneApiDocs {
     private final MemberService memberService;
     private final AuthMemberProvider authMemberProvider;
     private final DateProvider date;
+    private final FortuneAiService fortuneAiService;
 
     @PostMapping
     public ResponseEntity<FinalFortuneResponse> postMemberTodayFortune() {
@@ -51,7 +49,7 @@ public class FortuneController implements FortuneApiDocs {
         var geo = geocodingService.getCoordinates(req.birthCity());
 
         var input = new BirthDataInput(req.birthDate(), req.birthTime(), geo.latitude(), geo.longitude());
-        FinalFortuneResponse fortune = fortuneService.getFortuneScores(input, req.birthCity());
+        FinalFortuneResponse fortune = fortuneAiService.getFortuneScores(input, req.birthCity());
 
         var profile = new GuestProfile(
                 req.nickname(), req.gender(), req.birthDate(), req.birthTime(),
