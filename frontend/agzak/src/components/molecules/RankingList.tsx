@@ -1,9 +1,9 @@
 // src/components/ranking/RankingList.tsx
-import { useEffect, useMemo, useState } from "react";
 import Rank1 from "@/assets/ui/Rank1.svg";
 import Rank2 from "@/assets/ui/Rank2.svg";
 import Rank3 from "@/assets/ui/Rank3.svg";
 import { RankingAPI, type TodayRankingRes } from "@/lib/rankingAPI";
+import { useEffect, useMemo, useState } from "react";
 
 type Category = "total" | "original" | "increase";
 
