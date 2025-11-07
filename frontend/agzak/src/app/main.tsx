@@ -6,6 +6,9 @@ import "../pwa/registerSW";
 import "../styles/index.css";
 import { router } from "./router";
 
+const ENABLE_ANALYTICS = String(import.meta.env.VITE_ENABLE_ANALYTICS).toLowerCase() === "true";
+if (ENABLE_ANALYTICS) loadAnalytics();
+
 // 🔹 전역 window.Kakao 타입 선언
 declare global {
   interface Window {
@@ -27,9 +30,6 @@ if (!KAKAO_JS_KEY) {
 } else {
   console.warn(" window.Kakao가 없습니다. index.html에 로그인 SDK 스크립트 추가됐는지 확인해주세요.");
 }
-
-const ENABLE_ANALYTICS = String(import.meta.env.VITE_ENABLE_ANALYTICS).toLowerCase() === "true";
-if (ENABLE_ANALYTICS) loadAnalytics();
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
