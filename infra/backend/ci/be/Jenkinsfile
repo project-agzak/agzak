@@ -81,23 +81,35 @@ pipeline {
 
               sh """
                 set -Eeuo pipefail
-                ssh -o StrictHostKeyChecking=no "$DEPLOY_USER@$DEPLOY_HOST" \\
-                  "IMAGE='${image}' EDGE_CONF='${EDGE_CONF}' BE_COMPOSE='${BE_COMPOSE}' DOCKER_USER='${DOCKER_USER}' DOCKER_PWD='${DOCKER_PWD}' bash -s" << 'ENDSSH'
+
+                ssh -o StrictHostKeyChecking=no "${DEPLOY_USER}@${DEPLOY_HOST}" \\
+                  IMAGE='${image}' EDGE_CONF='${EDGE_CONF}' BE_COMPOSE='${BE_COMPOSE}' DOCKER_USER='${DOCKER_USER}' DOCKER_PWD='${DOCKER_PWD}' bash -s << 'ENDSSH'
                 set -Eeuo pipefail
 
                 echo "\$DOCKER_PWD" | docker login -u "\$DOCKER_USER" --password-stdin || true
 
-                # 0) 현재 활성 슬롯 읽기 → 대기 슬롯 결정
+                # 0) active_slot.conf 없으면 기본 blue로 생성
+                if [ ! -f "\$EDGE_CONF" ]; then
+                  printf 'set ${'$'}slot %s;\\n' "blue" > "\$EDGE_CONF"
+                fi
+
+                # 1) 현재 활성 슬롯 읽기 → 대기 슬롯 결정
                 CUR_SLOT=\$(grep -oE '(blue|green)' "\$EDGE_CONF" || echo blue)
                 if [ "\$CUR_SLOT" = "blue" ]; then IDLE_SLOT=green; else IDLE_SLOT=blue; fi
                 echo "Current=\$CUR_SLOT, Idle=\$IDLE_SLOT, IMAGE=\$IMAGE"
 
                 export IMAGE
 
-                # 1) Idle 슬롯만 올리기/갱신
+                # 2) Idle 슬롯 컨테이너가 이미 있으면 제거 (이전 잔여 컨테이너로 인한 Conflict 방지)
+                if docker ps -a --format '{{.Names}}' | grep -q "^agzak-be-\$IDLE_SLOT\$"; then
+                  echo "Existing container agzak-be-\$IDLE_SLOT found. Removing..."
+                  docker rm -f "agzak-be-\$IDLE_SLOT" || true
+                fi
+
+                # 3) Idle 슬롯만 올리기/갱신
                 docker compose -f "\$BE_COMPOSE" up -d --no-deps "agzak-be-\$IDLE_SLOT"
 
-                # 2) 헬스 체크(슬롯 컨테이너 대상으로)
+                # 4) 헬스 체크(Idle 슬롯 컨테이너)
                 for i in \$(seq 1 24); do
                   status=\$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "agzak-be-\$IDLE_SLOT" 2>/dev/null || true)
                   [ "\$status" = "healthy" ] && { echo "Idle slot healthy"; break; }
@@ -106,15 +118,14 @@ pipeline {
                 status=\$(docker inspect --format='{{.State.Health.Status}}' "agzak-be-\$IDLE_SLOT" 2>/dev/null || echo "unknown")
                 [ "\$status" = "healthy" ] || { echo "Idle slot not healthy in time"; exit 1; }
 
-                # 3) 업스트림 스위치 + Nginx reload (동시 배포 잠금)
+                # 5) 업스트림 스위치 + Nginx reload (동시 배포 잠금)
                 flock -n /var/lock/agzak-be-deploy.lock -c "
-                  printf 'set ${'$'}slot %s;\n' \"\$IDLE_SLOT\" > \"\$EDGE_CONF\"
+                  printf 'set ${'$'}slot %s;\\n' \"\$IDLE_SLOT\" > \"\$EDGE_CONF\"
                   docker exec agzak-nginx nginx -t
                   docker exec agzak-nginx nginx -s reload
                 "
 
-                # 4) (선택) 이전 슬롯 정리/중지는 운영 정책에 맞춰
-                # sleep 5
+                # 6) (선택) 이전 슬롯 중지 (원하면 주석 해제)
                 # docker compose -f "\$BE_COMPOSE" stop "agzak-be-\$CUR_SLOT" || true
 
                 ENDSSH
