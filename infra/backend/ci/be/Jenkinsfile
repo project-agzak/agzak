@@ -66,7 +66,7 @@ pipeline {
 
     stage('Deploy (Blue/Green)') {
       steps {
-        sshagent (credentials: ['deploy-ssh']) {
+        sshagent(credentials: ['deploy-ssh']) {
           withCredentials([usernamePassword(
             credentialsId: 'dockerhub-cred',
             usernameVariable: 'DOCKER_USER',
@@ -76,32 +76,41 @@ pipeline {
               def repo = (env.REGISTRY?.trim() && env.REGISTRY != 'docker.io')
                 ? "${env.REGISTRY}/${env.IMAGE_NAME}"
                 : env.IMAGE_NAME
-              def tag = "${env.TARGET_BRANCH}-${env.BUILD_NUMBER}"
+              def tag   = "${env.TARGET_BRANCH}-${env.BUILD_NUMBER}"
               def image = "${repo}:${tag}"
 
               sh """
                 set -Eeuo pipefail
 
                 ssh -o StrictHostKeyChecking=no "${DEPLOY_USER}@${DEPLOY_HOST}" \\
-                  IMAGE='${image}' EDGE_CONF='${EDGE_CONF}' BE_COMPOSE='${BE_COMPOSE}' DOCKER_USER='${DOCKER_USER}' DOCKER_PWD='${DOCKER_PWD}' bash -s << 'ENDSSH'
+                  IMAGE='${image}' \\
+                  EDGE_CONF='${EDGE_CONF}' \\
+                  BE_COMPOSE='${BE_COMPOSE}' \\
+                  DOCKER_USER='${DOCKER_USER}' \\
+                  DOCKER_PWD='${DOCKER_PWD}' \\
+                  bash -s << 'ENDSSH'
+
                 set -Eeuo pipefail
 
                 echo "\$DOCKER_PWD" | docker login -u "\$DOCKER_USER" --password-stdin || true
 
                 # 0) active_slot.conf 없으면 기본 blue로 생성
                 if [ ! -f "\$EDGE_CONF" ]; then
-                  # Nginx에서 include된 파일에서 set \$slot blue; 형태로 사용
-                  printf 'set \$slot %s;\\n' "blue" | sed 's/\\\\\\$slot/\$slot/' > "\$EDGE_CONF"
+                  echo 'set $slot blue;' > "\$EDGE_CONF"
                 fi
 
                 # 1) 현재 활성 슬롯 읽기 → 대기 슬롯 결정
                 CUR_SLOT=\$(grep -oE '(blue|green)' "\$EDGE_CONF" || echo blue)
-                if [ "\$CUR_SLOT" = "blue" ]; then IDLE_SLOT=green; else IDLE_SLOT=blue; fi
+                if [ "\$CUR_SLOT" = "blue" ]; then
+                  IDLE_SLOT=green
+                else
+                  IDLE_SLOT=blue
+                fi
                 echo "Current=\$CUR_SLOT, Idle=\$IDLE_SLOT, IMAGE=\$IMAGE"
 
                 export IMAGE
 
-                # 2) Idle 슬롯 컨테이너가 이미 있으면 제거 (Conflict 방지)
+                # 2) Idle 슬롯 컨테이너가 이미 있으면 제거 (이전 잔여 컨테이너로 인한 Conflict 방지)
                 if docker ps -a --format '{{.Names}}' | grep -q "^agzak-be-\$IDLE_SLOT\$"; then
                   echo "Existing container agzak-be-\$IDLE_SLOT found. Removing..."
                   docker rm -f "agzak-be-\$IDLE_SLOT" || true
@@ -110,27 +119,28 @@ pipeline {
                 # 3) Idle 슬롯만 올리기/갱신
                 docker compose -f "\$BE_COMPOSE" up -d --no-deps "agzak-be-\$IDLE_SLOT"
 
-                # 4) 헬스 체크(Idle 슬롯 컨테이너)
+                # 4) 헬스 체크 (Idle 슬롯 컨테이너)
                 for i in \$(seq 1 24); do
                   status=\$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "agzak-be-\$IDLE_SLOT" 2>/dev/null || true)
                   [ "\$status" = "healthy" ] && { echo "Idle slot healthy"; break; }
                   echo "Waiting health (\$i/24): \$status"; sleep 5
                 done
-                status=\$(docker inspect --format='{{.State.Health.Status}}' "agzak-be-\$IDLE_SLOT" 2>/dev/null || echo "unknown")
-                [ "\$status" = "healthy" ] || { echo "Idle slot not healthy in time"; exit 1; }
 
-                # 5) 업스트림 스위치 + Nginx reload (동시 배포 락)
+                status=\$(docker inspect --format='{{.State.Health.Status}}' "agzak-be-\$IDLE_SLOT" 2>/dev/null || echo "unknown")
+                [ "\$status" = "healthy" ] || { echo "Idle slot not healthy in time (\$status)"; exit 1; }
+
+                # 5) 업스트림 스위치 + Nginx reload (동시 배포 잠금)
                 (
                   flock -n 9 || { echo "Another deployment in progress"; exit 1; }
 
-                  # 여기서 \$slot은 Nginx 변수 이름, 절대 쉘 변수 아님 → 싱글 쿼트로 고정
-                  printf 'set \$slot %s;\\n' "\$IDLE_SLOT" | sed 's/\\\\\\$slot/\$slot/' > "\$EDGE_CONF"
+                  # \$slot 은 Nginx 변수, 여기서 literal 로 기록해야 함
+                  echo "set \\$slot \$IDLE_SLOT;" > "\$EDGE_CONF"
 
                   docker exec agzak-nginx nginx -t
                   docker exec agzak-nginx nginx -s reload
                 ) 9>/var/lock/agzak-be-deploy.lock
 
-                # 6) (선택) 이전 슬롯 중지 (원하면 주석 해제)
+                # 6) (선택) 이전 슬롯 중지 - 정책에 맞게 사용
                 # docker compose -f "\$BE_COMPOSE" stop "agzak-be-\$CUR_SLOT" || true
 
                 ENDSSH
