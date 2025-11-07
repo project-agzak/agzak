@@ -76,6 +76,7 @@ public class FortuneAiService {
         - 출력은 공백/개행 포함 가능하나 **JSON 객체만** 존재해야 한다.
         - total_score는 나머지 영역의 합으로 줘
         - [매우 중요] 각 항목의 상한선은 250이다
+        - [매우 중요] 각 항목 점수는 겹치지 않도록 한다.
         필수 출력 형식(키/타입 고정):
         {
           "total_score": number,
@@ -289,41 +290,41 @@ public class FortuneAiService {
         // 최저 점수 찾기
         String minKey = Collections.min(scoreMap.entrySet(), Map.Entry.comparingByValue()).getKey();
 
-        String name = "";
+        String name;
         if ("wealth".equals(maxKey) && "romance".equals(minKey)) {
             name = "소";
         }
-        if ("wealth".equals(maxKey) && "achievement".equals(minKey)) {
+        else if ("wealth".equals(maxKey) && "achievement".equals(minKey)) {
             name = "쥐";
         }
-        if ("wealth".equals(maxKey) && "health".equals(minKey)) {
+        else if ("wealth".equals(maxKey) && "health".equals(minKey)) {
             name = "용";
         }
-        if ("romance".equals(maxKey) && "wealth".equals(minKey)) {
+        else if ("romance".equals(maxKey) && "wealth".equals(minKey)) {
             name = "토끼";
         }
-        if ("romance".equals(maxKey) && "achievement".equals(minKey)) {
+        else if ("romance".equals(maxKey) && "achievement".equals(minKey)) {
             name = "양";
         }
-        if ("romance".equals(maxKey) && "health".equals(minKey)) {
+        else if ("romance".equals(maxKey) && "health".equals(minKey)) {
             name = "고양이";
         }
-        if ("achievement".equals(maxKey) && "wealth".equals(minKey)) {
+        else if ("achievement".equals(maxKey) && "wealth".equals(minKey)) {
             name = "호랑이";
         }
-        if ("achievement".equals(maxKey) && "romance".equals(minKey)) {
+        else if ("achievement".equals(maxKey) && "romance".equals(minKey)) {
             name = "말";
         }
-        if ("achievement".equals(maxKey) && "health".equals(minKey)) {
+        else if ("achievement".equals(maxKey) && "health".equals(minKey)) {
             name = "닭";
         }
-        if ("health".equals(maxKey) && "wealth".equals(minKey)) {
+        else if ("health".equals(maxKey) && "wealth".equals(minKey)) {
             name = "개";
         }
-        if ("health".equals(maxKey) && "romance".equals(minKey)) {
+        else if ("health".equals(maxKey) && "romance".equals(minKey)) {
             name = "뱀";
         }
-        if ("health".equals(maxKey) && "achievement".equals(minKey)) {
+        else {
             name = "원숭이";
         }
 
