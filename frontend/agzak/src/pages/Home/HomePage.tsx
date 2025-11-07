@@ -3,7 +3,8 @@ import RankingRibbon from "@/assets/ui/RankingRibbon.svg";
 import { Button_M } from "@/components/atoms/Button_M";
 import ShareButton from "@/components/atoms/ShareButton";
 import RankingList from "@/components/molecules/RankingList";
-import { useEffect } from "react";
+import { trackEvent } from "@/lib/analytics";
+import { useEffect, useMemo } from "react";
 
 import { useSessionQuotaStore } from "@/store/sessionQuotaStore";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -12,8 +13,18 @@ import { nanoid } from "nanoid";
 
 export default function HomePage() {
   const shareUrl = "https://www.agzak.co.kr/";
-  
   const { isLoggedIn } = useAuthStore();
+
+    const accessedAtKST = useMemo(() => {
+    const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+    const y = kst.getUTCFullYear();
+    const m = String(kst.getUTCMonth() + 1).padStart(2, "0");
+    const d = String(kst.getUTCDate()).padStart(2, "0");
+    const hh = String(kst.getUTCHours()).padStart(2, "0");
+    const mm = String(kst.getUTCMinutes()).padStart(2, "0");
+    return `${y}-${m}-${d} ${hh}:${mm}`;
+  }, []);
+
 
   const totalScore       = useFortuneStore((s) => s.scores?.total_score ?? null);
   const loadingFortune   = useFortuneStore((s) => s.loading);
@@ -78,7 +89,7 @@ export default function HomePage() {
               : totalScore ?? (loadingFortune ? "..." : "—")}{" "}
             점
           </p>
-          <p className="font-galmuri-xsmall pt-0.5">
+          <p className="flex flex-col items-center font-galmuri-xsmall pt-0.5">
             강화 잔여 횟수: {quotaError ? "—" : (quotaLoading ? "..." : remainingSessions)}회 <br />
             {quota && (
               <span className="text-gray-500">
@@ -91,8 +102,19 @@ export default function HomePage() {
       <div>
         <div className="flex justify-center pb-2">
           <div className="flex w-fit gap-2.5">
-            <Button_M className="shrink-0 mx-0!" label="운세 상세" to="/calendar" />
-            <Button_M className="shrink-0 mx-0!" label="운세 강화" to="/enforce" disabled={!canEnforce} />
+            <Button_M
+              label="운세 상세"
+              to="/fortune/result"
+               disabled={!canEnforce}
+              onClick={() => trackEvent("cta_result_click", { can_enforce: canEnforce })}
+            />
+
+            <Button_M
+              label="운세 강화"
+              to="/enforce"
+              disabled={!canEnforce}
+              onClick={() => trackEvent("cta_enforce_click", { can_enforce: canEnforce })}
+            />
           </div>
         </div>
         <ShareButton
@@ -112,9 +134,8 @@ export default function HomePage() {
           />
           <p className="absolute inset-0 flex items-center justify-center font-bitbit-large leading-none pb-5">오늘의 랭킹</p>
         </div>
-        <p className="text-center font-galmuri-xsmall -translate-y-8"> KST 24:00 기준</p>
-      </div>
-      <div className="-translate-y-8">
+        <p className="text-center font-galmuri-condensed-small -translate-y-8"> KST {accessedAtKST} 기준</p>      </div>
+      <div className="-translate-y-9">
         <RankingList />
       </div>
     </main>

@@ -36,7 +36,6 @@ export default function EnforcePage() {
       </main>
     )
   }
-
   if (game.blocked === "LIMIT") {
     // cap 동적 표기 (로딩/에러 방어)
     const capText =
