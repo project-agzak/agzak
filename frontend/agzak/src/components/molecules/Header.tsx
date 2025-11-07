@@ -58,7 +58,7 @@ useEffect(() => {
     logout();
 
     alert("로그아웃 되었습니다.");
-     window.location.href = "/";
+    window.location.replace("/");
   };
 
   const nickname = member?.nickname ?? "";
