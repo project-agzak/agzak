@@ -85,7 +85,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       "access_token_expires_at",
       "member",
       "userId",
-      "guestId",
+     
     ];
     keysToRemove.forEach((k) => localStorage.removeItem(k));
 
@@ -97,5 +97,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       member: null,
       isLoggedIn: false,
     });
+
+      if (typeof window !== "undefined") {
+    window.location.replace("/"); // 메인으로 강제 이동
+  }
   },
+    
 }));

@@ -60,13 +60,23 @@ export const MemberAPI = {
     }
     return res;
   },
+
+  
   getFortuneByDate: async (
-    date: string
-  ): Promise<ApiResponse<FortuneDetail | null>> => {
-    const res = await api.get<FortuneDetail>(`/members/fortunes/${date}`);
-    if (res.ok) return res;
-    const status = res.error?.status ?? res.error?.code;
-    if (status === 404) return { ok: true, data: null }; // 해당 날짜 운세 없음
-    return res;
-  },
+  date: string
+): Promise<ApiResponse<FortuneDetail | null>> => {
+  //  로그인 사용자 확인 (예: 토큰이 로컬스토리지에 있는지)
+  const token = localStorage.getItem("access_token");
+  if (!token) {
+    console.warn("⚠️ 로그인되지 않은 사용자입니다.");
+    return { ok: false, error: { message: "로그인 필요", code: 401 } };
+  }
+
+  //  토큰이 있다면 API 호출 진행
+  const res = await api.get<FortuneDetail>(`/members/fortunes/${date}`);
+  if (res.ok) return res;
+  const status = res.error?.status ?? res.error?.code;
+  if (status === 404) return { ok: true, data: null }; // 해당 날짜 운세 없음
+  return res;
+},
 };

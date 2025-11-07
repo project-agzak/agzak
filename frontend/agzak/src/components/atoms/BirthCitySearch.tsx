@@ -130,7 +130,7 @@ export function BirthCitySearch({
           birthcity-input
           relative z-10 w-full h-[48px] px-4
           bg-transparent outline-none
-          font-galmuri text-[12px]
+         text-[16px] sm:text-[12px]
           placeholder:font-galmuri placeholder:text-[12px] placeholder:font-normal placeholder:text-[#121212]/60
         "
         aria-autocomplete="list"

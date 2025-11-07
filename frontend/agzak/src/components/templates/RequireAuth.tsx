@@ -2,16 +2,25 @@
 import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/store/useAuthStore";
+import { isAccessTokenExpired } from "@/lib/authUtils";
 
 type RequireAuthProps = {
   children: ReactNode;
 };
 
 export function RequireAuth({ children }: RequireAuthProps) {
-  const { isLoggedIn } = useAuthStore();
+  const { isLoggedIn , logout } = useAuthStore();
   const location = useLocation();
 
-  if (!isLoggedIn) {
+
+  const expired = isAccessTokenExpired();
+
+   if (isLoggedIn && expired) {
+    logout();
+    return <Navigate to="/" replace />;
+  }
+
+  if (!isLoggedIn ) {
     // 로그인 안 되어 있으면 로그인 페이지로 보내고,
     // 나중에 돌아올 수 있도록 현재 위치를 state로 같이 보냄
     return (

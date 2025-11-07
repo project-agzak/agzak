@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 
 import { ExpandableFortune } from "@/components/molecules/ExpandableFortune";
 import { Button_L } from "@/components/atoms/Button_L";
@@ -103,7 +103,7 @@ const scores        = useFortuneStore((s) => s.scores);
 
   const shareUrl = "https://www.agzak.co.kr/";
 
-    const hasRequestedTodayRef = useRef(false);
+   
     
   // 🔥 로그인 유저일 때만 /fortune 호출
   //   - 게스트는 FortunePage에서 이미 fetchGuest로 store 채워놓은 상태
@@ -111,10 +111,9 @@ const scores        = useFortuneStore((s) => s.scores);
     if (!isLoggedIn) return;
 
     // 이미 운세가 store에 있으면 그대로 사용 (재요청 안 함)
-    if (scores) return;
+   // if (scores) return;
 
-    if (hasRequestedTodayRef.current) return;
-    hasRequestedTodayRef.current = true;
+   
 
     const loadTodayFortune = async () => {
       const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
