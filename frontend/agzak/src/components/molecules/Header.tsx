@@ -59,7 +59,7 @@ useEffect(() => {
     logout();
 
     alert("로그아웃 되었습니다.");
-    navigate("/login");
+    navigate("/");
   };
 
   const nickname = member?.nickname ?? "";
@@ -147,6 +147,7 @@ function SidebarContent({ isLoggedIn, nickname, onLogout }: SidebarContentProps)
     }
   };
 
+
   useEffect(() => {
     // 처음 진입 시 전역에 저장된 게 있으면 사용
     setDeferred((window as any).__pwaDeferredPrompt ?? null);
@@ -174,6 +175,7 @@ function SidebarContent({ isLoggedIn, nickname, onLogout }: SidebarContentProps)
     window.dispatchEvent(new CustomEvent('pwa:consumed'));
     setDeferred(null);
   };
+
 
   return (
     <div className="h-full flex flex-col">

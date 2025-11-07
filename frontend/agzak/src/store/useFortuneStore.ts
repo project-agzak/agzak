@@ -118,7 +118,7 @@ const pickTotalSummary = (src: any): string | undefined => {
 export const useFortuneStore = create<FortuneState>((set, get) => ({
   scores: null,
   typeInfo: null,
-  guestId: typeof window !== "undefined" ? localStorage.getItem("guest_id") : null,
+  guestId: typeof window !== "undefined" ? localStorage.getItem("guestId") : null,
 
   typeDetails: {},
 
@@ -140,7 +140,7 @@ export const useFortuneStore = create<FortuneState>((set, get) => ({
         if (guestId) {
           set({ guestId });
           try {
-            localStorage.setItem("guest_id", guestId);
+            localStorage.setItem("guestId", guestId);
           } catch {}
         }
 
@@ -162,7 +162,7 @@ export const useFortuneStore = create<FortuneState>((set, get) => ({
   // 게스트 운세 (게스트 폼 제출 시 사용)
   fetchGuest: async (payload) => {
     const { loading } = get();
-    if (loading) return; // ✅ 중복 호출 방지
+    if (loading) return; //  중복 호출 방지
 
     set({ loading: true, error: null });
     try {
@@ -174,7 +174,7 @@ export const useFortuneStore = create<FortuneState>((set, get) => ({
         if (guestId) {
           set({ guestId });
           try {
-            localStorage.setItem("guest_id", guestId);
+            localStorage.setItem("guestId", guestId);
           } catch {}
         }
 
