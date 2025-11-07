@@ -10,16 +10,41 @@ export type ApiResponse<T> = {
   error?: ApiError;
 };
 
+
 function handleAuthError(status?: number) {
-  if (status === 401 || status === 403) {
-    useAuthStore.getState().logout();
+  const { logout } = useAuthStore.getState();
+
+  if (status === 401) {
+    logout("로그인 정보가 만료되었습니다. 다시 로그인해주세요.");
   }
 }
-
-
 async function request<T>(config: AxiosRequestConfig): Promise<ApiResponse<T>> {
   try {
 
+    const { accessToken, expiresAt, logout } = useAuthStore.getState();
+
+ if (accessToken) {
+      // 토큰 만료 체크 (프론트 기준)
+      if (expiresAt && expiresAt <= Date.now()) {
+        logout("세션이 만료되었습니다. 다시 로그인해주세요.");
+        return {
+          ok: false,
+          error: {
+            status: 401,
+            code: 401,
+            message: "세션이 만료되었습니다. 다시 로그인해주세요.",
+          },
+        };
+      }
+// 유효한 토큰이면 Authorization 헤더 추가
+      config = {
+        ...config,
+        headers: {
+          ...(config.headers || {}),
+          Authorization: `Bearer ${accessToken}`,
+        },
+      };
+    }
     const res: AxiosResponse<T> = await apiClient.request<T>(config);
 
     //  204 No Content → 성공으로 간주

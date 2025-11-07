@@ -33,6 +33,7 @@ type KakaoLoginResponse = KakaoLoginOK | KakaoLoginNeedInfo;
 type LoginResponse = {
   accessToken: string;
   refreshToken: string;
+  expiresInSeconds: number;
 };
 
 export default function LoginPage() {
@@ -69,8 +70,10 @@ export default function LoginPage() {
     const data = res.data;
     console.log("로그인 성공:", data);
 
+    const { accessToken, refreshToken, expiresInSeconds } = data;
+
     // 토큰은 전역 스토어에만 세팅 (스토어 내부에서 localStorage 처리)
-    setTokens(data.accessToken, data.refreshToken);
+  setTokens(accessToken, refreshToken, expiresInSeconds);
 
     alert("로그인 성공!");
     navigate("/");
@@ -132,15 +135,11 @@ export default function LoginPage() {
         const { accessToken, refreshToken, expiresInSeconds } = data.tokens;
 
         // 토큰은 스토어에만 세팅
-        setTokens(accessToken, refreshToken);
+        setTokens(accessToken, refreshToken,expiresInSeconds);
 
-        // 만료 시간은 따로 저장 (인터셉터용)
-        if (typeof expiresInSeconds === "number" && expiresInSeconds > 0) {
-          localStorage.setItem("access_token_expires_at", String(Date.now() + expiresInSeconds * 1000));
-        }
-
+     
         // Analytics: 로그인 성공
-        trackEvent("auth_login_kakao_success", { guest_id: guestId ?? null });
+        trackEvent("auth_login_kakao_success", { guestId: guestId ?? null });
 
         if (guestId) localStorage.removeItem("guestId");
         navigate("/");

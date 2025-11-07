@@ -59,7 +59,7 @@ useEffect(() => {
     logout();
 
     alert("로그아웃 되었습니다.");
-    navigate("/login");
+    navigate("/");
   };
 
   const nickname = member?.nickname ?? "";
@@ -144,6 +144,9 @@ function SidebarContent({ isLoggedIn, nickname, onLogout }: SidebarContentProps)
       navigate("/fortune"); // ✅ 비로그인 시 기존 폼 페이지
     }
   };
+
+  
+
   return (
     <div className="h-full flex flex-col">
       {/* 로고 */}
