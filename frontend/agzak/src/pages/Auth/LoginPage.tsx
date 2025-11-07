@@ -36,11 +36,9 @@ type LoginResponse = {
 
 export default function LoginPage() {
   const navigate = useNavigate();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-
-
 
   // 전역 인증 스토어
   const { setTokens } = useAuthStore();
@@ -199,7 +197,7 @@ export default function LoginPage() {
           />
         </div>
 
-        {/*  로그인 버튼 + 카카오 로그인 + 회원가입 */}
+        {/* ✅ 로그인 버튼 + 카카오 로그인 + 회원가입 */}
         <div className="mt-3 flex flex-col items-center gap-3">
           {/* 기본 로그인 */}
           <Button_L label="로그인" width={260} onClick={handleLogin} />

@@ -8,8 +8,7 @@ import { Button_M } from "@/components/atoms/Button_M";
 import { Button_L } from "@/components/atoms/Button_L";
 
 type CheckEmailResponse = {
-  email: string;
-  available: boolean;
+  exists: boolean;
 };
 
 type RegisterWithGuestResponse = {
@@ -89,43 +88,21 @@ const regex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=\[{\]};:'",<.>/?`~\\|
       return;
     }
 
-   //  여기부터 변경
-  const { available } = res.data;
-  console.log("이메일 중복확인 결과:", res.data);
+    const { exists } = res.data;
+    console.log("이메일 중복확인 결과:", res.data);
 
-  if (!available) {
-    // 이미 사용 중
-    alert("이미 사용 중인 이메일입니다.");
-    setEmailChecked(false);
-  } else {
-    // 사용 가능
-    alert("사용 가능한 이메일입니다.");
-    setEmailChecked(true);
-  }
+    if (exists) {
+      alert("이미 사용 중인 이메일입니다.");
+      setEmailChecked(false);
+    } else {
+      alert("사용 가능한 이메일입니다.");
+      setEmailChecked(true);
+    }
   };
-const emailHelperText = (() => {
-  if (!email) {
-    // 아직 아무것도 안 적었을 때
-    return "이메일 형식으로 작성해주세요.";
-  }
-  if (!emailValid) {
-    // 형식 틀렸을 때
-    return "이메일 형식이 올바르지 않습니다.";
-  }
-  if (emailChecked) {
-    // 중복 확인 통과 후
-    return "중복 확인이 완료되었습니다.";
-  }
-  // 형식은 맞고, 아직 중복 확인 전이면 → 아무 문구도 표시 안 함
-  return "중복 확인 버튼을 눌러주세요.";
-})();
 
-const emailHasError = !!email && !emailValid;
   // 회원가입
   const handleRegister = async () => {
     const guestId = localStorage.getItem("guestId");
-
-    console.log("[Signup] effective guestId used for register:", guestId);
 
     if (!email || !password || !passwordCheck) {
       alert("모든 항목을 입력해주세요.");
@@ -222,12 +199,16 @@ const emailHasError = !!email && !emailValid;
           </div>
 
           <p
-  className={`mt-0 pl-8 text-left font-galmuri-xsmall ${
-    emailHasError ? "text-[#E11D48]" : "text-[#9CA3AF]"
-  }`}
->
-  {emailHelperText}
-</p>
+            className={`mt-0 pl-8 text-left font-galmuri-xsmall ${
+              emailValid ? "text-[#9CA3AF]" : "text-[#E11D48]"
+            }`}
+          >
+            {emailValid
+              ? emailChecked
+                ? "중복 확인이 완료되었습니다."
+                : "이메일 형식으로 작성해주세요."
+              : "이메일 형식이 올바르지 않습니다."}
+          </p>
         </div>
 
         <div className="flex w-full max-w-[300px] flex-col gap-1">
@@ -246,7 +227,7 @@ const emailHasError = !!email && !emailValid;
             }`}
           >
             {passwordValid
-              ? "영어, 숫자 ,특수문자 포함 8자이상"
+              ? "영어, 숫자 포함 8자이상"
               : "비밀번호 형식이 올바르지 않습니다."}
           </p>
         </div>

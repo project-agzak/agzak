@@ -1,7 +1,6 @@
 // src/pages/Fortune/FortunePage.tsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api } from "@/lib/api";
 
 import FullnameLogo from "@/assets/Background/agzak-fullname.svg";
 import FortuneCookie from "@/assets/Gifs/FortuneCookie.gif";
@@ -13,7 +12,7 @@ import { MidImages34 } from "@/components/templates/MidImages34";
 import { DropDown } from "@/components/atoms/DropDown";
 import { useFortuneStore } from "@/store/useFortuneStore";
 import type { GuestFortuneReq } from "@/lib/fortuneAPI"
-import FortuneLoading from "@/components/templates/FortuneLoading";
+
 
 
 export default function FortunePage() {
@@ -28,10 +27,7 @@ export default function FortunePage() {
   const [gender, setGender] = useState<"male" | "female" | null>(null);
   const [birthCity, setBirthCity] = useState<BirthCity | null>(null);
 
-    const [submitting, setSubmitting] = useState(false);
-
-    const handleFortuneSubmit = async () => {
-      if (submitting) return; // 중복 제출 방지
+   const handleFortuneSubmit = async () => {
     const birthTime =
       unknownTime || !hour || !minute
         ? "00:00"
@@ -48,98 +44,8 @@ export default function FortunePage() {
       return;
     }
 
-    const kakaoTicket = sessionStorage.getItem("kakao_ticket");
-    const userInfoStr = localStorage.getItem("userId");
-
     try {
-      setSubmitting(true);
-      // 1) 카카오 추가정보 플로우
-      if (kakaoTicket) {
-        const res = await api.post<{
-          accessToken: string;
-          refreshToken: string;
-          expiresIn: number;
-        }>("/auth/kakao/complete", {
-          ticket: kakaoTicket,
-          nickname,
-          gender: gender.toUpperCase(), // "MALE"/"FEMALE"
-          birthDate,
-          birthTime,
-          birthCity: birthCity.address,
-        });
-
-        if (!res.ok || !res.data) {
-          console.error("카카오 회원가입(/auth/kakao/complete) 오류:", res.error);
-          alert(res.error?.message ?? "카카오 회원가입 중 오류가 발생했습니다.");
-          return;
-        }
-
-        const { accessToken, refreshToken, expiresIn } = res.data;
-        if (accessToken && refreshToken && expiresIn) {
-          localStorage.setItem("access_token", accessToken);
-          localStorage.setItem("refresh_token", refreshToken);
-          localStorage.setItem(
-            "access_token_expires_at",
-            String(Date.now() + expiresIn * 1000),
-          );
-        }
-
-        // 카카오용 임시 값 정리
-        sessionStorage.removeItem("kakao_ticket");
-        sessionStorage.removeItem("kakao_email");
-        sessionStorage.removeItem("kakao_suggestedNickname");
-
-await fetchGuest({
-        nickname,
-        gender: gender.toUpperCase() as GuestFortuneReq["gender"],
-        birthDate,
-        birthTime,
-        birthCity: birthCity.address,
-      });
-        
-        navigate("/fortune/result");
-        return;
-      }
-
-      // 2) 일반 회원가입 플로우 (이메일/비번 먼저 SignupPage에서 받아온 경우)
-      if (userInfoStr) {
-        const { email, password } = JSON.parse(userInfoStr) as {
-          email: string;
-          password: string;
-        };
-
-        const res = await api.post<any>("/auth/register", {
-          email,
-          password,
-          nickname,
-          birthDate,
-          gender: gender.toUpperCase(), // "MALE"/"FEMALE"
-          birthTime,
-          birthCity: birthCity.address,
-        });
-
-        if (!res.ok) {
-          console.error("회원가입(/auth/register) 오류:", res.error);
-          alert(res.error?.message ?? "회원가입 중 오류가 발생했습니다.");
-          return;
-        }
-
-        // 임시 저장한 userId 제거
-        localStorage.removeItem("userId");
-
-        await fetchGuest({
-      nickname,
-      gender: gender.toUpperCase() as GuestFortuneReq["gender"], // "MALE" | "FEMALE"
-      birthDate,
-      birthTime,
-      birthCity: birthCity.address,
-    });
-    
-       navigate("/fortune/result");
-return;
-      }
-
-      // 3) 위 둘 다 없으면 → 순수 게스트 운세
+      // ✅ 게스트 운세를 store를 통해 호출(= POST /fortune/guest)
       await fetchGuest({
         nickname,
         gender: gender.toUpperCase() as GuestFortuneReq["gender"], // "MALE" | "FEMALE"
@@ -148,27 +54,16 @@ return;
         birthCity: birthCity.address,
       });
 
+      // ✅ 성공 시 결과 페이지로 이동
       navigate("/fortune/result");
     } catch (e) {
       console.error(e);
       alert("운세 계산 중 오류가 발생했습니다.");
     }
-     finally {
-      setSubmitting(false);   //  성공/실패 상관없이 로딩 종료
-    }
   };
-  if (submitting) {
-    return (
-      <main className="min-h-screen py-4">
-        <section className="w-full max-w-[420px] mx-auto px-4">
-          <FortuneLoading />
-        </section>
-      </main>
-    );
-  }
+
   return (
-      <main className="relative z-10 p-4 min-h-screen bg-[#FEFBF2]">
-   
+    <main className="relative z-10 p-4 min-h-screen">
       {/* 중간 이미지 */}
       <div className="mt-1 flex justify-center bg-gradient-to-b from-[#fff8e7] via-[#121212] to-[#fff8e7] py-10">
         <MidImages34 itemWidth={300} whiteBg />

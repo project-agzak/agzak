@@ -63,37 +63,17 @@ export type ApiErrorBody = {
   path: string;
 };
 
-export type MemberFortuneDetail = {
-  fortuneId: number;
-  description: string;
-  totalScore: number;
-  originalTotalScore: number;
-  fortuneType: {
-    id: number;
-    name: string;
-    goodWithId: number;
-    badWithId: number;
-  };
-  fortuneAspects: {
-    name: "achievement" | "health" | "love" | "money";
-    score: number;
-    original: number;
-  }[];
-};
-
 export const fortuneAPI = {
   /** 인증된 회원의 오늘 운세 생성/조회 */
+
   createOrFetchToday: () => api.post<FortuneResponse>("/fortune"),
 
   /** 게스트 운세 조회(계산 후 guestId 발급) */
   createGuestFortune: (body: GuestFortuneReq) =>
     api.post<GuestFortuneRes>("/fortune/guest", body),
 
-  /** 운세 타입 상세 조회 */
+  /** 운세 타입 상세 조회 */  
   getTypeDetail: (fortuneTypeId: number) =>
     api.get<FortuneTypeDetail>(`/fortune/fortuneType/${fortuneTypeId}`),
 
-  /** 🔥 멤버 특정 날짜 운세 상세 조회 */
-  getMemberFortuneByDate: (date: string) =>
-    api.get<MemberFortuneDetail>(`/members/fortunes/${date}`),
 };

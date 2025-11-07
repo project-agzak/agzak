@@ -19,7 +19,7 @@ export function BirthCitySearch({
   value,
   onChange,
   placeholder = "태어난 도시 검색 (예: 청주, 충북, 충청북도 청주시)",
-  maxListHeight = 0,
+  maxListHeight = 264,
 }: Props) {
   const [q, setQ] = React.useState(value?.address ?? "");
   const [open, setOpen] = React.useState(false);
@@ -64,12 +64,6 @@ export function BirthCitySearch({
     setOpen(true);
     setActiveIdx(filtered.length ? 0 : -1);
   };
- const VISIBLE_ROWS = 4;
-  const ROW_HEIGHT = 35; 
-
-    const dropdownMaxHeight = maxListHeight && maxListHeight > 0
-    ? maxListHeight                 // prop으로 넘기면 그 값 사용
-    : VISIBLE_ROWS * ROW_HEIGHT;    // 안 넘기면 4줄 기준으로 고정
 
   const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = e.target.value;
@@ -130,7 +124,7 @@ export function BirthCitySearch({
           birthcity-input
           relative z-10 w-full h-[48px] px-4
           bg-transparent outline-none
-         text-[16px] sm:text-[12px]
+          font-galmuri text-[12px]
           placeholder:font-galmuri placeholder:text-[12px] placeholder:font-normal placeholder:text-[#121212]/60
         "
         aria-autocomplete="list"
@@ -139,43 +133,39 @@ export function BirthCitySearch({
 
       {/* 드롭다운 */}
       {open && (
-  <div
-    className="
-      absolute z-50 left-0 right-0 top-full mt-0
-      rounded-md border border-[#000]/20 bg-white shadow
-      overflow-y-scroll
-    "
-    style={{ maxHeight: dropdownMaxHeight }}
-    role="listbox"
-  >
-    {results.length === 0 && (
-      <div className="px-3 py-2 text-[12px] text-gray-500">
-        결과가 없어요.
-      </div>
-    )}
-
-    {results.map((it, i) => {
-      const active = i === activeIdx;
-      return (
-        <button
-          key={`${it.sido}-${it.sgg}-${i}`}
-          onClick={(e) => {
-            e.preventDefault();
-            commitSelect(it);
-          }}
-          onMouseEnter={() => setActiveIdx(i)}
-          className={`w-full text-left px-3 py-2 text-[12px] transition-colors ${
-            active ? "bg-[#000]/6" : "hover:bg-[#000]/4"
-          }`}
-          role="option"
-          aria-selected={active}
+        <div
+          className="absolute z-50 left-0 right-0 top-full mt-0 rounded-md border border-[#000]/20 bg-white shadow"
+          style={{ maxHeight: maxListHeight, overflowY: "auto" }}
+          role="listbox"
         >
-          <div className="font-bold">{it.label}</div>
-        </button>
-      );
-    })}
-  </div>
-)}
-  </div>
+          {results.length === 0 && (
+            <div className="px-3 py-2 text-[12px] text-gray-500">
+              결과가 없어요.
+            </div>
+          )}
+
+          {results.map((it, i) => {
+            const active = i === activeIdx;
+            return (
+              <button
+                key={`${it.sido}-${it.sgg}-${i}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  commitSelect(it);
+                }}
+                onMouseEnter={() => setActiveIdx(i)}
+                className={`w-full text-left px-3 py-2 text-[12px] transition-colors ${
+                  active ? "bg-[#000]/6" : "hover:bg-[#000]/4"
+                }`}
+                role="option"
+                aria-selected={active}
+              >
+                <div className="font-bold">{it.label}</div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
