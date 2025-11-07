@@ -98,38 +98,41 @@ public class FortuneService {
             "achievement": "성취운 설명 요약..."
         }
         
-         점수 계산 가이드라인:
-            (신규) 긍정적 어스펙트(Trine, Sextile)는 점수를 증가시키고, 부정적 어스펙트(Square, Opposition)는 점수를 감소시킵니다. Conjunction은 행성의 성질에 따라 다르게 적용합니다.
-            (신규-인플레이션 억제) **전반적인 점수 인플레이션을 막기 위해, 부정적 어스펙트의 감점 폭을 긍정적 어스펙트의 가점 폭보다 1.5배 더 강하게 반영하세요.**
-            (신규) 모든 점수는 125점을 '보통' 기준으로 시작하여 가감하는 것을 권장합니다.
+    점수 계산 가이드라인:
+      (신규) 긍정적 어스펙트(Trine, Sextile)는 점수를 증가시키고, 부정적 어스펙트(Square, Opposition)는 점수를 감소시킵니다. Conjunction은 행성의 성질에 따라 다르게 적용합니다.
+      (신규-인플레이션 억제) **전반적인 점수 인플레이션을 막기 위해, 부정적 어스펙트의 감점 폭을 긍정적 어스펙트의 가점 폭보다 1.5배 더 강하게 반영하세요.**
+      (신규) 모든 점수는 125점을 '보통' 기준으로 시작하여 가감하는 것을 권장합니다.
 
-            (신규-역동성 확보) **[오늘의 운세 핵심]** '오늘의 운세'는 '일일 변화'를 반영해야 합니다.\s
-            - 따라서 점수 계산 시, **트랜싯 달(Transit Moon)의 어스펙트**에 **높은 가중치** (전체 일일 변동 점수의 약 40-50%)를 부여합니다. (단, 아래 '성취운' 섹션의 예외 규칙 참조)
-            - 트랜싯 목성과 토성의 어스펙트는 장기적인 '배경 운'으로 간주하며, 일일 점수 변동에는 상대적으로 **낮은 가중치**를 부여하여 점수가 매일 비슷해지는 것을 방지합니다.
+      (신규-역동성 확보) **[오늘의 운세 핵심]** '오늘의 운세'는 '일일 변화'를 반영해야 합니다.\s
+      - 따라서 점수 계산 시, **트랜싯 달(Transit Moon)의 어스펙트**에 **높은 가중치** (전체 일일 변동 점수의 약 40-50%)를 부여합니다. (단, 아래 '성취운'/'건강운'의 예외 규칙 참조)
+      - 트랜싯 목성과 토성의 어스펙트는 장기적인 '배경 운'으로 간주하며, 일일 점수 변동에는 상대적으로 **낮은 가중치**를 부여하여 점수가 매일 비슷해지는 것을 방지합니다.
 
-            - 연애운: Natal 금성/화성, 5/7하우스, 관련 트랜싯 어스펙트.
-            - 금전운: Natal 금성/목성, 2/8하우스, 관련 트랜싯 어스펙트. (신규: 트랜싯 토성의 부정적 어스펙트는 '지출/손실'로 감점 반영)
-            - 건강운: Natal 화성/토성, 6하우스, 관련 트랜싯 어스펙트.
+      - 연애운: Natal 금성/화성, 5/7하우스, 관련 트랜싯 어스펙트.
+      - 금전운: Natal 금성/목성, 2/8하우스, 관련 트랜싯 어스펙트. (신규: 트랜싯 토성의 부정적 어스펙트는 '지출/손실'로 감점 반영)
 
-            - 성취운: (규칙 전면 수정: '활동' vs '성과' 명확화)
-                - **(핵심 정의):** '성취'는 '단순한 바쁨(activity)'이나 '에너지 소모'가 아니라, **'긍정적인 사회적 결과(positive outcome)'**를 의미합니다.
-               \s
-                - **(매우 중요 - AI 오해 방지 규칙):**
-                    - 트랜싯 **화성(Mars)**이나 **태양(Sun)**이 Natal 행성/지점과 **부정적 어스펙트(Square, Opposition)**를 맺을 수 있습니다.
-                    - 이는 '갈등', '과로', '스트레스', '높은 에너지 소모'를 의미할 수 있으나, '성취'의 관점에서는 **'성과 없는 소모'** 또는 **'목표 달성의 방해'**로 엄격히 해석해야 합니다.
-                    - **따라서, AI는 이러한 부정적 어스펙트를 '활발한 날'로 긍정적으로 오인하여 점수를 높게 주어서는 안 되며, 오히려 **'성과를 갉아먹는 요인'**으로 간주하여 **성취운 점수를 명확하게 감점**해야 합니다. (이 감점은 1.5배 가중치 규칙을 따릅니다.)**
-               \s
-                - **(주요 가점):** 트랜싯 **태양, 화성**이 Natal 태양, Natal 화성, 10하우스(MC)와 **긍정적 어스펙트(Trine, Sextile)**를 맺을 때. (이것이 '성과 있는 활동'입니다.)
-               \s
-                - **(최우선 감점 - '브레이크' 역할):** 트랜싯 **토성(Saturn)**이 Natal 태양, Natal 화성, 10하우스(MC)와 **부정적 어스펙트(Square, Opposition, Conjunction)**를 맺을 때.
-                    - 이는 '명백한 장애물', '계획의 좌절', '상사의 압박'을 의미합니다.
-                    - 이 어스펙트는 **다른 모든 긍정 요소를 상쇄(offset)할 만큼 강력하게 감점**되어, 성취운 점수가 '보통(125점)' 이하로 떨어지도록 유도해야 합니다.
-               \s
-                - **(기타 요인 - 영향 제한):**
-                    - **목성(Jupiter):** '운'일 뿐 '성과'가 아니므로, 점수 보조 역할만 합니다.
-                    - **달(Moon):** '기분'일 뿐 '성과'가 아니므로, 소폭의 일일 변동성(±10~20점)만 담당합니다.
+      - 건강운: ('화성'의 영향 분리)
+          - **(핵심 정의):** '건강'은 '기본 활력(Sun)'과 '신체적 편안함(Venus)', '회복력(Jupiter)'이 '에너지 저하(Saturn)' 요인보다 우세한 상태를 의미합니다.
+          - **(가점 요인):** 트랜싯 행성이 **Natal 태양(Sun, 기본 활력)**, **Natal 목성(Jupiter, 보호/회복)**, **Natal 금성(Venus, 편안함/웰빙)**과 **긍정적 어스펙트(Trine, Sextile)**를 맺을 때 점수를 증가시킵니다.
+          - **(감점 요인):** 트랜싯 행성이 **Natal 토성(Saturn, 만성/에너지 저하)**, 6하우스와 **부정적 어스펙트(Square, Opposition, Conjunction)**를 맺을 때 1.5배 가중치로 감점합니다.
+          - **(의도적 분리):** **'화성(Mars)'은 '성취운'의 '활동'과 혼동되므로, 건강운 점수 계산에서는 Mars의 영향을 의도적으로 배제하거나 최소화합니다.** (AI는 Mars가 아닌 Sun, Venus, Jupiter, Saturn을 중심으로 건강운을 판단해야 합니다.)
+          - **(달의 영향):** 트랜싯 달은 '일시적인 컨디션 난조'나 '기분'을 의미하며, 점수에 소폭의 변동성만 줍니다.
 
-            - 총운세: 긍/부정 어스펙트의 개수·강도 종합. (위의 1.5배 감점 가중치 및 달 가중치 룰을 동일하게 적용)
+      - 성취운: (규칙 전면 재조정: '높은 성취' 조건 강화)
+        - **(핵심 정의):** '성취'는 '긍정적인 사회적 결과'입니다. '성과 없는 바쁨'은 명백한 감점 요인입니다.
+       \s
+        - **(1순위 - 'Veto' 감점 규칙):** AI는 점수 계산 전 **이 규칙을 최우선으로 확인합니다.** 만약 오늘 **트랜싯 화성(Mars) 또는 트랜싯 토성(Saturn)**이 `Natal 태양, Natal 화성, 또는 MC`와 **부정적 어스펙트(Square, Opposition)**를 맺는다면, 이는 **'성과를 직접적으로 방해'**하는 신호입니다.\s
+            - 이 경우, **다른 긍정적 신호(예: 목성, 금성)가 있더라도, 이 부정적 신호가 점수 계산을 '지배(dominate)'합니다.** - 이 Veto 신호는 다른 긍정 요소를 **대부분 상쇄(offset)시키며**, 성취운 점수가 '보통'(125점) 이하가 되도록 **아주 강력하게 감점**합니다.
+       \s
+        - **(2순위 - '높은 성과' 가점 / 조건 강화):** '매우 높은' 성취(예: 190점 이상)는 **'결정적인 긍정 신호'**가 있을 때만 발생합니다.
+            - 이는 **트랜싯 목성(Jupiter) 또는 트랜싯 태양(Sun)**이 `Natal 태양, MC`와 **매우 정확한(exact) 긍정 어스펙트(Trine, Sextile)**를 맺고, **동시에 1순위 Veto 감점 요인이 없을 때**만 해당됩니다.
+       \s
+        - **(3순위 - '일반 성과' 가점 / 화성 격하):** `트랜싯 화성(Mars)`의 **긍정적 어스펙트(Trine, Sextile)**는 '순조로운 업무'나 '추진력'을 의미하지만, 그 자체만으로는 '높은 성과'를 만들지 못합니다.
+            - 이는 점수를 '보통' 이상(예: 140~170점)으로 올려주는 **'보조 가점'** 요인으로만 사용합니다. (1순위 Veto 감점 요인이 없을 때)
+       \s
+        - **(4순위 - 영향 제한):**
+            - **달(Moon):** '일일 기분'일 뿐 '성과'가 아니므로, 점수에 소폭의 변동성(±10~20점)만 담당합니다.
+
+      - 총운세: 긍/부정 어스펙트의 개수·강도 종합. (위의 1.5배 감점 가중치 및 달 가중치 룰을 동일하게 적용)
             
             **[매우 중요] 요약 작성 가이드라인 (detailed_summaries)**
                    \s
@@ -163,13 +166,24 @@ public class FortuneService {
                 .build();
     }
 
+    public FinalFortuneResponse getMemberFortune(long memberId, BirthDataInput input, String city) {
+        if (!checkDuplicate(memberId, date.today())) {
+            return getFortuneScores(input, city);
+        }
+
+        Fortune fortune = fortuneRepository.findByMember_MemberIdAndDate(memberId,date.today())
+                .orElseThrow(() -> new IllegalArgumentException("일치하는 멤버의 운세가 없습니다."));
+
+        List<FortuneAspect> fortuneAspects = fortuneAspectRepository.findAllByFortune(fortune);
+        return FinalFortuneResponse.fromEntity(fortune, fortuneAspects);
+    }
+
     @Cacheable(
             value = "fortuneCache",
             key = "#root.methodName + ':' + #input.birthDate + 'T' + #input.birthTime + '::' + #city",
             cacheManager = "cacheManager"
     )
     public FinalFortuneResponse getFortuneScores(BirthDataInput input, String city) {
-
         AiPromptData aiData = calculationService.generateAiPromptData(input);
 
         String natalPlanetsString = formatNatalPlanets(aiData.natalPlanets());
@@ -264,18 +278,19 @@ public class FortuneService {
         fortuneRepository.save(fortune);
         afterCommit(() -> rankingService.refreshTodayForMember(memberId));
 
-        saveAspect(fortune, FortuneAspect.AspectName.LOVE, fortuneResponse.scores().love());
-        saveAspect(fortune, FortuneAspect.AspectName.MONEY, fortuneResponse.scores().money());
-        saveAspect(fortune, FortuneAspect.AspectName.HEALTH, fortuneResponse.scores().health());
-        saveAspect(fortune, FortuneAspect.AspectName.ACHIEVEMENT, fortuneResponse.scores().achievement());
+        saveAspect(fortune, FortuneAspect.AspectName.LOVE, fortuneResponse.scores().love(), fortuneResponse.scores().detailedSummaries().love());
+        saveAspect(fortune, FortuneAspect.AspectName.MONEY, fortuneResponse.scores().money(), fortuneResponse.scores().detailedSummaries().money());
+        saveAspect(fortune, FortuneAspect.AspectName.HEALTH, fortuneResponse.scores().health(), fortuneResponse.scores().detailedSummaries().health());
+        saveAspect(fortune, FortuneAspect.AspectName.ACHIEVEMENT, fortuneResponse.scores().achievement(), fortuneResponse.scores().detailedSummaries().achievement());
     }
 
-    private void saveAspect(Fortune fortune, FortuneAspect.AspectName name, int score) {
+    private void saveAspect(Fortune fortune, FortuneAspect.AspectName name, int score, String description) {
         FortuneAspect aspect = FortuneAspect.builder()
                 .fortune(fortune)
                 .name(name)
                 .score(score)
                 .originalScore(score)
+                .description(description)
                 .build();
         fortuneAspectRepository.save(aspect);
     }

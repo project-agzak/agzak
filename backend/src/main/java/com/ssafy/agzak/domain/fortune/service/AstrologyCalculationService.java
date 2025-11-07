@@ -49,8 +49,8 @@ public class AstrologyCalculationService {
 
         ZoneId birthZone = ZoneId.of("Asia/Seoul");
         ZonedDateTime natalZonedTime = input.birthDate().atTime(input.birthTime()).atZone(birthZone);
-        ZonedDateTime natalUtTime = natalZonedTime.withZoneSameInstant(ZoneId.of("UTC"));
-        ZonedDateTime transitUtTime = ZonedDateTime.now(ZoneId.of("UTC"));
+        ZonedDateTime natalUtTime = natalZonedTime.withZoneSameInstant(birthZone);
+        ZonedDateTime transitUtTime = ZonedDateTime.now(birthZone);
 
         double natalJulDay = getJulianDay(natalUtTime);
         double transitJulDay = getJulianDay(transitUtTime);
