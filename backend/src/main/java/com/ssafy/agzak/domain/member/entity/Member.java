@@ -7,6 +7,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -21,6 +22,7 @@ import java.time.LocalDateTime;
         }
 )
 public class Member {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "member_id", nullable = false)
@@ -42,12 +44,17 @@ public class Member {
     @Column(name = "birth_date", nullable = false)
     private LocalDate birthDate;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "birth_branch", length = 50)
-    private BirthBranch birthBranch;
+    @Column(name = "birth_time", nullable = false)
+    private LocalTime birthTime;
 
     @Column(name = "birth_city", length = 100)
     private String birthCity;
+
+    @Column(name = "latitude")
+    private Double latitude;
+
+    @Column(name = "longitude")
+    private Double longitude;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)
@@ -63,9 +70,17 @@ public class Member {
 
     public enum Gender { MALE, FEMALE }
 
-    public enum BirthBranch {
-        RAT, OX, TIGER, RABBIT, DRAGON, SNAKE, HORSE, SHEEP, MONKEY, ROOSTER, DOG, PIG
+    public enum MemberStatus { ACTIVE, WITHDRAWN }
+
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
     }
 
-    public enum MemberStatus { ACTIVE, WITHDRAWN }
+    public void updateBirthTime(LocalTime time) {
+        this.birthTime = time;
+    }
+
+    public void deleteMember() {
+        this.status = MemberStatus.WITHDRAWN;
+    }
 }

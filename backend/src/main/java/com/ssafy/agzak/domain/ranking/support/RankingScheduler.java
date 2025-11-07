@@ -17,5 +17,11 @@ public class RankingScheduler {
     public void hourlyRebuild() {
         rankingService.rebuildTodaySnapshot();
     }
+
+    /** 매 시간 30분(KST) - Redis 리씨드 */
+    @Scheduled(cron = "0 30 * * * *", zone = "Asia/Seoul")
+    public void hourlyReseedRedis() {
+        rankingService.reseedRedisFromMysqlToday();
+    }
 }
 

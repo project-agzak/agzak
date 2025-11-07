@@ -31,7 +31,10 @@ public class AstrologyCalculationService {
             SweConst.SE_VENUS, "Venus",
             SweConst.SE_MARS, "Mars",
             SweConst.SE_JUPITER, "Jupiter",
-            SweConst.SE_SATURN, "Saturn"
+            SweConst.SE_SATURN, "Saturn",
+            SweConst.SE_URANUS, "Uranus",
+            SweConst.SE_NEPTUNE, "Neptune",
+            SweConst.SE_PLUTO, "Pluto"
     );
     private static final String[] ZODIAC_SIGNS = {
             "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
@@ -45,7 +48,7 @@ public class AstrologyCalculationService {
     public AiPromptData generateAiPromptData(BirthDataInput input) {
 
         ZoneId birthZone = ZoneId.of("Asia/Seoul");
-        ZonedDateTime natalZonedTime = input.birthDateTime().atZone(birthZone);
+        ZonedDateTime natalZonedTime = input.birthDate().atTime(input.birthTime()).atZone(birthZone);
         ZonedDateTime natalUtTime = natalZonedTime.withZoneSameInstant(ZoneId.of("UTC"));
         ZonedDateTime transitUtTime = ZonedDateTime.now(ZoneId.of("UTC"));
 
@@ -121,21 +124,36 @@ public class AstrologyCalculationService {
     }
 
     private int getHousePosition(double planetLongitude, double[] cusps) {
-        double cusp1 = cusps[1];
-        if (cusp1 < cusps[12]) cusp1 += 360.0;
-        if (planetLongitude < cusps[1]) planetLongitude += 360.0;
+        double asc = cusps[1];
+
+        // 행성 위치를 0/360도 경계(ASC) 기준으로 정규화 (한 번만 수행)
+        if (planetLongitude < asc) {
+            planetLongitude += 360.0;
+        }
 
         for (int i = 1; i <= 12; i++) {
-            double cuspStart = (i == 1) ? cusps[1] : cusps[i];
-            double cuspEnd = (i == 12) ? cusp1 : cusps[i + 1];
+            double cuspStart = cusps[i];
+            double cuspEnd;
 
-            if (cuspEnd < cuspStart) cuspEnd += 360.0;
-            if (planetLongitude < cuspStart) planetLongitude += 360.0;
+            if (i == 12) {
+                // 12번 하우스는 12번 커스프에서 시작하여 다음 ASC(cusps[1] + 360)에서 끝남
+                cuspEnd = asc + 360.0;
+            } else {
+                cuspEnd = cusps[i + 1];
+            }
 
+            // 하우스 커스프가 0/360도를 넘어가는 경우 (예: 11하우스 290도, 12하우스 340도, 1하우스 20도)
+            if (cuspEnd < cuspStart) {
+                cuspEnd += 360.0;
+            }
+
+            // 정규화된 행성 위치가 현재 하우스 범위 내에 있는지 확인
             if (planetLongitude >= cuspStart && planetLongitude < cuspEnd) {
                 return i;
             }
         }
+
+        // 모든 범위를 벗어난 경우 (논리적으로는 발생하기 어려움)
         return 1;
     }
 

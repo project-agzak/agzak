@@ -36,4 +36,15 @@ public class FortuneAspect {
     private Integer originalScore;
 
     public enum AspectName { MONEY, LOVE, ACHIEVEMENT, HEALTH }
+
+    public int increaseWithUpperCap(int delta, int cap) {
+        if (delta <= 0) {
+            this.score += delta;
+            return delta;
+        }
+        int allowed = Math.max(0, cap - this.score);
+        int applied = Math.min(delta, allowed);
+        this.score += applied;
+        return applied;
+    }
 }

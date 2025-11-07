@@ -3,9 +3,9 @@ package com.ssafy.agzak.domain.fortune.dto.response;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public record DetailedSummaries(
-        @JsonProperty("romance") String romance,
+        @JsonProperty("love") String love,
         @JsonProperty("health") String health,
-        @JsonProperty("wealth") String wealth,
+        @JsonProperty("money") String money,
         @JsonProperty("achievement") String achievement
 ) {
 }

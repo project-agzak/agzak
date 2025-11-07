@@ -1,16 +1,37 @@
 package com.ssafy.agzak.domain.fortune.service;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssafy.agzak.domain.fortune.dto.request.BirthDataInput;
 import com.ssafy.agzak.domain.fortune.dto.response.*;
+import com.ssafy.agzak.domain.fortune.entity.Fortune;
+import com.ssafy.agzak.domain.fortune.entity.FortuneAspect;
+import com.ssafy.agzak.domain.fortune.entity.FortuneType;
+import com.ssafy.agzak.domain.fortune.repository.FortuneAspectRepository;
+import com.ssafy.agzak.domain.fortune.repository.FortuneRepository;
+import com.ssafy.agzak.domain.fortune.repository.FortuneTypeRepository;
+import com.ssafy.agzak.domain.guest.dto.GuestProfile;
+import com.ssafy.agzak.domain.guest.support.GuestProfileStore;
+import com.ssafy.agzak.domain.member.entity.Member;
+import com.ssafy.agzak.domain.member.repository.MemberRepository;
+import com.ssafy.agzak.domain.ranking.service.RankingService;
+import com.ssafy.agzak.global.time.DateProvider;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 
+import java.io.IOException;
+import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+
+import static com.ssafy.agzak.global.tx.TxAfterCommit.afterCommit;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +39,13 @@ import java.util.List;
 public class FortuneService {
     private RestClient restClient;
     private final AstrologyCalculationService calculationService;
+    private final RankingService rankingService;
+    private final FortuneTypeRepository fortuneTypeRepository;
+    private final MemberRepository memberRepository;
+    private final FortuneRepository fortuneRepository;
+    private final FortuneAspectRepository fortuneAspectRepository;
+    private final GuestProfileStore guestStore;
+    private final DateProvider date;
 
     @Value("${gms.base-url}")
     private String gmsBaseUrl;
@@ -44,61 +72,110 @@ public class FortuneService {
 
     private String systemPrompt = """
         시스템 지시사항
-        너는 제공된 출생 차트와 트랜싯 데이터를 바탕으로 5가지 영역의 '오늘의 운세 점수'를 계산하는 전문 점성가다.
+        너는 제공된 출생 차트와 트랜싯 데이터를 바탕으로 5가지 영역의 '오늘의 운세 점수'를 계산하는 '전문 점성가'다.
         반드시 **아래 키만 포함한 단일 JSON 객체**로만 출력한다. 어떠한 설명/문장/코드펜스/마크다운도 금지한다.
-        문자열로 감싸지 말고, JSON 최상위에 바로 객체를 출력한다.
+        문자열로 감싸지 말고, JSON 최상위에 바로 객체를 출력한다. 답변은 반드시 한글로 줘 그리고 사용자 운세에 대해 설명해줘.
         
         제약:
-        - 모든 점수는 0~100의 정수.
+        - 모든 점수는 0~250의 정수.
         - 키 순서는 아래와 동일하게 유지.
         - NaN/Infinity/빈값/추가 키 금지.
         - 출력은 공백/개행 포함 가능하나 **JSON 객체만** 존재해야 한다.
-        
+        - total_score는 나머지 영역의 합으로 줘
+        - [매우 중요] 각 항목의 상한선은 250이다
         필수 출력 형식(키/타입 고정):
         {
           "total_score": number,
-          "romance_score": number,
-          "health_score": number,
-          "wealth_score": number,
-          "achievement_score": number,
-          "total_summary": string,
+          "love": number (0~250),
+          "health": number (0~250),
+          "money": number (0~250),
+          "achievement": number (0~250),
+          "total_summary": string ("오늘의 총 운세 요약..."),
           "detailed_summaries": {
-            "romance": string,
-            "health": string,
-            "wealth": string,
-            "achievement": string
-          }
+            "love": "연애운 설명 요약...",
+            "health": "건강운 설명 요약...",
+            "money": "금전운 설명 요약...",
+            "achievement": "성취운 설명 요약..."
         }
         
-        점수 계산 가이드라인:
-        - 연애운: Natal 금성/화성, 5/7하우스, 관련 트랜싯 어스펙트.
-        - 금전운: Natal 금성/목성, 2/8하우스, 관련 트랜싯 어스펙트.
-        - 건강운: Natal 화성/토성, 6하우스, 관련 트랜싯 어스펙트.
-        - 성취운: Natal 태양/화성, 10하우스(MC), 관련 트랜싯 어스펙트.
-        - 총운세: 긍/부정 어스펙트의 개수·강도 종합.
+         점수 계산 가이드라인:
+            (신규) 긍정적 어스펙트(Trine, Sextile)는 점수를 증가시키고, 부정적 어스펙트(Square, Opposition)는 점수를 감소시킵니다. Conjunction은 행성의 성질에 따라 다르게 적용합니다.
+            (신규-인플레이션 억제) **전반적인 점수 인플레이션을 막기 위해, 부정적 어스펙트의 감점 폭을 긍정적 어스펙트의 가점 폭보다 1.5배 더 강하게 반영하세요.**
+            (신규) 모든 점수는 125점을 '보통' 기준으로 시작하여 가감하는 것을 권장합니다.
+
+            (신규-역동성 확보) **[오늘의 운세 핵심]** '오늘의 운세'는 '일일 변화'를 반영해야 합니다.\s
+            - 따라서 점수 계산 시, **트랜싯 달(Transit Moon)의 어스펙트**에 **높은 가중치** (전체 일일 변동 점수의 약 40-50%)를 부여합니다. (단, 아래 '성취운' 섹션의 예외 규칙 참조)
+            - 트랜싯 목성과 토성의 어스펙트는 장기적인 '배경 운'으로 간주하며, 일일 점수 변동에는 상대적으로 **낮은 가중치**를 부여하여 점수가 매일 비슷해지는 것을 방지합니다.
+
+            - 연애운: Natal 금성/화성, 5/7하우스, 관련 트랜싯 어스펙트.
+            - 금전운: Natal 금성/목성, 2/8하우스, 관련 트랜싯 어스펙트. (신규: 트랜싯 토성의 부정적 어스펙트는 '지출/손실'로 감점 반영)
+            - 건강운: Natal 화성/토성, 6하우스, 관련 트랜싯 어스펙트.
+
+            - 성취운: (규칙 전면 수정: '활동' vs '성과' 명확화)
+                - **(핵심 정의):** '성취'는 '단순한 바쁨(activity)'이나 '에너지 소모'가 아니라, **'긍정적인 사회적 결과(positive outcome)'**를 의미합니다.
+               \s
+                - **(매우 중요 - AI 오해 방지 규칙):**
+                    - 트랜싯 **화성(Mars)**이나 **태양(Sun)**이 Natal 행성/지점과 **부정적 어스펙트(Square, Opposition)**를 맺을 수 있습니다.
+                    - 이는 '갈등', '과로', '스트레스', '높은 에너지 소모'를 의미할 수 있으나, '성취'의 관점에서는 **'성과 없는 소모'** 또는 **'목표 달성의 방해'**로 엄격히 해석해야 합니다.
+                    - **따라서, AI는 이러한 부정적 어스펙트를 '활발한 날'로 긍정적으로 오인하여 점수를 높게 주어서는 안 되며, 오히려 **'성과를 갉아먹는 요인'**으로 간주하여 **성취운 점수를 명확하게 감점**해야 합니다. (이 감점은 1.5배 가중치 규칙을 따릅니다.)**
+               \s
+                - **(주요 가점):** 트랜싯 **태양, 화성**이 Natal 태양, Natal 화성, 10하우스(MC)와 **긍정적 어스펙트(Trine, Sextile)**를 맺을 때. (이것이 '성과 있는 활동'입니다.)
+               \s
+                - **(최우선 감점 - '브레이크' 역할):** 트랜싯 **토성(Saturn)**이 Natal 태양, Natal 화성, 10하우스(MC)와 **부정적 어스펙트(Square, Opposition, Conjunction)**를 맺을 때.
+                    - 이는 '명백한 장애물', '계획의 좌절', '상사의 압박'을 의미합니다.
+                    - 이 어스펙트는 **다른 모든 긍정 요소를 상쇄(offset)할 만큼 강력하게 감점**되어, 성취운 점수가 '보통(125점)' 이하로 떨어지도록 유도해야 합니다.
+               \s
+                - **(기타 요인 - 영향 제한):**
+                    - **목성(Jupiter):** '운'일 뿐 '성과'가 아니므로, 점수 보조 역할만 합니다.
+                    - **달(Moon):** '기분'일 뿐 '성과'가 아니므로, 소폭의 일일 변동성(±10~20점)만 담당합니다.
+
+            - 총운세: 긍/부정 어스펙트의 개수·강도 종합. (위의 1.5배 감점 가중치 및 달 가중치 룰을 동일하게 적용)
+            
+            **[매우 중요] 요약 작성 가이드라인 (detailed_summaries)**
+                   \s
+                    - `total_summary`와 `detailed_summaries`의 모든 내용은 **점성술을 전혀 모르는 일반인 사용자**를 위한 것입니다.
+                    - 따라서, 요약 내용에는 **절대로** 다음과 같은 점성술 전문 용어를 사용하지 마세요:
+                      - **행성 이름** (예: 금성, 화성, Jupiter, Venus)
+                      - **어스펙트 이름** (예: Trine, Square, Opposition, 어스펙트)
+                      - **하우스** (예: 5하우스, 10하우스)
+                      - **기타 전문 용어** (예: Natal, Transit, 상승점, 중천점)
+                   \s
+                    - 점성술 데이터를 **"해석"**하여, 실제 생활과 밀접한 조언으로 풀어서 설명해야 합니다.
+                   \s
+                    - **(절대 금지 - 나쁜 예):** "Venus가 Natal Mars와 Square 어스펙트를 맺어 연애운이 나쁩니다."
+                    - **(권장 - 좋은 예):** "오늘은 연인과 사소한 오해가 생기기 쉬운 날입니다. 말을 한 번 더 생각하고 부드럽게 표현하려는 노력이 필요합니다."
+                   \s
+                    - **(절대 금지 - 나쁜 예):** "Jupiter와 Sun의 Trine으로 금전운이 좋습니다."
+                    - **(권장 - 좋은 예):** "금전적인 흐름이 매우 좋습니다. 예상치 못한 수입을 기대하거나, 계획했던 투자를 실행하기에 좋은 날입니다."
         
         아래 규칙을 마지막으로 한 번 더 상기:
         - **JSON만 출력**, 따옴표로 감싸지 말 것, 코드블록(````), 주석, 추가 텍스트 금지.
-        """;;
+        """;
 
-    public FortuneScoreResponse getFortuneScores(BirthDataInput input) {
-        restClient = RestClient.builder()
+    @PostConstruct
+    private void initializeRestClient() {
+        this.restClient = RestClient.builder()
                 .baseUrl(gmsBaseUrl)
                 .defaultHeaders(headers -> {
-                    headers.setBearerAuth(gmsApiKey); // Authorization: Bearer $GMS_KEY
+                    headers.setBearerAuth(gmsApiKey);
                     headers.set("Content-Type", "application/json");
                 })
                 .build();
+    }
 
-        // 1. 점성술 데이터 객체 생성
+    @Cacheable(
+            value = "fortuneCache",
+            key = "#root.methodName + ':' + #input.birthDate + 'T' + #input.birthTime + '::' + #city",
+            cacheManager = "cacheManager"
+    )
+    public FinalFortuneResponse getFortuneScores(BirthDataInput input, String city) {
+
         AiPromptData aiData = calculationService.generateAiPromptData(input);
 
-        // 2. 데이터 -> 문자열 변환
         String natalPlanetsString = formatNatalPlanets(aiData.natalPlanets());
         String transitPlanetsString = formatTransitPlanets(aiData.transitPlanets());
         String aspectsString = formatAspects(aiData.aspects());
 
-        // 3. 사용자 프롬프트 템플릿(userTemplate)의 변수 수동 치환
         String userContent = userTemplate
                 .replace("{{ascSign}}", aiData.ascendantSign())
                 .replace("{{mcSign}}", aiData.mcSign())
@@ -109,6 +186,7 @@ public class FortuneService {
         String jsonRequestBody = """
             {
               "model": "%s",
+              "temperature": 0.7,
               "messages": [
                 {
                   "role": "developer",
@@ -122,20 +200,84 @@ public class FortuneService {
             }
             """.formatted(
                 gmsModel,
-                // objectMapper를 사용해 프롬프트 문자열을 'JSON 문자열 값'으로 안전하게 변환 (이스케이프 처리)
                 objectMapper.valueToTree(systemPrompt).toString(),
                 objectMapper.valueToTree(userContent).toString()
         );
 
-        log.info("--- GMS Request (Raw JSON Body) ---");
-        log.info(jsonRequestBody);
-
-        return restClient.post()
+        JsonNode fullResponseNode = restClient.post()
                 .uri("/chat/completions")
-                // .body(chatRequest) 대신 .body(String) 사용
                 .body(jsonRequestBody)
                 .retrieve()
-                .body(FortuneScoreResponse.class);
+                .body(JsonNode.class);
+
+        String innerJsonString = null;
+        if (fullResponseNode != null) {
+            innerJsonString = fullResponseNode
+                    .path("choices")
+                    .path(0)
+                    .path("message")
+                    .path("content")
+                    .asText(null);
+        }
+
+        if (innerJsonString == null) {
+            log.error("AI response structure is invalid or content string is missing!");
+            log.error("Received Full Response: {}", fullResponseNode != null ? fullResponseNode.toString() : "null");
+            return new FinalFortuneResponse(null,null);
+        }
+
+        FortuneScoreResponse scores;
+        try {
+            scores = objectMapper.readValue(innerJsonString, FortuneScoreResponse.class);
+            FortuneType fortuneType = determineFortuneType(scores);
+            return new FinalFortuneResponse(scores, FortuneTypeResponse.fromEntity(fortuneType));
+
+        } catch (IOException e) {
+            log.error("내부 JSON 문자열 파싱 실패: {}", e.getMessage());
+            return new FinalFortuneResponse(null,null);
+        }
+    }
+
+    @Transactional
+    public String saveGuestProfile(GuestProfile profile) {
+        return guestStore.save(profile);
+    }
+
+    @Transactional
+    public void saveFortune(long memberId, FinalFortuneResponse fortuneResponse) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 회원 아이디입니다."));
+        FortuneType fortuneType = fortuneTypeRepository.findFortuneTypeByFortuneTypeId(fortuneResponse.type().id())
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 운세 타입입니다."));
+
+        LocalDate today = date.today();
+
+        Fortune fortune = Fortune.builder()
+                .member(member)
+                .fortuneType(fortuneType)
+                .date(today)
+                .description(fortuneResponse.scores().totalSummary())
+                .originalTotalScore(fortuneResponse.scores().totalScore())
+                .totalScore(fortuneResponse.scores().totalScore())
+                .build();
+
+        fortuneRepository.save(fortune);
+        afterCommit(() -> rankingService.refreshTodayForMember(memberId));
+
+        saveAspect(fortune, FortuneAspect.AspectName.LOVE, fortuneResponse.scores().love());
+        saveAspect(fortune, FortuneAspect.AspectName.MONEY, fortuneResponse.scores().money());
+        saveAspect(fortune, FortuneAspect.AspectName.HEALTH, fortuneResponse.scores().health());
+        saveAspect(fortune, FortuneAspect.AspectName.ACHIEVEMENT, fortuneResponse.scores().achievement());
+    }
+
+    private void saveAspect(Fortune fortune, FortuneAspect.AspectName name, int score) {
+        FortuneAspect aspect = FortuneAspect.builder()
+                .fortune(fortune)
+                .name(name)
+                .score(score)
+                .originalScore(score)
+                .build();
+        fortuneAspectRepository.save(aspect);
     }
 
     private String formatNatalPlanets(List<NatalPlanetInfo> planets) {
@@ -144,7 +286,7 @@ public class FortuneService {
             sb.append(String.format("* %s: %s (%d 하우스)\n",
                     planet.name(), planet.sign(), planet.house()));
         }
-        return sb.toString().trim(); // 마지막 줄바꿈 제거
+        return sb.toString().trim();
     }
 
     private String formatTransitPlanets(List<TransitPlanetInfo> planets) {
@@ -159,13 +301,16 @@ public class FortuneService {
     private String formatAspects(List<AspectInfo> aspects) {
         StringBuilder sb = new StringBuilder();
         for (AspectInfo aspect : aspects) {
-            // (참고) 긍정/부정 판단 로직을 여기에 추가하면 더 좋습니다.
             String aspectType = aspect.aspectType();
             String mood = "[정보]";
-            if (aspectType.contains("Trine") || aspectType.contains("Sextile")) {
-                mood = "[긍정]";
-            } else if (aspectType.contains("Square") || aspectType.contains("Opposition")) {
-                mood = "[부정]";
+            if (aspectType.contains("Trine")) {
+                mood = "[매우 긍정적/조화]";
+            } else if (aspectType.contains("Sextile")) {
+                mood = "[긍정적/기회]";
+            } else if (aspectType.contains("Square")) {
+                mood = "[부정적/긴장]";
+            } else if (aspectType.contains("Opposition")) {
+                mood = "[부정적/대립]";
             }
 
             sb.append(String.format("* %s %s (Transit)이 %s (Natal)과 %s (오차: %.1f°)\n",
@@ -174,13 +319,70 @@ public class FortuneService {
         return sb.toString().trim();
     }
 
-    private record ChatRequest(
-            @JsonProperty("model") String model,
-            @JsonProperty("messages") List<Message> messages
-    ) {}
+    private FortuneType determineFortuneType(FortuneScoreResponse scores) {
+        int wealth = scores.money();
+        int health = scores.health();
+        int romance = scores.love();
+        int achievement = scores.achievement();
 
-    private record Message(
-            @JsonProperty("role") String role,
-            @JsonProperty("content") String content
-    ) {}
+        Map<String, Integer> scoreMap = Map.of(
+                "wealth", wealth,
+                "health", health,
+                "romance", romance,
+                "achievement", achievement
+        );
+
+        // 최고 점수 찾기
+        String maxKey = Collections.max(scoreMap.entrySet(), Map.Entry.comparingByValue()).getKey();
+        // 최저 점수 찾기
+        String minKey = Collections.min(scoreMap.entrySet(), Map.Entry.comparingByValue()).getKey();
+
+        String name = "";
+        if ("wealth".equals(maxKey) && "romance".equals(minKey)) {
+            name = "소";
+        }
+        if ("wealth".equals(maxKey) && "achievement".equals(minKey)) {
+            name = "쥐";
+        }
+        if ("wealth".equals(maxKey) && "health".equals(minKey)) {
+            name = "용";
+        }
+        if ("romance".equals(maxKey) && "wealth".equals(minKey)) {
+            name = "토끼";
+        }
+        if ("romance".equals(maxKey) && "achievement".equals(minKey)) {
+            name = "양";
+        }
+        if ("romance".equals(maxKey) && "health".equals(minKey)) {
+            name = "고양이";
+        }
+        if ("achievement".equals(maxKey) && "wealth".equals(minKey)) {
+            name = "호랑이";
+        }
+        if ("achievement".equals(maxKey) && "romance".equals(minKey)) {
+            name = "말";
+        }
+        if ("achievement".equals(maxKey) && "health".equals(minKey)) {
+            name = "닭";
+        }
+        if ("health".equals(maxKey) && "wealth".equals(minKey)) {
+            name = "개";
+        }
+        if ("health".equals(maxKey) && "romance".equals(minKey)) {
+            name = "뱀";
+        }
+        if ("health".equals(maxKey) && "achievement".equals(minKey)) {
+            name = "원숭이";
+        }
+
+        return fortuneTypeRepository.findFortuneTypeByName(name)
+                .orElseThrow(() -> new IllegalArgumentException("일치하는 운세 타입 이름이 없습니다."));
+    }
+
+    public boolean checkDuplicate(long memberId, LocalDate date) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 회원 아이디입니다."));
+
+        return fortuneRepository.existsByMemberAndDate(member, date);
+    }
 }

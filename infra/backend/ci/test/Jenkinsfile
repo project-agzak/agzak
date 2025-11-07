@@ -12,9 +12,11 @@ pipeline {
     REGISTRY    = 'docker.io'
     DEPLOY_USER = 'ubuntu'
     DEPLOY_HOST = 'k13b102.p.ssafy.io'
+    DOCKER_BUILDKIT = '1'
   }
 
   stages {
+
     stage('Checkout') {
       steps {
         checkout scm
@@ -30,29 +32,61 @@ pipeline {
       }
     }
 
+    stage('Docker Daemon Ready') {
+      steps {
+        // DinD가 health OK라도 TLS cert 준비 타이밍 이슈 대비
+        sh '''
+          set -eu -o pipefail
+          for i in $(seq 1 12); do
+            if docker info >/dev/null 2>&1; then
+              echo "Docker daemon reachable."
+              exit 0
+            fi
+            echo "Waiting for Docker daemon... ($i/12)"
+            sleep 5
+          done
+          echo "Docker daemon was not reachable in time." >&2
+          exit 1
+        '''
+      }
+    }
+
     stage('Docker Build & Push') {
       steps {
         dir("${env.SUBDIR}") {
           withCredentials([usernamePassword(credentialsId: 'dockerhub-cred',
               usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PWD')]) {
-            sh '''
-              set -eux
-              echo "$DOCKER_PWD" | docker login -u "$DOCKER_USER" --password-stdin ${REGISTRY}
-              export DOCKER_BUILDKIT=1
-              TAG="${TARGET_BRANCH}-${BUILD_NUMBER}"
+            script {
+              // repo/tag 문자열은 Groovy에서 안전하게 조합
+              def repo = (env.REGISTRY?.trim() && env.REGISTRY != 'docker.io') ?
+                         "${env.REGISTRY}/${env.IMAGE_NAME}" : env.IMAGE_NAME
+              def tag  = "${env.TARGET_BRANCH}-${env.BUILD_NUMBER}"
 
-              if [ -n "${REGISTRY}" ] && [ "${REGISTRY}" != "docker.io" ]; then
-                REPO="${REGISTRY}/${IMAGE_NAME}"
-              else
-                REPO="${IMAGE_NAME}"
-              fi
+              sh """
+                set -eu -o pipefail
+                # 로그인 줄만 -x 끄기(비밀값 에코 방지)
+                set +x
+                echo "\$DOCKER_PWD" | docker login -u "\$DOCKER_USER" --password-stdin ${env.REGISTRY}
+                set -x
 
-              docker build -t "${REPO}:${TAG}" .
-              docker push "${REPO}:${TAG}"
+                export DOCKER_BUILDKIT=1
+                REPO="${repo}"
+                TAG="${tag}"
 
-              docker tag "${REPO}:${TAG}" "${REPO}:latest"
-              docker push "${REPO}:latest"
-            '''
+                # 캐시 활용/재현성 향상을 위한 권장 옵션들
+                docker build --pull --progress=plain -t "\${REPO}:\${TAG}" .
+
+                docker push "\${REPO}:\${TAG}"
+
+                # main/master/release 계열에서만 latest 갱신
+                case "${env.TARGET_BRANCH_FULL}" in
+                  main|master|release|release/*)
+                    docker tag "\${REPO}:\${TAG}" "\${REPO}:latest"
+                    docker push "\${REPO}:latest"
+                    ;;
+                esac
+              """
+            }
           }
         }
       }
@@ -67,27 +101,33 @@ pipeline {
             passwordVariable: 'DOCKER_PWD'
           )]) {
             script {
-              def repo = (env.REGISTRY?.trim() && env.REGISTRY != 'docker.io')
-                ? "${env.REGISTRY}/${env.IMAGE_NAME}"
-                : env.IMAGE_NAME
-              def tag = "${env.TARGET_BRANCH}-${env.BUILD_NUMBER}"
+              def repo = (env.REGISTRY?.trim() && env.REGISTRY != 'docker.io') ?
+                         "${env.REGISTRY}/${env.IMAGE_NAME}" : env.IMAGE_NAME
+              def tag  = "${env.TARGET_BRANCH}-${env.BUILD_NUMBER}"
               def testImage = "${repo}:${tag}"
 
               sh """
-                set -eux
+                set -eu -o pipefail
                 ssh -o StrictHostKeyChecking=no \\
-                  "$DEPLOY_USER@$DEPLOY_HOST" \\
+                  "${env.DEPLOY_USER}@${env.DEPLOY_HOST}" \\
                   "TEST_IMAGE=${testImage} DOCKER_USER=${DOCKER_USER} DOCKER_PWD=${DOCKER_PWD} bash -s" <<'ENDSSH'
-                    set -eux
+                    set -eu -o pipefail
                     cd /home/ubuntu/agzak-app/test/backend
 
-                    echo "TEST_IMAGE=\$TEST_IMAGE" > .env
+                    # .env 최신화
+                    sed -i '/^TEST_IMAGE=/d' .env || true
+                    sed -i '/^PROJECT=/d' .env || true
+                    echo "TEST_IMAGE=\$TEST_IMAGE" >> .env
                     echo "PROJECT=test" >> .env
 
+                    # 로그인(실패해도 배포 시 재시도하니 무시 가능)
+                    set +x
                     echo "\$DOCKER_PWD" | docker login -u "\$DOCKER_USER" --password-stdin || true
+                    set -x
 
                     make -C .. up-be
 
+                    # 헬스체크 대기 (최대 60초)
                     for i in \$(seq 1 12); do
                       status=\$(docker inspect --format '{{.State.Health.Status}}' test-app-server 2>/dev/null || echo "unhealthy")
                       echo "Current status: \$status"
@@ -108,27 +148,27 @@ pipeline {
   }
 
   post {
-      success {
-        script {
-          def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
-          def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
-          sh """
-            curl -X POST -H 'Content-Type: application/json' \
-            -d '{"text":"빌드 성공: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name}) (<${env.BUILD_URL}|상세 보기>)"}' \
-            https://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo
-          """
-        }
+    success {
+      script {
+        def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
+        def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
+        sh """
+          curl -X POST -H 'Content-Type: application/json' \
+          -d '{"text":"빌드 성공: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name}) (<${env.BUILD_URL}|상세 보기>)"}' \
+          https://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo
+        """
       }
-      failure {
-        script {
-          def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
-          def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
-          sh """
-            curl -X POST -H 'Content-Type: application/json' \
-            -d '{"text":"빌드 실패: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name}) (<${env.BUILD_URL}|상세 보기>)"}' \
-            https://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo
-          """
-        }
+    }
+    failure {
+      script {
+        def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
+        def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
+        sh """
+          curl -X POST -H 'Content-Type: application/json' \
+          -d '{"text":"빌드 실패: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name}) (<${env.BUILD_URL}|상세 보기>)"}' \
+          https://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo
+        """
       }
+    }
   }
 }

@@ -1,36 +1,28 @@
 package com.ssafy.agzak.domain.fortune.service;
 
-import com.ssafy.agzak.domain.fortune.dto.response.KakaoAddressResponse;
-import org.springframework.beans.factory.annotation.Value;
+import com.ssafy.agzak.domain.fortune.dto.response.LatLng;
+import com.ssafy.agzak.domain.fortune.exception.IllegalCityNameException;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
-import org.springframework.web.util.UriComponentsBuilder;
 
-import java.net.URI;
+import java.util.Map;
 
 @Service
+@Slf4j
+@RequiredArgsConstructor
 public class GeocodingService {
 
-    @Value("${spring.kakao.map.api.key}")
-    private String kakaoMapKey;
+    private final CityIndex cityIndex;
 
-    private static final String KAKAO_MAP_API_URL = "https://dapi.kakao.com/v2/local/search/address.json";
-
-    public KakaoAddressResponse.Document getCoordinates(String city) {
+    public LatLng getCoordinates(String city) {
         //도시를 위도 경도로 변환
-        RestClient restClient = RestClient.create();
-
-        URI uri = UriComponentsBuilder.fromHttpUrl(KAKAO_MAP_API_URL)
-                .queryParam("query", city)
-                .build()
-                .toUri();
-
-        KakaoAddressResponse response = restClient.get()
-                .uri(uri)
-                .header("Authorization", "KakaoAK " + kakaoMapKey)
-                .retrieve()
-                .body(KakaoAddressResponse.class);
-
-        return response.documents().get(0);
+        return cityIndex.find(city)
+                .map(Map.Entry::getValue)
+                .orElseThrow(() ->
+                        new IllegalCityNameException(
+                                String.format("해당 도시명을 찾을 수 없습니다. (입력값: %s, 영문 입력 또는 미등록 지역)", city),
+                                city
+                        ));
     }
 }
