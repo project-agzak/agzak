@@ -58,7 +58,7 @@ useEffect(() => {
     logout();
 
     alert("로그아웃 되었습니다.");
-     window.location.href = "/";
+     window.location.href = "/home";
   };
 
   const nickname = member?.nickname ?? "";
@@ -67,7 +67,7 @@ useEffect(() => {
     <header className="fixed inset-x-0 top-0 z-50">
       <div className="mx-auto w-full max-w-[360px] bg-[#FEFBF2]">
         <div className="flex h-16 items-center px-4">
-          <a href="/">
+          <a href="/home">
             <img
               src="/agzak-logo.svg"
               alt="Agzak Logo"
@@ -219,7 +219,7 @@ function SidebarContent({ isLoggedIn, nickname, onLogout }: SidebarContentProps)
 
       {/* 메뉴 */}
        {/*  운세 보기 수정됨 */}
-      <nav className="px-5 py-5 space-y-1 font-bitbit">
+      <nav className="ml-10 font-bitbit">
         <SheetClose asChild>
           <button
             onClick={handleFortuneClick}

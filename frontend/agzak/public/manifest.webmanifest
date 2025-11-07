@@ -2,7 +2,7 @@
   "name": "아그작",
   "short_name": "아그작",
   "description": "아침에 배고파서 쿠키를 구워 먹었는데, 쿠키 속 버터 향에 행운이 녹아들었는지 그날부터 이상할 정도로 작정한 듯이 일이 잘 풀리기 시작했다...",
-  "start_url": "/",
+  "start_url": "/fortune",
   "scope": "/",
   "id": "/",
   "display": "standalone",

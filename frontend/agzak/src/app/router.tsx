@@ -1,7 +1,7 @@
 // src/app/router.tsx
 import AppLoader from '@/components/ui/AppLoader';
 import { lazy, Suspense, type ReactNode } from 'react';
-import { createBrowserRouter, Outlet } from 'react-router-dom';
+import { createBrowserRouter, Outlet, Navigate } from 'react-router-dom';
 import AppLayout from './layout';
 
 import { RequireAuth } from "@/components/templates/RequireAuth";
@@ -34,9 +34,10 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: <AppLayout />,
-    errorElement: suspense(<AppError />),
+    errorElement: suspense(<AppError />), 
     children: [
-      { index: true, element: suspense(<HomePage />) },
+      { index: true, element: <Navigate to="/fortune" replace /> },
+      { path: 'home', element: suspense(<HomePage />) },
       { path: 'login', element: suspense(<LoginPage />) },
       { path: 'signup', element: suspense(<SignupPage />) },
       {
