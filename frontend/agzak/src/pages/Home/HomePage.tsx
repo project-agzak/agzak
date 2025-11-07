@@ -103,7 +103,7 @@ export default function HomePage() {
       <div>
         <div className="flex justify-center pb-2">
           <div className="flex w-fit gap-2.5">
-            <Button_M className="shrink-0 mx-0!" label="운세 상세" to="/calendar" />
+            <Button_M className="shrink-0 mx-0!" label="운세 상세" to="/calendar" disabled={!canEnforce}/>
             <Button_M className="shrink-0 mx-0!" label="운세 강화" to="/enforce" disabled={!canEnforce} />
           </div>
         </div>

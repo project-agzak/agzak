@@ -35,6 +35,7 @@ export const FortuneAPI = {
     api.get<{ value: number; desc: string }>(`/fortune/detail/${type}`),
 };
 
+
 // 쿠키 인벤토리
 export const CookieAPI = {
   list: () =>

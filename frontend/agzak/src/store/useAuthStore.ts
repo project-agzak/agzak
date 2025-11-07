@@ -14,6 +14,8 @@ export type Member = {
   longitude: number | null;
 };
 
+
+
 // 초기 member 로딩
 function loadInitialMember(): Member | null {
   const raw = localStorage.getItem("member");
