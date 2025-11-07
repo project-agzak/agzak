@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 import { ExpandableFortune } from "@/components/molecules/ExpandableFortune";
 import { Button_L } from "@/components/atoms/Button_L";
-
+import AppLoader from "@/components/ui/AppLoader";
 import ShareButton from "@/components/atoms/ShareButton";
 import { PureFlipImage } from "@/components/molecules/PureFlipImage";
 import BackCard from "@/components/atoms/BackCard";
@@ -99,6 +99,15 @@ export default function FortuneResultPage() {
 
   const bestieSrc = goodWithId ? FRIEND_BY_ID[goodWithId] : undefined;
   const enemySrc  = badWithId  ? FRIEND_BY_ID[badWithId]  : undefined;
+
+
+   if (isLoggedIn && loadingFortune && totalScore == null && !typeInfo) {
+    return (
+      <main className="relative z-10 min-h-screen">
+        <AppLoader fullscreen label="오늘의 운세를 불러오는 중..." />
+      </main>
+    );
+  }
 
   return (
     <main className="relative z-10 p-4 min-h-screen">
