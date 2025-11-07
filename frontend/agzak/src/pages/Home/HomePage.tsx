@@ -18,6 +18,16 @@ export default function HomePage() {
     return kst.toISOString().slice(0, 10);
   }, []);
 
+  const accessedAtKST = useMemo(() => {
+    const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+    const y = kst.getUTCFullYear();
+    const m = String(kst.getUTCMonth() + 1).padStart(2, "0");
+    const d = String(kst.getUTCDate()).padStart(2, "0");
+    const hh = String(kst.getUTCHours()).padStart(2, "0");
+    const mm = String(kst.getUTCMinutes()).padStart(2, "0");
+    return `${y}-${m}-${d} ${hh}:${mm}`;
+  }, []);
+
 
   const { fortuneCache, fortuneLoading, fortuneError, fetchFortuneByDate } = useMembersStore();
   const totalScore = fortuneCache[today]?.totalScore ?? null;
@@ -125,9 +135,9 @@ export default function HomePage() {
           />
           <p className="absolute inset-0 flex items-center justify-center font-bitbit-large leading-none pb-5">오늘의 랭킹</p>
         </div>
-        <p className="text-center font-galmuri-xsmall -translate-y-8"> KST 24:00 기준</p>
+        <p className="text-center font-galmuri-condensed-small -translate-y-8"> KST {accessedAtKST} 기준</p>
       </div>
-      <div className="-translate-y-8">
+      <div className="-translate-y-9">
         <RankingList />
       </div>
     </main>

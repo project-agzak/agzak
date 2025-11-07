@@ -103,7 +103,9 @@ export default function FortuneResultPage() {
   return (
     <main className="relative z-10 p-4 min-h-screen">
 
-      <div className="flex justify-center pb-5">
+      <div className="flex flex-col justify-center items-center pb-5 gap-3">
+        <p className="font-galmuri-condensed-small animate-bounce motion-reduce:animate-none">
+          카드를 클릭해 뒤집어 보세요!</p>
         <PureFlipImage
           className="w-64 aspect-[2/3] cursor-pointer"
           frontSrc={getFrontByTypeName(typeName)}
@@ -153,7 +155,7 @@ export default function FortuneResultPage() {
       </div>
 
       <div className="flex flex-col items-center pt-10">
-        <p className="font-galmuri pb-2">오늘의 단짝은?</p>
+        <p className="font-galmuri pb-2">오늘의 단짝 친구는?</p>
         <div className="flex justify-center w-full min-w-0">
           <img
             src={bestieSrc}
@@ -161,7 +163,7 @@ export default function FortuneResultPage() {
             className="w-[42%] max-w-[140px] h-auto object-contain min-w-0"
           />
         </div>
-        <p className="font-galmuri pb-2 pt-5">오늘의 천적은?</p>
+        <p className="font-galmuri pb-2 pt-5">오늘의 엇갈린 친구는?</p>
         <div className="flex justify-center w-full min-w-0">
           <img
             src={enemySrc}

@@ -1,9 +1,9 @@
 // src/components/atoms/OvenImage.tsx
 "use client"
 
-import ovenFail from "@/assets/Game/Oven/oven-fail.svg"
-import ovenIdle from "@/assets/Game/Oven/oven-idle.svg"
-import ovenSuccess from "@/assets/Game/Oven/oven-success.svg"
+import ovenFail from "@/assets/Game/Oven/oven-fail.webp"
+import ovenIdle from "@/assets/Game/Oven/oven-idle.webp"
+import ovenSuccess from "@/assets/Game/Oven/oven-success.webp"
 import { useEffect, useState } from "react"
 
 export default function OvenImage({

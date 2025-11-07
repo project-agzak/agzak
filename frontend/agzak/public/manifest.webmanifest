@@ -1,7 +1,7 @@
 {
-  "name": "Agzak",
-  "short_name": "Agzak",
-  "description": "자율 프로젝트 아그작",
+  "name": "아그작",
+  "short_name": "아그작",
+  "description": "아침에 배고파서 쿠키를 구워 먹었는데, 쿠키 속 버터 향에 행운이 녹아들었는지 그날부터 이상할 정도로 작정한 듯이 일이 잘 풀리기 시작했다...",
   "start_url": "/",
   "scope": "/",
   "id": "/",
@@ -13,23 +13,20 @@
   "theme_color": "#FEFBF2",
 
   "icons": [
-    { "src": "icons/favicon-16.png", "sizes": "16x16",   "type": "image/png", "purpose": "any" },
-    { "src": "icons/favicon-32.png", "sizes": "32x32",   "type": "image/png", "purpose": "any" },
-    { "src": "icons/favicon-48.png", "sizes": "48x48",   "type": "image/x-icon", "purpose": "any" },
-
-    { "src": "/icons/icon-48.png",  "sizes": "48x48",   "type": "image/png", "purpose": "any" },
-    { "src": "/icons/icon-72.png",  "sizes": "72x72",   "type": "image/png", "purpose": "any" },
-    { "src": "/icons/icon-96.png",  "sizes": "96x96",   "type": "image/png", "purpose": "any" },
-    { "src": "/icons/icon-128.png", "sizes": "128x128", "type": "image/png", "purpose": "any" },
-    { "src": "/icons/icon-144.png", "sizes": "144x144", "type": "image/png", "purpose": "any" },
-    { "src": "/icons/icon-152.png", "sizes": "152x152", "type": "image/png", "purpose": "any" },
-    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/icons/icon-256.png", "sizes": "256x256", "type": "image/png", "purpose": "any" },
-    { "src": "/icons/icon-384.png", "sizes": "384x384", "type": "image/png", "purpose": "any" },
-    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-
-    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
-
-    { "src": "/icons/monochrome.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "monochrome" }
-  ]
+      { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+      { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+      { "src": "/icons/icon-48.png",  "sizes": "48x48",  "type": "image/png" },
+      { "src": "/icons/icon-72.png",  "sizes": "72x72",  "type": "image/png" },
+      { "src": "/icons/icon-96.png",  "sizes": "96x96",  "type": "image/png" },
+      { "src": "/icons/icon-128.png", "sizes": "128x128","type": "image/png" },
+      { "src": "/icons/icon-144.png", "sizes": "144x144","type": "image/png" },
+      { "src": "/icons/icon-152.png", "sizes": "152x152","type": "image/png" },
+      { "src": "/icons/icon-256.png", "sizes": "256x256","type": "image/png" },
+      { "src": "/icons/icon-384.png", "sizes": "384x384","type": "image/png" },
+      { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "오늘의 운세", "url": "/fortune", "short_name": "오늘의 운세"}
+  ],
+  "categories": ["games", "entertainment"]
 }
