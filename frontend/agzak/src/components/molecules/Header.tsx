@@ -283,6 +283,15 @@ function SidebarContent({ isLoggedIn, nickname, onLogout }: SidebarContentProps)
             <span>앱 설치하기</span>
           </button>
         </SheetClose>
+
+        <SheetClose asChild>
+          <a
+            href="https://forms.gle/VBKJ3K4wdY7RWfyG6"
+            className="flex items-center gap-2 rounded-md px-0 py-2 mt-7 hover:bg-zinc-100 active:bg-zinc-200 transition-colors"
+          >
+            <span>피드백하기</span>
+          </a>
+        </SheetClose>
       </nav>
 
       {/* 하단 버전 표시 */}

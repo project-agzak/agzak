@@ -1,78 +1,44 @@
-import { FortuneBubble } from "@/components/atoms/FortuneBubble";
-import BlackboardCalendar from "@/components/molecules/CalendarBoard";
-import { ExpandableFortune } from "@/components/molecules/ExpandableFortune";
-import { FortuneGaugeList } from "@/components/molecules/FortuneGaugeList";
+// @/pages/_shared/NotFoundPage.tsx
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import FortuneCookieGif from "@/assets/Gifs/FortuneCookie.gif" 
 
-import type { FortuneCookieDetail } from "@/types/cookies";
+export default function NotFoundPage() {
+  const navigate = useNavigate();
 
-const fortuneCookie: FortuneCookieDetail = {
-  title: "건강쿠키",
-  effects: [
-    { label: "건강운", value: 100 },
-    { label: "성취운", value: 30 },
-    { label: "애정운", value: 10 },
-  ],
-};
+  const HOME_PATH = "/fortune";
 
-export default function Page() {
   return (
-    <main className="relative z-10 p-4 min-h-screen">
-      <div className="bg-white/80 rounded-2xl px-5 py-4 shadow">
-        <p className="text-center font-medium">행운을 열어볼까요? 🥠</p>
-        <p className="font-galmuri-xsmall">갈무리 폰트 xsmall</p>
-        <p className="font-galmuri-small">갈무리 폰트 small</p>
-        <p className="font-galmuri">갈무리 폰트 base</p>
-        <p className="font-galmuri-large">갈무리 폰트 large</p>
-        <p className="font-galmuri-xlarge">갈무리 폰트 xlarge</p>
-        
-        <br />
+    <main className="relative z-10 min-h-screen flex items-center justify-center p-3">
+      <div className="w-full max-w-[480px] px-6 py-8">
+        <div className="text-center">
+          <p className="text-xs tracking-widest text-gray-400">ERROR</p>
+          <div className="flex justify-center items-center">
+            <img src={ FortuneCookieGif } alt="아그작" />
+          </div>
+          <h1 className="mt-1 text-5xl font-extrabold leading-tight">
+            <span className="font-bitbit-xlarge bg-clip-text text-transparent bg-gradient-to-r from-gray-800 to-gray-500">
+              404
+            </span>
+          </h1>
+          <h2 className="mt-2 font-galmuri font-semibold text-gray-800 cursor-pointer">
+            페이지를 찾을 수 없어요
+          </h2>
+          <p className="mt-2 font-galmuri-small text-gray-600 cursor-pointer">
+            요청하신 주소가 변경되었거나, 일시적으로 사용할 수 없어요.
+          </p>
 
-        <p className="font-bitbit-xsmall">DNF 폰트xsmall</p>
-        <p className="font-bitbit-small">DNF 폰트 small</p>
-        <p className="font-bitbit">DNF 폰트 base</p>
-        <p className="font-bitbit-large">DNF 폰트 large</p>
-        <p className="font-bitbit-xlarge">DNF 폰트 xlarge</p>
-      </div>
-      <BlackboardCalendar />
-      <FortuneGaugeList />
-      <FortuneBubble {...fortuneCookie} width={120} />
-      <div className="min-h-dvh bg-[#FEFBF2] px-4 py-6">
-        <div className="space-y-3">
-          <ExpandableFortune
-            itemValue="health"
-            label="건강운"
-            value={180}
-            color="green"
-            description="몸 컨디션이 좋아지는 날입니다. 가벼운 운동이나 산책이 행운을 끌어옵니다."
-          />
-
-          <ExpandableFortune
-            itemValue="success"
-            label="성취운"
-            value={220}
-            color="blue"
-            description="집중력이 좋고 주변에서 도와주는 사람이 생깁니다. 중요한 일을 먼저 처리해보세요."
-          />
-
-          <ExpandableFortune
-            itemValue="love"
-            label="애정운"
-            value={130}
-            color="pink"
-            description="대화운이 좋아요. 솔직함이 좋은 결과로 이어질 수 있습니다."
-          />
-
-          <ExpandableFortune
-            itemValue="money"
-            label="금전운"
-            value={150}
-            color="yellow"
-            description="지출은 조심, 하지만 필요한 곳에 쓰는 돈은 다시 돌아옵니다."
-          />
+          <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center font-galmuri-condensed-small">
+            <Button onClick={() => navigate(-1)} variant="secondary" className="h-10">
+              이전 페이지
+            </Button>
+            <Link to={HOME_PATH}>
+              <Button className="h-10">홈으로 가기</Button>
+            </Link>
+          </div>
         </div>
+
       </div>
-
-
     </main>
   );
 }
