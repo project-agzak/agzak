@@ -7,7 +7,7 @@ pipeline {
     }
 
     environment {
-        SUBDIR = 'frontend'
+        SUBDIR      = 'frontend'
         DEPLOY_USER = 'ubuntu'
         DEPLOY_HOST = 'k13b102.p.ssafy.io'
     }
@@ -18,10 +18,15 @@ pipeline {
                 checkout scm
                 script {
                     def full = (env.GIT_BRANCH ?: '').replaceFirst(/^origin\//, '')
-                    if (!full) full = sh(returnStdout: true, script: 'git rev-parse --abbrev-ref HEAD').trim()
+                    if (!full) {
+                        full = sh(returnStdout: true, script: 'git rev-parse --abbrev-ref HEAD').trim()
+                    }
                     env.TARGET_BRANCH_FULL = full
                     env.TARGET_BRANCH = full.replaceAll('/', '-')
+                    // GIT_COMMIT 보장
+                    env.GIT_COMMIT = sh(script: 'git rev-parse HEAD', returnStdout: true).trim()
                     echo "Target branch: ${env.TARGET_BRANCH_FULL} -> ${env.TARGET_BRANCH}"
+                    echo "Git commit: ${env.GIT_COMMIT}"
                 }
             }
         }
@@ -39,57 +44,54 @@ pipeline {
         }
 
         stage('Deploy (Atomic Symlink Swap)') {
-          steps {
-            sshagent (credentials: ['deploy-ssh']) {
-              sh """
-                set -eux
-                RELEASE_ID="`date +%Y-%m-%d_%H-%M-%S`-build-${BUILD_NUMBER}"
-                BASE="/home/ubuntu/agzak-app/deploy/infra/nginx/data/www"
-                NEW="$BASE/releases/$RELEASE_ID"
+            steps {
+                sshagent (credentials: ['deploy-ssh']) {
+                    sh '''
+                        set -eux
 
-                ssh ${DEPLOY_USER}@${DEPLOY_HOST} "mkdir -p \\$NEW"
+                        # 릴리즈 ID 생성
+                        RELEASE_ID="$(date +%Y-%m-%d_%H-%M-%S)-build-${BUILD_NUMBER}"
 
-                rsync -avz --delete ${SUBDIR}/agzak/dist/ ${DEPLOY_USER}@${DEPLOY_HOST}:$NEW/
+                        BASE="/home/ubuntu/agzak-app/deploy/infra/nginx/data/www"
+                        NEW="$BASE/releases/$RELEASE_ID"
 
-                ssh ${DEPLOY_USER}@${DEPLOY_HOST} "BASE='\\$BASE' NEW='\\$NEW' JOB_NAME='${JOB_NAME}' BUILD_NUMBER='${BUILD_NUMBER}' GIT_COMMIT='${GIT_COMMIT}' bash -s" << 'ENDSSH'
-                set -Eeuo pipefail
+                        # 1) 원격에 릴리즈 디렉토리 생성
+                        ssh ${DEPLOY_USER}@${DEPLOY_HOST} "mkdir -p $NEW"
 
-                echo "${JOB_NAME}#${BUILD_NUMBER}@${GIT_COMMIT}" > "$NEW/DEPLOY_VERSION.txt"
+                        # 2) 빌드 산출물 전송
+                        rsync -avz --delete ${SUBDIR}/agzak/dist/ ${DEPLOY_USER}@${DEPLOY_HOST}:$NEW/
 
-                ln -sfn "$NEW" "$BASE/current"
-
-                docker exec agzak-nginx nginx -t && docker exec agzak-nginx nginx -s reload || true
-
-                cd "$BASE/releases" && ls -1t | tail -n +6 | xargs -r rm -rf
-                ENDSSH
-              """
+                        # 3) 원격 배포 스크립트 실행
+                        ssh ${DEPLOY_USER}@${DEPLOY_HOST} \
+                          "/home/ubuntu/agzak-app/deploy/frontend/deploy_fe.sh $RELEASE_ID '${JOB_NAME}' '${BUILD_NUMBER}' '${GIT_COMMIT}'"
+                    '''
+                }
             }
-          }
         }
     }
 
     post {
         success {
-          script {
-            def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
-            def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
-            sh """
-              curl -X POST -H 'Content-Type: application/json' \
-              -d '{"text":"빌드 성공: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name}) (<${env.BUILD_URL}|상세 보기>)"}' \
-              https://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo
-            """
-          }
+            script {
+                def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
+                def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
+                sh """
+                  curl -X POST -H 'Content-Type: application/json' \
+                  -d '{"text":"빌드 성공: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name}) (<${env.BUILD_URL}|상세 보기>)"}' \
+                  https://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo
+                """
+            }
         }
         failure {
-          script {
-            def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
-            def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
-            sh """
-              curl -X POST -H 'Content-Type: application/json' \
-              -d '{"text":"빌드 실패: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name}) (<${env.BUILD_URL}|상세 보기>)"}' \
-              https://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo
-            """
-          }
+            script {
+                def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
+                def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
+                sh """
+                  curl -X POST -H 'Content-Type: application/json' \
+                  -d '{"text":"빌드 실패: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name}) (<${env.BUILD_URL}|상세 보기>)"}' \
+                  https://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo
+                """
+            }
         }
     }
 }
