@@ -34,11 +34,17 @@ pipeline {
         stage('Build React App') {
             steps {
                 dir("${env.SUBDIR}/agzak") {
-                    sh '''
-                        set -eux
-                        npm ci
-                        npm run build
-                    '''
+                    script {
+                        def viteCredId = (env.TARGET_BRANCH == 'main') ? 'vite_env_prod' : 'vite_env_dev'
+                        withCredentials([file(credentialsId: viteCredId, variable: 'VITE_ENV_FILE')]) {
+                            sh '''
+                              set -eux
+                              cp "$VITE_ENV_FILE" .env.production
+                              npm ci
+                              npm run build
+                            '''
+                        }
+                    }
                 }
             }
         }
