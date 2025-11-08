@@ -31,7 +31,7 @@ const hasHandledKakaoCode = useRef(false);
        const res = await AuthAPI.login({ email, password });
 
     if (!res.ok || !res.data) {
-      console.error("로그인 실패:", res.error);
+      //console.error("로그인 실패:", res.error);
       if (res.error?.code === 401) {
         alert("이메일 또는 비밀번호가 올바르지 않습니다.");
       } else {
@@ -90,7 +90,7 @@ const hasHandledKakaoCode = useRef(false);
 
 
       if (hasHandledKakaoCode.current) {
-    console.log("[KAKAO LOGIN FLOW] 이미 처리된 code, 두 번째 실행 막음");
+    //console.log("[KAKAO LOGIN FLOW] 이미 처리된 code, 두 번째 실행 막음");
     return;
   }
   hasHandledKakaoCode.current = true;
@@ -104,33 +104,33 @@ const hasHandledKakaoCode = useRef(false);
       ...(guestId ? { guestId } : {}),
     };
 
-      console.group("%c[KAKAO LOGIN FLOW]", "color: #FFB400; font-weight: bold;");
-  console.log("📤 요청 payload:", payload);
+      //console.group("%c[KAKAO LOGIN FLOW]", "color: #FFB400; font-weight: bold;");
+  //console.log("📤 요청 payload:", payload);
 
     (async () => {
       const res = await AuthAPI.kakaoLogin(payload);
-        console.log("📩 Raw 응답 객체:", res);
-      console.log("✅ 응답 status:", res.ok ? "OK" : "FAIL");
-      console.log("📦 응답 data:", res.data);
-      console.log("❗ 응답 error:", res.error);
+        //console.log("📩 Raw 응답 객체:", res);
+      //console.log("✅ 응답 status:", res.ok ? "OK" : "FAIL");
+      //console.log("📦 응답 data:", res.data);
+      //console.log("❗ 응답 error:", res.error);
 
       if (!res.ok || !res.data) {
-        console.error("카카오 로그인 응답 에러:", res.error);
+        //console.error("카카오 로그인 응답 에러:", res.error);
         trackError("auth_login_kakao_fail", res.error?.message ?? "unknown");
         alert(res.error?.message ?? "카카오 로그인 중 서버 오류가 발생했습니다.");
         return;
       }
 
       const data = res.data;
-      console.log("/auth/kakao/login 응답:", data);
+      //console.log("/auth/kakao/login 응답:", data);
 
       // ?code 제거
       window.history.replaceState(null, "", window.location.pathname);
 
       // 1) 기존 회원 / 게스트 이관 완료 → 로그인 성공
       if (data.success && data.tokens) {
-             console.log("🎉 기존 회원 or 게스트 → 카카오 회원 성공!");
-        console.log("🔑 tokens:", data.tokens);
+             //console.log("🎉 기존 회원 or 게스트 → 카카오 회원 성공!");
+        //console.log("🔑 tokens:", data.tokens);
         
         const { accessToken, refreshToken, expiresInSeconds } = data.tokens;
 
@@ -146,7 +146,7 @@ const hasHandledKakaoCode = useRef(false);
           localStorage.removeItem("guestId");
         }
 
-        // ✅ 카카오 로그인/회원가입까지 끝난 상태라 바로 홈으로
+        //  카카오 로그인/회원가입까지 끝난 상태라 바로 홈으로
         navigate("/home");
         return;
       }
@@ -200,7 +200,7 @@ const hasHandledKakaoCode = useRef(false);
           />
         </div>
 
-        {/* ✅ 로그인 버튼 + 카카오 로그인 + 회원가입 */}
+        {/*  로그인 버튼 + 카카오 로그인 + 회원가입 */}
         <div className="mt-3 flex flex-col items-center gap-3">
           {/* 기본 로그인 */}
           <Button_L label="로그인" width={260} onClick={handleLogin} />

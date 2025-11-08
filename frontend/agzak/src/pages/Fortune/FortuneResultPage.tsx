@@ -1,3 +1,4 @@
+// src/pages/Fortune/FortuneResultPage.tsx
 import { useEffect } from "react";
 
 import { ExpandableFortune } from "@/components/molecules/ExpandableFortune";
@@ -85,8 +86,7 @@ export default function FortuneResultPage() {
 
   const shareUrl = "https://www.agzak.co.kr/";
 
-  // 🔥 로그인 유저일 때만 /fortune 호출
-  //   - 게스트는 FortunePage에서 이미 fetchGuest로 store 채워놓은 상태
+
 useEffect(() => {
   if (!isLoggedIn) return;
 

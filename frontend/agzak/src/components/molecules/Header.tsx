@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
 import { useAuthStore, type Member } from "@/store/useAuthStore";
-
+import { useSessionQuotaStore } from "@/store/sessionQuotaStore";
 import { Button_M } from "@/components/atoms/Button_M";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,12 +26,12 @@ useEffect(() => {
     const res = await api.get<Member>("/members"); // ⬅ 전체 Member 타입으로 받기
 
     if (!res.ok || !res.data) {
-      console.error("회원 정보 불러오기 실패:", res.error);
+      //console.error("회원 정보 불러오기 실패:", res.error);
       return;
     }
 
     const data = res.data;
-    console.log("Header - 회원 정보 불러오기 성공:", data); // 여기 birthTime 나와야 함
+    //console.log("Header - 회원 정보 불러오기 성공:", data); // 여기 birthTime 나와야 함
     setMember(data); // ⬅ 이제 birthTime까지 포함된 객체가 store에 저장됨
   };
 
@@ -48,10 +48,10 @@ useEffect(() => {
     const res = await api.post<null>("/auth/logout");
 
     if (!res.ok) {
-      console.error("로그아웃 요청 실패:", res.error);
+      //console.error("로그아웃 요청 실패:", res.error);
       // 서버 로그아웃 실패해도 클라이언트에서는 일단 로그아웃 처리
     } else {
-      console.log("로그아웃 API 성공");
+      //console.log("로그아웃 API 성공");
     }
 
     // 전역 인증 상태 및 토큰 정리
@@ -135,7 +135,7 @@ type SidebarContentProps = {
 function SidebarContent({ isLoggedIn, nickname, onLogout }: SidebarContentProps) {
   const navigate = useNavigate();
   const displayName = nickname || "사용자";
-
+  // 설치
   const [deferred, setDeferred] = useState<any>(null);
 
   const handleFortuneClick = () => {
@@ -146,6 +146,14 @@ function SidebarContent({ isLoggedIn, nickname, onLogout }: SidebarContentProps)
     }
   };
 
+  // 강화 버튼 비활성화
+  const { quota, refresh } = useSessionQuotaStore();
+  const remainingSessions = quota?.remaining ?? 0;
+  const canEnforce = remainingSessions > 0; 
+
+  useEffect(() => {
+    refresh(); // 홈과 동일하게 진입 시 최신화
+  }, [refresh]);
 
   useEffect(() => {
     // 처음 진입 시 전역에 저장된 게 있으면 사용
@@ -230,12 +238,13 @@ function SidebarContent({ isLoggedIn, nickname, onLogout }: SidebarContentProps)
         </SheetClose>
 
         <SheetClose asChild>
-          <a
-            href="/enforce"
-            className="flex items-center gap-2 rounded-md px-0 py-2 hover:bg-zinc-100 active:bg-zinc-200 transition-colors"
+          <button
+            onClick={() => canEnforce && navigate("/enforce")}
+            disabled={!canEnforce}
+            className="flex items-center gap-2 rounded-md px-0 py-2 hover:bg-zinc-100 active:bg-zinc-200 transition-colors text-left cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <span>운세 강화</span>
-          </a>
+          </button>
         </SheetClose>
 
         <SheetClose asChild>

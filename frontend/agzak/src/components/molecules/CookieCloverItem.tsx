@@ -98,9 +98,8 @@ export function CookieCloverItem({
           src={imgSrc}
           alt={detail.title}
           className={clsx(
-            "w-20 h-20 object-contain pixelated inline-block", // inline-block 추가
+            "w-20 h-20 object-contain pixelated inline-block max-[60px] mx-auto", 
             selected && "animate-bounce motion-reduce:animate-none" // 접근성
-            // (원하면 "motion-safe:animate-bounce"로 바꿔도 OK)
           )}
           draggable={false}
         />

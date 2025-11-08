@@ -7,18 +7,15 @@ import { trackEvent } from "@/lib/analytics";
 import { useEffect, useMemo } from "react";
 
 import { useSessionQuotaStore } from "@/store/sessionQuotaStore";
-import { useMembersStore } from "@/store/useMembersStore";
+import { useAuthStore } from "@/store/useAuthStore";
+import { useFortuneStore } from "@/store/useFortuneStore";
 import { nanoid } from "nanoid";
 
 export default function HomePage() {
   const shareUrl = "https://www.agzak.co.kr/";
-  
-  const today = useMemo(() => {
-    const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
-    return kst.toISOString().slice(0, 10);
-  }, []);
+  const { isLoggedIn } = useAuthStore();
 
-  const accessedAtKST = useMemo(() => {
+    const accessedAtKST = useMemo(() => {
     const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
     const y = kst.getUTCFullYear();
     const m = String(kst.getUTCMonth() + 1).padStart(2, "0");
@@ -29,10 +26,10 @@ export default function HomePage() {
   }, []);
 
 
-  const { fortuneCache, fortuneLoading, fortuneError, fetchFortuneByDate } = useMembersStore();
-  const totalScore = fortuneCache[today]?.totalScore ?? null;
-  const loading = fortuneLoading[today] ?? false;
-  const error = fortuneError[today] ?? null;
+  const totalScore       = useFortuneStore((s) => s.scores?.total_score ?? null);
+  const loadingFortune   = useFortuneStore((s) => s.loading);
+  const errorFortune     = useFortuneStore((s) => s.error);
+  const fetchToday       = useFortuneStore((s) => s.fetchToday);
 
   // 강화 세션 쿼터
   const { quota, loading: quotaLoading, error: quotaError, refresh, claim } = useSessionQuotaStore();
@@ -47,14 +44,10 @@ export default function HomePage() {
 
 
   useEffect(() => {
-    if (totalScore == null) {
-      fetchFortuneByDate(today);
-    }
-  }, [today, totalScore, fetchFortuneByDate]);
-
-  useEffect(() => {
-    if (totalScore == null) fetchFortuneByDate(today);
-  }, [today, totalScore, fetchFortuneByDate]);
+    if (!isLoggedIn) return;
+    if (loadingFortune || totalScore != null) return;
+    fetchToday();
+  }, [isLoggedIn, loadingFortune, totalScore, fetchToday]);
 
   // 공유 완료 시 → claim +1
   const handleShared = async () => {
@@ -90,7 +83,12 @@ export default function HomePage() {
         <img src={ Pig } alt="메인 돼지" className="w-1/2 max-w-[220px] h-auto"/>
         <div className="flex flex-col items-center pr-5">
           <p className="font-galmuri">현재 총운</p>
-          <p className="font-bitbit-large">{error ? "—" : totalScore ?? (loading ? "..." : "—")} 점</p>
+          <p className="font-bitbit-large">
+            {errorFortune
+              ? "—"
+              : totalScore ?? (loadingFortune ? "..." : "—")}{" "}
+            점
+          </p>
           <p className="flex flex-col items-center font-galmuri-xsmall pt-0.5">
             강화 잔여 횟수: {quotaError ? "—" : (quotaLoading ? "..." : remainingSessions)}회 <br />
             {quota && (
@@ -104,11 +102,10 @@ export default function HomePage() {
       <div>
         <div className="flex justify-center pb-2">
           <div className="flex w-fit gap-2.5">
-
             <Button_M
               label="운세 상세"
               to="/fortune/result"
-               disabled={!canEnforce}
+              disabled={!canEnforce}
               onClick={() => trackEvent("cta_result_click", { can_enforce: canEnforce })}
             />
 
@@ -118,7 +115,6 @@ export default function HomePage() {
               disabled={!canEnforce}
               onClick={() => trackEvent("cta_enforce_click", { can_enforce: canEnforce })}
             />
-
           </div>
         </div>
         <ShareButton
@@ -138,8 +134,7 @@ export default function HomePage() {
           />
           <p className="absolute inset-0 flex items-center justify-center font-bitbit-large leading-none pb-5">오늘의 랭킹</p>
         </div>
-        <p className="text-center font-galmuri-condensed-small -translate-y-8"> KST {accessedAtKST} 기준</p>
-      </div>
+        <p className="text-center font-galmuri-condensed-small -translate-y-8"> KST {accessedAtKST} 기준</p>      </div>
       <div className="-translate-y-9">
         <RankingList />
       </div>
