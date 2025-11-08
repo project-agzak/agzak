@@ -32,18 +32,27 @@ pipeline {
         }
 
         stage('Build React App') {
-            steps {
-                dir("${env.SUBDIR}/agzak") {
-                    withCredentials([file(credentialsId: 'vite_env_prod', variable: 'VITE_ENV_FILE')]) {
-                        sh '''
-                          set -eux
-                          cp "$VITE_ENV_FILE" .env.production
-                          npm ci
-                          npm run build
-                        '''
-                    }
-                }
+          steps {
+            dir("${env.SUBDIR}/agzak") {
+              withCredentials([file(credentialsId: 'vite_env_prod', variable: 'VITE_ENV_FILE')]) {
+                sh '''
+                  set -eux
+
+                  id
+                  pwd
+                  ls -ld .
+                  ls -lA || true
+
+                  set -a
+                  . "$VITE_ENV_FILE"
+                  set +a
+
+                  npm ci
+                  npm run build
+                '''
+              }
             }
+          }
         }
 
         stage('Deploy (Atomic Symlink Swap)') {
