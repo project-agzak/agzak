@@ -40,10 +40,18 @@ const titleToGif: Record<string, string> = {
   "시련쿠키": RottenGif,
 };
 
+const getTodayLocalString = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
 export default function CookiesPage() {
   // 총운 (날짜별 조회 방식)
   const scores = useFortuneStore((s) => s.scores);
-  const today = new Date().toISOString().slice(0, 10);
+ const today = getTodayLocalString();
   const { fortuneCache, fortuneLoading, fortuneError, fetchFortuneByDate } = useMembersStore();
   const totalScore = fortuneCache[today]?.totalScore ?? null;
   const loadingFortune = fortuneLoading[today] ?? false;

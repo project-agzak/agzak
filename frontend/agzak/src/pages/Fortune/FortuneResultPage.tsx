@@ -92,7 +92,7 @@ useEffect(() => {
 
   // 로그인 유저면 무조건 오늘 운세 한 번 시도
   fetchToday();
-  console.log("오늘 운세 불러오기 호출");
+
 }, [isLoggedIn, fetchToday]);
 
   // 🔥 단짝/천적: 추가 API 없이 goodWithId/badWithId로 바로 이미지 찾기
