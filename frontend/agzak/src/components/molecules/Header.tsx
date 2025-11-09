@@ -26,12 +26,12 @@ useEffect(() => {
     const res = await api.get<Member>("/members"); // ⬅ 전체 Member 타입으로 받기
 
     if (!res.ok || !res.data) {
-      console.error("회원 정보 불러오기 실패:", res.error);
+      //console.error("회원 정보 불러오기 실패:", res.error);
       return;
     }
 
     const data = res.data;
-    console.log("Header - 회원 정보 불러오기 성공:", data); // 여기 birthTime 나와야 함
+    //console.log("Header - 회원 정보 불러오기 성공:", data); // 여기 birthTime 나와야 함
     setMember(data); // ⬅ 이제 birthTime까지 포함된 객체가 store에 저장됨
   };
 
@@ -48,10 +48,10 @@ useEffect(() => {
     const res = await api.post<null>("/auth/logout");
 
     if (!res.ok) {
-      console.error("로그아웃 요청 실패:", res.error);
+      //console.error("로그아웃 요청 실패:", res.error);
       // 서버 로그아웃 실패해도 클라이언트에서는 일단 로그아웃 처리
     } else {
-      console.log("로그아웃 API 성공");
+      //console.log("로그아웃 API 성공");
     }
 
     // 전역 인증 상태 및 토큰 정리

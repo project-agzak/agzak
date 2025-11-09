@@ -28,6 +28,14 @@ export function BirthCitySearch({
 
   const rootRef = React.useRef<HTMLDivElement>(null);
 
+    React.useEffect(() => {
+    if (!value) {
+      setQ("");
+    } else {
+      setQ(value.address);
+    }
+  }, [value]);
+
   // 바깥 클릭 시 닫기
   React.useEffect(() => {
     const onDoc = (e: MouseEvent) => {
@@ -65,7 +73,7 @@ export function BirthCitySearch({
     setActiveIdx(filtered.length ? 0 : -1);
   };
  const VISIBLE_ROWS = 4;
-  const ROW_HEIGHT = 35; 
+  const ROW_HEIGHT = 32; 
 
     const dropdownMaxHeight = maxListHeight && maxListHeight > 0
     ? maxListHeight                 // prop으로 넘기면 그 값 사용
@@ -74,10 +82,76 @@ export function BirthCitySearch({
   const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = e.target.value;
     setQ(v);
-    // 🔥 카카오 아니고 로컬 필터라서 타이핑마다 돌려도 됨
+     
+ 
+
+    //  카카오 아니고 로컬 필터라서 타이핑마다 돌려도 됨
     runSearch(v);
   };
 
+ const onInputBlur = () => {
+    // 드롭다운 클릭과 blur 순서 충돌 방지용
+    setTimeout(() => {
+      const active = document.activeElement;
+      if (rootRef.current?.contains(active)) {
+        // 아직 컴포넌트 내부(드롭다운 버튼 등)에 포커스가 있으면 처리하지 않음
+        return;
+      }
+
+      setOpen(false);
+      setActiveIdx(-1);
+
+      const text = q.trim();
+
+      // 1) 입력이 아예 비어 있을 때
+      if (!text) {
+        if (value) {
+          // 이미 선택된 값 있으면 그걸 다시 보여줌
+          setQ(value.address);
+        } else {
+          setQ("");
+        }
+        return;
+      }
+
+      // 2) SIMPLE_REGIONS 중 완전히 일치하는 label 있는지 확인
+      const matched = SIMPLE_REGIONS.find((r) => r.label === text);
+
+      if (!matched) {
+        //  목록에 없는 값이면 경고 + 선택값(or 빈 값)으로 되돌리기
+        alert("태어난 도시는 검색 후 목록에서 선택해 주세요.");
+
+        if (value) {
+          setQ(value.address); // 마지막 선택값으로 복원
+        } else {
+          setQ(""); // 선택도 없으면 비움
+        }
+        return;
+      }
+
+      // 3) 입력한 텍스트가 실제 목록에 있는 경우
+      //    (직접 '충청북도 청주시' 전체를 타이핑한 케이스 등)
+      const isSameAsValue =
+        value &&
+        value.address === matched.label &&
+        value.sido === matched.sido &&
+        value.sgg === matched.sgg;
+
+      if (!isSameAsValue) {
+        // 🔹 value를 이 지역으로 강제 동기화 (자동 선택)
+        const next: BirthCity = {
+          sido: matched.sido,
+          sgg: matched.sgg,
+          address: matched.label,
+        };
+        onChange?.(next);
+        setQ(matched.label);
+      } else {
+        // 이미 선택된 값과 동일하면 그냥 텍스트만 정리
+        setQ(matched.label);
+      }
+    }, 0);
+  };
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!open) return;
 
@@ -124,6 +198,7 @@ export function BirthCitySearch({
         value={q}
         onChange={onInputChange}
         onKeyDown={onKeyDown}
+        onBlur={onInputBlur}//  블러 시 검증 추가
         onFocus={() => q && results.length > 0 && setOpen(true)}
         placeholder={placeholder}
         className="

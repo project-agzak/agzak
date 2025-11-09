@@ -105,7 +105,8 @@ export default function HomePage() {
             <Button_M
               label="운세 상세"
               to="/fortune/result"
-              onClick={() => trackEvent("cta_result_click")}
+              disabled={!canEnforce}
+              onClick={() => trackEvent("cta_result_click", { can_enforce: canEnforce })}
             />
 
             <Button_M

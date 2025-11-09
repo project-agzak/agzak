@@ -1,3 +1,4 @@
+// src/pages/Fortune/FortuneResultPage.tsx
 import { useEffect } from "react";
 
 import { ExpandableFortune } from "@/components/molecules/ExpandableFortune";
@@ -85,14 +86,13 @@ export default function FortuneResultPage() {
 
   const shareUrl = "https://www.agzak.co.kr/";
 
-  // 🔥 로그인 유저일 때만 /fortune 호출
-  //   - 게스트는 FortunePage에서 이미 fetchGuest로 store 채워놓은 상태
+
 useEffect(() => {
   if (!isLoggedIn) return;
 
   // 로그인 유저면 무조건 오늘 운세 한 번 시도
   fetchToday();
-  console.log("오늘 운세 불러오기 호출");
+
 }, [isLoggedIn, fetchToday]);
 
   // 🔥 단짝/천적: 추가 API 없이 goodWithId/badWithId로 바로 이미지 찾기
@@ -105,9 +105,7 @@ useEffect(() => {
   return (
     <main className="relative z-10 p-4 min-h-screen">
 
-      <div className="flex flex-col justify-center items-center pb-5 gap-3">
-        <p className="text-gray-600 font-galmuri-condensed-small animate-bounce motion-reduce:animate-none">
-          카드를 클릭해 뒤집어 보세요!</p>
+      <div className="flex justify-center pb-5">
         <PureFlipImage
           className="w-64 aspect-[2/3] cursor-pointer"
           frontSrc={getFrontByTypeName(typeName)}
@@ -121,7 +119,7 @@ useEffect(() => {
       </div>
       
       <div className="bg-[#FEFBF2] px-4 py-6 pt-5">
-        <div className="space-y-3 w-full max-w-[320px] mx-auto">
+        <div className="space-y-3">
           <ExpandableFortune
             itemValue="health"
             label="건강운"
