@@ -130,13 +130,13 @@ const todayStr = new Date().toISOString().slice(0, 10);
         });
 
         if (!res.ok || !res.data) {
-          console.error("카카오 회원가입(/auth/kakao/complete) 오류:", res.error);
+          //console.error("카카오 회원가입(/auth/kakao/complete) 오류:", res.error);
           alert(res.error?.message ?? "카카오 회원가입 중 오류가 발생했습니다.");
           return;
         }
- const { accessToken, refreshToken, expiresInSeconds } = res.data;
+ //const { accessToken, refreshToken, expiresInSeconds } = res.data;
 
-      setTokens(accessToken, refreshToken, expiresInSeconds);
+      //setTokens(accessToken, refreshToken, expiresInSeconds);
 
   //  if (accessToken && refreshToken && expiresInSeconds) {
   //         localStorage.setItem("access_token", accessToken);
@@ -153,7 +153,7 @@ const todayStr = new Date().toISOString().slice(0, 10);
         sessionStorage.removeItem("kakao_suggestedNickname");
 
 
-
+  await fetchGuest(payload); 
       //  게스트 운세를 store를 통해 호출(= POST /fortune/guest)
       // await fetchGuest(payload);
         navigate("/fortune/result");
@@ -178,7 +178,7 @@ const todayStr = new Date().toISOString().slice(0, 10);
         });
 
         if (!res.ok) {
-          console.error("회원가입(/auth/register) 오류:", res.error);
+          //console.error("회원가입(/auth/register) 오류:", res.error);
           alert(res.error?.message ?? "회원가입 중 오류가 발생했습니다.");
           return;
         }
@@ -195,7 +195,7 @@ const todayStr = new Date().toISOString().slice(0, 10);
        await fetchGuest(payload);
       navigate("/fortune/result");
     } catch (e) {
-      console.error(e);
+      //console.error(e);
       alert("운세 계산 중 오류가 발생했습니다.");
     }
      finally {

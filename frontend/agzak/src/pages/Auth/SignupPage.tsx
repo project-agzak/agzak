@@ -46,7 +46,7 @@ export default function SignupPage() {
   const validatePassword = (value: string) => {
   
    //  영문 + 숫자 + 특수문자 허용 (8자 이상 100자 이하)
-const regex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=\[{\]};:'",<.>/?`~\\|])[A-Za-z\d!@#$%^&*()_\-+=\[{\]};:'",<.>/?`~\\|]{8,100}$/;
+const regex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d!@#$%^&*()_\-+=\[{\]};:'",<.>/?`~\\|]{8,100}$/;
 
     setPasswordValid(regex.test(value));
   };
@@ -255,7 +255,7 @@ const emailHasError = !emailValid || (email && !emailChecked);
             }`}
           >
             {passwordValid
-             ? "영어, 숫자 ,특수문자 포함 8자이상"
+             ? "영어, 숫자 포함 8자이상"
               : "비밀번호 형식이 올바르지 않습니다."}
           </p>
         </div>

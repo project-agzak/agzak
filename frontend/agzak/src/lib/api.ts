@@ -16,11 +16,23 @@ function handleAuthError(status?: number, url?: string) {
   const { logout } = useAuthStore.getState();
 
   const isAuthRequest = !!url && url.startsWith("/auth/"); // /auth/* 는 건들지 않기
+if (isAuthRequest || status == null) return;
 
-  if (!isAuthRequest && status === 401) {
+    // 401: 세션 만료 등
+  if (status === 401) {
     logout("로그인 정보가 만료되었습니다. 다시 로그인해주세요.");
+    window.location.replace("/login");
+    return;
+  }
+
+  // 400: 깨진 세션/회원 정보 문제라고 보고 처리
+  if (status === 400) {
+    logout("계정 정보에 문제가 있어 로그아웃되었습니다. 다시 로그인해주세요.");
+    window.location.replace("/login");
+    return;
   }
 }
+
 
 async function request<T>(config: AxiosRequestConfig): Promise<ApiResponse<T>> {
   try {
@@ -68,11 +80,17 @@ if (!isAuthRequest && accessToken) {
     
       handleAuthError(status, config.url as string | undefined);
 
-        if (status === 500) {
-      console.error("서버 오류 감지됨. 홈으로 이동:", message);
+        const url = typeof config.url === "string" ? config.url : "";
+    const isAuthRequest = url.startsWith("/auth/");
+
+     handleAuthError(status, url);
+    
+       if (!isAuthRequest && status === 500) {
+      console.error("서버 오류(500) 감지됨. 홈으로 이동:", message);
       alert("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
-      window.location.replace("/"); // 새로고침 이동
+      window.location.replace("/"); // 새로고침 + 홈 이동
     }
+
 
     
     return { ok: false, error: { status, code: status, message, raw } };
