@@ -28,6 +28,7 @@ export function BirthCitySearch({
 
   const rootRef = React.useRef<HTMLDivElement>(null);
 
+    const selectingRef = React.useRef(false);
     React.useEffect(() => {
     if (!value) {
       setQ("");
@@ -92,65 +93,59 @@ export function BirthCitySearch({
  const onInputBlur = () => {
     // 드롭다운 클릭과 blur 순서 충돌 방지용
     setTimeout(() => {
-      const active = document.activeElement;
-      if (rootRef.current?.contains(active)) {
-        // 아직 컴포넌트 내부(드롭다운 버튼 등)에 포커스가 있으면 처리하지 않음
-        return;
-      }
+     if (selectingRef.current) {
+      return;
+    }
 
-      setOpen(false);
-      setActiveIdx(-1);
+     const active = document.activeElement;
+    if (rootRef.current?.contains(active)) {
+      // 아직 컴포넌트 내부(드롭다운 버튼 등)에 포커스가 있으면 처리하지 않음
+      return;
+    }
 
-      const text = q.trim();
-
-      // 1) 입력이 아예 비어 있을 때
-      if (!text) {
-        if (value) {
-          // 이미 선택된 값 있으면 그걸 다시 보여줌
-          setQ(value.address);
-        } else {
-          setQ("");
-        }
-        return;
-      }
-
-      // 2) SIMPLE_REGIONS 중 완전히 일치하는 label 있는지 확인
-      const matched = SIMPLE_REGIONS.find((r) => r.label === text);
-
-      if (!matched) {
-        //  목록에 없는 값이면 경고 + 선택값(or 빈 값)으로 되돌리기
-        alert("태어난 도시는 검색 후 목록에서 선택해 주세요.");
-
-        if (value) {
-          setQ(value.address); // 마지막 선택값으로 복원
-        } else {
-          setQ(""); // 선택도 없으면 비움
-        }
-        return;
-      }
-
-      // 3) 입력한 텍스트가 실제 목록에 있는 경우
-      //    (직접 '충청북도 청주시' 전체를 타이핑한 케이스 등)
-      const isSameAsValue =
-        value &&
-        value.address === matched.label &&
-        value.sido === matched.sido &&
-        value.sgg === matched.sgg;
-
-      if (!isSameAsValue) {
-        // 🔹 value를 이 지역으로 강제 동기화 (자동 선택)
-        const next: BirthCity = {
-          sido: matched.sido,
-          sgg: matched.sgg,
-          address: matched.label,
-        };
-        onChange?.(next);
-        setQ(matched.label);
+    setOpen(false);
+    setActiveIdx(-1);
+ const text = q.trim();
+     
+   // 1) 입력이 아예 비어 있을 때
+    if (!text) {
+      if (value) {
+        setQ(value.address);
       } else {
-        // 이미 선택된 값과 동일하면 그냥 텍스트만 정리
-        setQ(matched.label);
+        setQ("");
       }
-    }, 0);
+      return;
+    }
+       const matched = SIMPLE_REGIONS.find((r) => r.label === text);
+
+    if (!matched) {
+      alert("태어난 도시는 검색 후 목록에서 선택해 주세요.");
+
+      if (value) {
+        setQ(value.address);
+      } else {
+        setQ("");
+      }
+      return;
+    }
+    const isSameAsValue =
+      value &&
+      value.address === matched.label &&
+      value.sido === matched.sido &&
+      value.sgg === matched.sgg;
+
+    if (!isSameAsValue) {
+      const next: BirthCity = {
+        sido: matched.sido,
+        sgg: matched.sgg,
+        address: matched.label,
+      };
+      onChange?.(next);
+      setQ(matched.label);
+    } else {
+      setQ(matched.label);
+    }
+  }, 0);
   };
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!open) return;
@@ -182,6 +177,9 @@ export function BirthCitySearch({
     setQ(region.label);
     setOpen(false);
     setActiveIdx(-1);
+
+    selectingRef.current = false;
+    
   };
 
   return (
@@ -232,21 +230,29 @@ export function BirthCitySearch({
     {results.map((it, i) => {
       const active = i === activeIdx;
       return (
-        <button
-          key={`${it.sido}-${it.sgg}-${i}`}
-          onClick={(e) => {
-            e.preventDefault();
-            commitSelect(it);
-          }}
-          onMouseEnter={() => setActiveIdx(i)}
-          className={`w-full text-left px-3 py-2 text-[12px] transition-colors ${
-            active ? "bg-[#000]/6" : "hover:bg-[#000]/4"
-          }`}
-          role="option"
-          aria-selected={active}
-        >
-          <div className="font-bold">{it.label}</div>
-        </button>
+         <button
+      key={`${it.sido}-${it.sgg}-${i}`}
+      onMouseDown={() => {
+        // 🔹 클릭(터치) 시작 시 "선택 중" 플래그 켜기
+        selectingRef.current = true;
+      }}
+      onTouchStart={() => {
+        // 모바일 터치 이벤트도 대비
+        selectingRef.current = true;
+      }}
+      onClick={(e) => {
+        e.preventDefault();
+        commitSelect(it);
+      }}
+      onMouseEnter={() => setActiveIdx(i)}
+      className={`w-full text-left px-3 py-2 text-[12px] transition-colors ${
+        active ? "bg-[#000]/6" : "hover:bg-[#000]/4"
+      }`}
+      role="option"
+      aria-selected={active}
+    >
+      <div className="font-bold">{it.label}</div>
+    </button>
       );
     })}
   </div>
