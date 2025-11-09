@@ -11,6 +11,7 @@ export type BirthCity = {
 type Props = {
   value?: BirthCity | null;
   onChange?: (next: BirthCity) => void;
+  onTextChange?: (text: string) => void;
   placeholder?: string;
   maxListHeight?: number;
 };
@@ -18,6 +19,7 @@ type Props = {
 export function BirthCitySearch({
   value,
   onChange,
+  onTextChange,
   placeholder = "태어난 도시 검색 (예: 청주, 충북, 충청북도 청주시)",
   maxListHeight = 0,
 }: Props) {
@@ -28,7 +30,7 @@ export function BirthCitySearch({
 
   const rootRef = React.useRef<HTMLDivElement>(null);
 
-    const selectingRef = React.useRef(false);
+
     React.useEffect(() => {
     if (!value) {
       setQ("");
@@ -84,7 +86,7 @@ export function BirthCitySearch({
     const v = e.target.value;
     setQ(v);
      
- 
+   onTextChange?.(v);
 
     //  카카오 아니고 로컬 필터라서 타이핑마다 돌려도 됨
     runSearch(v);
@@ -93,58 +95,8 @@ export function BirthCitySearch({
  const onInputBlur = () => {
     // 드롭다운 클릭과 blur 순서 충돌 방지용
     setTimeout(() => {
-     if (selectingRef.current) {
-      return;
-    }
-
-     const active = document.activeElement;
-    if (rootRef.current?.contains(active)) {
-      // 아직 컴포넌트 내부(드롭다운 버튼 등)에 포커스가 있으면 처리하지 않음
-      return;
-    }
-
     setOpen(false);
     setActiveIdx(-1);
- const text = q.trim();
-     
-   // 1) 입력이 아예 비어 있을 때
-    if (!text) {
-      if (value) {
-        setQ(value.address);
-      } else {
-        setQ("");
-      }
-      return;
-    }
-       const matched = SIMPLE_REGIONS.find((r) => r.label === text);
-
-    if (!matched) {
-      alert("태어난 도시는 검색 후 목록에서 선택해 주세요.");
-
-      if (value) {
-        setQ(value.address);
-      } else {
-        setQ("");
-      }
-      return;
-    }
-    const isSameAsValue =
-      value &&
-      value.address === matched.label &&
-      value.sido === matched.sido &&
-      value.sgg === matched.sgg;
-
-    if (!isSameAsValue) {
-      const next: BirthCity = {
-        sido: matched.sido,
-        sgg: matched.sgg,
-        address: matched.label,
-      };
-      onChange?.(next);
-      setQ(matched.label);
-    } else {
-      setQ(matched.label);
-    }
   }, 0);
   };
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -175,11 +127,12 @@ export function BirthCitySearch({
     };
     onChange?.(next);
     setQ(region.label);
+     onTextChange?.(region.label);
     setOpen(false);
     setActiveIdx(-1);
 
-    selectingRef.current = false;
-    
+   
+
   };
 
   return (
@@ -232,15 +185,8 @@ export function BirthCitySearch({
       return (
          <button
       key={`${it.sido}-${it.sgg}-${i}`}
-      onMouseDown={() => {
-        // 🔹 클릭(터치) 시작 시 "선택 중" 플래그 켜기
-        selectingRef.current = true;
-      }}
-      onTouchStart={() => {
-        // 모바일 터치 이벤트도 대비
-        selectingRef.current = true;
-      }}
-      onClick={(e) => {
+   
+      onMouseDown={(e) => {
         e.preventDefault();
         commitSelect(it);
       }}

@@ -15,6 +15,7 @@ import type { GuestFortuneReq } from "@/lib/fortuneAPI"
 import FortuneLoading from "@/components/templates/FortuneLoading";
 import { AuthAPI } from "@/lib/AuthAPI";
 import { useAuthStore } from "@/store/useAuthStore";
+import { SIMPLE_REGIONS } from "@/constants/regions"; 
 
 export default function FortunePage() {
   const navigate = useNavigate();
@@ -28,6 +29,7 @@ export default function FortunePage() {
   const [unknownTime, setUnknownTime] = useState(false);
   const [gender, setGender] = useState<"male" | "female" | null>(null);
   const [birthCity, setBirthCity] = useState<BirthCity | null>(null);
+const [birthCityText, setBirthCityText] = useState("");
 
    const [submitting,setSubmitting] = useState(false);
 const todayStr = new Date().toISOString().slice(0, 10); 
@@ -84,11 +86,30 @@ const todayStr = new Date().toISOString().slice(0, 10);
     return;
   }
 
-  // 5) 태어난 도시
-  if (!birthCity) {
-    alert("태어난 도시를 선택해주세요.");
-    return;
-  }
+ // 5) 태어난 도시 (텍스트 + JSON 목록 검증)
+const rawCity = birthCityText.trim();
+if (!rawCity) {
+  alert("태어난 도시는 검색 후 목록에서 선택해 주세요.");
+  return;
+}
+
+// SIMPLE_REGIONS에서 label이 완전히 같은 항목 찾기
+const matchedRegion = SIMPLE_REGIONS.find((r) => r.label === rawCity);
+
+if (!matchedRegion) {
+  alert("태어난 도시는 검색 후 목록에서 선택해 주세요.");
+  return;
+}
+
+// 항상 JSON 목록 기반 값으로 강제 세팅
+const selectedCity: BirthCity = {
+  sido: matchedRegion.sido,
+  sgg: matchedRegion.sgg,
+  address: matchedRegion.label,
+};
+
+setBirthCity(selectedCity); // 내부 state도 일치시켜 둠
+
   // 모든 필드 확인
     if (
       !nickname ||
@@ -361,6 +382,7 @@ const todayStr = new Date().toISOString().slice(0, 10);
             <BirthCitySearch
               value={birthCity}
               onChange={(next) => setBirthCity(next)}
+              onTextChange={(text) => setBirthCityText(text)} 
               placeholder="태어난 도시 검색"
             />
           </div>
