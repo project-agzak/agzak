@@ -367,7 +367,7 @@ const todayStr = new Date().toISOString().slice(0, 10);
         </div>
 
         {/* 하단 버튼 */}
-        <div className="mt-12 flex justify-center pb-15">
+        <div className="mt-20 flex justify-center pb-15">
           <Button_L
             label="운세 카드 확인"
             width={260}
