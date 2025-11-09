@@ -45,20 +45,6 @@ export function useOvenGame() {
       try {
         setInitLoading(true);
         setInitError(null);
-        
-        // iOS 환경 감지 및 로깅
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-        const userAgent = navigator.userAgent;
-        const localStorageAvailable = (() => {
-          try {
-            const test = '__localStorage_test__';
-            localStorage.setItem(test, test);
-            localStorage.removeItem(test);
-            return true;
-          } catch {
-            return false;
-          }
-        })();
                 
         // 먼저 오늘의 할당량을 체크
         const quotaRes = await GameAPI.getToday();
@@ -72,7 +58,19 @@ export function useOvenGame() {
           return;
         }
 
-        const res = await GameAPI.startSession();        
+        const res = await GameAPI.startSession();
+        console.log("[ENFORCE_INIT] startSession 응답:", {
+          ok: res.ok,
+          ...(res.ok
+            ? { hasData: !!res.data }
+            : {
+                error: res.error,
+                status: res.error.status,
+                code: res.error.code,
+                message: res.error.message,
+              }),
+        });
+        
         if (res.ok) {
           trackEvent("game_session_start", {
             session_no: res.data.sessionNo,

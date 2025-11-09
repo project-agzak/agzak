@@ -42,7 +42,6 @@ async function request<T>(config: AxiosRequestConfig): Promise<ApiResponse<T>> {
 
      const url = typeof config.url === "string" ? config.url : "";
     const isAuthRequest = url.startsWith("/auth/");
-    const isGameRequest = url.startsWith("/game/");
 
 if (!isAuthRequest && accessToken) {
       // 토큰 만료 체크 (프론트 기준)
