@@ -15,6 +15,7 @@ import type { GuestFortuneReq } from "@/lib/fortuneAPI"
 import FortuneLoading from "@/components/templates/FortuneLoading";
 import { AuthAPI } from "@/lib/AuthAPI";
 import { useAuthStore } from "@/store/useAuthStore";
+import { SIMPLE_REGIONS } from "@/constants/regions"; 
 
 export default function FortunePage() {
   const navigate = useNavigate();
@@ -28,6 +29,7 @@ export default function FortunePage() {
   const [unknownTime, setUnknownTime] = useState(false);
   const [gender, setGender] = useState<"male" | "female" | null>(null);
   const [birthCity, setBirthCity] = useState<BirthCity | null>(null);
+const [birthCityText, setBirthCityText] = useState("");
 
    const [submitting,setSubmitting] = useState(false);
 const todayStr = new Date().toISOString().slice(0, 10); 
@@ -84,10 +86,61 @@ const todayStr = new Date().toISOString().slice(0, 10);
     return;
   }
 
-  // 5) 태어난 도시
-  if (!birthCity) {
-    alert("태어난 도시를 선택해주세요.");
+
+    // ---------------------------
+    // 5) 태어난 도시 최종 검증
+    // ---------------------------
+    const normalize = (s: string) =>
+  s.replace(/\s+/g, " ").trim().toLowerCase();
+
+     if (!birthCityText.trim()) {
+    alert("태어난 도시를 입력해주세요.");
     return;
+  }
+
+  let finalBirthCity = birthCity;
+
+  const inputNorm = normalize(birthCityText);
+
+  if (finalBirthCity) {
+    // 이미 선택된 값이 있는데, 인풋 텍스트랑 다른 경우
+    const stateNorm = normalize(finalBirthCity.address);
+
+    if (stateNorm !== inputNorm) {
+      // 인풋 텍스트 기준으로 다시 SIMPLE_REGIONS에서 찾아보기
+      const matched = SIMPLE_REGIONS.find(
+        (r) => normalize(r.label) === inputNorm
+      );
+
+      if (!matched) {
+        alert("태어난 도시는 검색 후 목록에서 선택해 주세요.");
+        return;
+      }
+
+      finalBirthCity = {
+        sido: matched.sido,
+        sgg: matched.sgg,
+        address: matched.label,
+      };
+      setBirthCity(finalBirthCity);
+    }
+  } else {
+    // birthCity가 아직 없는 상태인데 텍스트만 있는 경우 → 텍스트로 매칭 시도
+    const matched = SIMPLE_REGIONS.find(
+      (r) => normalize(r.label) === inputNorm
+    );
+
+    if (!matched) {
+      alert("태어난 도시는 검색 후 목록에서 선택해 주세요.");
+      return;
+    }
+
+    finalBirthCity = {
+      sido: matched.sido,
+      sgg: matched.sgg,
+      address: matched.label,
+    };
+    setBirthCity(finalBirthCity);
   }
   // 모든 필드 확인
     if (
@@ -108,14 +161,19 @@ const todayStr = new Date().toISOString().slice(0, 10);
     try {
        setSubmitting(true);
 
+       if (!finalBirthCity) {
+  alert("태어난 도시를 다시 선택해 주세요.");
+  return;
+}
+
         const payload: GuestFortuneReq = {
       nickname: nickname.trim(),
       gender: gender.toUpperCase() as GuestFortuneReq["gender"], // "MALE" | "FEMALE"
       birthDate,
       birthTime,
-      birthCity: birthCity.sgg
-        ? `${birthCity.sido} ${birthCity.sgg}`
-        : birthCity.sido,
+      birthCity: finalBirthCity.sgg
+    ? `${finalBirthCity.sido} ${finalBirthCity.sgg}`
+    : finalBirthCity.sido,
     };
 
     
@@ -361,13 +419,14 @@ const todayStr = new Date().toISOString().slice(0, 10);
             <BirthCitySearch
               value={birthCity}
               onChange={(next) => setBirthCity(next)}
+              onTextChange={(text) => setBirthCityText(text)} 
               placeholder="태어난 도시 검색"
             />
           </div>
         </div>
 
         {/* 하단 버튼 */}
-        <div className="mt-20 flex justify-center pb-15">
+        <div className="mt-30 flex justify-center pb-15">
           <Button_L
             label="운세 카드 확인"
             width={260}
