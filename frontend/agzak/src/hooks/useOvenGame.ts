@@ -59,23 +59,9 @@ export function useOvenGame() {
             return false;
           }
         })();
-        
-        console.log("[ENFORCE_INIT] 초기화 시작", {
-          isIOS,
-          userAgent,
-          localStorageAvailable,
-          timestamp: new Date().toISOString(),
-        });
-        
+                
         // 먼저 오늘의 할당량을 체크
         const quotaRes = await GameAPI.getToday();
-        console.log("[ENFORCE_INIT] getToday 응답:", {
-          ok: quotaRes.ok,
-          ...(quotaRes.ok
-            ? { data: { cap: quotaRes.data.cap, used: quotaRes.data.used } }
-            : { error: quotaRes.error }),
-        });
-        
         if (quotaRes.ok && quotaRes.data.cap === quotaRes.data.used) {
           setBlocked("LIMIT");
           refresh();
@@ -86,19 +72,7 @@ export function useOvenGame() {
           return;
         }
 
-        const res = await GameAPI.startSession();
-        console.log("[ENFORCE_INIT] startSession 응답:", {
-          ok: res.ok,
-          ...(res.ok
-            ? { hasData: !!res.data }
-            : {
-                error: res.error,
-                status: res.error.status,
-                code: res.error.code,
-                message: res.error.message,
-              }),
-        });
-        
+        const res = await GameAPI.startSession();        
         if (res.ok) {
           trackEvent("game_session_start", {
             session_no: res.data.sessionNo,
