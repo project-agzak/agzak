@@ -2,6 +2,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
 
 import { Button_L } from "@/components/atoms/Button_L"
 import { OvenCookButton } from "@/components/atoms/OvenCookButton"
@@ -20,12 +21,21 @@ export default function EnforcePage() {
   const [helpOpen, setHelpOpen] = useState(false)
   const [shakeKey, setShakeKey] = useState(0)
   const [view, setView] = useState<"game" | "loading" | "result">("game")
+  const navigate = useNavigate()
 
   const game = useOvenGame()
 
   // cap/remaining을 스토어에서 읽고, 마운트 시 최신화
   const { quota, loading: quotaLoading, error: quotaError, refresh } = useSessionQuotaStore()
   useEffect(() => { refresh() }, [refresh])
+
+  // 에러 발생 시 안전하게 홈으로 리디렉션
+  useEffect(() => {
+    if (game.initError) {
+      console.error("[ENFORCE] 초기화 에러 감지, 홈으로 리디렉션:", game.initError)
+      navigate("/", { replace: true })
+    }
+  }, [game.initError, navigate])
 
   if (game.initLoading) {
     return (
