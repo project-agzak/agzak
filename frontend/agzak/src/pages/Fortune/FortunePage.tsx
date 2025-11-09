@@ -1,5 +1,5 @@
 // src/pages/Fortune/FortunePage.tsx
-import { useState } from "react";
+import {  useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import FullnameLogo from "@/assets/Background/agzak-fullname.svg";
@@ -20,7 +20,7 @@ export default function FortunePage() {
   const navigate = useNavigate();
   const fetchGuest = useFortuneStore((s) => s.fetchGuest);
  const { setTokens } = useAuthStore();
-
+  const [showGuide, setShowGuide] = useState(false);
   const [nickname, setNickname] = useState("");
   const [birthDate, setBirthDate] = useState<string>("");
   const [hour, setHour] = useState<string | null>(null);
@@ -104,6 +104,7 @@ const todayStr = new Date().toISOString().slice(0, 10);
  const kakaoTicket = sessionStorage.getItem("kakao_ticket");
     const userInfoStr = localStorage.getItem("userId");
 
+    
     try {
        setSubmitting(true);
 
@@ -206,7 +207,16 @@ const todayStr = new Date().toISOString().slice(0, 10);
   };
 
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
 
+    const hasUserId = !!localStorage.getItem("userId");
+    const hasKakaoTicket = !!sessionStorage.getItem("kakao_ticket");
+
+    //  userId 또는 kakao_ticket이 있으면 안내문 숨김
+   setShowGuide(hasUserId || hasKakaoTicket);
+  }, []);
+  
    if (submitting) {
     return (
       <main className="min-h-screen py-4">
@@ -221,14 +231,17 @@ const todayStr = new Date().toISOString().slice(0, 10);
   return (
     <main className="relative z-10 p-4 min-h-screen">
 
-      
-      {/* 안내 문구 */}
-       <p className="font-galmuri text-[#121212] text-center text-lg font-extrabold">
-    추가 정보 입력을 완료하고
-  </p>
-  <p className="font-galmuri text-[#121212] text-center text-lg font-extrabold">
-    회원가입을 마무리하세요 ✨
-  </p>
+     {/* 안내 문구 */}
+    {showGuide && (
+      <div className="mt-3 flex flex-col items-center pb-4">
+        <p className="font-galmuri text-[#121212] text-center text-lg font-extrabold">
+          추가 정보 입력을 완료하고
+        </p>
+        <p className="font-galmuri text-[#121212] text-center text-lg font-extrabold">
+          회원가입을 마무리하세요 ✨
+        </p>
+      </div>
+    )}
 
 
       {/* 중간 이미지 */}
