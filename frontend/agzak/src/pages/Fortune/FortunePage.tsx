@@ -14,11 +14,12 @@ import { useFortuneStore } from "@/store/useFortuneStore";
 import type { GuestFortuneReq } from "@/lib/fortuneAPI"
 import FortuneLoading from "@/components/templates/FortuneLoading";
 import { AuthAPI } from "@/lib/AuthAPI";
+import { useAuthStore } from "@/store/useAuthStore";
 
 export default function FortunePage() {
   const navigate = useNavigate();
   const fetchGuest = useFortuneStore((s) => s.fetchGuest);
-
+ const { setTokens } = useAuthStore();
 
   const [nickname, setNickname] = useState("");
   const [birthDate, setBirthDate] = useState<string>("");
@@ -116,6 +117,7 @@ const todayStr = new Date().toISOString().slice(0, 10);
         : birthCity.sido,
     };
 
+    
     // 1) 카카오 회원가입 완료
     
          if (kakaoTicket) {
@@ -133,9 +135,9 @@ const todayStr = new Date().toISOString().slice(0, 10);
           alert(res.error?.message ?? "카카오 회원가입 중 오류가 발생했습니다.");
           return;
         }
- //const { accessToken, refreshToken, expiresInSeconds } = res.data;
+ const { accessToken, refreshToken, expiresInSeconds } = res.data;
 
-      //setTokens(accessToken, refreshToken, expiresInSeconds);
+      setTokens(accessToken, refreshToken, expiresInSeconds);
 
   //  if (accessToken && refreshToken && expiresInSeconds) {
   //         localStorage.setItem("access_token", accessToken);
@@ -152,9 +154,10 @@ const todayStr = new Date().toISOString().slice(0, 10);
         sessionStorage.removeItem("kakao_suggestedNickname");
 
 
-  await fetchGuest(payload); 
+ await fetchGuest(payload);
       //  게스트 운세를 store를 통해 호출(= POST /fortune/guest)
       // await fetchGuest(payload);
+      // navigate("/fortune/result", { state: { fromSignupOrKakao: false } });
         navigate("/fortune/result");
         return;
       }
@@ -217,8 +220,19 @@ const todayStr = new Date().toISOString().slice(0, 10);
 
   return (
     <main className="relative z-10 p-4 min-h-screen">
+
+      
+      {/* 안내 문구 */}
+       <p className="font-galmuri text-[#121212] text-center text-lg font-extrabold">
+    추가 정보 입력을 완료하고
+  </p>
+  <p className="font-galmuri text-[#121212] text-center text-lg font-extrabold">
+    회원가입을 마무리하세요 ✨
+  </p>
+
+
       {/* 중간 이미지 */}
-      <div className="mt-1 flex justify-center bg-gradient-to-b from-[#fff8e7] via-[#121212] to-[#fff8e7] py-10">
+      <div className="mt-5 flex justify-center bg-gradient-to-b from-[#fff8e7] via-[#121212] to-[#fff8e7] py-10">
         <MidImages34 itemWidth={300} whiteBg />
       </div>
 
