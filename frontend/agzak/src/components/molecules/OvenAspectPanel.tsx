@@ -60,8 +60,6 @@ export function OvenAspectPanel({
             src={misfortune}
             alt="액운 상승"
             className="w-full h-full object-contain pointer-events-none select-none"
-            onLoad={() => console.log("[IMG_OK] oven-misfortune", misfortune)}
-            onError={(e) => console.log("[IMG_ERR] oven-misfortune", e.currentTarget.src)}
           />
         </button>
         <div className="mt-1 text-xs font-galmuri font-bold text-[#1f1f1f]">
@@ -113,8 +111,6 @@ function AspectBtn({
           src={img}
           alt={label}
           className="w-full h-full object-contain pointer-events-none select-none"
-          onLoad={() => console.log("[IMG_OK] oven-aspect", label, img)}
-          onError={(e) => console.log("[IMG_ERR] oven-aspect", label, e.currentTarget.src)}
         />
       </button>
       <div className="mt-1 text-xs font-galmuri font-bold text-[#121212]">

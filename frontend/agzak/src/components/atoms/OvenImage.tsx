@@ -35,8 +35,6 @@ export default function OvenImage({
         className={`w-[280px] h-auto select-none pointer-events-none ${
           isShaking ? "animate-shake" : ""
         }`}
-        onLoad={() => console.log("[IMG_OK] oven-main", oven)}
-        onError={(e) => console.log("[IMG_ERR] oven-main", e.currentTarget.src)}
         draggable={false}
       />
     </div>
