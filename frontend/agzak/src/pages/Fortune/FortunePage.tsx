@@ -14,12 +14,11 @@ import { useFortuneStore } from "@/store/useFortuneStore";
 import type { GuestFortuneReq } from "@/lib/fortuneAPI"
 import FortuneLoading from "@/components/templates/FortuneLoading";
 import { AuthAPI } from "@/lib/AuthAPI";
-import { useAuthStore } from "@/store/useAuthStore";
 
 export default function FortunePage() {
   const navigate = useNavigate();
   const fetchGuest = useFortuneStore((s) => s.fetchGuest);
- const { setTokens } = useAuthStore();
+
 
   const [nickname, setNickname] = useState("");
   const [birthDate, setBirthDate] = useState<string>("");
