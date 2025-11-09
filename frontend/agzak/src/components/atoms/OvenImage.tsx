@@ -1,9 +1,9 @@
 // src/components/atoms/OvenImage.tsx
 "use client"
 
-import ovenFail from "@/assets/Game/Oven/oven-fail.webp"
-import ovenIdle from "@/assets/Game/Oven/oven-idle.webp"
-import ovenSuccess from "@/assets/Game/Oven/oven-success.webp"
+import ovenFail from "@/assets/Game/oven-fail.webp"
+import ovenIdle from "@/assets/Game/oven-idle.webp"
+import ovenSuccess from "@/assets/Game/oven-success.webp"
 import { useEffect, useState } from "react"
 
 export default function OvenImage({
@@ -35,6 +35,8 @@ export default function OvenImage({
         className={`w-[280px] h-auto select-none pointer-events-none ${
           isShaking ? "animate-shake" : ""
         }`}
+        onLoad={() => console.log("[IMG_OK] oven-main", oven)}
+        onError={(e) => console.log("[IMG_ERR] oven-main", e.currentTarget.src)}
         draggable={false}
       />
     </div>
