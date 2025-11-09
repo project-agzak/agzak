@@ -76,7 +76,8 @@ export function BirthCitySearch({
     setActiveIdx(filtered.length ? 0 : -1);
   };
  const VISIBLE_ROWS = 4;
-  const ROW_HEIGHT = 25; 
+  const ROW_HEIGHT = 30
+; 
 
     const dropdownMaxHeight = maxListHeight && maxListHeight > 0
     ? maxListHeight                 // prop으로 넘기면 그 값 사용
