@@ -109,7 +109,7 @@ export default function HomePage() {
                   className="absolute inset-0 w-full h-full object-fill pointer-events-none select-none"
                 />
                 <p className="absolute inset-0 flex items-center justify-center text-center font-galmuri-condensed pl-4">
-                  로그인 후<br />운세를 확인해보세요
+                  로그인 후<br />운세를 강화해보세요.
                 </p>
               </div>
             )}
