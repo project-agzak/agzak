@@ -80,6 +80,16 @@ export default function FortuneWebtoonPage() {
       <div className="mt-5 flex justify-center bg-gradient-to-b from-[#fff8e7] via-[#121212] to-[#fff8e7] py-10">
         <MidImages34 itemWidth={300} whiteBg />
       </div>
+
+        {/* 하단 버튼 */}
+      <div className="mt-15 flex justify-center pb-15">
+        <Button_L
+          label="운세 카드 확인"
+          width={260}
+          onClick={handleNext}
+        />
+      </div>
+
     </main>
   );
 }
