@@ -44,6 +44,6 @@ public class GuestFortuneService {
     }
 
     private String generateCacheKey(BirthDataInput input, String city) {
-        return "getFortuneScores:" + input.birthDate() + "T" + input.birthTime() + "::" + city;
+        return "guest:" + input.birthDate() + "T" + input.birthTime() + "::" + city;
     }
 }
