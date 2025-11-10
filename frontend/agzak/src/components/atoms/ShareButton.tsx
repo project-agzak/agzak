@@ -18,7 +18,7 @@ export default function ShareButton({
   label = "공유하기",
   width = 260,
   title = "아그작",
-  text = "아그작에서 오늘의 운세를 확인해보세요!",
+  text = "오늘의 운세를 확인하고 강화 해보세요. 점성술 기반 운세 + 쿠키 강화 게임!",
   url = typeof window !== "undefined" ? window.location.href : "",
   files,
   onShared,

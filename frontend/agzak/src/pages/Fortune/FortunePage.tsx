@@ -8,7 +8,7 @@ import { Input } from "@/components/atoms/Input";
 import { Button_L } from "@/components/atoms/Button_L";
 import { TimeDropDown } from "@/components/atoms/TimeDropDown";
 import { BirthCitySearch, type BirthCity } from "@/components/atoms/BirthCitySearch";
-import { MidImages34 } from "@/components/templates/MidImages34";
+
 import { DropDown } from "@/components/atoms/DropDown";
 import { useFortuneStore } from "@/store/useFortuneStore";
 import type { GuestFortuneReq } from "@/lib/fortuneAPI"
@@ -217,7 +217,7 @@ const todayStr = new Date().toISOString().slice(0, 10);
       //  게스트 운세를 store를 통해 호출(= POST /fortune/guest)
       // await fetchGuest(payload);
       // navigate("/fortune/result", { state: { fromSignupOrKakao: false } });
-        navigate("/fortune/result");
+        navigate("/fortune/webtoon");
         return;
       }
 
@@ -248,13 +248,13 @@ const todayStr = new Date().toISOString().slice(0, 10);
         localStorage.removeItem("userId");
 
        await fetchGuest(payload);
-        navigate("/fortune/result");
+        navigate("/fortune/webtoon");
         return;
       }
 
       // 3) 위 둘 다 없으면 → 순수 게스트 운세
        await fetchGuest(payload);
-      navigate("/fortune/result");
+      navigate("/fortune/webtoon");
     } catch (e) {
       //console.error(e);
       alert("운세 계산 중 오류가 발생했습니다.");
@@ -302,13 +302,10 @@ const todayStr = new Date().toISOString().slice(0, 10);
     )}
 
 
-      {/* 중간 이미지 */}
-      <div className="mt-5 flex justify-center bg-gradient-to-b from-[#fff8e7] via-[#121212] to-[#fff8e7] py-10">
-        <MidImages34 itemWidth={300} whiteBg />
-      </div>
+  
 
       {/* 상단 로고 */}
-      <div className="mt-5 flex flex-col items-center pb-10">
+      <div className="mt-0 flex flex-col items-center pb-10">
         <img src={FortuneCookie} alt="FortuneCookie" />
         <img src={FullnameLogo} alt="Agzak Fullname" />
       </div>
@@ -428,7 +425,7 @@ const todayStr = new Date().toISOString().slice(0, 10);
         {/* 하단 버튼 */}
         <div className="mt-30 flex justify-center pb-15">
           <Button_L
-            label="운세 카드 확인"
+            label="다음 단계로"
             width={260}
             onClick={handleFortuneSubmit}
           />

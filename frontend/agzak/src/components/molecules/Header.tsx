@@ -227,7 +227,7 @@ function SidebarContent({ isLoggedIn, nickname, onLogout }: SidebarContentProps)
 
       {/* 메뉴 */}
        {/*  운세 보기 수정됨 */}
-      <nav className="ml-10 font-bitbit">
+      <nav className="ml-10 font-bitbit flex-1 flex flex-col">
         <SheetClose asChild>
           <button
             onClick={handleFortuneClick}
@@ -274,15 +274,26 @@ function SidebarContent({ isLoggedIn, nickname, onLogout }: SidebarContentProps)
           </a>
         </SheetClose>
 
-        <SheetClose asChild>
-          <button
-            onClick={handleInstall}
-            disabled={!deferred}   
-            className="flex w-full items-center gap-2 rounded-md px-0 py-2 hover:bg-zinc-100 active:bg-zinc-200 transition-colors text-left cursor-pointer"
-          >
-            <span>앱 설치하기</span>
-          </button>
-        </SheetClose>
+        <div className="mt-auto flex flex-col">
+          <SheetClose asChild>
+            <button
+              onClick={handleInstall}
+              disabled={!deferred}
+              className="flex w-full items-center gap-2 rounded-md px-0 py-2 hover:bg-zinc-100 active:bg-zinc-200 transition-colors text-left cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <span>앱 설치하기</span>
+            </button>
+          </SheetClose>
+
+          <SheetClose asChild>
+            <a
+              href="https://forms.gle/VBKJ3K4wdY7RWfyG6"
+              className="flex items-center gap-2 rounded-md px-0 py-2 hover:bg-zinc-100 active:bg-zinc-200 transition-colors"
+            >
+              <span>피드백하기</span>
+            </a>
+          </SheetClose>
+        </div>
       </nav>
 
       {/* 하단 버전 표시 */}
