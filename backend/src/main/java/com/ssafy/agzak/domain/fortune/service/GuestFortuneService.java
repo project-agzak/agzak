@@ -8,7 +8,6 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 
-// GuestFortuneService.java (신규 파일)
 @Service
 @RequiredArgsConstructor
 @Slf4j
