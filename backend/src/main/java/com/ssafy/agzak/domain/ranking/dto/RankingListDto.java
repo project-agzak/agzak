@@ -1,6 +1,7 @@
 package com.ssafy.agzak.domain.ranking.dto;
 
 import lombok.Builder;
+
 import java.time.LocalDate;
 import java.util.List;
 
