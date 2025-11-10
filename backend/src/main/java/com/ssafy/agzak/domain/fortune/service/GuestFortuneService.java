@@ -38,7 +38,7 @@ public class GuestFortuneService {
 
         if (cache != null) {
             cache.put(cacheKey, finalFortuneResponse);
-            log.info("GUEST Cache WRITE from AI. key: {}", cacheKey);
+            log.debug("GUEST Cache WRITE from AI. key: {}", cacheKey);
         }
 
         return finalFortuneResponse;
