@@ -74,6 +74,10 @@ dependencies {
     // ── Cache
     implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
 
+    // retry
+    implementation 'org.springframework.retry:spring-retry'
+    implementation 'org.springframework:spring-aspects'
+
 
     // ── Dev only
     developmentOnly 'org.springframework.boot:spring-boot-devtools'

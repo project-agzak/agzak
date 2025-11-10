@@ -5,18 +5,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssafy.agzak.domain.fortune.dto.request.BirthDataInput;
 import com.ssafy.agzak.domain.fortune.dto.response.*;
 import com.ssafy.agzak.domain.fortune.entity.FortuneType;
-import com.ssafy.agzak.domain.fortune.repository.FortuneAspectRepository;
-import com.ssafy.agzak.domain.fortune.repository.FortuneRepository;
 import com.ssafy.agzak.domain.fortune.repository.FortuneTypeRepository;
-import com.ssafy.agzak.domain.guest.support.GuestProfileStore;
-import com.ssafy.agzak.domain.member.repository.MemberRepository;
-import com.ssafy.agzak.domain.ranking.service.RankingService;
-import com.ssafy.agzak.global.time.DateProvider;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.annotation.Cacheable;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Recover;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -71,6 +67,7 @@ public class FortuneAiService {
         - total_score는 나머지 영역의 합으로 줘
         - [매우 중요] 각 항목의 상한선은 250이다
         - [매우 중요] 각 항목 점수는 겹치지 않도록 한다.
+        - [매우 중요] total score는 최소 500점이다. 
         필수 출력 형식(키/타입 고정):
         {
           "total_score": number,
@@ -107,18 +104,14 @@ public class FortuneAiService {
 
       - 성취운: (규칙 전면 재조정: '높은 성취' 조건 강화)
         - **(핵심 정의):** '성취'는 '긍정적인 사회적 결과'입니다. '성과 없는 바쁨'은 명백한 감점 요인입니다.
-       \s
         - **(1순위 - 'Veto' 감점 규칙):** AI는 점수 계산 전 **이 규칙을 최우선으로 확인합니다.** 만약 오늘 **트랜싯 화성(Mars) 또는 트랜싯 토성(Saturn)**이 `Natal 태양, Natal 화성, 또는 MC`와 **부정적 어스펙트(Square, Opposition)**를 맺는다면, 이는 **'성과를 직접적으로 방해'**하는 신호입니다.\s
             - 이 경우, **다른 긍정적 신호(예: 목성, 금성)가 있더라도, 이 부정적 신호가 점수 계산을 '지배(dominate)'합니다.** - 이 Veto 신호는 다른 긍정 요소를 **대부분 상쇄(offset)시키며**, 성취운 점수가 '보통'(125점) 이하가 되도록 **아주 강력하게 감점**합니다.
-       \s
         - **(2순위 - '높은 성과' 가점 / 조건 강화):** '매우 높은' 성취(예: 190점 이상)는 **'결정적인 긍정 신호'**가 있을 때만 발생합니다.
             - 이는 **트랜싯 목성(Jupiter) 또는 트랜싯 태양(Sun)**이 `Natal 태양, MC`와 **매우 정확한(exact) 긍정 어스펙트(Trine, Sextile)**를 맺고, **동시에 1순위 Veto 감점 요인이 없을 때**만 해당됩니다.
-       \s
         - **(3순위 - '일반 성과' 가점 / 화성 격하):** `트랜싯 화성(Mars)`의 **긍정적 어스펙트(Trine, Sextile)**는 '순조로운 업무'나 '추진력'을 의미하지만, 그 자체만으로는 '높은 성과'를 만들지 못합니다.
             - 이는 점수를 '보통' 이상(예: 140~170점)으로 올려주는 **'보조 가점'** 요인으로만 사용합니다. (1순위 Veto 감점 요인이 없을 때)
-       \s
         - **(4순위 - 영향 제한):**
-            - **달(Moon):** '일일 기분'일 뿐 '성과'가 아니므로, 점수에 소폭의 변동성(±10~20점)만 담당합니다.
+            - **달(Moon):** '일일 기분'일 뿐 '성과'가 아니므로, 점수에 소폭의 변동성(±5~10점)만 담당합니다.
 
       - 총운세: 긍/부정 어스펙트의 개수·강도 종합. (위의 1.5배 감점 가중치 및 달 가중치 룰을 동일하게 적용)
             
@@ -131,7 +124,7 @@ public class FortuneAiService {
                       - **하우스** (예: 5하우스, 10하우스)
                       - **기타 전문 용어** (예: Natal, Transit, 상승점, 중천점)
                    \s
-                    - 점성술 데이터를 **"해석"**하여, 실제 생활과 밀접한 조언으로 풀어서 설명해야 합니다.
+                    - 점성술 데이터를 **"해석"**하여, 실제 생활과 밀접한 조언으로 풀어서 설명해야 합니다. 단, 3문장으로 요약해서 설명하세요.
                    \s
                     - **(절대 금지 - 나쁜 예):** "Venus가 Natal Mars와 Square 어스펙트를 맺어 연애운이 나쁩니다."
                     - **(권장 - 좋은 예):** "오늘은 연인과 사소한 오해가 생기기 쉬운 날입니다. 말을 한 번 더 생각하고 부드럽게 표현하려는 노력이 필요합니다."
@@ -153,10 +146,11 @@ public class FortuneAiService {
                 })
                 .build();
     }
-    @Cacheable(
-            value = "fortuneCache",
-            key = "#root.methodName + ':' + #input.birthDate + 'T' + #input.birthTime + '::' + #city",
-            cacheManager = "cacheManager"
+
+    @Retryable(
+            value = {IllegalStateException.class},
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 1000)
     )
     public FinalFortuneResponse getFortuneScores(BirthDataInput input, String city) {
         AiPromptData aiData = calculationService.generateAiPromptData(input);
@@ -212,7 +206,7 @@ public class FortuneAiService {
         if (innerJsonString == null) {
             log.error("AI response structure is invalid or content string is missing!");
             log.error("Received Full Response: {}", fullResponseNode != null ? fullResponseNode.toString() : "null");
-            return new FinalFortuneResponse(null,null);
+            throw new IllegalStateException("AI empty content");
         }
 
         FortuneScoreResponse scores;
@@ -223,8 +217,14 @@ public class FortuneAiService {
 
         } catch (IOException e) {
             log.error("내부 JSON 문자열 파싱 실패: {}", e.getMessage());
-            return new FinalFortuneResponse(null,null);
+            throw new IllegalStateException("AI JSON parsing failed: Invalid JSON format", e);
         }
+    }
+
+    @Recover
+    public FinalFortuneResponse recover(IllegalStateException e, BirthDataInput input, String city) {
+        log.error("AI 운세 생성 최종 실패 (3회 재시도 모두 실패): {}", e.getMessage());
+        throw new IllegalStateException("운세 생성 서비스에 일시적인 문제가 발생했습니다.", e);
     }
 
     private String formatTransitPlanets(List<TransitPlanetInfo> planets) {
