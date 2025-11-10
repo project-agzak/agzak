@@ -10,6 +10,7 @@ import { useSessionQuotaStore } from "@/store/sessionQuotaStore";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useFortuneStore } from "@/store/useFortuneStore";
 import { nanoid } from "nanoid";
+import BubbleImg from "@/assets/ui/BubbleMain.svg"
 
 export default function HomePage() {
   const shareUrl = "https://www.agzak.co.kr/";
@@ -80,23 +81,39 @@ export default function HomePage() {
       </div>
 
       <div className="flex flex-row justify-center items-center">
-        <img src={ Pig } alt="메인 돼지" className="w-1/2 max-w-[220px] h-auto"/>
-        <div className="flex flex-col items-center pr-5">
-          <p className="font-galmuri">현재 총운</p>
-          <p className="font-bitbit-large">
-            {errorFortune
-              ? "—"
-              : totalScore ?? (loadingFortune ? "..." : "—")}{" "}
-            점
-          </p>
-          <p className="flex flex-col items-center font-galmuri-xsmall pt-0.5">
-            강화 잔여 횟수: {quotaError ? "—" : (quotaLoading ? "..." : remainingSessions)}회 <br />
-            {quota && (
-              <span className="text-gray-500">
-                (최대 {quota.cap}회)
-              </span>
+        <img
+          src={Pig}
+          alt="메인 돼지"
+          className="w-1/2 max-w-[220px] h-auto"
+        />
+
+        <div className="pr-5">
+          <div className="relative h-[160px] flex items-center justify-center">
+            {isLoggedIn ? (
+              <div className="flex flex-col items-center text-center">
+                <p className="font-galmuri">현재 총운</p>
+                <p className="font-bitbit-large">
+                  {errorFortune ? "—" : totalScore ?? (loadingFortune ? "..." : "—")} 점
+                </p>
+                <p className="flex flex-col items-center font-galmuri-xsmall pt-0.5">
+                  강화 잔여 횟수: {quotaError ? "—" : (quotaLoading ? "..." : remainingSessions)}회 <br />
+                  {quota && <span className="text-gray-500">(최대 {quota.cap}회)</span>}
+                </p>
+              </div>
+            ) : (
+              <div className="relative w-[160px] h-[100px]">
+                <img
+                  src={BubbleImg}
+                  alt=""
+                  aria-hidden="true"
+                  className="absolute inset-0 w-full h-full object-fill pointer-events-none select-none"
+                />
+                <p className="absolute inset-0 flex items-center justify-center text-center font-galmuri-condensed pl-4">
+                  로그인 후<br />운세를 확인해보세요
+                </p>
+              </div>
             )}
-          </p>
+          </div>
         </div>
       </div>
       <div>
