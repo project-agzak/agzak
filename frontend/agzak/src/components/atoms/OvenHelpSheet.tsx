@@ -1,7 +1,7 @@
 // src/components/oven/OvenHelpSheet.tsx
 "use client"
 
-import helpCard from "@/assets/Game/oven-rule.svg"
+import helpCard from "@/assets/Game/oven-rule.webp"
 
 type Props = {
   open: boolean

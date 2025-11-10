@@ -1,3 +1,4 @@
+// src/pages/Fortune/FortuneResultPage.tsx
 import { useEffect } from "react";
 
 import { ExpandableFortune } from "@/components/molecules/ExpandableFortune";
@@ -85,13 +86,14 @@ export default function FortuneResultPage() {
 
   const shareUrl = "https://www.agzak.co.kr/";
 
-  // 🔥 로그인 유저일 때만 /fortune 호출
-  //   - 게스트는 FortunePage에서 이미 fetchGuest로 store 채워놓은 상태
-  useEffect(() => {
-    if (!isLoggedIn) return;
-    if (loadingFortune || totalScore != null) return;
-    fetchToday();
-  }, [isLoggedIn, loadingFortune, totalScore, fetchToday]);
+
+useEffect(() => {
+  if (!isLoggedIn) return;
+
+  // 로그인 유저면 무조건 오늘 운세 한 번 시도
+  fetchToday();
+
+}, [isLoggedIn, fetchToday]);
 
   // 🔥 단짝/천적: 추가 API 없이 goodWithId/badWithId로 바로 이미지 찾기
   const goodWithId = typeInfo?.goodWithId ?? null;
@@ -102,14 +104,17 @@ export default function FortuneResultPage() {
 
   return (
     <main className="relative z-10 p-4 min-h-screen">
-
-      <div className="flex justify-center pb-5">
+  <div className="flex flex-col justify-center items-center pb-5 gap-3">
+        <p className="text-gray-600 font-galmuri-condensed-small animate-bounce motion-reduce:animate-none">
+          카드를 클릭해 뒤집어 보세요!</p>
         <PureFlipImage
           className="w-64 aspect-[2/3] cursor-pointer"
           frontSrc={getFrontByTypeName(typeName)}
           backNode={<BackCard />}
         />
       </div>
+
+
 
       <div className="flex flex-col items-center">
         <p className="font-galmuri">오늘의 총운</p>
@@ -153,7 +158,7 @@ export default function FortuneResultPage() {
       </div>
 
       <div className="flex flex-col items-center pt-10">
-        <p className="font-galmuri pb-2">오늘의 단짝은?</p>
+        <p className="font-galmuri pb-2">오늘의 단짝 친구는?</p>
         <div className="flex justify-center w-full min-w-0">
           <img
             src={bestieSrc}
@@ -161,7 +166,7 @@ export default function FortuneResultPage() {
             className="w-[42%] max-w-[140px] h-auto object-contain min-w-0"
           />
         </div>
-        <p className="font-galmuri pb-2 pt-5">오늘의 천적은?</p>
+        <p className="font-galmuri pb-2 pt-5">오늘의 엇갈린 친구는?</p>
         <div className="flex justify-center w-full min-w-0">
           <img
             src={enemySrc}

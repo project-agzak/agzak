@@ -4,7 +4,7 @@
 /* 레이아웃 토큰 */
 :root {
   --app-width: 360px;
-  --bg-pattern: url('@/assets/Background/fortune-tile.png');
+  --bg-pattern: url("/assets/Background/fortune-tile.png");
   --fz-xsmall: 10pt;
   --fz-small: 12pt;
   --fz-medium: 16pt;

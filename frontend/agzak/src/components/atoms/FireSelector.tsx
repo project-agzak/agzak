@@ -1,9 +1,8 @@
 // src/components/atoms/FireSelector.tsx
 "use client"
 
+import fireKnob from "@/assets/Game/fire-button.svg"
 import type { OvenFireType } from "@/types/oven"
-import weakFlame from "@/assets/Game/weak-flame-px.svg"
-import strongFlame from "@/assets/Game/strong-flame-px.svg"
 
 type Props = {
   selected: OvenFireType
@@ -11,46 +10,56 @@ type Props = {
 }
 
 export function FireSelector({ selected, onChange }: Props) {
-  const btn =
-    "flex-1 h-9 rounded-xl border px-2 flex items-center justify-center gap-1 transition active:scale-[0.98]"
+  const current: OvenFireType = selected || "WEAK"
+  const isWeak = current === "WEAK"
+
+  const modeLabel = isWeak ? "약불" : "강불"
+  const probText = isWeak ? "성공 확률 +5%p" : "성공 확률 -5%p"
+  const gainText = isWeak ? "성공 시 +7" : "성공 시 +13"
+  const handleToggle = () => {
+    onChange(isWeak ? "STRONG" : "WEAK")
+  }
 
   return (
-    <div className="w-full max-w-[360px] mx-auto mt-1 mb-1 select-none">
-      <div className="flex gap-2">
-        <button
-          type="button"
-          onClick={() => onChange("WEAK")}
-          aria-pressed={selected === "WEAK"}
-          className={`${btn} ${
-            selected === "WEAK"
-              ? "border-amber-500 bg-amber-50"
-              : "border-gray-300 bg-white"
-          }`}
+    <div className="flex flex-row items-center max-w-[360px] mx-auto mb-1 select-none">
+      <button
+        type="button"
+        onClick={handleToggle}
+        aria-pressed={!isWeak}
+        className={[
+          "flex flex-col items-center gap-3 px-3 py-2 rounded-2xl transition-all",
+          "cursor-pointer",
+        ].join(" ")}
         >
-          <img src={weakFlame} alt="" className="w-4 h-4" aria-hidden />
-          <span className="font-galmuri !text-[15px] leading-none">약불</span>
-          <span className="font-galmuri !text-[16px] leading-none text-gray-600">(+5%p)</span>
-        </button>
+          <div className="flex flex-col items-center justify-center w-11 h-11 rounded-full">
+            <img
+              src={fireKnob}
+              alt={`${modeLabel} 선택`}
+              className={`w-15 h-15 transition-transform duration-200 ${
+                isWeak ? "-rotate-45" : "rotate-45"
+              }`}
+            />          
+          <div className="font-galmuri-small text-[14px]">
+            {modeLabel}
+          </div>
+          </div>
+      </button>
+        {/* 텍스트 블럭 */}
+        <div className="flex flex-col leading-tight text-center gap-2">
+          <span>
+          <div
+            className={`font-galmuri-xsmall text-[11px] ${
+              isWeak ? "text-amber-600" : "text-rose-600"
+            }`}
+          >
+            {probText}
+          <span className="font-galmuri-xsmall text-[10px] text-gray-500">
+            ({gainText})
+          </span>
+          </div>
 
-        <button
-          type="button"
-          onClick={() => onChange("STRONG")}
-          aria-pressed={selected === "STRONG"}
-          className={`${btn} ${
-            selected === "STRONG"
-              ? "border-rose-500 bg-rose-50"
-              : "border-gray-300 bg-white"
-          }`}
-        >
-          <img src={strongFlame} alt="" className="h-4 w-7" aria-hidden />
-          <span className="font-galmuri !text-[15px] leading-none">강불</span>
-          <span className="font-galmuri !text-[16px] leading-none text-gray-600">(-5%p)</span>
-        </button>
-      </div>
-      <p className="mt-1 font-galmuri !text-[13px] text-center text-gray-500">
-        선택한 불꽃이 이번 시도의 성공 확률에 반영됩니다.
-         약불 성공시 +7, 강불 성공시 +13
-      </p>
+          </span>
+        </div>
     </div>
   )
 }

@@ -1,9 +1,13 @@
+import { loadAnalytics } from "@/lib/analytics";
 import React, { Suspense } from "react";
 import ReactDOM from "react-dom/client";
 import { RouterProvider } from "react-router-dom";
 import "../pwa/registerSW";
 import "../styles/index.css";
 import { router } from "./router";
+
+const ENABLE_ANALYTICS = String(import.meta.env.VITE_ENABLE_ANALYTICS).toLowerCase() === "true";
+if (ENABLE_ANALYTICS) loadAnalytics();
 
 // 🔹 전역 window.Kakao 타입 선언
 declare global {

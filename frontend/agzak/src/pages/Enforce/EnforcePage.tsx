@@ -1,7 +1,8 @@
 // @/pages/Enforce/EnforcePage.tsx
 "use client"
 
-import { useEffect, useState } from "react" // ⬅️ useMemo 제거
+import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
 
 import { Button_L } from "@/components/atoms/Button_L"
 import { OvenCookButton } from "@/components/atoms/OvenCookButton"
@@ -13,16 +14,17 @@ import { OvenAspectPanel } from "@/components/molecules/OvenAspectPanel"
 import OvenLoading from "@/components/templates/OvenLoading"
 import OvenResult from "@/components/templates/OvenResult"
 
+import { FireSelector } from "@/components/atoms/FireSelector"
 import { useOvenGame } from "@/hooks/useOvenGame"
 import { useSessionQuotaStore } from "@/store/sessionQuotaStore"
 import type { OvenFireType } from "@/types/oven"
-import { FireSelector } from "@/components/atoms/FireSelector"
 
 export default function EnforcePage() {
   const [helpOpen, setHelpOpen] = useState(false)
   const [shakeKey, setShakeKey] = useState(0)
   const [view, setView] = useState<"game" | "loading" | "result">("game")
   const [fire, setFire] = useState<OvenFireType>("WEAK") // 강/약불 상태
+  const navigate = useNavigate()
 
   const game = useOvenGame()
   const { quota, loading: quotaLoading, error: quotaError, refresh } = useSessionQuotaStore()
@@ -33,6 +35,13 @@ export default function EnforcePage() {
   const base = Number(game.successProb) || 0
   const delta = fire === "WEAK" ? +5 : -5
   const displayProb = Math.min(100, Math.max(0, base + delta))
+  // 에러 발생 시 안전하게 홈으로 리디렉션
+  useEffect(() => {
+    if (game.initError) {
+      console.error("[ENFORCE] 초기화 에러 감지, 홈으로 리디렉션:", game.initError)
+      navigate("/", { replace: true })
+    }
+  }, [game.initError, navigate])
 
   if (game.initLoading) {
     return (
@@ -43,7 +52,6 @@ export default function EnforcePage() {
       </main>
     )
   }
-
   if (game.blocked === "LIMIT") {
     const capText =
       quotaError ? "일일 세션 한도" :
@@ -91,7 +99,7 @@ export default function EnforcePage() {
             <header className="text-center">
               <p className="font-bitbit-large">강화 쿠키 오븐</p>
               <p className="font-galmuri-small pt-2">
-                확률을 기반으로 <br />적합한 버튼을 눌러보자!
+                확률을 기반으로 <br />손잡이와 버튼을 눌러보자!
               </p>
             </header>
 

@@ -1,6 +1,7 @@
 // src/components/atoms/ShareButton.tsx
-import * as React from "react";
+import { trackError, trackEvent } from "@/lib/analytics";
 import "@/styles/components.css"; // Button_L와 동일한 CSS 사용 (btnL-*)
+import * as React from "react";
 
 type ShareButtonProps = {
   label?: string;          // 버튼 텍스트
@@ -37,10 +38,15 @@ export default function ShareButton({
   const shareOrCopy = async () => {
     if (busy) return; // 중복 클릭 방지
     setBusy(true);
+    const origin = url;
+    // 트래킹: 클릭
+    trackEvent("share_click", { origin });
+
     try {
       // 1) 파일까지 포함 가능한 경우
       if (canShareFiles) {
         await (navigator as any).share({ title, text, files });
+        trackEvent("share_success", { origin, method: "files" });
         onShared?.(); // ✅ 보상
         return;
       }
@@ -48,6 +54,7 @@ export default function ShareButton({
       // 2) 일반 네이티브 공유
       if (canNativeShare) {
         await (navigator as any).share({ title, text, url });
+        trackEvent("share_success", { origin, method: "native" });
         onShared?.(); // ✅ 보상
         return;
       }
@@ -56,6 +63,7 @@ export default function ShareButton({
       await navigator.clipboard.writeText(url);
       // 사용자 알림(선호에 따라 제거 가능)
       alert("이 브라우저는 시스템 공유를 지원하지 않아 링크를 복사했어요.");
+      trackEvent("share_success", { origin, method: "copy" });
       onShared?.(); // ✅ 폴백 성공도 보상
     } catch (err: any) {
       // 사용자가 네이티브 공유를 취소(Abort)한 경우엔 조용히 종료
@@ -65,11 +73,14 @@ export default function ShareButton({
       try {
         await navigator.clipboard.writeText(url);
         alert("공유 중 오류가 있어 링크를 복사했어요.");
+        trackEvent("share_success", { origin, method: "copy-fallback" });
         onShared?.(); // ✅ 폴백 성공 보상
-      } catch {
+        return;
+      } catch (err2: any) {
         // 정말 복사도 실패하면 사용자가 직접 복사하도록 안내
         // (prompt는 일부 환경에서 차단될 수 있음)
-        // 보상은 부여하지 않음
+        // 트래킹: 공유 실패
+        trackError("share_fail", err2?.message ?? err?.message ?? "unknown", { origin });
         prompt("공유가 지원되지 않아 아래 링크를 복사해 주세요:", url);
       }
     } finally {

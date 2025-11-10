@@ -1,7 +1,6 @@
 // src/pages/Fortune/FortunePage.tsx
-import { useState } from "react";
+import {  useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { api } from "@/lib/api";
 
 import FullnameLogo from "@/assets/Background/agzak-fullname.svg";
 import FortuneCookie from "@/assets/Gifs/FortuneCookie.gif";
@@ -13,13 +12,16 @@ import { MidImages34 } from "@/components/templates/MidImages34";
 import { DropDown } from "@/components/atoms/DropDown";
 import { useFortuneStore } from "@/store/useFortuneStore";
 import type { GuestFortuneReq } from "@/lib/fortuneAPI"
-
-
+import FortuneLoading from "@/components/templates/FortuneLoading";
+import { AuthAPI } from "@/lib/AuthAPI";
+import { useAuthStore } from "@/store/useAuthStore";
+import { SIMPLE_REGIONS } from "@/constants/regions"; 
 
 export default function FortunePage() {
   const navigate = useNavigate();
   const fetchGuest = useFortuneStore((s) => s.fetchGuest);
-
+ const { setTokens } = useAuthStore();
+  const [showGuide, setShowGuide] = useState(false);
   const [nickname, setNickname] = useState("");
   const [birthDate, setBirthDate] = useState<string>("");
   const [hour, setHour] = useState<string | null>(null);
@@ -27,13 +29,120 @@ export default function FortunePage() {
   const [unknownTime, setUnknownTime] = useState(false);
   const [gender, setGender] = useState<"male" | "female" | null>(null);
   const [birthCity, setBirthCity] = useState<BirthCity | null>(null);
+const [birthCityText, setBirthCityText] = useState("");
 
-    const handleFortuneSubmit = async () => {
-    const birthTime =
-      unknownTime || !hour || !minute
-        ? "00:00"
-        : `${hour.padStart(2, "0")}:${minute.padStart(2, "0")}`;
+   const [submitting,setSubmitting] = useState(false);
+const todayStr = new Date().toISOString().slice(0, 10); 
+   const handleFortuneSubmit = async () => {
+    
+      if (submitting) return; //  중복 클릭 방지
 
+  // 1) 닉네임
+  if (!nickname || nickname.trim().length === 0) {
+    alert("이름(닉네임)을 입력해주세요.");
+    return;
+  }
+  if (nickname.trim().length > 12) {
+    alert("닉네임은 12자 이내로 입력해주세요.");
+    return;
+  }
+
+  // 2) 성별
+  if (!gender) {
+    alert("성별을 선택해주세요.");
+    return;
+  }
+
+  // 3) 생년월일
+  if (!birthDate) {
+    alert("생년월일을 입력해주세요.");
+    return;
+  }
+
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(birthDate)) {
+    alert("생년월일은 YYYY-MM-DD 형식으로 입력해주세요. 예: 1999-08-15");
+    return;
+  }
+
+  const birth = new Date(birthDate);
+  const minDate = new Date("1900-01-01");
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  if (birth < minDate || birth > today) {
+    alert("생년월일은 1900-01-01부터 오늘까지 입력할 수 있어요.");
+    return;
+  }
+
+  // 4) 태어난 시간
+  const birthTime =
+    unknownTime || !hour || !minute
+      ? "00:00"
+      : `${hour.padStart(2, "0")}:${minute.padStart(2, "0")}`;
+
+  if (!unknownTime && (!hour || !minute)) {
+    alert("태어난 시간을 선택하거나 '시간 모름'에 체크해주세요.");
+    return;
+  }
+
+
+    // ---------------------------
+    // 5) 태어난 도시 최종 검증
+    // ---------------------------
+    const normalize = (s: string) =>
+  s.replace(/\s+/g, " ").trim().toLowerCase();
+
+     if (!birthCityText.trim()) {
+    alert("태어난 도시를 입력해주세요.");
+    return;
+  }
+
+  let finalBirthCity = birthCity;
+
+  const inputNorm = normalize(birthCityText);
+
+  if (finalBirthCity) {
+    // 이미 선택된 값이 있는데, 인풋 텍스트랑 다른 경우
+    const stateNorm = normalize(finalBirthCity.address);
+
+    if (stateNorm !== inputNorm) {
+      // 인풋 텍스트 기준으로 다시 SIMPLE_REGIONS에서 찾아보기
+      const matched = SIMPLE_REGIONS.find(
+        (r) => normalize(r.label) === inputNorm
+      );
+
+      if (!matched) {
+        alert("태어난 도시는 검색 후 목록에서 선택해 주세요.");
+        return;
+      }
+
+      finalBirthCity = {
+        sido: matched.sido,
+        sgg: matched.sgg,
+        address: matched.label,
+      };
+      setBirthCity(finalBirthCity);
+    }
+  } else {
+    // birthCity가 아직 없는 상태인데 텍스트만 있는 경우 → 텍스트로 매칭 시도
+    const matched = SIMPLE_REGIONS.find(
+      (r) => normalize(r.label) === inputNorm
+    );
+
+    if (!matched) {
+      alert("태어난 도시는 검색 후 목록에서 선택해 주세요.");
+      return;
+    }
+
+    finalBirthCity = {
+      sido: matched.sido,
+      sgg: matched.sgg,
+      address: matched.label,
+    };
+    setBirthCity(finalBirthCity);
+  }
+  // 모든 필드 확인
     if (
       !nickname ||
       !gender ||
@@ -45,69 +154,92 @@ export default function FortunePage() {
       return;
     }
 
-    const kakaoTicket = sessionStorage.getItem("kakao_ticket");
+ const kakaoTicket = sessionStorage.getItem("kakao_ticket");
     const userInfoStr = localStorage.getItem("userId");
 
+    
     try {
-      // 1) 카카오 추가정보 플로우
-      if (kakaoTicket) {
-        const res = await api.post<{
-          accessToken: string;
-          refreshToken: string;
-          expiresIn: number;
-        }>("/auth/kakao/complete", {
+       setSubmitting(true);
+
+       if (!finalBirthCity) {
+  alert("태어난 도시를 다시 선택해 주세요.");
+  return;
+}
+
+        const payload: GuestFortuneReq = {
+      nickname: nickname.trim(),
+      gender: gender.toUpperCase() as GuestFortuneReq["gender"], // "MALE" | "FEMALE"
+      birthDate,
+      birthTime,
+      birthCity: finalBirthCity.sgg
+    ? `${finalBirthCity.sido} ${finalBirthCity.sgg}`
+    : finalBirthCity.sido,
+    };
+
+    
+    // 1) 카카오 회원가입 완료
+    
+         if (kakaoTicket) {
+        const res = await AuthAPI.kakaoComplete({
           ticket: kakaoTicket,
           nickname,
-          gender: gender.toUpperCase(), // "MALE"/"FEMALE"
+          gender: gender.toUpperCase() as "MALE" | "FEMALE",
           birthDate,
           birthTime,
           birthCity: birthCity.address,
         });
 
         if (!res.ok || !res.data) {
-          console.error("카카오 회원가입(/auth/kakao/complete) 오류:", res.error);
+          //console.error("카카오 회원가입(/auth/kakao/complete) 오류:", res.error);
           alert(res.error?.message ?? "카카오 회원가입 중 오류가 발생했습니다.");
           return;
         }
+ const { accessToken, refreshToken, expiresInSeconds } = res.data;
 
-        const { accessToken, refreshToken, expiresIn } = res.data;
-        if (accessToken && refreshToken && expiresIn) {
-          localStorage.setItem("access_token", accessToken);
-          localStorage.setItem("refresh_token", refreshToken);
-          localStorage.setItem(
-            "access_token_expires_at",
-            String(Date.now() + expiresIn * 1000),
-          );
-        }
+      setTokens(accessToken, refreshToken, expiresInSeconds);
+
+  //  if (accessToken && refreshToken && expiresInSeconds) {
+  //         localStorage.setItem("access_token", accessToken);
+  //         localStorage.setItem("refresh_token", refreshToken);
+  //         localStorage.setItem(
+  //           "access_token_expires_at",
+  //           String(Date.now() + expiresInSeconds * 1000),
+  //         );
+  //       }
 
         // 카카오용 임시 값 정리
         sessionStorage.removeItem("kakao_ticket");
         sessionStorage.removeItem("kakao_email");
         sessionStorage.removeItem("kakao_suggestedNickname");
 
+
+ await fetchGuest(payload);
+      //  게스트 운세를 store를 통해 호출(= POST /fortune/guest)
+      // await fetchGuest(payload);
+      // navigate("/fortune/result", { state: { fromSignupOrKakao: false } });
         navigate("/fortune/result");
         return;
       }
 
-      // 2) 일반 회원가입 플로우 (이메일/비번 먼저 SignupPage에서 받아온 경우)
-      if (userInfoStr) {
+      // 2) 일반 회원가입 후 운세
+ if (userInfoStr) {
         const { email, password } = JSON.parse(userInfoStr) as {
           email: string;
           password: string;
         };
 
-        const res = await api.post<any>("/auth/register", {
+        const res = await AuthAPI.register({
           email,
           password,
           nickname,
           birthDate,
-          gender: gender.toUpperCase(), // "MALE"/"FEMALE"
+          gender: gender.toUpperCase() as "MALE" | "FEMALE",
           birthTime,
           birthCity: birthCity.address,
         });
 
         if (!res.ok) {
-          console.error("회원가입(/auth/register) 오류:", res.error);
+          //console.error("회원가입(/auth/register) 오류:", res.error);
           alert(res.error?.message ?? "회원가입 중 오류가 발생했습니다.");
           return;
         }
@@ -115,33 +247,63 @@ export default function FortunePage() {
         // 임시 저장한 userId 제거
         localStorage.removeItem("userId");
 
-        
-        navigate("/login", {
-  state: { redirectTo: "/fortune/result" },
-});
-return;
+       await fetchGuest(payload);
+        navigate("/fortune/result");
+        return;
       }
 
       // 3) 위 둘 다 없으면 → 순수 게스트 운세
-      await fetchGuest({
-        nickname,
-        gender: gender.toUpperCase() as GuestFortuneReq["gender"], // "MALE" | "FEMALE"
-        birthDate,
-        birthTime,
-        birthCity: birthCity.address,
-      });
-
+       await fetchGuest(payload);
       navigate("/fortune/result");
     } catch (e) {
-      console.error(e);
+      //console.error(e);
       alert("운세 계산 중 오류가 발생했습니다.");
+    }
+     finally {
+      setSubmitting(false);   //  성공/실패 상관없이 로딩 종료
     }
   };
 
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const hasUserId = !!localStorage.getItem("userId");
+    const hasKakaoTicket = !!sessionStorage.getItem("kakao_ticket");
+
+    //  userId 또는 kakao_ticket이 있으면 안내문 숨김
+   setShowGuide(hasUserId || hasKakaoTicket);
+  }, []);
+  
+   if (submitting) {
+    return (
+      <main className="min-h-screen py-4">
+        <section className="w-full max-w-[420px] mx-auto px-4">
+          <FortuneLoading />
+        </section>
+      </main>
+    );
+  }
+
+
   return (
     <main className="relative z-10 p-4 min-h-screen">
+
+     {/* 안내 문구 */}
+    {showGuide && (
+      <div className="mt-3 flex flex-col items-center pb-4">
+        <p className="font-galmuri text-[#121212] text-center text-lg font-extrabold">
+          추가 정보 입력을 완료하고
+        </p>
+        <p className="font-galmuri text-[#121212] text-center text-lg font-extrabold">
+          회원가입을 마무리하세요 ✨
+        </p>
+      </div>
+    )}
+
+
       {/* 중간 이미지 */}
-      <div className="mt-1 flex justify-center bg-gradient-to-b from-[#fff8e7] via-[#121212] to-[#fff8e7] py-10">
+      <div className="mt-5 flex justify-center bg-gradient-to-b from-[#fff8e7] via-[#121212] to-[#fff8e7] py-10">
         <MidImages34 itemWidth={300} whiteBg />
       </div>
 
@@ -200,13 +362,15 @@ return;
               양력
             </span>
           </div>
-          <Input
-            type="date"
-            aria-label="생년월일 입력"
-            value={birthDate || ""}
-            onChange={(e) => setBirthDate(e.target.value)}
-            className="font-galmuri-small w-[260px]"
-          />
+         <Input
+  type="date"
+  aria-label="생년월일 입력"
+  value={birthDate || ""}
+  onChange={(e) => setBirthDate(e.target.value)}
+  className="font-galmuri-small w-[260px]"
+  min="1900-01-01"
+  max={todayStr}
+/>
         </div>
 
         {/* 태어난 시간 */}
@@ -255,13 +419,14 @@ return;
             <BirthCitySearch
               value={birthCity}
               onChange={(next) => setBirthCity(next)}
+              onTextChange={(text) => setBirthCityText(text)} 
               placeholder="태어난 도시 검색"
             />
           </div>
         </div>
 
         {/* 하단 버튼 */}
-        <div className="mt-12 flex justify-center pb-15">
+        <div className="mt-30 flex justify-center pb-15">
           <Button_L
             label="운세 카드 확인"
             width={260}

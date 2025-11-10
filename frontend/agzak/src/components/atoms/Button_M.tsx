@@ -1,6 +1,6 @@
+import "@/styles/components.css";
 import * as React from "react";
 import { useNavigate } from "react-router-dom";
-import "@/styles/components.css";
 
 interface ButtonMProps {
   to?: string;
@@ -26,8 +26,10 @@ export function Button_M({
 
   const handleClick = () => {
     if (disabled) return;
-    if (onClick) onClick();
-    else if (to) navigate(to);
+    if (onClick) {
+      onClick();
+      if (to) navigate(to);
+    } else if (to) navigate(to);
   };
 
   return (

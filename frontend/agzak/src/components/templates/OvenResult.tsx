@@ -11,7 +11,8 @@ import cookieMoney from "@/assets/Cookies/money-cookie.webp"
 import cookieRotten from "@/assets/Cookies/rotten-cookie.webp"
 import speechBubble from "@/assets/ui/speech-bubble.svg"
 import { Button_L } from "@/components/atoms/Button_L"
-import { useEffect, useMemo } from "react";
+import { trackEvent } from "@/lib/analytics"
+import { useEffect, useMemo } from "react"
 
 // 기본값(미연동 테스트)
 const mockFortuneCookie: FortuneCookieResult = {
@@ -42,7 +43,7 @@ const labelMap: Record<FortuneCookieResult["type"], string> = {
   MONEY: "황금색 금전쿠키",
   ACHIEVEMENT: "푸르른 성취쿠키",
   MIXED: "영롱한 믹스쿠키",
-  ROTTEN: "새까만 실연쿠키",
+  ROTTEN: "새까만 시련쿠키",
 }
 
 // 항목별 컬러(양/음 구분)
@@ -81,6 +82,15 @@ export default function OvenResult({
     document.body.scrollTop = 0
   }, [])
 
+  useEffect(() => {
+    if (!cookie) return;
+    trackEvent("page_result_view", {
+      cookie_type: cookie.type,
+      total: cookie.total,
+    });
+  }, [cookie]);
+
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[400px] text-center">
       <p className="font-galmuri-small mb-1 text-left w-full pl-20">
@@ -103,9 +113,9 @@ export default function OvenResult({
             key={s.label}
             className={`font-galmuri text-sm leading-none ${colorByLabel(s.label, s.value)}`}
             >
-            {s.label} 
+            {s.label}
             <span >
-              {s.value > 0 ? `+${s.value}` : s.value}
+            {s.value > 0 ? `+${s.value}` : s.value}
             </span>
           </li>
         ))}
@@ -119,11 +129,15 @@ export default function OvenResult({
           draggable={false}
         />
         {/* 텍스트 오버레이 */}
-        <p className="absolute inset-0 flex items-center justify-center text-[#121212] font-galmuri-condensed-small not-first: px-5 pb-2 text-center whitespace-pre-line mx-6">
+        <p className="absolute inset-0 flex items-center justify-center text-[#121212] font-galmuri-condensed-small not-first: px-5 pb-2 text-center whitespace-pre-line mx-6 -translate-y-1">
           {cookie.message}
         </p>
       </div>
-      <Button_L label="쿠키 먹으러 가기" to="/cookies" />
+      <Button_L
+        label="쿠키 먹으러 가기"
+        to="/cookies"
+        onClick={() => trackEvent("cookie_consume_click", { cookie_type: cookie.type })}
+      />
     </div>
   )
 }
