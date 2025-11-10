@@ -1,7 +1,6 @@
 package com.ssafy.agzak.domain.inventory.repository;
 
 import com.ssafy.agzak.domain.inventory.entity.FortuneCookie;
-import com.ssafy.agzak.domain.member.entity.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;

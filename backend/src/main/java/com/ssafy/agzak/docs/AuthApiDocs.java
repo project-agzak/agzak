@@ -1,7 +1,10 @@
 package com.ssafy.agzak.docs;
 
 import com.ssafy.agzak.domain.auth.dto.request.*;
-import com.ssafy.agzak.domain.auth.dto.response.*;
+import com.ssafy.agzak.domain.auth.dto.response.CheckEmailResponse;
+import com.ssafy.agzak.domain.auth.dto.response.OkResponse;
+import com.ssafy.agzak.domain.auth.dto.response.SocialLoginResponse;
+import com.ssafy.agzak.domain.auth.dto.response.TokenResponse;
 import com.ssafy.agzak.global.error.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
