@@ -7,7 +7,6 @@ import { Button_L } from "@/components/atoms/Button_L";
 import { MidImages34 } from "@/components/templates/MidImages34";
 
 import { useFortuneStore } from "@/store/useFortuneStore";
-import SadCharacter from "@/assets/ui/sad.webp";
 
 export default function FortuneWebtoonPage() {
   const navigate = useNavigate();
@@ -51,10 +50,10 @@ export default function FortuneWebtoonPage() {
       <div
         className="relative bg-white border-4 border-[#121212] shadow-[4px_4px_0_#121212]
                    px-3 py-2 font-galmuri-small text-[12px] text-[#121212]
-                   text-center min-w-[160px] max-w-[200px] leading-tight
+                   text-center min-w-[200px] max-w-[260px] leading-tight
                    [image-rendering:pixelated] pixel-rounded"
       >
-        아래에 <br /> 재밌는 웹툰도 있어요!
+        가시기 전에...<br /> 아래에 재밌는 웹툰도 <br /> 보고가세요 !
         {/* 꼬리 */}
         <div className="absolute left-1/2 bottom-[-10px] -translate-x-1/2 w-0 h-0 
                         border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent 
