@@ -10,7 +10,6 @@ import java.io.InputStream;
 import java.util.*;
 import java.util.regex.Pattern;
 
-// POJO
 @Component
 public class CityIndex {
     private final Map<String, LatLng> idx = new LinkedHashMap<>();
