@@ -15,7 +15,6 @@ import com.ssafy.agzak.domain.fortune.repository.FortuneRepository;
 import com.ssafy.agzak.domain.member.dto.response.MemberInfoResponse;
 import com.ssafy.agzak.domain.member.entity.Member;
 import com.ssafy.agzak.domain.member.repository.MemberRepository;
-import com.ssafy.agzak.domain.ranking.repository.RankingRepository;
 import com.ssafy.agzak.domain.ranking.service.RankingService;
 import com.ssafy.agzak.global.security.RefreshTokenStore;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -121,6 +119,7 @@ public class MemberService {
         oauthRepo.deleteAllByMember(member);
         refreshStore.delete(memberId);
         member.deleteMember();
+        memberRepository.delete(member);
     }
 
 }
