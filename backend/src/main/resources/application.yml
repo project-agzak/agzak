@@ -59,7 +59,7 @@ gms:
   api-key: ${GMS_API_KEY}
   timeout:
     ms: 5000
-  model: gpt-4o
+  model: ${GPT_MODEL:gpt-4.1-mini}
 
 # === Swagger / OpenAPI ===
 springdoc:

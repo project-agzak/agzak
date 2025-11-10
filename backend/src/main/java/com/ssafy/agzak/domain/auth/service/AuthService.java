@@ -19,6 +19,7 @@ import com.ssafy.agzak.domain.inventory.entity.Inventory;
 import com.ssafy.agzak.domain.inventory.repository.InventoryRepository;
 import com.ssafy.agzak.domain.member.entity.Member;
 import com.ssafy.agzak.domain.member.repository.MemberRepository;
+import com.ssafy.agzak.domain.ranking.service.RankingService;
 import com.ssafy.agzak.global.security.JwtProvider;
 import com.ssafy.agzak.global.security.RefreshTokenStore;
 import com.ssafy.agzak.global.security.TokenRevocationService;
@@ -34,6 +35,8 @@ import java.time.Duration;
 import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.function.Function;
+
+import static com.ssafy.agzak.global.tx.TxAfterCommit.afterCommit;
 
 @Service
 @RequiredArgsConstructor
@@ -51,6 +54,7 @@ public class AuthService {
     private final MemberRepository memberRepo;
     private final OAuthIdentityRepository oauthRepo;
     private final InventoryRepository inventoryRepo;
+    private final RankingService rankingService;
 
     private void ensureInventory(Member m) {
         inventoryRepo.findByMember(m)
@@ -261,6 +265,7 @@ public class AuthService {
         if (m.getPassword() == null || !passwordEncoder.matches(req.password(), m.getPassword()))
             throw new BadCredentialsException("이메일 또는 비밀번호가 올바르지 않습니다.");
 
+        afterCommit(() -> rankingService.refreshTodayForMember(m.getMemberId()));
         return issueTokens(m.getMemberId());
     }
 

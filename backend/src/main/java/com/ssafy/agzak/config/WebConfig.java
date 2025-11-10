@@ -20,7 +20,8 @@ public class WebConfig {
                                 "http://localhost:5173",
                                 "http://localhost:3000",
                                 "http://k13b102.p.ssafy.io:15173",
-                                "http://k13b102.p.ssafy.io:5173"
+                                "http://k13b102.p.ssafy.io:5173",
+                                "https://agzak.co.kr"
                         )
                         .allowedMethods("GET","POST","PUT","PATCH","DELETE","OPTIONS")
                         .allowedHeaders("*")

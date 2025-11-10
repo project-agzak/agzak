@@ -15,6 +15,8 @@ import com.ssafy.agzak.domain.member.entity.Member;
 import com.ssafy.agzak.domain.member.exception.IllegalFortuneAspectException;
 import com.ssafy.agzak.domain.member.exception.NoFortuneFoundException;
 import com.ssafy.agzak.domain.member.repository.MemberRepository;
+import com.ssafy.agzak.domain.ranking.repository.RankingRepository;
+import com.ssafy.agzak.domain.ranking.service.RankingService;
 import com.ssafy.agzak.global.security.RefreshTokenStore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -27,6 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.ssafy.agzak.global.tx.TxAfterCommit.afterCommit;
+
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -36,6 +40,7 @@ public class MemberService {
     private final FortuneAspectRepository fortuneAspectRepository;
     private final OAuthIdentityRepository oauthRepo;
     private final RefreshTokenStore  refreshStore;
+    private final RankingService rankingService;
 
     public MemberInfoResponse getMemberInfo(Long memberId) {
         Member member = memberRepository.findById(memberId)
@@ -88,13 +93,21 @@ public class MemberService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 멤버 아이디입니다."));
 
+        // 닉네임 변경 처리
         if (request.nickname() != null) {
-            if (memberRepository.existsByNickname(request.nickname())) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 사용중인 닉네임입니다.");
+            String newNick = request.nickname().trim();
+            String oldNick = member.getNickname();
+
+            if (!newNick.equals(oldNick)) {
+                if (memberRepository.existsByNicknameAndMemberIdNot(newNick, memberId)) {
+                    throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 사용중인 닉네임입니다.");
+                }
+                member.updateNickname(newNick);
+                afterCommit(() -> rankingService.refreshTodayForMember(memberId));
             }
-            member.updateNickname(request.nickname());
         }
 
+        // 출생시간 변경 처리
         if (request.birthTime() != null) {
             member.updateBirthTime(request.birthTime());
         }

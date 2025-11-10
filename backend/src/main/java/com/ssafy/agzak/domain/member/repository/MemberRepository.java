@@ -19,4 +19,6 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @Query("SELECT CASE WHEN COUNT(m) > 0 THEN true ELSE false END " +
             "FROM Member m WHERE m.nickname = :nickname AND m.status = 'ACTIVE'")
     boolean existsByNickname(String nickname);
+
+    boolean existsByNicknameAndMemberIdNot(String nickname, Long memberId);
 }

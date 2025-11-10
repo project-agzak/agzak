@@ -12,6 +12,9 @@ pipeline {
     REGISTRY    = 'docker.io'
     DEPLOY_USER = 'ubuntu'
     DEPLOY_HOST = 'k13b102.p.ssafy.io'
+
+    EDGE_CONF   = '/home/ubuntu/agzak-app/deploy/infra/nginx/data/active_slot.conf'
+    BE_COMPOSE  = '/home/ubuntu/agzak-app/deploy/backend/agzak-app-server.yml'
   }
 
   stages {
@@ -61,9 +64,9 @@ pipeline {
       }
     }
 
-    stage('Deploy') {
+    stage('Deploy (Blue/Green)') {
       steps {
-        sshagent (credentials: ['deploy-ssh']) {
+        sshagent(credentials: ['deploy-ssh']) {
           withCredentials([usernamePassword(
             credentialsId: 'dockerhub-cred',
             usernameVariable: 'DOCKER_USER',
@@ -73,38 +76,18 @@ pipeline {
               def repo = (env.REGISTRY?.trim() && env.REGISTRY != 'docker.io')
                 ? "${env.REGISTRY}/${env.IMAGE_NAME}"
                 : env.IMAGE_NAME
-              def tag = "${env.TARGET_BRANCH}-${env.BUILD_NUMBER}"
+              def tag   = "${env.TARGET_BRANCH}-${env.BUILD_NUMBER}"
               def image = "${repo}:${tag}"
 
               sh """
-                set -eux
-                ssh -o StrictHostKeyChecking=no \\
-                  "$DEPLOY_USER@$DEPLOY_HOST" \\
-                  "IMAGE=${image} DOCKER_USER=${DOCKER_USER} DOCKER_PWD=${DOCKER_PWD} bash -s" <<'ENDSSH'
-                    set -eux
-                    cd /home/ubuntu/agzak-app/deploy/backend
-
-                    sed -i '/^IMAGE=/d' .env
-                    sed -i '/^PROJECT=/d' .env
-
-                    echo "IMAGE=\$IMAGE" >> .env
-                    echo "PROJECT=deploy" >> .env
-
-                    echo "\$DOCKER_PWD" | docker login -u "\$DOCKER_USER" --password-stdin || true
-
-                    make -C .. up-be
-
-                    for i in \$(seq 1 12); do
-                      status=\$(docker inspect --format '{{.State.Health.Status}}' agzak-app-server 2>/dev/null || echo "unhealthy")
-                      echo "Current status: \$status"
-                      [ "\$status" = "healthy" ] && { echo "Container is healthy."; exit 0; }
-                      echo "Waiting for container to be healthy... (\$i/12)"
-                      sleep 5
-                    done
-
-                    echo "Container did not become healthy in time." >&2
-                    exit 1
-                ENDSSH
+                set -Eeuo pipefail
+                ssh -o StrictHostKeyChecking=no ${env.DEPLOY_USER}@${env.DEPLOY_HOST} \\
+                  IMAGE='${image}' \\
+                  EDGE_CONF='${env.EDGE_CONF}' \\
+                  BE_COMPOSE='${env.BE_COMPOSE}' \\
+                  DOCKER_USER='${DOCKER_USER}' \\
+                  DOCKER_PWD='${DOCKER_PWD}' \\
+                  /home/ubuntu/agzak-app/deploy/backend/blue_green_deploy.sh
               """
             }
           }

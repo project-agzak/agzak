@@ -92,7 +92,7 @@ CREATE TABLE `fortune_aspect` (
                                   `name`              VARCHAR(50) NOT NULL COMMENT 'ENUM(`MONEY`, `LOVE`, `ACHIEVEMENT`, `HEALTH`)',
                                   `score`             INT         NOT NULL,
                                   `original_score`    INT         NOT NULL,
-                                  `description`     VARCHAR(1000) NULL
+                                  `description`     VARCHAR(1000) NULL,
                                   PRIMARY KEY (`fortune_aspect_id`),
                                   UNIQUE KEY `UQ_aspect_per_fortune` (`fortune_id`, `name`),
                                   CONSTRAINT `FK_aspect_fortune`
@@ -125,7 +125,7 @@ CREATE TABLE `game_session` (
                                 `updated_at`           DATETIME    NOT NULL,
                                 PRIMARY KEY (`game_session_id`),
                                 UNIQUE KEY `UQ_game_day_quota` (`member_id`, `game_date`, `session_no`),
-                                CONSTRAINT `CK_session_no_range` CHECK (`session_no` BETWEEN 1 AND 3),
+                                CONSTRAINT `CK_session_no_range` CHECK (`session_no` BETWEEN 1 AND 10),
                                 CONSTRAINT `FK_game_session_member`
                                     FOREIGN KEY (`member_id`) REFERENCES `member`(`member_id`)
                                         ON DELETE CASCADE ON UPDATE CASCADE
