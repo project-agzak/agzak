@@ -2,8 +2,8 @@ package com.ssafy.agzak.domain.member.controller;
 
 import com.ssafy.agzak.docs.MemberApiDocs;
 import com.ssafy.agzak.domain.fortune.dto.response.DetailFortuneDataResponse;
-import com.ssafy.agzak.domain.member.dto.response.MemberGraphResponse;
 import com.ssafy.agzak.domain.member.dto.request.MemberEditRequest;
+import com.ssafy.agzak.domain.member.dto.response.MemberGraphResponse;
 import com.ssafy.agzak.domain.member.dto.response.MemberInfoResponse;
 import com.ssafy.agzak.domain.member.service.MemberService;
 import com.ssafy.agzak.global.security.AuthMemberProvider;

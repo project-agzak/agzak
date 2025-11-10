@@ -3,7 +3,6 @@ package com.ssafy.agzak.domain.fortune.dto.response;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ssafy.agzak.domain.fortune.entity.Fortune;
 import com.ssafy.agzak.domain.fortune.entity.FortuneAspect;
-import com.ssafy.agzak.domain.fortune.entity.FortuneType;
 
 import java.util.List;
 

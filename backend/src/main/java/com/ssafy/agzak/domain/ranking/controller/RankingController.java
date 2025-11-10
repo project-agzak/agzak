@@ -1,7 +1,8 @@
 package com.ssafy.agzak.domain.ranking.controller;
 
 import com.ssafy.agzak.docs.RankingApiDocs;
-import com.ssafy.agzak.domain.ranking.dto.*;
+import com.ssafy.agzak.domain.ranking.dto.MyRankDto;
+import com.ssafy.agzak.domain.ranking.dto.RankingListDto;
 import com.ssafy.agzak.domain.ranking.service.RankingService;
 import com.ssafy.agzak.global.security.AuthMemberProvider;
 import lombok.RequiredArgsConstructor;
