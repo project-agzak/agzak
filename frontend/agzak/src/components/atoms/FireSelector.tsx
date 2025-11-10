@@ -57,7 +57,6 @@ export function FireSelector({ selected, onChange }: Props) {
             ({gainText})
           </span>
           </div>
-
           </span>
         </div>
     </div>
