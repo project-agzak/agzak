@@ -49,10 +49,9 @@ export default function OvenHelpSheet({ open, onClose, src }: Props) {
               aria-label="도움말 닫기"
               onClick={onClose}
               className="absolute top-2 right-2
-                w-8 h-8 rounded-full
+                w-55 h-15 rounded-full
                 text-[#70431B] font-extrabold
-                flex items-center justify-center
-                pt-5 pr-24"
+                "
             >
               ✕
             </button>

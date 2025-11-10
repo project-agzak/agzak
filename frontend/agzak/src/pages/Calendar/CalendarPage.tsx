@@ -5,8 +5,8 @@ import week from "@/assets/ui/week.png";
 import BlackboardCalendar from "@/components/molecules/CalendarBoard";
 import { FortuneBottomSheet } from "@/components/molecules/FortuneBottomSheet";
 import { WeeklyFortuneCard } from "@/components/molecules/WeeklyChart";
-import * as React from "react";
 import { useFortuneByDate } from "@/hooks/useFortuneByDate";
+import * as React from "react";
 
 export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = React.useState<string | null>(null)
@@ -37,7 +37,7 @@ export default function CalendarPage() {
         </div>
 
         {/* 금주의 운세 변동 */}
-        <div className="flex items-center justify-center w-full max-w-[320px] mx-auto mt-2">
+        <div className="flex items-center justify-center w-full max-w-[320px] mx-auto">
           <WeeklyFortuneCard />
         </div>
         {/* bottom sheet */}
