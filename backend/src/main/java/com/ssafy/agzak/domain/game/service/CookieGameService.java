@@ -17,7 +17,6 @@ import com.ssafy.agzak.domain.inventory.repository.FortuneCookieRepository;
 import com.ssafy.agzak.domain.inventory.repository.InventoryRepository;
 import com.ssafy.agzak.domain.member.entity.Member;
 import com.ssafy.agzak.domain.member.repository.MemberRepository;
-import com.ssafy.agzak.domain.ranking.controller.RankingController;
 import com.ssafy.agzak.global.security.AuthMemberProvider;
 import com.ssafy.agzak.global.time.DateProvider;
 import jakarta.persistence.EntityNotFoundException;

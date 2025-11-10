@@ -2,7 +2,8 @@ package com.ssafy.agzak.domain.ranking.support;
 
 import com.ssafy.agzak.domain.ranking.service.RankingService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.scheduling.annotation.*;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component

@@ -1,10 +1,10 @@
 package com.ssafy.agzak.domain.fortune.controller;
 
 import com.ssafy.agzak.docs.FortuneApiDocs;
-import com.ssafy.agzak.domain.fortune.service.*;
 import com.ssafy.agzak.domain.fortune.dto.request.BirthDataInput;
 import com.ssafy.agzak.domain.fortune.dto.request.GuestFortuneRequest;
 import com.ssafy.agzak.domain.fortune.dto.response.*;
+import com.ssafy.agzak.domain.fortune.service.*;
 import com.ssafy.agzak.domain.guest.dto.GuestProfile;
 import com.ssafy.agzak.domain.member.dto.response.MemberInfoResponse;
 import com.ssafy.agzak.domain.member.service.MemberService;

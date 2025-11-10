@@ -1,8 +1,11 @@
 package com.ssafy.agzak.domain.auth.controller;
 
 import com.ssafy.agzak.docs.AuthApiDocs;
-import com.ssafy.agzak.domain.auth.dto.response.*;
 import com.ssafy.agzak.domain.auth.dto.request.*;
+import com.ssafy.agzak.domain.auth.dto.response.CheckEmailResponse;
+import com.ssafy.agzak.domain.auth.dto.response.OkResponse;
+import com.ssafy.agzak.domain.auth.dto.response.SocialLoginResponse;
+import com.ssafy.agzak.domain.auth.dto.response.TokenResponse;
 import com.ssafy.agzak.domain.auth.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

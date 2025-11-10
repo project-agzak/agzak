@@ -1,9 +1,9 @@
 package com.ssafy.agzak.domain.ranking.support;
 
 import com.ssafy.agzak.domain.fortune.entity.Fortune;
+import com.ssafy.agzak.domain.fortune.repository.FortuneRepository;
 import com.ssafy.agzak.domain.member.entity.Member;
 import com.ssafy.agzak.domain.ranking.entity.Ranking;
-import com.ssafy.agzak.domain.fortune.repository.FortuneRepository;
 import com.ssafy.agzak.domain.ranking.repository.RankingRepository;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
