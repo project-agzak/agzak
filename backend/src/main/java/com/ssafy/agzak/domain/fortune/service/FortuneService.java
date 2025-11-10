@@ -1,15 +1,11 @@
 package com.ssafy.agzak.domain.fortune.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ssafy.agzak.domain.fortune.dto.request.BirthDataInput;
 import com.ssafy.agzak.domain.fortune.dto.response.*;
 import com.ssafy.agzak.domain.fortune.entity.Fortune;
 import com.ssafy.agzak.domain.fortune.entity.FortuneAspect;
-import com.ssafy.agzak.domain.fortune.entity.FortuneType;
 import com.ssafy.agzak.domain.fortune.repository.FortuneAspectRepository;
 import com.ssafy.agzak.domain.fortune.repository.FortuneRepository;
-import com.ssafy.agzak.domain.fortune.repository.FortuneTypeRepository;
 import com.ssafy.agzak.domain.guest.dto.GuestProfile;
 import com.ssafy.agzak.domain.guest.support.GuestProfileStore;
 import com.ssafy.agzak.global.time.DateProvider;
@@ -44,11 +40,11 @@ public class FortuneService {
         if (cache != null) {
             FinalFortuneResponse cachedResponse = cache.get(cacheKey, FinalFortuneResponse.class);
             if (cachedResponse != null) {
-                log.info("Cache Hit: {} 키의 운세 정보를 캐시에서 반환합니다.", cacheKey);
+                log.debug("Cache Hit: {} 키의 운세 정보를 캐시에서 반환합니다.", cacheKey);
                 return cachedResponse;
             }
         }
-        log.info("Cache Miss: {} 키의 운세 정보를 DB에서 조회합니다.", cacheKey);
+        log.debug("Cache Miss: {} 키의 운세 정보를 DB에서 조회합니다.", cacheKey);
 
         Optional<Fortune> fortuneOpt = fortuneRepository.findByMember_MemberIdAndDate(memberId, date.today());
         if (fortuneOpt.isPresent()) {
