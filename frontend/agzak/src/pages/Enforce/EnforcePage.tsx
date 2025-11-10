@@ -14,21 +14,27 @@ import { OvenAspectPanel } from "@/components/molecules/OvenAspectPanel"
 import OvenLoading from "@/components/templates/OvenLoading"
 import OvenResult from "@/components/templates/OvenResult"
 
+import { FireSelector } from "@/components/atoms/FireSelector"
 import { useOvenGame } from "@/hooks/useOvenGame"
 import { useSessionQuotaStore } from "@/store/sessionQuotaStore"
+import type { OvenFireType } from "@/types/oven"
 
 export default function EnforcePage() {
   const [helpOpen, setHelpOpen] = useState(false)
   const [shakeKey, setShakeKey] = useState(0)
   const [view, setView] = useState<"game" | "loading" | "result">("game")
+  const [fire, setFire] = useState<OvenFireType>("WEAK") // 강/약불 상태
   const navigate = useNavigate()
 
   const game = useOvenGame()
-
-  // cap/remaining을 스토어에서 읽고, 마운트 시 최신화
   const { quota, loading: quotaLoading, error: quotaError, refresh } = useSessionQuotaStore()
+
   useEffect(() => { refresh() }, [refresh])
 
+  // ✅ 훅이 아닌 "일반 변수"로 즉시 계산 (조건부 return보다 위에 위치)
+  const base = Number(game.successProb) || 0
+  const delta = fire === "WEAK" ? +5 : -5
+  const displayProb = Math.min(100, Math.max(0, base + delta))
   // 에러 발생 시 안전하게 홈으로 리디렉션
   useEffect(() => {
     if (game.initError) {
@@ -47,7 +53,6 @@ export default function EnforcePage() {
     )
   }
   if (game.blocked === "LIMIT") {
-    // cap 동적 표기 (로딩/에러 방어)
     const capText =
       quotaError ? "일일 세션 한도" :
       quotaLoading ? "세션" :
@@ -94,19 +99,23 @@ export default function EnforcePage() {
             <header className="text-center">
               <p className="font-bitbit-large">강화 쿠키 오븐</p>
               <p className="font-galmuri-small pt-2">
-                확률을 기반으로 <br />적합한 버튼을 눌러보자!
+                확률을 기반으로 <br />손잡이와 버튼을 눌러보자!
               </p>
             </header>
 
             <OvenImage lastSuccess={game.lastSuccess} triggerKey={shakeKey} />
 
-            <OvenStatus remaining={game.remaining} successProb={game.successProb} />
+            {/* 강불/약불 토글 */}
+            <FireSelector selected={fire} onChange={setFire} />
+
+            {/* 선택한 불꽃 반영 확률 표시 */}
+            <OvenStatus remaining={game.remaining} successProb={displayProb} />
 
             <OvenAspectPanel
               snap={game.snap}
               onSelect={(aspect) => {
-                game.attempt(aspect)
-                setShakeKey((k) => k + 1) // 흔들림 트리거
+                game.attempt(aspect, fire) // STRONG/WEAK 반영
+                setShakeKey((k) => k + 1)
                 if (typeof navigator !== "undefined" && "vibrate" in navigator) {
                   navigator.vibrate?.(80)
                 }
