@@ -68,6 +68,21 @@ const FRIEND_BY_ID: Record<number, string> = {
   12: FriendMonkey,  // 원숭이
 };
 
+const DESCRIPTION_BY_TYPE: Record<number, string> = {
+  2: "결과가 중요하지, 방법은 묻지 마.",
+  1: "사랑은 어려워도 돈은 확실히 남겨야지.",
+  7: "돈보다 내 이름이 더 값지지.",
+  4: "사랑만 있으면 세상은 충분히 따뜻해.",
+  11: "마음도 체력처럼 훈련이 필요해.",
+  8: "연애? 나 지금 달리느라 바빠!",
+  5: "함께 걷는 게, 이기는 것보다 좋아.",
+  12: "성공은 모르겠지만, 오늘도 재밌었잖아?",
+  9: "하루 25시간 일할 수 있다면 좋겠네.",
+  10: "돈이 없어도 마음은 부자야.",
+  3: "몸이 좀 힘들어도 세상은 나를 기억할 거야.",
+  6: "사랑엔 진심인데… 왜 늘 피곤할까?",
+};
+
 const getFrontByTypeName = (name?: string | null) =>
   name ? FRONT_BY_TYPE[name] : undefined;
 
@@ -102,6 +117,9 @@ useEffect(() => {
   const bestieSrc = goodWithId ? FRIEND_BY_ID[goodWithId] : undefined;
   const enemySrc  = badWithId  ? FRIEND_BY_ID[badWithId]  : undefined;
 
+   const bestieDescription = goodWithId ? DESCRIPTION_BY_TYPE[goodWithId] : undefined;
+  const enemyDescription = badWithId ? DESCRIPTION_BY_TYPE[badWithId] : undefined;
+  
   return (
     <main className="relative z-10 p-4 min-h-screen">
   <div className="flex flex-col justify-center items-center pb-5 gap-3">
@@ -156,30 +174,67 @@ useEffect(() => {
           />
         </div>
       </div>
+<div className="flex flex-col items-center pt-10">
+  {/* 단짝 친구 */}
+  <div className="flex flex-col items-center">
+    <p className="font-galmuri pb-2">오늘의 단짝 친구는?</p>
 
-      <div className="flex flex-col items-center pt-10">
-        <p className="font-galmuri pb-2">오늘의 단짝 친구는?</p>
-        <div className="flex justify-center w-full min-w-0">
-          <img
-            src={bestieSrc}
-            alt="bestie"
-            className="w-[42%] max-w-[140px] h-auto object-contain min-w-0"
-          />
-        </div>
-        <p className="font-galmuri pb-2 pt-5">오늘의 엇갈린 친구는?</p>
-        <div className="flex justify-center w-full min-w-0">
-          <img
-            src={enemySrc}
-            alt="enemy"
-            className="w-[42%] max-w-[140px] h-auto object-contain min-w-0"
-          />
-        </div>
-      </div>
+    <div className="flex justify-center w-full min-w-0">
+      <img
+        src={bestieSrc}
+        alt="bestie"
+        className="w-[42%] max-w-[140px] h-auto object-contain min-w-0 drop-shadow-[2px_2px_0_#121212]"
+      />
+    </div>
+
+    {bestieDescription && (
+      <p className="mt-3 px-6 text-center text-[12px] leading-relaxed text-[#3A3A3A] font-galmuri-xsmall max-w-[240px]">
+        {bestieDescription}
+      </p>
+    )}
+  </div>
+
+  {/* 엇갈린 친구 */}
+  <div className="flex flex-col items-center mt-15">
+    <p className="font-galmuri pb-2">오늘의 엇갈린 친구는?</p>
+
+    <div className="flex justify-center w-full min-w-0">
+      <img
+        src={enemySrc}
+        alt="enemy"
+        className="w-[42%] max-w-[140px] h-auto object-contain min-w-0 drop-shadow-[2px_2px_0_#121212]"
+      />
+    </div>
+
+    {enemyDescription && (
+      <p className="mt-3 px-6 text-center text-[12px] leading-relaxed text-[#3A3A3A] font-galmuri-xsmall max-w-[240px]">
+        {enemyDescription}
+      </p>
+    )}
+  </div>
+</div>
+
+
       
-      <div className="flex flex-col items-center pt-10 pb-5">
-        <div className="pb-2">
-            <Button_L to="/enforce" label="운세 강화" width={260} />
-        </div>
+      <div className="flex flex-col items-center pt-20 pb-5">
+       <div className="pb-2 relative">
+  <Button_L
+    to="/enforce"
+    label="운세 상승 아이템 얻으러 가기"
+    width={260}
+  />
+
+  <style>
+    {`
+      /* 이 div 안에서만 Button_L 글씨 크기 조정 */
+      .pb-2 .btnL-click {
+        font-size: 16px !important;
+        line-height: 1.1;
+      }
+    `}
+  </style>
+</div>
+
         <div>
           <ShareButton
           label="공유하기"
