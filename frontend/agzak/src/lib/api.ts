@@ -38,10 +38,42 @@ if (isAuthRequest || status == null) return;
 async function request<T>(config: AxiosRequestConfig): Promise<ApiResponse<T>> {
   try {
 
-     const { accessToken, expiresAt, logout } = useAuthStore.getState();
+     const { accessToken, expiresAt, logout, isLoggedIn } = useAuthStore.getState();
 
      const url = typeof config.url === "string" ? config.url : "";
     const isAuthRequest = url.startsWith("/auth/");
+
+    const isGameRequest = url.startsWith("/game/");
+
+       //  0. 로그인 안 된 상태에서 게임 API는 아예 호출하지 않기
+    if (isGameRequest && !isLoggedIn) {
+      console.log("[API_SKIP] 로그인 안 된 상태에서 게임 API 호출 차단:", {
+        url,
+        method: config.method,
+      });
+
+      return {
+        ok: false,
+        error: {
+          status: 401,
+          code: "GAME_LOGIN_REQUIRED",
+          message: "운세 강화는 로그인 후 이용해주세요.",
+        },
+      };
+    }
+
+    // 게임 요청에 대한 상세 로깅
+    if (isGameRequest) {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      console.log("[API_REQUEST] 게임 API 요청:", {
+        url,
+        method: config.method,
+        isIOS,
+        hasToken: !!accessToken,
+        tokenExpiresAt: expiresAt ? new Date(expiresAt).toISOString() : null,
+        timestamp: new Date().toISOString(),
+      });
+    }
 
 if (!isAuthRequest && accessToken) {
       // 토큰 만료 체크 (프론트 기준)

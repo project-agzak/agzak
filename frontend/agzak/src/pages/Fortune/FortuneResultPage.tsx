@@ -104,14 +104,17 @@ useEffect(() => {
 
   return (
     <main className="relative z-10 p-4 min-h-screen">
-
-      <div className="flex justify-center pb-5">
+  <div className="flex flex-col justify-center items-center pb-5 gap-3">
+        <p className="text-gray-600 font-galmuri-condensed-small animate-bounce motion-reduce:animate-none">
+          카드를 클릭해 뒤집어 보세요!</p>
         <PureFlipImage
           className="w-64 aspect-[2/3] cursor-pointer"
           frontSrc={getFrontByTypeName(typeName)}
           backNode={<BackCard />}
         />
       </div>
+
+
 
       <div className="flex flex-col items-center">
         <p className="font-galmuri">오늘의 총운</p>
