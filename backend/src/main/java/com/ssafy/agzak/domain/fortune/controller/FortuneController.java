@@ -9,7 +9,6 @@ import com.ssafy.agzak.domain.guest.dto.GuestProfile;
 import com.ssafy.agzak.domain.member.dto.response.MemberInfoResponse;
 import com.ssafy.agzak.domain.member.service.MemberService;
 import com.ssafy.agzak.global.security.AuthMemberProvider;
-import com.ssafy.agzak.global.time.DateProvider;
 import io.swagger.v3.oas.annotations.Hidden;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -26,19 +25,18 @@ public class FortuneController implements FortuneApiDocs {
     private final FortuneTypeService fortuneTypeService;
     private final MemberService memberService;
     private final AuthMemberProvider authMemberProvider;
-    private final DateProvider date;
-    private final FortuneAiService fortuneAiService;
+    private final GuestFortuneService guestFortuneService;
 
     @PostMapping
     public ResponseEntity<FinalFortuneResponse> postMemberTodayFortune() {
         long memberId = authMemberProvider.currentMemberId();
-        MemberInfoResponse response = memberService.getMemberInfo(memberId);
-        BirthDataInput input = BirthDataInput.fromMemberInfo(response);
-        FinalFortuneResponse result = fortuneService.getMemberFortune(memberId, input,response.birthCity());
-        if (fortuneService.checkDuplicate(memberId, date.today())) {
-            return ResponseEntity.ok().body(result);
-        }
-        fortuneService.saveFortune(memberId, result);
+        MemberInfoResponse memberInfo = memberService.getMemberInfo(memberId);
+
+        BirthDataInput input = BirthDataInput.fromMemberInfo(memberInfo);
+        String city = memberInfo.birthCity();
+
+        FinalFortuneResponse result = fortuneService.getMemberFortune(memberId, input, city);
+
         return ResponseEntity.ok().body(result);
     }
 
@@ -49,7 +47,7 @@ public class FortuneController implements FortuneApiDocs {
         var geo = geocodingService.getCoordinates(req.birthCity());
 
         var input = new BirthDataInput(req.birthDate(), req.birthTime(), geo.latitude(), geo.longitude());
-        FinalFortuneResponse fortune = fortuneAiService.getFortuneScores(input, req.birthCity());
+        FinalFortuneResponse fortune = guestFortuneService.getGuestFortune(input, req.birthCity());
 
         var profile = new GuestProfile(
                 req.nickname(), req.gender(), req.birthDate(), req.birthTime(),
