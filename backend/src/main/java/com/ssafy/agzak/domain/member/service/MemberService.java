@@ -15,7 +15,6 @@ import com.ssafy.agzak.domain.member.entity.Member;
 import com.ssafy.agzak.domain.member.exception.IllegalFortuneAspectException;
 import com.ssafy.agzak.domain.member.exception.NoFortuneFoundException;
 import com.ssafy.agzak.domain.member.repository.MemberRepository;
-import com.ssafy.agzak.domain.ranking.repository.RankingRepository;
 import com.ssafy.agzak.domain.ranking.service.RankingService;
 import com.ssafy.agzak.global.security.RefreshTokenStore;
 import lombok.RequiredArgsConstructor;
