@@ -311,7 +311,7 @@ const todayStr = new Date().toISOString().slice(0, 10);
       </div>
 
       {/* 입력 폼 */}
-      <div className="mt-10 flex flex-col items-center gap-3">
+      <div className="mt-5 flex flex-col items-center gap-3">
         {/* 성별 선택 */}
         <div className="flex max-w-[300px] flex-col gap-1">
           <label className="font-galmuri-small font-extrabold text-[#222] text-left w-[230px] mx-auto">
