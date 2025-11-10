@@ -34,50 +34,48 @@ public class FortuneService {
     private static final String FORTUNE_CACHE_NAME = "fortuneCache";
 
     public FinalFortuneResponse getMemberFortune(long memberId, BirthDataInput input, String city) {
-        Cache cache = cacheManager.getCache(FORTUNE_CACHE_NAME);
-        String cacheKey = generateCacheKey(input, city);
-
-        if (cache != null) {
-            FinalFortuneResponse cachedResponse = cache.get(cacheKey, FinalFortuneResponse.class);
-            if (cachedResponse != null) {
-                log.debug("Cache Hit: {} 키의 운세 정보를 캐시에서 반환합니다.", cacheKey);
-                return cachedResponse;
-            }
-        }
-        log.debug("Cache Miss: {} 키의 운세 정보를 DB에서 조회합니다.", cacheKey);
-
         Optional<Fortune> fortuneOpt = fortuneRepository.findByMember_MemberIdAndDate(memberId, date.today());
+
         if (fortuneOpt.isPresent()) {
+            log.debug("DB Hit: Member {}. DB 데이터를 반환합니다.", memberId);
             Fortune fortune = fortuneOpt.get();
             List<FortuneAspect> fortuneAspects = fortuneAspectRepository.findAllByFortune(fortune);
-            FinalFortuneResponse response = FinalFortuneResponse.fromEntity(fortune, fortuneAspects);
-
-            if (cache != null) {
-                cache.put(cacheKey, response);
-            }
-
-            return response;
-
-        } else {
-            FinalFortuneResponse finalFortuneResponse = fortuneAiService.getFortuneScores(input, city);
-            fortuneWriter.saveFortune(memberId, finalFortuneResponse);
-
-            if (cache != null) {
-                cache.put(cacheKey, finalFortuneResponse);
-            }
-
-            return finalFortuneResponse;
+            return FinalFortuneResponse.fromEntity(fortune, fortuneAspects);
         }
+
+        log.debug("DB Miss: Member {}. AI 절약용 캐시(guestCache)를 확인합니다.", memberId);
+
+        Cache cache = cacheManager.getCache(FORTUNE_CACHE_NAME);
+        String guestCacheKey = generateGuestCacheKey(input, city);  //게스트일 때 조회한 값 조회 키
+        FinalFortuneResponse finalFortuneResponse; // DB에 저장할 최종 운세
+
+        if (cache != null) {
+            FinalFortuneResponse guestCachedResponse = cache.get(guestCacheKey, FinalFortuneResponse.class);
+            if (guestCachedResponse != null) {
+                log.info("Guest Cache Hit for Member: {}. AI 호출을 건너뛰고 이 값으로 DB 저장을 진행합니다.", memberId);
+                finalFortuneResponse = guestCachedResponse;
+            } else {
+                log.info("Total Miss (DB & Guest Cache). AI 운세 생성을 시작합니다: {}", memberId);
+                finalFortuneResponse = fortuneAiService.getFortuneScores(input, city);
+            }
+        } else {
+            log.warn("Cache를 찾을 수 없어 AI를 직접 호출합니다. (key: {})", guestCacheKey);
+            finalFortuneResponse = fortuneAiService.getFortuneScores(input, city);
+        }
+
+        fortuneWriter.saveFortune(memberId, finalFortuneResponse);
+
+        return finalFortuneResponse;
     }
 
-    private String generateCacheKey(BirthDataInput input, String city) {
-        return "getFortuneScores:" + input.birthDate() + "T" + input.birthTime() + "::" + city;
+    private String generateGuestCacheKey(BirthDataInput input, String city) {
+        return "guest:" + input.birthDate() + "T" + input.birthTime() + "::" + city;
     }
-
 
     @Transactional
     public String saveGuestProfile(GuestProfile profile) {
         return guestStore.save(profile);
     }
+
 
 }
