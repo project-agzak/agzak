@@ -1,11 +1,11 @@
 // src/components/molecules/OvenAspectPanel.tsx
 "use client"
 
-import achievement from "@/assets/Game/achievement-button.webp"
-import health from "@/assets/Game/health-button.webp"
-import love from "@/assets/Game/love-button.webp"
-import misfortune from "@/assets/Game/misfortune-button.webp"
-import money from "@/assets/Game/money-button.webp"
+import achievement from "@/assets/Game/achievement-button.svg"
+import health from "@/assets/Game/health-button.svg"
+import love from "@/assets/Game/love-button.svg"
+import misfortune from "@/assets/Game/misfortune-button.svg"
+import money from "@/assets/Game/money-button.svg"
 import type { OvenAspectName } from "@/types/oven"
 
 type Snap = {
@@ -60,8 +60,6 @@ export function OvenAspectPanel({
             src={misfortune}
             alt="액운 상승"
             className="w-full h-full object-contain pointer-events-none select-none"
-            onLoad={() => console.log("[IMG_OK] oven-misfortune", misfortune)}
-            onError={(e) => console.log("[IMG_ERR] oven-misfortune", e.currentTarget.src)}
           />
         </button>
         <div className="mt-1 text-xs font-galmuri font-bold text-[#1f1f1f]">
@@ -113,8 +111,6 @@ function AspectBtn({
           src={img}
           alt={label}
           className="w-full h-full object-contain pointer-events-none select-none"
-          onLoad={() => console.log("[IMG_OK] oven-aspect", label, img)}
-          onError={(e) => console.log("[IMG_ERR] oven-aspect", label, e.currentTarget.src)}
         />
       </button>
       <div className="mt-1 text-xs font-galmuri font-bold text-[#121212]">

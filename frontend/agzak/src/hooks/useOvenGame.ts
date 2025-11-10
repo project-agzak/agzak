@@ -45,37 +45,9 @@ export function useOvenGame() {
       try {
         setInitLoading(true);
         setInitError(null);
-        
-        // iOS 환경 감지 및 로깅
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-        const userAgent = navigator.userAgent;
-        const localStorageAvailable = (() => {
-          try {
-            const test = '__localStorage_test__';
-            localStorage.setItem(test, test);
-            localStorage.removeItem(test);
-            return true;
-          } catch {
-            return false;
-          }
-        })();
-        
-        console.log("[ENFORCE_INIT] 초기화 시작", {
-          isIOS,
-          userAgent,
-          localStorageAvailable,
-          timestamp: new Date().toISOString(),
-        });
-        
+                
         // 먼저 오늘의 할당량을 체크
         const quotaRes = await GameAPI.getToday();
-        console.log("[ENFORCE_INIT] getToday 응답:", {
-          ok: quotaRes.ok,
-          ...(quotaRes.ok
-            ? { data: { cap: quotaRes.data.cap, used: quotaRes.data.used } }
-            : { error: quotaRes.error }),
-        });
-        
         if (quotaRes.ok && quotaRes.data.cap === quotaRes.data.used) {
           setBlocked("LIMIT");
           refresh();

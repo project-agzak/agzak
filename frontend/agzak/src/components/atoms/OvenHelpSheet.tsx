@@ -40,8 +40,6 @@ export default function OvenHelpSheet({ open, onClose, src }: Props) {
             alt="강화 쿠키 오븐 도움말"
             className="block w-full h-auto
               max-w-[min(92vw,280px)] max-h-[70vh] object-contain"
-            onLoad={() => console.log("[IMG_OK] oven-help", img)}
-            onError={(e) => console.log("[IMG_ERR] oven-help", e.currentTarget.src)}
             draggable={false}
           />
 

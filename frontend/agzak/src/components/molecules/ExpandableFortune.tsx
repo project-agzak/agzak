@@ -29,6 +29,7 @@ export function ExpandableFortune({
       type="single"
       collapsible
       className="w-full"
+      defaultValue={itemValue} 
       // 기본은 닫혀 있게 하고 싶으면 defaultValue 안 넣으면 됨
     >
       <AccordionItem value={itemValue} className="border-none">

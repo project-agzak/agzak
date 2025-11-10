@@ -42,6 +42,7 @@ async function request<T>(config: AxiosRequestConfig): Promise<ApiResponse<T>> {
 
      const url = typeof config.url === "string" ? config.url : "";
     const isAuthRequest = url.startsWith("/auth/");
+
     const isGameRequest = url.startsWith("/game/");
 
        //  0. 로그인 안 된 상태에서 게임 API는 아예 호출하지 않기
@@ -98,15 +99,6 @@ if (!isAuthRequest && accessToken) {
     }
     const res: AxiosResponse<T> = await apiClient.request<T>(config);
 
-    // 게임 요청 성공 로깅
-    if (isGameRequest) {
-      console.log("[API_RESPONSE] 게임 API 응답 성공:", {
-        url,
-        status: res.status,
-        hasData: !!res.data,
-      });
-    }
-
     //  204 No Content → 성공으로 간주
     if (res.status === 204) {
       return { ok: true, data: undefined };
@@ -120,24 +112,6 @@ if (!isAuthRequest && accessToken) {
     const message = raw?.message ?? e?.message ?? "Unexpected error";
     const url = typeof config.url === "string" ? config.url : "";
     const isAuthRequest = url.startsWith("/auth/");
-    const isGameRequest = url.startsWith("/game/");
-    
-    // 게임 요청 에러 상세 로깅
-    if (isGameRequest) {
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      console.error("[API_ERROR] 게임 API 요청 실패:", {
-        url,
-        method: config.method,
-        status,
-        statusText: e?.response?.statusText,
-        message,
-        error: e?.message,
-        responseData: raw,
-        isIOS,
-        headers: e?.response?.headers,
-        timestamp: new Date().toISOString(),
-      });
-    }
     
     // handleAuthError는 한 번만 호출
     handleAuthError(status, url);
