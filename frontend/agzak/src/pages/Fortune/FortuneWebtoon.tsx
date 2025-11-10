@@ -7,6 +7,7 @@ import { Button_L } from "@/components/atoms/Button_L";
 import { MidImages34 } from "@/components/templates/MidImages34";
 
 import { useFortuneStore } from "@/store/useFortuneStore";
+import SadCharacter from "@/assets/ui/sad.webp";
 
 export default function FortuneWebtoonPage() {
   const navigate = useNavigate();
@@ -65,11 +66,12 @@ export default function FortuneWebtoonPage() {
     </div>
 
     {/* 캐릭터 */}
-    <img
-      src="/src/assets/ui/sad.webp"
-      alt="말풍선 캐릭터"
-      className="w-40 h-auto mt-10 [image-rendering:pixelated]"
-    />
+   <img
+  src={SadCharacter}
+  alt="말풍선 캐릭터"
+  className="w-40 h-auto mt-10 [image-rendering:pixelated]"
+/>
+
   </div>
 </div>
 
