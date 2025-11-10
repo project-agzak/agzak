@@ -94,14 +94,21 @@ public class MemberService {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 멤버 아이디입니다."));
 
+        // 닉네임 변경 처리
         if (request.nickname() != null) {
-            if (memberRepository.existsByNickname(request.nickname())) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 사용중인 닉네임입니다.");
+            String newNick = request.nickname().trim();
+            String oldNick = member.getNickname();
+
+            if (!newNick.equals(oldNick)) {
+                if (memberRepository.existsByNicknameAndMemberIdNot(newNick, memberId)) {
+                    throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 사용중인 닉네임입니다.");
+                }
+                member.updateNickname(newNick);
+                afterCommit(() -> rankingService.refreshTodayForMember(memberId));
             }
-            member.updateNickname(request.nickname());
-            afterCommit(() -> rankingService.refreshTodayForMember(memberId));
         }
 
+        // 출생시간 변경 처리
         if (request.birthTime() != null) {
             member.updateBirthTime(request.birthTime());
         }
