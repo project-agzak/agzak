@@ -1,14 +1,17 @@
+import { trackError, trackEvent } from "@/lib/analytics";
+import { api } from "@/lib/api";
 import { useState, type ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { api } from "@/lib/api";
 
 import Logo from "@/assets/Background/agzak-logo.svg";
-import { Input } from "@/components/atoms/Input";
-import { Button_M } from "@/components/atoms/Button_M";
 import { Button_L } from "@/components/atoms/Button_L";
+import { Button_M } from "@/components/atoms/Button_M";
+import { Input } from "@/components/atoms/Input";
 
 type CheckEmailResponse = {
-  exists: boolean;
+   email: string;
+  available: boolean;
+
 };
 
 type RegisterWithGuestResponse = {
@@ -41,11 +44,13 @@ export default function SignupPage() {
 
   // 비밀번호 형식 검사 (8자 이상, 영문+숫자)
   const validatePassword = (value: string) => {
-    //  영문 + 숫자 + 특수문자 허용 (8자 이상 100자 이하)
-const regex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=\[{\]};:'",<.>/?`~\\|])[A-Za-z\d!@#$%^&*()_\-+=\[{\]};:'",<.>/?`~\\|]{8,100}$/;
+  
+   //  영문 + 숫자 + 특수문자 허용 (8자 이상 100자 이하)
+const regex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d!@#$%^&*()_\-+=\[{\]};:'",<.>/?`~\\|]{8,100}$/;
 
     setPasswordValid(regex.test(value));
   };
+
 
   const handleEmailChange = (e: ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
@@ -83,22 +88,41 @@ const regex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=\[{\]};:'",<.>/?`~\\|
     setChecking(false);
 
     if (!res.ok || !res.data) {
-      console.error("이메일 중복확인 실패:", res.error);
+      //console.error("이메일 중복확인 실패:", res.error);
       alert(res.error?.message ?? "서버와 통신 중 오류가 발생했습니다.");
       return;
     }
+  //  여기부터 변경
+  const { available } = res.data;
+  //console.log("이메일 중복확인 결과:", res.data);
 
-    const { exists } = res.data;
-    console.log("이메일 중복확인 결과:", res.data);
-
-    if (exists) {
-      alert("이미 사용 중인 이메일입니다.");
-      setEmailChecked(false);
-    } else {
-      alert("사용 가능한 이메일입니다.");
-      setEmailChecked(true);
-    }
+  if (!available) {
+    // 이미 사용 중
+    alert("이미 사용 중인 이메일입니다.");
+    setEmailChecked(false);
+  } else {
+    // 사용 가능
+    alert("사용 가능한 이메일입니다.");
+    setEmailChecked(true);
+  }
   };
+const emailHelperText = (() => {
+  if (!email) {
+    // 아직 아무것도 안 적었을 때
+    return "이메일 형식으로 작성해주세요.";
+  }
+  if (!emailValid) {
+    // 형식 틀렸을 때
+    return "이메일 형식이 올바르지 않습니다.";
+  }
+  if (emailChecked) {
+    // 중복 확인 통과 후
+    return "중복 확인이 완료되었습니다.";
+  }
+  // 형식은 맞고, 아직 중복 확인 전이면 → 아무 문구도 표시 안 함
+  return "중복 확인 버튼을 눌러주세요.";
+})();
+const emailHasError = !emailValid || (email && !emailChecked);
 
   // 회원가입
   const handleRegister = async () => {
@@ -125,7 +149,7 @@ const regex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=\[{\]};:'",<.>/?`~\\|
     }
 
     if (!emailChecked) {
-      alert("이메일 중복확인을 먼저 해주세요.");
+      alert("이메일 중복 확인을 먼저 해주세요.");
       return;
     }
 
@@ -152,13 +176,13 @@ const regex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=\[{\]};:'",<.>/?`~\\|
     );
 
     if (!res.ok || !res.data) {
-      console.error("회원가입 요청 실패:", res.error);
+      //console.error("회원가입 요청 실패:", res.error);
       alert(res.error?.message ?? "서버와 통신 중 오류가 발생했습니다.");
       return;
     }
 
     const data = res.data;
-    console.log("게스트 정보로 회원가입 성공:", data);
+    //console.log("게스트 정보로 회원가입 성공:", data);
 
     if (data.accessToken) {
       localStorage.setItem("access_token", data.accessToken);
@@ -168,6 +192,13 @@ const regex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=\[{\]};:'",<.>/?`~\\|
     }
 
     localStorage.removeItem("guestId");
+
+    // Analytics: 회원가입 완료
+    try {
+      trackEvent("auth_signup_complete", { method: guestId ? "with_guest" : "email" });
+    } catch (e) {
+      trackError("auth_signup_event_fail", (e as any)?.message ?? "event error");
+    }
 
     alert("회원가입이 완료되었습니다!");
     navigate("/login");
@@ -199,16 +230,13 @@ const regex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=\[{\]};:'",<.>/?`~\\|
           </div>
 
           <p
-            className={`mt-0 pl-8 text-left font-galmuri-xsmall ${
-              emailValid ? "text-[#9CA3AF]" : "text-[#E11D48]"
-            }`}
-          >
-            {emailValid
-              ? emailChecked
-                ? "중복 확인이 완료되었습니다."
-                : "이메일 형식으로 작성해주세요."
-              : "이메일 형식이 올바르지 않습니다."}
-          </p>
+           className={`mt-0 pl-8 text-left font-galmuri-xsmall ${
+    emailHasError ? "text-[#E11D48]" : "text-[#9CA3AF]"
+  }`}
+>
+  {emailHelperText}
+</p>
+
         </div>
 
         <div className="flex w-full max-w-[300px] flex-col gap-1">
@@ -227,7 +255,7 @@ const regex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=\[{\]};:'",<.>/?`~\\|
             }`}
           >
             {passwordValid
-              ? "영어, 숫자 포함 8자이상"
+             ? "영어, 숫자 포함 8자이상"
               : "비밀번호 형식이 올바르지 않습니다."}
           </p>
         </div>

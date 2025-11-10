@@ -1,9 +1,9 @@
 // src/components/molecules/Header.tsx
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
 import { useAuthStore, type Member } from "@/store/useAuthStore";
-
+import { useSessionQuotaStore } from "@/store/sessionQuotaStore";
 import { Button_M } from "@/components/atoms/Button_M";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/sheet";
 
 export default function Header() {
-  const navigate = useNavigate();
 
   // 전역 인증 상태
   const { isLoggedIn, member, setMember, logout } = useAuthStore();
@@ -27,12 +26,12 @@ useEffect(() => {
     const res = await api.get<Member>("/members"); // ⬅ 전체 Member 타입으로 받기
 
     if (!res.ok || !res.data) {
-      console.error("회원 정보 불러오기 실패:", res.error);
+      //console.error("회원 정보 불러오기 실패:", res.error);
       return;
     }
 
     const data = res.data;
-    console.log("Header - 회원 정보 불러오기 성공:", data); // 여기 birthTime 나와야 함
+    //console.log("Header - 회원 정보 불러오기 성공:", data); // 여기 birthTime 나와야 함
     setMember(data); // ⬅ 이제 birthTime까지 포함된 객체가 store에 저장됨
   };
 
@@ -49,17 +48,17 @@ useEffect(() => {
     const res = await api.post<null>("/auth/logout");
 
     if (!res.ok) {
-      console.error("로그아웃 요청 실패:", res.error);
+      //console.error("로그아웃 요청 실패:", res.error);
       // 서버 로그아웃 실패해도 클라이언트에서는 일단 로그아웃 처리
     } else {
-      console.log("로그아웃 API 성공");
+      //console.log("로그아웃 API 성공");
     }
 
     // 전역 인증 상태 및 토큰 정리
     logout();
 
     alert("로그아웃 되었습니다.");
-    navigate("/login");
+    window.location.replace("/home");
   };
 
   const nickname = member?.nickname ?? "";
@@ -68,7 +67,7 @@ useEffect(() => {
     <header className="fixed inset-x-0 top-0 z-50">
       <div className="mx-auto w-full max-w-[360px] bg-[#FEFBF2]">
         <div className="flex h-16 items-center px-4">
-          <a href="/">
+          <a href="/home">
             <img
               src="/agzak-logo.svg"
               alt="Agzak Logo"
@@ -134,8 +133,10 @@ type SidebarContentProps = {
 
 /** 사이드바 내용 */
 function SidebarContent({ isLoggedIn, nickname, onLogout }: SidebarContentProps) {
-   const navigate = useNavigate();
+  const navigate = useNavigate();
   const displayName = nickname || "사용자";
+  // 설치
+  const [deferred, setDeferred] = useState<any>(null);
 
   const handleFortuneClick = () => {
     if (isLoggedIn) {
@@ -144,6 +145,45 @@ function SidebarContent({ isLoggedIn, nickname, onLogout }: SidebarContentProps)
       navigate("/fortune"); // ✅ 비로그인 시 기존 폼 페이지
     }
   };
+
+  // 강화 버튼 비활성화
+  const { quota, refresh } = useSessionQuotaStore();
+  const remainingSessions = quota?.remaining ?? 0;
+  const canEnforce = remainingSessions > 0; 
+
+  useEffect(() => {
+    refresh(); // 홈과 동일하게 진입 시 최신화
+  }, [refresh]);
+
+  useEffect(() => {
+    // 처음 진입 시 전역에 저장된 게 있으면 사용
+    setDeferred((window as any).__pwaDeferredPrompt ?? null);
+
+    // PWABadge에서 브로드캐스트하는 이벤트를 구독
+    const onDeferred = (e: any) => setDeferred(e.detail ?? null);
+    const onConsumed = () => setDeferred(null);
+
+    window.addEventListener('pwa:beforeinstallprompt', onDeferred as any);
+    window.addEventListener('pwa:consumed', onConsumed);
+
+    return () => {
+      window.removeEventListener('pwa:beforeinstallprompt', onDeferred as any);
+      window.removeEventListener('pwa:consumed', onConsumed);
+    };
+  }, []);
+
+  const handleInstall = async () => {
+    const evt = (window as any).__pwaDeferredPrompt || deferred;
+    if (!evt) return;
+
+    await evt.prompt();
+    try { await evt.userChoice; } catch {}
+    (window as any).__pwaDeferredPrompt = null;
+    window.dispatchEvent(new CustomEvent('pwa:consumed'));
+    setDeferred(null);
+  };
+
+
   return (
     <div className="h-full flex flex-col">
       {/* 로고 */}
@@ -187,7 +227,7 @@ function SidebarContent({ isLoggedIn, nickname, onLogout }: SidebarContentProps)
 
       {/* 메뉴 */}
        {/*  운세 보기 수정됨 */}
-      <nav className="px-5 py-5 space-y-1 font-bitbit">
+      <nav className="ml-10 font-bitbit">
         <SheetClose asChild>
           <button
             onClick={handleFortuneClick}
@@ -198,12 +238,13 @@ function SidebarContent({ isLoggedIn, nickname, onLogout }: SidebarContentProps)
         </SheetClose>
 
         <SheetClose asChild>
-          <a
-            href="/enforce"
-            className="flex items-center gap-2 rounded-md px-0 py-2 hover:bg-zinc-100 active:bg-zinc-200 transition-colors"
+          <button
+            onClick={() => canEnforce && navigate("/enforce")}
+            disabled={!canEnforce}
+            className="flex items-center gap-2 rounded-md px-0 py-2 hover:bg-zinc-100 active:bg-zinc-200 transition-colors text-left cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <span>운세 강화</span>
-          </a>
+          </button>
         </SheetClose>
 
         <SheetClose asChild>
@@ -231,6 +272,16 @@ function SidebarContent({ isLoggedIn, nickname, onLogout }: SidebarContentProps)
           >
             <span>마이페이지</span>
           </a>
+        </SheetClose>
+
+        <SheetClose asChild>
+          <button
+            onClick={handleInstall}
+            disabled={!deferred}   
+            className="flex w-full items-center gap-2 rounded-md px-0 py-2 hover:bg-zinc-100 active:bg-zinc-200 transition-colors text-left cursor-pointer"
+          >
+            <span>앱 설치하기</span>
+          </button>
         </SheetClose>
       </nav>
 
