@@ -1,9 +1,9 @@
 // @/components/molecules/FortuneBottomSheet.tsx
 "use client"
 
+import { COLOR_MAP } from "@/adapters/fortuneAdapter";
 import parchmentFrame from "@/assets/ui/parchment-frame.png";
 import { FortuneGaugeList } from "@/components/molecules/FortuneGaugeList";
-import { COLOR_MAP } from "@/adapters/fortuneAdapter"
 import type { FortuneData } from "@/types/fortune";
 
 import FrontCat from "@/assets/FrontCard/FrontCat.webp";
@@ -93,7 +93,7 @@ export function FortuneBottomSheet({
             </h2>
             <button
               onClick={onClose}
-              className="w-15 h-15 flex items-center justify-center rounded-full pr-6 cursor-pointer"
+              className="w-10 h-15 flex items-center justify-center rounded-full cursor-pointer"
             >
               ✕
             </button>

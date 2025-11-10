@@ -46,7 +46,7 @@ export default function SignupPage() {
   const validatePassword = (value: string) => {
   
    //  영문 + 숫자 + 특수문자 허용 (8자 이상 100자 이하)
-const regex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=\[{\]};:'",<.>/?`~\\|])[A-Za-z\d!@#$%^&*()_\-+=\[{\]};:'",<.>/?`~\\|]{8,100}$/;
+const regex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d!@#$%^&*()_\-+=\[{\]};:'",<.>/?`~\\|]{8,100}$/;
 
     setPasswordValid(regex.test(value));
   };
@@ -88,13 +88,13 @@ const regex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_\-+=\[{\]};:'",<.>/?`~\\|
     setChecking(false);
 
     if (!res.ok || !res.data) {
-      console.error("이메일 중복확인 실패:", res.error);
+      //console.error("이메일 중복확인 실패:", res.error);
       alert(res.error?.message ?? "서버와 통신 중 오류가 발생했습니다.");
       return;
     }
   //  여기부터 변경
   const { available } = res.data;
-  console.log("이메일 중복확인 결과:", res.data);
+  //console.log("이메일 중복확인 결과:", res.data);
 
   if (!available) {
     // 이미 사용 중
@@ -176,13 +176,13 @@ const emailHasError = !emailValid || (email && !emailChecked);
     );
 
     if (!res.ok || !res.data) {
-      console.error("회원가입 요청 실패:", res.error);
+      //console.error("회원가입 요청 실패:", res.error);
       alert(res.error?.message ?? "서버와 통신 중 오류가 발생했습니다.");
       return;
     }
 
     const data = res.data;
-    console.log("게스트 정보로 회원가입 성공:", data);
+    //console.log("게스트 정보로 회원가입 성공:", data);
 
     if (data.accessToken) {
       localStorage.setItem("access_token", data.accessToken);
@@ -255,7 +255,7 @@ const emailHasError = !emailValid || (email && !emailChecked);
             }`}
           >
             {passwordValid
-             ? "영어, 숫자 ,특수문자 포함 8자이상"
+             ? "영어, 숫자 포함 8자이상"
               : "비밀번호 형식이 올바르지 않습니다."}
           </p>
         </div>
