@@ -54,7 +54,7 @@ export default function FortuneWebtoonPage() {
                    text-center min-w-[200px] max-w-[260px] leading-tight
                    [image-rendering:pixelated] pixel-rounded"
       >
-        가시기 전에...<br /> 아래에 재밌는 웹툰도 <br /> 보고가세요 !
+        힝... <br/> 아래 웹툰도 <br/>보고 가주세요...
         {/* 꼬리 */}
         <div className="absolute left-1/2 bottom-[-10px] -translate-x-1/2 w-0 h-0 
                         border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent 
@@ -69,7 +69,7 @@ export default function FortuneWebtoonPage() {
    <img
   src={SadCharacter}
   alt="말풍선 캐릭터"
-  className="w-40 h-auto mt-10 [image-rendering:pixelated]"
+  className="w-20 h-auto mt-10 [image-rendering:pixelated]"
 />
 
   </div>
@@ -80,6 +80,16 @@ export default function FortuneWebtoonPage() {
       <div className="mt-5 flex justify-center bg-gradient-to-b from-[#fff8e7] via-[#121212] to-[#fff8e7] py-10">
         <MidImages34 itemWidth={300} whiteBg />
       </div>
+
+        {/* 하단 버튼 */}
+      <div className="mt-15 flex justify-center pb-15">
+        <Button_L
+          label="운세 카드 확인"
+          width={260}
+          onClick={handleNext}
+        />
+      </div>
+
     </main>
   );
 }
