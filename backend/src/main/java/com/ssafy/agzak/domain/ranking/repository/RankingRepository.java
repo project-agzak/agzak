@@ -1,7 +1,9 @@
 package com.ssafy.agzak.domain.ranking.repository;
 
 import com.ssafy.agzak.domain.ranking.entity.Ranking;
-import org.springframework.data.jpa.repository.*;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;

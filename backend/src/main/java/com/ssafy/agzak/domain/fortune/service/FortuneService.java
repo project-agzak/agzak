@@ -1,7 +1,7 @@
 package com.ssafy.agzak.domain.fortune.service;
 
 import com.ssafy.agzak.domain.fortune.dto.request.BirthDataInput;
-import com.ssafy.agzak.domain.fortune.dto.response.*;
+import com.ssafy.agzak.domain.fortune.dto.response.FinalFortuneResponse;
 import com.ssafy.agzak.domain.fortune.entity.Fortune;
 import com.ssafy.agzak.domain.fortune.entity.FortuneAspect;
 import com.ssafy.agzak.domain.fortune.repository.FortuneAspectRepository;

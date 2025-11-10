@@ -1,11 +1,16 @@
 package com.ssafy.agzak.domain.auth.service;
 
+import com.ssafy.agzak.domain.auth.client.KakaoApiClient;
 import com.ssafy.agzak.domain.auth.client.KakaoOAuthClient;
-import com.ssafy.agzak.domain.auth.dto.request.LoginRequest;
-import com.ssafy.agzak.domain.auth.dto.request.RegisterRequest;
+import com.ssafy.agzak.domain.auth.dto.request.*;
 import com.ssafy.agzak.domain.auth.dto.response.CheckEmailResponse;
-import com.ssafy.agzak.domain.auth.dto.request.RegisterWithGuestRequest;
+import com.ssafy.agzak.domain.auth.dto.response.SocialLoginResponse;
 import com.ssafy.agzak.domain.auth.dto.response.TokenResponse;
+import com.ssafy.agzak.domain.auth.entity.OAuthIdentity;
+import com.ssafy.agzak.domain.auth.entity.OAuthIdentity.OAuthIdentityId;
+import com.ssafy.agzak.domain.auth.entity.OAuthIdentity.OAuthProvider;
+import com.ssafy.agzak.domain.auth.repository.OAuthIdentityRepository;
+import com.ssafy.agzak.domain.auth.support.SocialSignupTicketStore;
 import com.ssafy.agzak.domain.fortune.dto.response.LatLng;
 import com.ssafy.agzak.domain.fortune.service.GeocodingService;
 import com.ssafy.agzak.domain.guest.dto.GuestProfile;
@@ -24,19 +29,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-import com.ssafy.agzak.domain.auth.dto.request.KakaoLoginRequest;
-import com.ssafy.agzak.domain.auth.dto.request.KakaoCompleteSignupRequest;
-import com.ssafy.agzak.domain.auth.dto.response.SocialLoginResponse;
-import com.ssafy.agzak.domain.auth.entity.OAuthIdentity;
-import com.ssafy.agzak.domain.auth.entity.OAuthIdentity.OAuthIdentityId;
-import com.ssafy.agzak.domain.auth.entity.OAuthIdentity.OAuthProvider;
-import com.ssafy.agzak.domain.auth.repository.OAuthIdentityRepository;
-import com.ssafy.agzak.domain.auth.support.SocialSignupTicketStore;
-import com.ssafy.agzak.domain.auth.client.KakaoApiClient;
-import java.util.HashMap;
 
 import java.time.Duration;
 import java.time.LocalTime;
+import java.util.HashMap;
 import java.util.function.Function;
 
 @Service
