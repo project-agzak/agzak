@@ -13,6 +13,7 @@ const LoginPage = lazy(() => import('@/pages/Auth/LoginPage'));
 const SignupPage = lazy(() => import('@/pages/Auth/SignupPage'));
 
 const FortunePage = lazy(() => import('@/pages/Fortune/FortunePage'));
+const FortuneWebtoon = lazy(() => import('@/pages/Fortune/FortuneWebtoon'));
 const FortuneResultPage = lazy(() => import('@/pages/Fortune/FortuneResultPage'));
 
 const EnforcePage = lazy(() => import('@/pages/Enforce/EnforcePage'));
@@ -45,6 +46,7 @@ export const router = createBrowserRouter([
         element: <EmptyLayout />,
         children: [
           { index: true, element: suspense(<FortunePage />) },
+            { path:'webtoon', element: suspense(<FortuneWebtoon />) },
           { path: 'result', element: suspense(<FortuneResultPage />) },
         ],
       },
