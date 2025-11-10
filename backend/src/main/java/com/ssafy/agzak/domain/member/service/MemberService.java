@@ -119,6 +119,7 @@ public class MemberService {
         oauthRepo.deleteAllByMember(member);
         refreshStore.delete(memberId);
         member.deleteMember();
+        memberRepository.delete(member);
     }
 
 }
