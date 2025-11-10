@@ -57,7 +57,6 @@ public class FortuneService {
             } else {
                 log.info("Total Miss (DB & Guest Cache). AI 운세 생성을 시작합니다: {}", memberId);
                 finalFortuneResponse = fortuneAiService.getFortuneScores(input, city);
-                cache.put(guestCacheKey, finalFortuneResponse);
             }
         } else {
             log.warn("Cache를 찾을 수 없어 AI를 직접 호출합니다. (key: {})", guestCacheKey);
