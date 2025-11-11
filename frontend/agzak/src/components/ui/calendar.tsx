@@ -31,11 +31,12 @@ function Calendar({
     <DayPicker
       showOutsideDays={showOutsideDays}
       className={cn(
-        "group/calendar p-3 [--cell-size:2rem] [[data-slot=card-content]_&]:bg-transparent [[data-slot=popover-content]_&]:bg-transparent",
-        String.raw`rtl:**:[.rdp-button_next>svg]:rotate-180`,
-        String.raw`rtl:**:[.rdp-button_previous>svg]:rotate-180`,
-        className
-      )}
+  // 모바일에서는 살짝 더 작게, 큰 화면에서는 기존 크기 유지
+  "group/calendar p-2 [--cell-size:1.7rem] sm:p-3 sm:[--cell-size:2rem] [[data-slot=card-content]_&]:bg-transparent [[data-slot=popover-content]_&]:bg-transparent",
+  String.raw`rtl:**:[.rdp-button_next>svg]:rotate-180`,
+  String.raw`rtl:**:[.rdp-button_previous>svg]:rotate-180`,
+  className
+)}
       captionLayout={captionLayout}
       formatters={{
         formatMonthDropdown: (date) =>
@@ -44,11 +45,11 @@ function Calendar({
       }}
       classNames={{
         root: cn(
-  "w-fit rounded-xl bg-white shadow-md overflow-hidden", // 👈 카드 + 잘림 방지
+  "w-fit rounded-xl bg-white shadow-md", // 👈 카드 + 잘림 방지
   defaultClassNames.root
 ),
         months: cn(
-          "relative flex flex-col gap-4 md:flex-row",
+          "relative flex flex-col gap-2 md:flex-row",
           defaultClassNames.months
         ),
         month: cn("flex w-full flex-col gap-4", defaultClassNames.month),
@@ -92,7 +93,7 @@ function Calendar({
           "text-muted-foreground flex-1 select-none rounded-md text-[0.8rem] font-normal",
           defaultClassNames.weekday
         ),
-        week: cn("mt-2 flex w-full", defaultClassNames.week),
+        week: cn("mt-1 flex w-full", defaultClassNames.week),
         week_number_header: cn(
           "w-[--cell-size] select-none",
           defaultClassNames.week_number_header
