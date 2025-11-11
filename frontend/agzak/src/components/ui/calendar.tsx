@@ -45,7 +45,9 @@ function Calendar({
       }}
       classNames={{
         root: cn(
-  "w-fit rounded-xl bg-white shadow-md", // 👈 카드 + 잘림 방지
+  // ✅ 전체 배경이 calendar 높이 전체를 덮도록 수정
+  "block w-full rounded-xl bg-white shadow-md p-2",
+  "min-h-[320px] sm:min-h-[340px]",  // ✅ 높이 고정 (15일 이후 칸까지 흰배경 유지)
   defaultClassNames.root
 ),
         months: cn(

@@ -1,15 +1,14 @@
 // src/pages/Fortune/FortunePage.tsx
-import {  useEffect,useLayoutEffect, useState,useRef } from "react";
-import { createPortal } from "react-dom";
+import {  useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Calendar } from "@/components/ui/calendar";
+
 import FullnameLogo from "@/assets/Background/agzak-fullname.svg";
 import FortuneCookie from "@/assets/Gifs/FortuneCookie.gif";
 import { Input } from "@/components/atoms/Input";
 import { Button_L } from "@/components/atoms/Button_L";
 import { TimeDropDown } from "@/components/atoms/TimeDropDown";
 import { BirthCitySearch, type BirthCity } from "@/components/atoms/BirthCitySearch";
-import { CalendarIcon } from "lucide-react";
+
 import { DropDown } from "@/components/atoms/DropDown";
 import { useFortuneStore } from "@/store/useFortuneStore";
 import type { GuestFortuneReq } from "@/lib/fortuneAPI"
@@ -17,7 +16,8 @@ import FortuneLoading from "@/components/templates/FortuneLoading";
 import { AuthAPI } from "@/lib/AuthAPI";
 import { useAuthStore } from "@/store/useAuthStore";
 import { SIMPLE_REGIONS } from "@/constants/regions"; 
-
+import { Calendar } from "@/components/ui/calendar";
+import { CalendarIcon } from "lucide-react";
 
 export default function FortunePage() {
   const navigate = useNavigate();
@@ -35,23 +35,6 @@ const [birthCityText, setBirthCityText] = useState("");
   const { isLoggedIn } = useAuthStore();
 const [showBirthCalendar, setShowBirthCalendar] = useState(false);
    const [submitting,setSubmitting] = useState(false);
-const birthRef = useRef<HTMLDivElement | null>(null);
-const calendarRef = useRef<HTMLDivElement | null>(null);
-const [calendarPos, setCalendarPos] = useState({ top: 0, left: 0 });
-
-useLayoutEffect(() => {
-  if (showBirthCalendar && birthRef.current) {
-    const rect = birthRef.current.getBoundingClientRect();
-    const scrollY = window.scrollY;
-    const scrollX = window.scrollX;
-
-    // 인풋 기준 위로 띄우기
-    setCalendarPos({
-      top: rect.top + scrollY - 340, // 캘린더 높이에 맞게 조정
-      left: rect.left + scrollX + rect.width / 2,
-    });
-  }
-}, [showBirthCalendar]);
 
      useEffect(() => {
     if (isLoggedIn) {
@@ -378,7 +361,7 @@ useLayoutEffect(() => {
           />
         </div>
 
-   
+     {/* 생년월일 */}
 {/* 🔹 생년월일 */}
 <div className="flex max-w-[300px] flex-col gap-1">
   <div className="mx-auto flex w-[230px] justify-between items-center">
@@ -390,8 +373,8 @@ useLayoutEffect(() => {
     </span>
   </div>
 
-   {/* 인풋 + 캘린더 */}
-  <div ref={birthRef} className="relative flex flex-col items-center">
+  {/* 인풋 + 캘린더 */}
+  <div className="relative flex flex-col items-center">
     {/* 입력창 */}
     <Input
       type="text"
@@ -403,8 +386,8 @@ useLayoutEffect(() => {
       className="font-galmuri-small w-[260px] pr-8 cursor-pointer"
     />
 
-    {/* 달력 아이콘 버튼 */}
-     <button
+    {/* 달력 버튼 */}
+    <button
       type="button"
       className="absolute right-[calc(50%-130px+8px)] top-1/2 -translate-y-1/2 flex h-6 w-10 items-center justify-center"
       onClick={(e) => {
@@ -415,50 +398,49 @@ useLayoutEffect(() => {
       <CalendarIcon className="h-4 w-4 opacity-80" />
       <span className="sr-only">날짜 선택</span>
     </button>
-  </div>
 
-  {/* ✅ Portal 캘린더 (절대 안 잘림) */}
-  {showBirthCalendar &&
-    createPortal(
+    {/* 캘린더 — 단순 토글형 */}
+    {showBirthCalendar && (
       <div
-        className="fixed inset-0 z-[999]"
-        onClick={() => setShowBirthCalendar(false)} // 외부 클릭 시 닫힘
+        className="
+          absolute
+          bottom-[calc(100%+8px)]   /* 인풋 위에 8px 간격 */
+          left-1/2
+          -translate-x-1/2
+          z-50
+        "
       >
-        <div
-          ref={calendarRef}
-          className="absolute z-[1000] rounded-lg border bg-white shadow-lg w-[300px]"
-          style={{
-            top: `${calendarPos.top}px`,
-            left: `${calendarPos.left}px`,
-            transform: "translateX(-50%)",
+        <Calendar
+          mode="single"
+          captionLayout="dropdown"
+          selected={birthDate ? new Date(`${birthDate}T00:00:00`) : undefined}
+          onSelect={(selectedDate: Date | undefined) => {
+            if (!selectedDate) return;
+
+            const y = selectedDate.getFullYear();
+            const m = String(selectedDate.getMonth() + 1).padStart(2, "0");
+            const d = String(selectedDate.getDate()).padStart(2, "0");
+            const formatted = `${y}-${m}-${d}`;
+
+            setBirthDate(formatted);
+            setShowBirthCalendar(false); // 선택 시 닫기
           }}
-          onClick={(e) => e.stopPropagation()} // 내부 클릭 시 닫히지 않게
-        >
-          <Calendar
-            mode="single"
-            captionLayout="dropdown"
-            selected={birthDate ? new Date(`${birthDate}T00:00:00`) : undefined}
-            onSelect={(selectedDate: Date | undefined) => {
-              if (!selectedDate) return;
-              const y = selectedDate.getFullYear();
-              const m = String(selectedDate.getMonth() + 1).padStart(2, "0");
-              const d = String(selectedDate.getDate()).padStart(2, "0");
-              setBirthDate(`${y}-${m}-${d}`);
-              setShowBirthCalendar(false);
-            }}
-            disabled={(day: Date | undefined) => {
-              if (!day) return false;
-              const min = new Date("1900-01-01T00:00:00");
-              const today = new Date();
-              today.setHours(0, 0, 0, 0);
-              return day < min || day > today;
-            }}
-            className="rounded-lg border bg-white shadow-lg w-[300px] [--cell-size:2.4rem]"
-          />
-        </div>
-      </div>,
-      document.body
+          disabled={(day: Date | undefined) => {
+            if (!day) return false;
+
+            const min = new Date("1900-01-01T00:00:00");
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            return day < min || day > today;
+          }}
+          className="
+            rounded-lg border bg-white shadow-lg
+            w-[300px] [--cell-size:2.4rem]
+          "
+        />
+      </div>
     )}
+  </div>
 </div>
 
 
