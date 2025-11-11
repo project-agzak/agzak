@@ -42,7 +42,6 @@ const [showBirthCalendar, setShowBirthCalendar] = useState(false);
   }, [isLoggedIn, navigate]);
 
 
-const todayStr = new Date().toISOString().slice(0, 10); 
    const handleFortuneSubmit = async () => {
     
       if (submitting) return; //  중복 클릭 방지
@@ -426,7 +425,7 @@ const todayStr = new Date().toISOString().slice(0, 10);
           }}
           className="
             rounded-lg border bg-white shadow-lg
-            w-[340px]                /* 🔹 가로 널널하게 */
+            w-[260px]                /* 🔹 가로 널널하게 */
             [--cell-size:2.4rem]     /* 🔹 칸도 조금 넓게 */
           "
         />
