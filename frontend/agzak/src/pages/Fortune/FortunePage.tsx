@@ -439,7 +439,7 @@ const [showBirthCalendar, setShowBirthCalendar] = useState(false);
           }}
           className="
             rounded-lg border bg-white shadow-lg
-            w-[260px]                /* 🔹 가로 널널하게 */
+            w-[300px]                /* 🔹 가로 널널하게 */
             [--cell-size:2.4rem]     /* 🔹 칸도 조금 넓게 */
           "
         />
