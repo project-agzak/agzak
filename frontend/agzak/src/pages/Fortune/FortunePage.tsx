@@ -360,8 +360,7 @@ const [showBirthCalendar, setShowBirthCalendar] = useState(false);
             onChange={(e) => setNickname(e.target.value)}
           />
         </div>
-
-     {/* 생년월일 */}
+{/* 🔹 생년월일 */}
 <div className="flex max-w-[300px] flex-col gap-1">
   <div className="mx-auto flex w-[230px] justify-between items-center">
     <label className="font-galmuri-small font-extrabold text-[#222]">
@@ -372,9 +371,9 @@ const [showBirthCalendar, setShowBirthCalendar] = useState(false);
     </span>
   </div>
 
-  {/* 🔹 인풋 + 캘린더 팝업 컨테이너 */}
-  <div className="relative flex flex-col items-center">
-    {/* 클릭하면 토글되는 인풋 */}
+  {/* 🔹 인풋 + 캘린더 컨테이너 */}
+  <div className="relative flex flex-col items-center overflow-visible">
+    {/* 인풋 */}
     <Input
       type="text"
       aria-label="생년월일 입력"
@@ -382,14 +381,15 @@ const [showBirthCalendar, setShowBirthCalendar] = useState(false);
       placeholder="YYYY-MM-DD"
       readOnly
       onClick={() => setShowBirthCalendar((prev) => !prev)}
-      className="font-galmuri-small w-[260px] pr-8 cursor-pointer" 
+      className="font-galmuri-small w-[260px] pr-8 cursor-pointer"
     />
- {/* 🔹 오른쪽 달력 버튼 */}
+
+    {/* 달력 버튼 */}
     <button
       type="button"
       className="absolute right-[calc(50%-130px+8px)] top-1/2 -translate-y-1/2 flex h-6 w-10 items-center justify-center"
       onClick={(e) => {
-        e.stopPropagation(); // 인풋 클릭 이벤트랑 겹치지 않게
+        e.stopPropagation();
         setShowBirthCalendar((prev) => !prev);
       }}
     >
@@ -397,13 +397,12 @@ const [showBirthCalendar, setShowBirthCalendar] = useState(false);
       <span className="sr-only">날짜 선택</span>
     </button>
 
-
-    {/* 🔹 위로 떠서 나오는 캘린더 */}
+    {/* 🔹 캘린더 */}
     {showBirthCalendar && (
       <div
         className="
           absolute
-          bottom-[calc(100%+8px)]   /* 인풋 위에, 8px 띄우기 */
+          bottom-[calc(100%+8px)]   /* 인풋 위로 띄우기 */
           left-1/2
           -translate-x-1/2
           z-50
@@ -413,9 +412,7 @@ const [showBirthCalendar, setShowBirthCalendar] = useState(false);
           mode="single"
           captionLayout="dropdown"
           selected={
-            birthDate
-              ? new Date(`${birthDate}T00:00:00`)
-              : undefined
+            birthDate ? new Date(`${birthDate}T00:00:00`) : undefined
           }
           onSelect={(selectedDate: Date | undefined) => {
             if (!selectedDate) return;
@@ -426,7 +423,7 @@ const [showBirthCalendar, setShowBirthCalendar] = useState(false);
             const formatted = `${y}-${m}-${d}`;
 
             setBirthDate(formatted);
-            setShowBirthCalendar(false); // 선택 후 닫기
+            setShowBirthCalendar(false);
           }}
           disabled={(day: Date | undefined) => {
             if (!day) return false;
@@ -434,13 +431,12 @@ const [showBirthCalendar, setShowBirthCalendar] = useState(false);
             const min = new Date("1900-01-01T00:00:00");
             const today = new Date();
             today.setHours(0, 0, 0, 0);
-
             return day < min || day > today;
           }}
           className="
             rounded-lg border bg-white shadow-lg
-            w-[300px]                /* 🔹 가로 널널하게 */
-            [--cell-size:2.4rem]     /* 🔹 칸도 조금 넓게 */
+            w-[300px]
+            [--cell-size:2.4rem]
           "
         />
       </div>
