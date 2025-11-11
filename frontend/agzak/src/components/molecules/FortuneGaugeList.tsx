@@ -1,9 +1,9 @@
 // @/components/molecules/FortuneGaugeList.tsx
 "use client"
 
+import type { FortuneGaugeColor } from "@/adapters/fortuneAdapter";
+import { COLOR_MAP } from "@/adapters/fortuneAdapter";
 import { FortuneGauge } from "@/components/atoms/FortuneGauge";
-import type { FortuneGaugeColor } from "@/adapters/fortuneAdapter"
-import { COLOR_MAP } from "@/adapters/fortuneAdapter"
 
 export type FortuneStat = {
   label: string
@@ -21,7 +21,7 @@ export function FortuneGaugeList({
   labelClassName?: string,
 }) {
   return (
-    <div className="w-full space-y-2">
+    <div className="w-full space-y-2 font-galmuri-xsmall">
       {stats.length === 0 ? (
         // 데이터가 비어있을 때 레이아웃 깨지지 않도록 0값 4개 출력
         <>
