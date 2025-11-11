@@ -28,6 +28,8 @@ public class RankingScheduler {
     @SchedulerLock(name = "rankingReseed", lockAtMostFor = "PT4M", lockAtLeastFor = "PT10S")
     public void hourlyReseedRedis() {
         rankingService.reseedRedisFromMysqlToday();
+        int pruned = rankingService.pruneTodayOrphans();
+        if (pruned > 0) log.info("Pruned {} orphan(s) after reseed", pruned);
     }
 }
 

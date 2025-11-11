@@ -223,6 +223,7 @@ public class RankingService {
                 .build();
     }
 
+
     // ===== 스냅샷 재생성(자정/시간별 배치용) =====
     @Transactional
     public void rebuildTodaySnapshot() {
@@ -231,28 +232,42 @@ public class RankingService {
         // 총점 기준 역정렬(내림차순)로 전원 로드
         var all = redisStore.readTop(today, redisStore.zTotal(today), Integer.MAX_VALUE);
         if (all == null || all.isEmpty()) {
-            // 오늘자 스냅샷 비우기
             mysqlStore.replaceTodaySnapshot(today, List.of());
             return;
         }
 
-        int rank = 1;
-        List<Ranking> rows = new ArrayList<>(all.size());
-        for (var r : all) {
-            // Member 프록시 참조
-            Member ref = mysqlStore.refMember(r.memberId());
+        // 존재하는 회원만 남기고, 고아는 정리
+        Set<Long> ids = all.stream().map(RedisRankingStore.UserRow::memberId).collect(Collectors.toSet());
+        Set<Long> alive = mysqlStore.existingMemberIds(ids);
 
+        int pruned = 0;
+        if (alive.size() != ids.size()) {
+            // Redis 고아 제거
+            for (Long mid : ids) {
+                if (!alive.contains(mid)) { try { redisStore.removeTodayUser(mid); pruned++; } catch (Exception ignore) {} }
+            }
+            log.info("Ranking snapshot prune: {} orphan(s) removed from Redis", pruned);
+        }
+
+        // 남은 회원만 스냅샷 생성
+        int rank = 1;
+        List<Ranking> rows = new ArrayList<>(alive.size());
+        for (var r : all) {
+            if (!alive.contains(r.memberId())) continue;
+            Member ref = mysqlStore.refMember(r.memberId());
             rows.add(Ranking.builder()
                     .member(ref)
                     .date(today)
-                    .rankNo(rank++)                               // 총점 기준 1-base 순번
+                    .rankNo(rank++)
                     .totalScore(r.total())
                     .originalTotalScore(r.original())
                     .build());
         }
 
-        // 오늘자 스냅샷 교체 저장
         mysqlStore.replaceTodaySnapshot(today, rows);
+        if (pruned > 0) {
+            log.info("Ranking snapshot saved with {} rows after pruning", rows.size());
+        }
     }
 
     public void removeFromToday(long memberId) {
@@ -261,6 +276,26 @@ public class RankingService {
         } catch (Exception e) {
             log.warn("Redis removeFromToday failed: memberId={}, err={}", memberId, e.toString());
         }
+    }
+
+    /** Redis에 남아있는 '삭제된 회원' 고아 데이터 정리 */
+    @Transactional
+    public int pruneTodayOrphans() {
+        LocalDate today = redisStore.today();
+        var all = redisStore.readTop(today, redisStore.zTotal(today), Integer.MAX_VALUE);
+        if (all == null || all.isEmpty()) return 0;
+
+        Set<Long> allIds = all.stream().map(RedisRankingStore.UserRow::memberId).collect(Collectors.toSet());
+        Set<Long> alive = mysqlStore.existingMemberIds(allIds);
+        allIds.removeAll(alive); // allIds = orphans
+
+        if (!allIds.isEmpty()) {
+            // 파이프라인 내부에서 일괄 삭제
+            for (Long mid : allIds) {
+                try { redisStore.removeTodayUser(mid); } catch (Exception ignore) { }
+            }
+        }
+        return allIds.size();
     }
 
     private enum RankBasis { TOTAL, ORIGINAL, GAIN }
