@@ -9,7 +9,7 @@ export default function AppLayout() {
       <div className="app-bg" aria-hidden />
       <Header />
       <RouterAnalytics />
-      <main className="app-content pt-16"> 
+      <main className="pt-16"> 
         <Outlet />
       </main>
       <div className="pwa-badge-wrap">
