@@ -169,7 +169,7 @@ export function BirthCitySearch({
   <div
     className="
       absolute z-50 left-0 right-0 top-full mt-3
-      rounded border-[2px] border-[#121212] bg-white shadow-md
+      rounded border-[1px] border-[#121212] bg-white shadow-md
       overflow-y-auto
     "
     style={{ maxHeight: dropdownMaxHeight }}

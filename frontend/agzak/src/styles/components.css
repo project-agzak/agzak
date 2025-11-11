@@ -163,7 +163,7 @@
   left: 0; top: 100%;
   width: 100%;
   background: #fff;
-  border: 2px solid #121212;
+  border: 1px solid #121212;
   border-radius: 4px;
   margin-top: 4px;
   z-index: 10;
@@ -210,7 +210,7 @@
 
   background-color: #ffffff;
   border-radius: 5px;
-  border: 2px solid #222222;
+  border: 1px solid #222222;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
 
   display: flex;
@@ -243,7 +243,7 @@
   padding: 0 2px;
 }
 
-/* 🔹 각각의 시/분 아이템 */
+/*  각각의 시/분 아이템 */
 .time-item {
   margin: 2px 0;
   padding: 4px 0;
@@ -251,7 +251,7 @@
   cursor: pointer;
 
   font-size: 12px;
-  color: #222222;
+  color: #121212;
 
   transition: background-color 0.15s ease, color 0.15s ease,
     transform 0.08s ease;
@@ -286,7 +286,7 @@
   --field-h: 48px;
 }
 
-/* ⛓️ 입력 전/후(포커스 포함), 오토필 포함해서 사이즈 고정 */
+/*  입력 전/후(포커스 포함), 오토필 포함해서 사이즈 고정 */
 .birthcity-input{
   height: var(--field-h) !important;
   box-sizing: border-box !important;
@@ -301,7 +301,6 @@
   font-weight: 400 !important;
   color: #121212 !important;
 
-  -webkit-appearance: none;
   -webkit-text-size-adjust: 100%;
 }
 
