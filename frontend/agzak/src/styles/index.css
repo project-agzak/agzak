@@ -133,6 +133,7 @@ body {
 .font-bitbit-large  { font-family: var(--font-bitbit); font-size: var(--fz-large);  line-height: var(--lh-tight); }
 .font-bitbit-xlarge { font-family: var(--font-bitbit); font-size: var(--fz-xlarge); line-height: var(--lh-tight); }
 
+.font-galmuri-condensed-xsmall { font-family: var(--font-galmuri-condensed); font-size: var(--fz-xsmall); line-height: var(--lh-tight);}
 .font-galmuri-condensed-small { font-family: var(--font-galmuri-condensed); font-size: var(--fz-small); line-height: var(--lh-tight);}
 .font-galmuri-condensed { font-family: var(--font-galmuri-condensed); font-size: var(--fz-medium); line-height: var(--lh-tight);}
 
