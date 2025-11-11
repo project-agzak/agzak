@@ -11,7 +11,7 @@ pipeline {
     IMAGE_NAME  = 'sso9594/agzak-app'
     REGISTRY    = 'docker.io'
     DEPLOY_USER = 'ubuntu'
-    DEPLOY_HOST = 'https://jenkins.agzak.co.kr'
+    DEPLOY_HOST = 'k13b102.p.ssafy.io'
 
     EDGE_CONF   = '/home/ubuntu/agzak-app/deploy/infra/nginx/data/active_slot.conf'
     BE_COMPOSE  = '/home/ubuntu/agzak-app/deploy/backend/agzak-app-server.yml'
