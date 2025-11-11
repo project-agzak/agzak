@@ -107,11 +107,34 @@ if (!isAuthRequest && accessToken) {
     return { ok: true, data: res.data };
 
   } catch (e: any) {
-    const status = e?.response?.status;
-    const raw = e?.response?.data;
-    const message = raw?.message ?? e?.message ?? "Unexpected error";
+
     const url = typeof config.url === "string" ? config.url : "";
     const isAuthRequest = url.startsWith("/auth/");
+     //  1) 네트워크 레벨 에러 (서버 꺼짐, DNS, CORS, 연결 거절 등)
+    if (!e?.response) {
+      console.error("[NETWORK_ERROR] 서버에 연결할 수 없습니다.", {
+        url,
+        method: config.method,
+        error: e,
+      });
+
+      // 필요하면 여기서 한 번만 얼럿 띄우도록 토글 변수 둘 수도 있음
+      alert("서버 점검 중입니다.\n잠시 후 다시 시도해주세요.");
+
+      return {
+        ok: false,
+        error: {
+          status: undefined,
+          code: "NETWORK_ERROR",
+          message: "서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.",
+          raw: e,
+        },
+      };
+    }
+    
+        const status = e?.response?.status;
+    const raw = e?.response?.data;
+    const message = raw?.message ?? e?.message ?? "Unexpected error";
     
     // handleAuthError는 한 번만 호출
     handleAuthError(status, url);

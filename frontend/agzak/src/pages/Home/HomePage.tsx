@@ -101,15 +101,15 @@ export default function HomePage() {
                 </p>
               </div>
             ) : (
-              <div className="relative w-[160px] h-[100px]">
+              <div className="relative w-[130px] h-[100px] -translate-x-2">
                 <img
                   src={BubbleImg}
                   alt=""
                   aria-hidden="true"
                   className="absolute inset-0 w-full h-full object-fill pointer-events-none select-none"
                 />
-                <p className="absolute inset-0 flex items-center justify-center text-center font-galmuri-condensed pl-4">
-                  로그인 후<br />운세를 강화해보세요.
+                <p className="absolute inset-0 flex items-center justify-center text-center font-galmuri-condensed-small pl-4">
+                  로그인 후<br />운세를 강화해보세요
                 </p>
               </div>
             )}
@@ -151,7 +151,7 @@ export default function HomePage() {
           />
           <p className="absolute inset-0 flex items-center justify-center font-bitbit-large leading-none pb-5">오늘의 랭킹</p>
         </div>
-        <p className="text-center font-galmuri-condensed-small -translate-y-8"> KST {accessedAtKST} 기준</p>      </div>
+        <p className="text-center font-galmuri-condensed-xsmall -translate-y-8"> KST {accessedAtKST} 기준</p>      </div>
       <div className="-translate-y-9">
         <RankingList />
       </div>

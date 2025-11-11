@@ -7,6 +7,8 @@ import Logo from "@/assets/Background/agzak-logo.svg";
 import { Button_L } from "@/components/atoms/Button_L";
 import { Button_M } from "@/components/atoms/Button_M";
 import { Input } from "@/components/atoms/Input";
+import openIcon from "/images/open.svg";
+import closeIcon from "/images/close.svg";
 
 type CheckEmailResponse = {
    email: string;
@@ -31,6 +33,10 @@ export default function SignupPage() {
   const [passwordMatch, setPasswordMatch] = useState(true);
   const [emailChecked, setEmailChecked] = useState(false);
   const [checking, setChecking] = useState(false);
+
+    //  비밀번호 표시/숨김
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [passwordCheckVisible, setPasswordCheckVisible] = useState(false);
 
   const guestId = localStorage.getItem("guestId");
 
@@ -239,14 +245,20 @@ const emailHasError = !emailValid || (email && !emailChecked);
 
         </div>
 
-        <div className="flex w-full max-w-[300px] flex-col gap-1">
-          <div className="flex justify-center">
+         {/* 비밀번호 */}
+        <div className="flex w-full max-w-[300px] flex-col gap-1 relative">
+          <div className="flex justify-center relative">
             <Input
               placeholder="비밀번호"
-              type="password"
-              aria-label="비밀번호 입력"
+              type={passwordVisible ? "text" : "password"}
               value={password}
               onChange={handlePasswordChange}
+            />
+            <img
+              src={passwordVisible ? openIcon : closeIcon}
+              alt="비밀번호 보기 토글"
+              className="absolute right-10 top-4 w-5 h-5 cursor-pointer"
+              onClick={() => setPasswordVisible(!passwordVisible)}
             />
           </div>
           <p
@@ -255,26 +267,32 @@ const emailHasError = !emailValid || (email && !emailChecked);
             }`}
           >
             {passwordValid
-             ? "영어, 숫자 포함 8자이상"
+              ? "영어, 숫자 포함 8자이상"
               : "비밀번호 형식이 올바르지 않습니다."}
           </p>
         </div>
 
-        <div className="flex w-full max-w-[300px] flex-col gap-1">
-          <div className="flex justify-center">
+         {/* 비밀번호 확인 */}
+        <div className="flex w-full max-w-[300px] flex-col gap-1 relative">
+          <div className="flex justify-center relative">
             <Input
               placeholder="비밀번호 확인"
-              type="password"
-              aria-label="비밀번호 확인 입력"
+              type={passwordCheckVisible ? "text" : "password"}
               value={passwordCheck}
               onChange={handlePasswordCheckChange}
             />
+            <img
+              src={passwordCheckVisible ? openIcon : closeIcon}
+              alt="비밀번호 확인 보기 토글"
+              className="absolute right-10 top-4 w-5 h-5 cursor-pointer"
+              onClick={() => setPasswordCheckVisible(!passwordCheckVisible)}
+            />
           </div>
-          <div className="h-4 pl-8 text-left font-galmuri-xsmall">
-            {!passwordMatch && (
-              <p className="text-[#E11D48]">비밀번호가 일치하지 않습니다.</p>
-            )}
-          </div>
+          {!passwordMatch && (
+            <p className="pl-8 text-left font-galmuri-xsmall text-[#E11D48]">
+              비밀번호가 일치하지 않습니다.
+            </p>
+          )}
         </div>
 
         <div className="mt-12 flex justify-center pb-15">
