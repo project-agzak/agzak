@@ -11,6 +11,7 @@ export type BirthCity = {
 type Props = {
   value?: BirthCity | null;
   onChange?: (next: BirthCity) => void;
+  onTextChange?: (text: string) => void;
   placeholder?: string;
   maxListHeight?: number;
 };
@@ -18,6 +19,7 @@ type Props = {
 export function BirthCitySearch({
   value,
   onChange,
+  onTextChange,
   placeholder = "태어난 도시 검색 (예: 청주, 충북, 충청북도 청주시)",
   maxListHeight = 0,
 }: Props) {
@@ -27,6 +29,15 @@ export function BirthCitySearch({
   const [activeIdx, setActiveIdx] = React.useState(-1);
 
   const rootRef = React.useRef<HTMLDivElement>(null);
+
+
+    React.useEffect(() => {
+    if (!value) {
+      setQ("");
+    } else {
+      setQ(value.address);
+    }
+  }, [value]);
 
   // 바깥 클릭 시 닫기
   React.useEffect(() => {
@@ -65,7 +76,8 @@ export function BirthCitySearch({
     setActiveIdx(filtered.length ? 0 : -1);
   };
  const VISIBLE_ROWS = 4;
-  const ROW_HEIGHT = 35; 
+  const ROW_HEIGHT = 30
+; 
 
     const dropdownMaxHeight = maxListHeight && maxListHeight > 0
     ? maxListHeight                 // prop으로 넘기면 그 값 사용
@@ -74,10 +86,20 @@ export function BirthCitySearch({
   const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const v = e.target.value;
     setQ(v);
-    // 🔥 카카오 아니고 로컬 필터라서 타이핑마다 돌려도 됨
+     
+   onTextChange?.(v);
+
+    //  카카오 아니고 로컬 필터라서 타이핑마다 돌려도 됨
     runSearch(v);
   };
 
+ const onInputBlur = () => {
+    // 드롭다운 클릭과 blur 순서 충돌 방지용
+    setTimeout(() => {
+    setOpen(false);
+    setActiveIdx(-1);
+  }, 0);
+  };
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!open) return;
 
@@ -106,8 +128,12 @@ export function BirthCitySearch({
     };
     onChange?.(next);
     setQ(region.label);
+     onTextChange?.(region.label);
     setOpen(false);
     setActiveIdx(-1);
+
+   
+
   };
 
   return (
@@ -124,6 +150,7 @@ export function BirthCitySearch({
         value={q}
         onChange={onInputChange}
         onKeyDown={onKeyDown}
+        onBlur={onInputBlur}//  블러 시 검증 추가
         onFocus={() => q && results.length > 0 && setOpen(true)}
         placeholder={placeholder}
         className="
@@ -157,21 +184,22 @@ export function BirthCitySearch({
     {results.map((it, i) => {
       const active = i === activeIdx;
       return (
-        <button
-          key={`${it.sido}-${it.sgg}-${i}`}
-          onClick={(e) => {
-            e.preventDefault();
-            commitSelect(it);
-          }}
-          onMouseEnter={() => setActiveIdx(i)}
-          className={`w-full text-left px-3 py-2 text-[12px] transition-colors ${
-            active ? "bg-[#000]/6" : "hover:bg-[#000]/4"
-          }`}
-          role="option"
-          aria-selected={active}
-        >
-          <div className="font-bold">{it.label}</div>
-        </button>
+         <button
+      key={`${it.sido}-${it.sgg}-${i}`}
+   
+      onMouseDown={(e) => {
+        e.preventDefault();
+        commitSelect(it);
+      }}
+      onMouseEnter={() => setActiveIdx(i)}
+      className={`w-full text-left px-3 py-2 text-[12px] transition-colors ${
+        active ? "bg-[#000]/6" : "hover:bg-[#000]/4"
+      }`}
+      role="option"
+      aria-selected={active}
+    >
+      <div className="font-bold">{it.label}</div>
+    </button>
       );
     })}
   </div>

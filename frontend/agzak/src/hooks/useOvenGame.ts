@@ -31,6 +31,7 @@ export function useOvenGame() {
   const [initLoading, setInitLoading] = useState(true);
   const [blocked, setBlocked] = useState<null | "LIMIT" | "NO_MEMBER">(null); // 409 / 404
   const [lastCookie, setLastCookie] = useState<FortuneCookieResult | null>(null);
+  const [initError, setInitError] = useState<Error | null>(null);
 
   const initialized = useRef(false);
   const { refresh } = useSessionQuotaStore();
@@ -41,55 +42,83 @@ export function useOvenGame() {
     initialized.current = true;
 
     (async () => {
-      setInitLoading(true);
-      
-      // 먼저 오늘의 할당량을 체크
-      const quotaRes = await GameAPI.getToday();
-      if (quotaRes.ok && quotaRes.data.cap === quotaRes.data.used) {
-        setBlocked("LIMIT");
-        refresh();
-        setInitLoading(false);
-        trackEvent("game_session_blocked", {
-          reason: "DAILY_SESSION_LIMIT",
-        });
-        return;
-      }
-
-      const res = await GameAPI.startSession();
-      if (res.ok) {
-        trackEvent("game_session_start", {
-          session_no: res.data.sessionNo,
-          attempts_limit: res.data.attemptsLimit,
-          base_prob: res.data.initialSuccessProb,
-        });
-
-        const s = res.data ?? null;
-        if (!s) {
-          setSession(null);
-          setBlocked(null);
+      try {
+        setInitLoading(true);
+        setInitError(null);
+                
+        // 먼저 오늘의 할당량을 체크
+        const quotaRes = await GameAPI.getToday();
+        if (quotaRes.ok && quotaRes.data.cap === quotaRes.data.used) {
+          setBlocked("LIMIT");
+          refresh();
           setInitLoading(false);
-          return
+          trackEvent("game_session_blocked", {
+            reason: "DAILY_SESSION_LIMIT",
+          });
+          return;
         }
-        setSession(s);
-        setAttemptsLimit(clamp(Number(s.attemptsLimit) || 10, 1, 99));
-        // 다음 시도 번호의 "이전까지 수행한 횟수" = nextAttemptNo - 1
-        setAttempts(clamp((Number(s.nextAttemptNo) || 1) - 1, 0, Number(s.attemptsLimit) || 10));
-        setSuccessProb(Number(s.currentBaseProb) || Number(s.initialSuccessProb) || 70);
-        setSnap({
-          snapLove: s.snapLove ?? 0,
-          snapMoney: s.snapMoney ?? 0,
-          snapAchievement: s.snapAchievement ?? 0,
-          snapHealth: s.snapHealth ?? 0,
-          snapMisfortune: s.snapMisfortune ?? 0,
+
+        const res = await GameAPI.startSession();
+        console.log("[ENFORCE_INIT] startSession 응답:", {
+          ok: res.ok,
+          ...(res.ok
+            ? { hasData: !!res.data }
+            : {
+                error: res.error,
+                status: res.error.status,
+                code: res.error.code,
+                message: res.error.message,
+              }),
         });
-        setBlocked(null);
-      } else {
-        const code = res.error?.status ?? res.error?.code;
-        if (code === 409) setBlocked("LIMIT");
-        else if (code === 404) setBlocked("NO_MEMBER");
-        else console.warn("[GAME] startSession error:", res.error);
+        
+        if (res.ok) {
+          trackEvent("game_session_start", {
+            session_no: res.data.sessionNo,
+            attempts_limit: res.data.attemptsLimit,
+            base_prob: res.data.initialSuccessProb,
+          });
+
+          const s = res.data ?? null;
+          if (!s) {
+            setSession(null);
+            setBlocked(null);
+            setInitLoading(false);
+            return
+          }
+          setSession(s);
+          setAttemptsLimit(clamp(Number(s.attemptsLimit) || 10, 1, 99));
+          // 다음 시도 번호의 "이전까지 수행한 횟수" = nextAttemptNo - 1
+          setAttempts(clamp((Number(s.nextAttemptNo) || 1) - 1, 0, Number(s.attemptsLimit) || 10));
+          setSuccessProb(Number(s.currentBaseProb) || Number(s.initialSuccessProb) || 70);
+          setSnap({
+            snapLove: s.snapLove ?? 0,
+            snapMoney: s.snapMoney ?? 0,
+            snapAchievement: s.snapAchievement ?? 0,
+            snapHealth: s.snapHealth ?? 0,
+            snapMisfortune: s.snapMisfortune ?? 0,
+          });
+          setBlocked(null);
+        } else {
+          const code = res.error?.status ?? res.error?.code;
+          if (code === 409) setBlocked("LIMIT");
+          else if (code === 404) setBlocked("NO_MEMBER");
+          else {
+            console.warn("[GAME] startSession error:", res.error);
+            // 예상치 못한 에러는 initError로 설정
+            setInitError(new Error(res.error?.message || "게임 세션 시작 실패"));
+          }
+        }
+        setInitLoading(false);
+      } catch (error: any) {
+        console.error("[ENFORCE_INIT] 초기화 중 예외 발생:", {
+          error,
+          message: error?.message,
+          stack: error?.stack,
+          name: error?.name,
+        });
+        setInitError(error instanceof Error ? error : new Error(String(error)));
+        setInitLoading(false);
       }
-      setInitLoading(false);
     })();
   }, [refresh]);
 
@@ -215,6 +244,7 @@ export function useOvenGame() {
     loading,
     isCompleted,
     lastCookie,
+    initError,            // 초기화 에러
 
     // actions
     attempt,

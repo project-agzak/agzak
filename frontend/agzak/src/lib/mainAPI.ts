@@ -6,6 +6,8 @@ import type { FortuneDetail, MemberGraphPoint } from "@/types/fortune";
 export type LoginReq = { email: string; password: string };
 export type LoginRes = { accessToken: string; refreshToken: string; userId: number };
 
+
+
 // 회원 정보 응답 (GET /members)
 export type Member = {
   id: number;

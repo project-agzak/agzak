@@ -1,6 +1,6 @@
 // src/components/atoms/OvenHeader.tsx
 "use client"
-import helpIcon from "@/assets/Game/guide-button.webp"
+import helpIcon from "@/assets/Game/guide-button.svg"
 
 export function OvenHeader({ onHelp }: { onHelp: () => void }) {
   return (

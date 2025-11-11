@@ -6,7 +6,7 @@ import FortuneCookieGif from "@/assets/Gifs/FortuneCookie.gif"
 export default function NotFoundPage() {
   const navigate = useNavigate();
 
-  const HOME_PATH = "/fortune";
+  const HOME_PATH = "/home";
 
   return (
     <main className="relative z-10 min-h-screen flex items-center justify-center p-3">

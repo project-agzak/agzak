@@ -26,12 +26,12 @@ useEffect(() => {
     const res = await api.get<Member>("/members"); // ⬅ 전체 Member 타입으로 받기
 
     if (!res.ok || !res.data) {
-      console.error("회원 정보 불러오기 실패:", res.error);
+      //console.error("회원 정보 불러오기 실패:", res.error);
       return;
     }
 
     const data = res.data;
-    console.log("Header - 회원 정보 불러오기 성공:", data); // 여기 birthTime 나와야 함
+    //console.log("Header - 회원 정보 불러오기 성공:", data); // 여기 birthTime 나와야 함
     setMember(data); // ⬅ 이제 birthTime까지 포함된 객체가 store에 저장됨
   };
 
@@ -48,10 +48,10 @@ useEffect(() => {
     const res = await api.post<null>("/auth/logout");
 
     if (!res.ok) {
-      console.error("로그아웃 요청 실패:", res.error);
+      //console.error("로그아웃 요청 실패:", res.error);
       // 서버 로그아웃 실패해도 클라이언트에서는 일단 로그아웃 처리
     } else {
-      console.log("로그아웃 API 성공");
+      //console.log("로그아웃 API 성공");
     }
 
     // 전역 인증 상태 및 토큰 정리
@@ -227,7 +227,7 @@ function SidebarContent({ isLoggedIn, nickname, onLogout }: SidebarContentProps)
 
       {/* 메뉴 */}
        {/*  운세 보기 수정됨 */}
-      <nav className="ml-10 font-bitbit">
+      <nav className="ml-10 font-bitbit flex-1 flex flex-col">
         <SheetClose asChild>
           <button
             onClick={handleFortuneClick}
@@ -274,24 +274,26 @@ function SidebarContent({ isLoggedIn, nickname, onLogout }: SidebarContentProps)
           </a>
         </SheetClose>
 
-        <SheetClose asChild>
-          <button
-            onClick={handleInstall}
-            disabled={!deferred}   
-            className="flex w-full items-center gap-2 rounded-md px-0 py-2 hover:bg-zinc-100 active:bg-zinc-200 transition-colors text-left cursor-pointer"
-          >
-            <span>앱 설치하기</span>
-          </button>
-        </SheetClose>
+        <div className="mt-auto flex flex-col">
+          <SheetClose asChild>
+            <button
+              onClick={handleInstall}
+              disabled={!deferred}
+              className="flex w-full items-center gap-2 rounded-md px-0 py-2 hover:bg-zinc-100 active:bg-zinc-200 transition-colors text-left cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              <span>앱 설치하기</span>
+            </button>
+          </SheetClose>
 
-        <SheetClose asChild>
-          <a
-            href="https://forms.gle/VBKJ3K4wdY7RWfyG6"
-            className="flex items-center gap-2 rounded-md px-0 py-2 mt-6 hover:bg-zinc-100 active:bg-zinc-200 transition-colors"
-          >
-            <span>피드백하기</span>
-          </a>
-        </SheetClose>
+          <SheetClose asChild>
+            <a
+              href="https://forms.gle/VBKJ3K4wdY7RWfyG6"
+              className="flex items-center gap-2 rounded-md px-0 py-2 hover:bg-zinc-100 active:bg-zinc-200 transition-colors"
+            >
+              <span>피드백하기</span>
+            </a>
+          </SheetClose>
+        </div>
       </nav>
 
       {/* 하단 버전 표시 */}

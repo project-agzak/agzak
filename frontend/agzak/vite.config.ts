@@ -4,6 +4,7 @@ import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+
 export default defineConfig(({ mode }) => {
   const isDev = mode === 'development'
 

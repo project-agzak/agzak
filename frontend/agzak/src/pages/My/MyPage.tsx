@@ -77,7 +77,7 @@ export default function MyPage() {
       const res = await api.get<Member>("/members");
 
       if (!res.ok || !res.data) {
-        console.error("회원 정보 불러오기 실패:", res.error);
+        //console.error("회원 정보 불러오기 실패:", res.error);
         if (res.error?.code === 401) {
           alert("세션이 만료되었습니다. 다시 로그인해주세요.");
           navigate("/login");
@@ -90,7 +90,7 @@ export default function MyPage() {
       }
 
       const data = res.data;
-      console.log("회원 정보 불러오기 성공:", data);
+      //console.log("회원 정보 불러오기 성공:", data);
 
       // 전역 스토어에도 저장
       setMember(data);
@@ -119,10 +119,10 @@ const handleEditToggle = async () => {
 
     // 1) PATCH 요청 (성공/실패 여부는 우선 기록만)
     const res = await api.patch("/members", body);
-    console.log("PATCH /members:", res);
+    //console.log("PATCH /members:", res);
 
     if (!res.ok) {
-      console.error("회원 정보 수정 실패:", res.error);
+      //console.error("회원 정보 수정 실패:", res.error);
       alert(res.error?.message ?? "회원 정보 수정 중 오류가 발생했습니다.");
       // ❗ 실패해도 아래에서 한 번 /members로 동기화 시도
     } else {
@@ -131,7 +131,7 @@ const handleEditToggle = async () => {
 
     // 2) 서버 기준 최신 프로필로 한 번 더 동기화
     const profileRes = await api.get<Member>("/members");
-    console.log("GET /members after patch:", profileRes);
+    //console.log("GET /members after patch:", profileRes);
 
     if (profileRes.ok && profileRes.data) {
       const latest = profileRes.data;
@@ -144,7 +144,7 @@ const handleEditToggle = async () => {
     // 3) 수정 모드 종료
     setIsEdit(false);
   } catch (err) {
-    console.error(err);
+    //console.error(err);
     alert("회원 정보 수정 중 문제가 발생했습니다.");
   }
 };
@@ -160,12 +160,12 @@ const handleEditToggle = async () => {
     const res = await api.del<null>("/members");
 
     if (!res.ok) {
-      console.error("회원 탈퇴 실패:", res.error);
+      //console.error("회원 탈퇴 실패:", res.error);
       alert(res.error?.message ?? "계정 삭제 중 오류가 발생했습니다.");
       return;
     }
 
-    console.log("회원 탈퇴 성공");
+    //console.log("회원 탈퇴 성공");
 
     // 인증 관련은 스토어에 맡김
     logout();
