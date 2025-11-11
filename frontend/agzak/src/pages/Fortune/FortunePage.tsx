@@ -16,6 +16,8 @@ import FortuneLoading from "@/components/templates/FortuneLoading";
 import { AuthAPI } from "@/lib/AuthAPI";
 import { useAuthStore } from "@/store/useAuthStore";
 import { SIMPLE_REGIONS } from "@/constants/regions"; 
+import { Calendar } from "@/components/ui/calendar";
+import { CalendarIcon } from "lucide-react";
 
 export default function FortunePage() {
   const navigate = useNavigate();
@@ -30,9 +32,17 @@ export default function FortunePage() {
   const [gender, setGender] = useState<"male" | "female" | null>(null);
   const [birthCity, setBirthCity] = useState<BirthCity | null>(null);
 const [birthCityText, setBirthCityText] = useState("");
-
+  const { isLoggedIn } = useAuthStore();
+const [showBirthCalendar, setShowBirthCalendar] = useState(false);
    const [submitting,setSubmitting] = useState(false);
-const todayStr = new Date().toISOString().slice(0, 10); 
+
+     useEffect(() => {
+    if (isLoggedIn) {
+      navigate("/home", { replace: true });
+    }
+  }, [isLoggedIn, navigate]);
+
+
    const handleFortuneSubmit = async () => {
     
       if (submitting) return; //  중복 클릭 방지
@@ -268,6 +278,8 @@ const todayStr = new Date().toISOString().slice(0, 10);
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+
+  
     const hasUserId = !!localStorage.getItem("userId");
     const hasKakaoTicket = !!sessionStorage.getItem("kakao_ticket");
 
@@ -349,26 +361,89 @@ const todayStr = new Date().toISOString().slice(0, 10);
           />
         </div>
 
-        {/* 생년월일 */}
-        <div className="flex max-w-[300px] flex-col gap-1">
-          <div className="mx-auto flex w-[230px] justify-between items-center">
-            <label className="font-galmuri-small font-extrabold text-[#222]">
-              생년월일
-            </label>
-            <span className="text-xs font-galmuri-xsmall font-extrabold text-[#121212] opacity-70">
-              양력
-            </span>
-          </div>
-         <Input
-  type="date"
-  aria-label="생년월일 입력"
-  value={birthDate || ""}
-  onChange={(e) => setBirthDate(e.target.value)}
-  className="font-galmuri-small w-[260px]"
-  min="1900-01-01"
-  max={todayStr}
-/>
-        </div>
+     {/* 생년월일 */}
+{/* 🔹 생년월일 */}
+<div className="flex max-w-[300px] flex-col gap-1">
+  <div className="mx-auto flex w-[230px] justify-between items-center">
+    <label className="font-galmuri-small font-extrabold text-[#222]">
+      생년월일
+    </label>
+    <span className="text-xs font-galmuri-xsmall font-extrabold text-[#121212] opacity-70">
+      양력
+    </span>
+  </div>
+
+  {/* 인풋 + 캘린더 */}
+  <div className="relative flex flex-col items-center">
+    {/* 입력창 */}
+    <Input
+      type="text"
+      aria-label="생년월일 입력"
+      value={birthDate || ""}
+      placeholder="YYYY-MM-DD"
+      readOnly
+      onClick={() => setShowBirthCalendar((prev) => !prev)}
+      className="font-galmuri-small w-[260px] pr-8 cursor-pointer"
+    />
+
+    {/* 달력 버튼 */}
+    <button
+      type="button"
+      className="absolute right-[calc(50%-130px+8px)] top-1/2 -translate-y-1/2 flex h-6 w-10 items-center justify-center"
+      onClick={(e) => {
+        e.stopPropagation();
+        setShowBirthCalendar((prev) => !prev);
+      }}
+    >
+      <CalendarIcon className="h-4 w-4 opacity-80" />
+      <span className="sr-only">날짜 선택</span>
+    </button>
+
+    {/* 캘린더 — 단순 토글형 */}
+    {showBirthCalendar && (
+      <div
+        className="
+          absolute
+          bottom-[calc(100%+8px)]   /* 인풋 위에 8px 간격 */
+          left-1/2
+          -translate-x-1/2
+          z-50
+        "
+      >
+        <Calendar
+          mode="single"
+          captionLayout="dropdown"
+          selected={birthDate ? new Date(`${birthDate}T00:00:00`) : undefined}
+          onSelect={(selectedDate: Date | undefined) => {
+            if (!selectedDate) return;
+
+            const y = selectedDate.getFullYear();
+            const m = String(selectedDate.getMonth() + 1).padStart(2, "0");
+            const d = String(selectedDate.getDate()).padStart(2, "0");
+            const formatted = `${y}-${m}-${d}`;
+
+            setBirthDate(formatted);
+            setShowBirthCalendar(false); // 선택 시 닫기
+          }}
+          disabled={(day: Date | undefined) => {
+            if (!day) return false;
+
+            const min = new Date("1900-01-01T00:00:00");
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            return day < min || day > today;
+          }}
+          className="
+            rounded-lg border bg-white shadow-lg
+            w-[300px] [--cell-size:2.4rem]
+          "
+        />
+      </div>
+    )}
+  </div>
+</div>
+
+
 
         {/* 태어난 시간 */}
         <div className="flex max-w-[300px] flex-col gap-1">
@@ -408,19 +483,19 @@ const todayStr = new Date().toISOString().slice(0, 10);
         </div>
 
         {/* 태어난 도시 */}
-        <div className="flex max-w-[300px] flex-col gap-1">
-          <label className="font-galmuri-small font-extrabold text-[#222] text-left w-[230px] mx-auto">
-            태어난 도시
-          </label>
-          <div className="flex w-full justify-center">
-            <BirthCitySearch
-              value={birthCity}
-              onChange={(next) => setBirthCity(next)}
-              onTextChange={(text) => setBirthCityText(text)} 
-              placeholder="태어난 도시 검색"
-            />
-          </div>
-        </div>
+       <div className="flex max-w-[300px] flex-col gap-1">
+  <label className="font-galmuri-small font-extrabold text-[#222] text-left w-[230px] mx-auto">
+    태어난 도시
+  </label>
+  <div className="flex w-full justify-center">
+    <BirthCitySearch
+      value={birthCity}
+      onChange={(next) => setBirthCity(next)}
+      onTextChange={(text) => setBirthCityText(text)} 
+      placeholder="태어난 도시 검색"
+    />
+  </div>
+</div>
 
         {/* 하단 버튼 */}
         <div className="mt-30 flex justify-center pb-15">

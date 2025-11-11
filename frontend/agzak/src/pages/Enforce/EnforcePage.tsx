@@ -25,11 +25,33 @@ export default function EnforcePage() {
   const [view, setView] = useState<"game" | "loading" | "result">("game")
   const [fire, setFire] = useState<OvenFireType>("WEAK") // 강/약불 상태
   const navigate = useNavigate()
+  const ENFORCE_HELP_KEY = "agzak:enforce_help_seen"
 
   const game = useOvenGame()
   const { quota, loading: quotaLoading, error: quotaError, refresh } = useSessionQuotaStore()
 
   useEffect(() => { refresh() }, [refresh])
+
+  // ✅ 최초 진입 + 캐시 비어 있을 때만 도움말 자동 오픈
+  useEffect(() => {
+    if (game.initLoading || game.initError) return
+
+    // "캐시가 비어 있는 상태" 정의 (상황에 맞게 조정 가능)
+    const hasHistory =
+      !!game.lastCookie ||
+      (Array.isArray(game.snap) && game.snap.length > 0)
+
+    if (hasHistory) return
+
+    if (typeof window !== "undefined") {
+      const alreadySeen = window.localStorage.getItem(ENFORCE_HELP_KEY) === "1"
+      if (!alreadySeen) {
+        setHelpOpen(true)
+        window.localStorage.setItem(ENFORCE_HELP_KEY, "1")
+      }
+    }
+  }, [game.initLoading, game.initError, game.lastCookie, game.snap])
+
 
   // ✅ 훅이 아닌 "일반 변수"로 즉시 계산 (조건부 return보다 위에 위치)
   const base = Number(game.successProb) || 0
@@ -42,6 +64,8 @@ export default function EnforcePage() {
       navigate("/", { replace: true })
     }
   }, [game.initError, navigate])
+
+
 
   if (game.initLoading) {
     return (

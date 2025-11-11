@@ -1,9 +1,9 @@
 // @/components/atoms/FortuneGauge.tsx
 
+import type { FortuneGaugeColor } from "@/adapters/fortuneAdapter";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import * as React from "react";
-import type { FortuneGaugeColor } from "@/adapters/fortuneAdapter"
 
 const colorMap: Record<FortuneGaugeColor, string> = {
   green: "bg-[#559A2D]",   // 건강운
@@ -49,18 +49,26 @@ export function FortuneGauge({
       </div>
 
       {/* 게이지 바 */}
-      <Progress
-        value={safeValue}
-        max={250}
-        className={cn(
-          "h-3 bg-[#DFDFDB]/90", // 배경 (이미지의 연회색 바탕)
-          // progress.tsx 안에서 indicator에 스타일을 입힐 거라 여기선 배경만
-        )}
-        indicatorClassName={cn(
-          "rounded-full",
-          colorMap[color]
-        )}
-      />
+      <div className="relative w-full flex items-center">
+        <Progress
+          value={safeValue}
+          max={250}
+          className={cn(
+            "h-3 bg-[#DFDFDB]/90", // 배경 (이미지의 연회색 바탕)
+            // progress.tsx 안에서 indicator에 스타일을 입힐 거라 여기선 배경만
+          )}
+          indicatorClassName={cn(
+            "rounded-full",
+            colorMap[color]
+          )}
+        />
+        <span
+          className="absolute right-1 text-[10px] text-gray-500 drop-shadow-sm select-none"
+        >
+          {safeValue}
+        </span>
+
+      </div>
     </div>
   );
 }

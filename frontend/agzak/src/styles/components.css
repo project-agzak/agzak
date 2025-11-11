@@ -163,7 +163,7 @@
   left: 0; top: 100%;
   width: 100%;
   background: #fff;
-  border: 2px solid #121212;
+  border: 1px solid #121212;
   border-radius: 4px;
   margin-top: 4px;
   z-index: 10;
@@ -181,7 +181,7 @@
   border-bottom: 1px solid #e5e7eb;
 }
 .dropdown-item:last-child { border-bottom: none; }
-.dropdown-item:hover { background: #f3f4f6; }
+.dropdown-item:hover { background: #FFDB7C; }
 .dropdown-empty {
   padding: 8px 16px;
   font-size: 14px;
@@ -200,50 +200,72 @@
 }
 .time-panel {
   position: absolute;
-  left: 0; top: 100%;
-  width: 100%;
-  display: grid;
-  grid-template-columns: 1fr 24px 1fr; /* 시 | : | 분 */
-  align-items: center;
-  gap: 4px;
-  background: #fff;
-  border: 2px solid #121212;
-  border-radius: 4px;
+  left: 50%;
+  transform: translateX(-50%);
   margin-top: 4px;
-  z-index: 20;
-  padding: 6px 8px;
-  box-sizing: border-box;
-  max-height: calc(var(--td-row-h) * var(--td-max-rows) + 12px);
-  overflow: hidden;   /* 내부 스크롤러만 스크롤 */
+
+  /* 외부 박스는 Input.svg가 담당 → 이건 내부 카드만 */
+  width: var(--dropdown-width, 260px);
+  padding: 10px 14px;
+
+  background-color: #ffffff;
+  border-radius: 5px;
+  border: 1px solid #222222;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 8px;
+
+  z-index: 999;
 }
-/* 가운데 하이라이트 라인 */
-.time-panel-highlight {
-  position: absolute;
-  left: 8px; right: 8px;
-  top: calc(6px + (var(--td-row-h) * 3));
-  height: var(--td-row-h);
-  border-radius: 8px;
-  background: rgba(18,18,18,0.06);
-  pointer-events: none;
-}
-/* 칼럼 스크롤 */
+
+/* 🔹 시 / 분 컬럼 */
 .time-col {
-  max-height: calc(var(--td-row-h) * var(--td-max-rows));
+  flex: 1;
+  max-height: 150px;       /* 높이 제한 + 스크롤 */
   overflow-y: auto;
-  scrollbar-width: thin;
-}
-.time-col::-webkit-scrollbar { width: 8px; }
-.time-col::-webkit-scrollbar-thumb { background: #cfcfcf; border-radius: 4px; }
-/* 아이템 */
-.time-item {
-  height: var(--td-row-h);
-  line-height: var(--td-row-h);
+  padding: 2px 0;
   text-align: center;
-  font-size: 14px;
-  cursor: pointer;
-  user-select: none;
 }
-.time-item.is-active { color: #121212; font-weight: 700; }
+
+/* 스크롤바 살짝 얇게 */
+
+
+/* 🔹 가운데 콜론 */
+.time-sep {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #999999;
+  padding: 0 2px;
+}
+
+/*  각각의 시/분 아이템 */
+.time-item {
+  margin: 2px 0;
+  padding: 4px 0;
+  border-radius: 8px;
+  cursor: pointer;
+
+  font-size: 12px;
+  color: #121212;
+
+  transition: background-color 0.15s ease, color 0.15s ease,
+    transform 0.08s ease;
+}
+
+.time-item:hover {
+  background-color: #f2f2f2;
+}
+
+.time-item.is-active {
+  background-color: #FFDB7C;
+  color: #121212;
+  transform: translateY(-1px);
+}
 .time-sep { text-align: center; font-weight: 700; color: #999; }
 /* =========================
    공통 폰트 적용 (Galmuri11, 12px)
@@ -264,7 +286,7 @@
   --field-h: 48px;
 }
 
-/* ⛓️ 입력 전/후(포커스 포함), 오토필 포함해서 사이즈 고정 */
+/*  입력 전/후(포커스 포함), 오토필 포함해서 사이즈 고정 */
 .birthcity-input{
   height: var(--field-h) !important;
   box-sizing: border-box !important;
@@ -279,7 +301,6 @@
   font-weight: 400 !important;
   color: #121212 !important;
 
-  -webkit-appearance: none;
   -webkit-text-size-adjust: 100%;
 }
 
@@ -454,3 +475,4 @@ background: transparent;
 .pixel-button-light:active {
   background-color: #e9dfc5;
 }
+

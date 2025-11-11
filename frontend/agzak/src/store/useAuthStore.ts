@@ -94,7 +94,7 @@ let initialIsLoggedIn = !!initialAccessToken;
 //   initialExpiresAt = null;
 // }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>((set,get) => ({
 isLoggedIn: initialIsLoggedIn,
   accessToken: initialIsLoggedIn ? initialAccessToken : null,
   refreshToken: initialIsLoggedIn ? initialRefreshToken : null,
@@ -108,6 +108,22 @@ isLoggedIn: initialIsLoggedIn,
       typeof expiresInSeconds === "number"
         ? Date.now() + expiresInSeconds * 1000
         : null;
+
+          console.group("[AUTH] setTokens 호출됨");
+  console.log("accessToken:", access?.slice(0, 20) + "..."); // 토큰 앞부분만 표시
+  console.log("refreshToken:", refresh?.slice(0, 20) + "...");
+  console.log("expiresInSeconds:", expiresInSeconds);
+
+  if (expiresAt) {
+    const remainingMs = expiresAt - Date.now();
+    const remainingMin = remainingMs / 1000 / 60;
+    console.log("만료 예정 시각:", new Date(expiresAt).toLocaleString());
+    console.log("남은 시간(ms):", remainingMs);
+    console.log("남은 시간(분):", remainingMin.toFixed(2));
+  } else {
+    console.warn(" expiresInSeconds 값이 없거나 숫자가 아님 — 만료 시간 계산 안 됨");
+  }
+  console.groupEnd();
 
     localStorage.setItem("access_token", access);
     if (refresh) localStorage.setItem("refresh_token", refresh);
@@ -133,6 +149,29 @@ isLoggedIn: initialIsLoggedIn,
   },
 
   logout: (reason?: string) => {
+
+    const prev = get(); // ✅ 이전 상태 조회
+
+    console.group("[AUTH] logout 호출됨");
+    console.log("reason:", reason ?? "(no reason)");
+    console.log("wasLoggedIn:", prev.isLoggedIn);
+    console.log(
+      "prevAccessToken:",
+      prev.accessToken ? prev.accessToken.slice(0, 20) + "..." : null,
+    );
+    console.log(
+      "prevRefreshToken:",
+      prev.refreshToken ? prev.refreshToken.slice(0, 20) + "..." : null,
+    );
+    console.log(
+      "prevExpiresAt:",
+      prev.expiresAt ? new Date(prev.expiresAt).toLocaleString() : null,
+    );
+    console.log("now:", new Date().toLocaleString());
+    console.log("prevMember:", prev.member);
+    console.groupEnd();
+
+
     const keysToRemove = [
       "access_token",
       "refresh_token",

@@ -76,7 +76,7 @@ export function BirthCitySearch({
     setActiveIdx(filtered.length ? 0 : -1);
   };
  const VISIBLE_ROWS = 4;
-  const ROW_HEIGHT = 30
+  const ROW_HEIGHT = 28
 ; 
 
     const dropdownMaxHeight = maxListHeight && maxListHeight > 0
@@ -168,9 +168,9 @@ export function BirthCitySearch({
       {open && (
   <div
     className="
-      absolute z-50 left-0 right-0 top-full mt-0
-      rounded-md border border-[#000]/20 bg-white shadow
-      overflow-y-scroll
+      absolute z-50 left-0 right-0 top-full mt-3
+      rounded border-[1px] border-[#121212] bg-white shadow-md
+      overflow-y-auto
     "
     style={{ maxHeight: dropdownMaxHeight }}
     role="listbox"
@@ -193,12 +193,12 @@ export function BirthCitySearch({
       }}
       onMouseEnter={() => setActiveIdx(i)}
       className={`w-full text-left px-3 py-2 text-[12px] transition-colors ${
-        active ? "bg-[#000]/6" : "hover:bg-[#000]/4"
+        active ? "bg-[#FFDB7C]" : "hover:bg-[#FFDB7C]"
       }`}
       role="option"
       aria-selected={active}
     >
-      <div className="font-bold">{it.label}</div>
+      <div className="font-galmuri-xsmall">{it.label}</div>
     </button>
       );
     })}

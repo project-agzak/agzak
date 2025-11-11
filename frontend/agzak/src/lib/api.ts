@@ -45,6 +45,20 @@ async function request<T>(config: AxiosRequestConfig): Promise<ApiResponse<T>> {
 
     const isGameRequest = url.startsWith("/game/");
 
+      // 공통 요청 로깅 (최상단)
+    console.group("[API_REQUEST]");
+    console.log("url:", url);
+    console.log("method:", config.method);
+    console.log("isAuthRequest:", isAuthRequest);
+    console.log("isGameRequest:", isGameRequest);
+    console.log("isLoggedIn:", isLoggedIn);
+    console.log("hasAccessToken:", !!accessToken);
+    console.log(
+      "expiresAt:",
+      expiresAt ? new Date(expiresAt).toISOString() : null,
+    );
+    console.groupEnd();
+    
        //  0. 로그인 안 된 상태에서 게임 API는 아예 호출하지 않기
     if (isGameRequest && !isLoggedIn) {
       console.log("[API_SKIP] 로그인 안 된 상태에서 게임 API 호출 차단:", {
@@ -110,6 +124,7 @@ if (!isAuthRequest && accessToken) {
 
     const url = typeof config.url === "string" ? config.url : "";
     const isAuthRequest = url.startsWith("/auth/");
+     const { accessToken, expiresAt, isLoggedIn } = useAuthStore.getState();
      //  1) 네트워크 레벨 에러 (서버 꺼짐, DNS, CORS, 연결 거절 등)
     if (!e?.response) {
       console.error("[NETWORK_ERROR] 서버에 연결할 수 없습니다.", {
@@ -131,11 +146,48 @@ if (!isAuthRequest && accessToken) {
         },
       };
     }
-    
-        const status = e?.response?.status;
-    const raw = e?.response?.data;
-    const message = raw?.message ?? e?.message ?? "Unexpected error";
-    
+     const status = e?.response?.status;
+  const raw = e?.response?.data;
+  const backendCode =
+    raw?.code ?? raw?.errorCode ?? raw?.error ?? undefined;
+  const message = raw?.message ?? e?.message ?? "Unexpected error";
+
+  const hasToken = !!accessToken;
+  const expiredOnClient = !!expiresAt && expiresAt <= Date.now();
+
+  // 🔥 401 디버깅용 상세 로그
+  if (status === 401) {
+    console.group("[AUTH_401_DEBUG]");
+    console.log("url:", url);
+    console.log("isAuthRequest:", isAuthRequest);
+    console.log("isLoggedIn:", isLoggedIn);
+    console.log("hasToken:", hasToken);
+    console.log(
+      "expiresAt:",
+      expiresAt ? new Date(expiresAt).toISOString() : null,
+    );
+    console.log("now:", new Date().toISOString());
+    console.log("expiredOnClient:", expiredOnClient);
+    console.log("backendCode:", backendCode);
+    console.log("backendMessage:", message);
+    console.log("raw:", raw);
+    console.groupEnd();
+
+    // 분류해서 한 번 더 찍어주면 더 보기 좋음
+    if (!hasToken) {
+      console.warn("[AUTH_401_REASON] 토큰 없음 → 로그인 필요");
+    } else if (expiredOnClient) {
+      console.warn(
+        "[AUTH_401_REASON] 프론트에서 이미 만료된 토큰으로 호출",
+      );
+    } else if (backendCode === "TOKEN_EXPIRED") {
+      console.warn("[AUTH_401_REASON] 서버 기준 토큰 만료");
+    } else {
+      console.warn(
+        "[AUTH_401_REASON] 기타 401 (권한 부족/잘못된 토큰/로그아웃 처리 등)",
+      );
+    }
+  }
     // handleAuthError는 한 번만 호출
     handleAuthError(status, url);
     
