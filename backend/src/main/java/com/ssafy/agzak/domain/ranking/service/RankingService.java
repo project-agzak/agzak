@@ -255,6 +255,14 @@ public class RankingService {
         mysqlStore.replaceTodaySnapshot(today, rows);
     }
 
+    public void removeFromToday(long memberId) {
+        try {
+            redisStore.removeTodayUser(memberId);
+        } catch (Exception e) {
+            log.warn("Redis removeFromToday failed: memberId={}, err={}", memberId, e.toString());
+        }
+    }
+
     private enum RankBasis { TOTAL, ORIGINAL, GAIN }
 
     private List<RankingItemDto> fillRanks(List<RedisRankingStore.UserRow> rows){
