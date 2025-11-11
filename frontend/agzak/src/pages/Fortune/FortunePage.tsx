@@ -16,6 +16,7 @@ import FortuneLoading from "@/components/templates/FortuneLoading";
 import { AuthAPI } from "@/lib/AuthAPI";
 import { useAuthStore } from "@/store/useAuthStore";
 import { SIMPLE_REGIONS } from "@/constants/regions"; 
+import { Calendar } from "@/components/ui/calendar";
 
 export default function FortunePage() {
   const navigate = useNavigate();
@@ -30,8 +31,17 @@ export default function FortunePage() {
   const [gender, setGender] = useState<"male" | "female" | null>(null);
   const [birthCity, setBirthCity] = useState<BirthCity | null>(null);
 const [birthCityText, setBirthCityText] = useState("");
-
+  const { isLoggedIn } = useAuthStore();
+const [showBirthCalendar, setShowBirthCalendar] = useState(false);
    const [submitting,setSubmitting] = useState(false);
+
+     useEffect(() => {
+    if (isLoggedIn) {
+      navigate("/home", { replace: true });
+    }
+  }, [isLoggedIn, navigate]);
+
+
 const todayStr = new Date().toISOString().slice(0, 10); 
    const handleFortuneSubmit = async () => {
     
@@ -268,6 +278,8 @@ const todayStr = new Date().toISOString().slice(0, 10);
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+
+  
     const hasUserId = !!localStorage.getItem("userId");
     const hasKakaoTicket = !!sessionStorage.getItem("kakao_ticket");
 
@@ -349,26 +361,80 @@ const todayStr = new Date().toISOString().slice(0, 10);
           />
         </div>
 
-        {/* 생년월일 */}
-        <div className="flex max-w-[300px] flex-col gap-1">
-          <div className="mx-auto flex w-[230px] justify-between items-center">
-            <label className="font-galmuri-small font-extrabold text-[#222]">
-              생년월일
-            </label>
-            <span className="text-xs font-galmuri-xsmall font-extrabold text-[#121212] opacity-70">
-              양력
-            </span>
-          </div>
-         <Input
-  type="date"
-  aria-label="생년월일 입력"
-  value={birthDate || ""}
-  onChange={(e) => setBirthDate(e.target.value)}
-  className="font-galmuri-small w-[260px]"
-  min="1900-01-01"
-  max={todayStr}
-/>
-        </div>
+     {/* 생년월일 */}
+<div className="flex max-w-[300px] flex-col gap-1">
+  <div className="mx-auto flex w-[230px] justify-between items-center">
+    <label className="font-galmuri-small font-extrabold text-[#222]">
+      생년월일
+    </label>
+    <span className="text-xs font-galmuri-xsmall font-extrabold text-[#121212] opacity-70">
+      양력
+    </span>
+  </div>
+
+  {/* 🔹 인풋 + 캘린더 팝업 컨테이너 */}
+  <div className="relative flex flex-col items-center">
+    {/* 클릭하면 토글되는 인풋 */}
+    <Input
+      type="text"
+      aria-label="생년월일 입력"
+      value={birthDate || ""}
+      placeholder="YYYY-MM-DD"
+      readOnly
+      onClick={() => setShowBirthCalendar((prev) => !prev)}
+      className="font-galmuri-small w-[260px] cursor-pointer"
+    />
+
+    {/* 🔹 위로 떠서 나오는 캘린더 */}
+    {showBirthCalendar && (
+      <div
+        className="
+          absolute
+          bottom-[calc(100%+8px)]   /* 인풋 위에, 8px 띄우기 */
+          left-1/2
+          -translate-x-1/2
+          z-50
+        "
+      >
+        <Calendar
+          mode="single"
+          captionLayout="dropdown"
+          selected={
+            birthDate
+              ? new Date(`${birthDate}T00:00:00`)
+              : undefined
+          }
+          onSelect={(selectedDate: Date | undefined) => {
+            if (!selectedDate) return;
+
+            const y = selectedDate.getFullYear();
+            const m = String(selectedDate.getMonth() + 1).padStart(2, "0");
+            const d = String(selectedDate.getDate()).padStart(2, "0");
+            const formatted = `${y}-${m}-${d}`;
+
+            setBirthDate(formatted);
+            setShowBirthCalendar(false); // 선택 후 닫기
+          }}
+          disabled={(day: Date | undefined) => {
+            if (!day) return false;
+
+            const min = new Date("1900-01-01T00:00:00");
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            return day < min || day > today;
+          }}
+          className="
+            rounded-lg border bg-white shadow-lg
+            w-[340px]                /* 🔹 가로 널널하게 */
+            [--cell-size:2.4rem]     /* 🔹 칸도 조금 넓게 */
+          "
+        />
+      </div>
+    )}
+  </div>
+</div>
+
 
         {/* 태어난 시간 */}
         <div className="flex max-w-[300px] flex-col gap-1">
