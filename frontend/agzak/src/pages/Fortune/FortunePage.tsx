@@ -17,6 +17,7 @@ import { AuthAPI } from "@/lib/AuthAPI";
 import { useAuthStore } from "@/store/useAuthStore";
 import { SIMPLE_REGIONS } from "@/constants/regions"; 
 import { Calendar } from "@/components/ui/calendar";
+import { CalendarIcon } from "lucide-react";
 
 export default function FortunePage() {
   const navigate = useNavigate();
@@ -381,8 +382,21 @@ const [showBirthCalendar, setShowBirthCalendar] = useState(false);
       placeholder="YYYY-MM-DD"
       readOnly
       onClick={() => setShowBirthCalendar((prev) => !prev)}
-      className="font-galmuri-small w-[260px] cursor-pointer"
+      className="font-galmuri-small w-[260px] pr-8 cursor-pointer" 
     />
+ {/* 🔹 오른쪽 달력 버튼 */}
+    <button
+      type="button"
+      className="absolute right-[calc(50%-130px+8px)] top-1/2 -translate-y-1/2 flex h-6 w-10 items-center justify-center"
+      onClick={(e) => {
+        e.stopPropagation(); // 인풋 클릭 이벤트랑 겹치지 않게
+        setShowBirthCalendar((prev) => !prev);
+      }}
+    >
+      <CalendarIcon className="h-4 w-4 opacity-80" />
+      <span className="sr-only">날짜 선택</span>
+    </button>
+
 
     {/* 🔹 위로 떠서 나오는 캘린더 */}
     {showBirthCalendar && (
@@ -473,19 +487,19 @@ const [showBirthCalendar, setShowBirthCalendar] = useState(false);
         </div>
 
         {/* 태어난 도시 */}
-        <div className="flex max-w-[300px] flex-col gap-1">
-          <label className="font-galmuri-small font-extrabold text-[#222] text-left w-[230px] mx-auto">
-            태어난 도시
-          </label>
-          <div className="flex w-full justify-center">
-            <BirthCitySearch
-              value={birthCity}
-              onChange={(next) => setBirthCity(next)}
-              onTextChange={(text) => setBirthCityText(text)} 
-              placeholder="태어난 도시 검색"
-            />
-          </div>
-        </div>
+       <div className="flex max-w-[300px] flex-col gap-1">
+  <label className="font-galmuri-small font-extrabold text-[#222] text-left w-[230px] mx-auto">
+    태어난 도시
+  </label>
+  <div className="flex w-full justify-center">
+    <BirthCitySearch
+      value={birthCity}
+      onChange={(next) => setBirthCity(next)}
+      onTextChange={(text) => setBirthCityText(text)} 
+      placeholder="태어난 도시 검색"
+    />
+  </div>
+</div>
 
         {/* 하단 버튼 */}
         <div className="mt-30 flex justify-center pb-15">
