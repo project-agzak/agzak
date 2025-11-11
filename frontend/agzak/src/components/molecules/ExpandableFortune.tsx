@@ -37,7 +37,7 @@ export function ExpandableFortune({
         <AccordionTrigger
           className="p-0 hover:no-underline [&[data-state=open]>svg]:rotate-180 cursor-pointer"
         >
-          <div className="flex w-full items-center gap-2">
+          <div className="flex w-full items-center gap-2 font-galmuri-xsmall">
             <FortuneGauge
               label={label}
               value={value}
