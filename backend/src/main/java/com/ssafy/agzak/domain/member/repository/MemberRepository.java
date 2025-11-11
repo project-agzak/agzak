@@ -9,16 +9,15 @@ import java.util.Optional;
 
 @Repository
 public interface MemberRepository extends JpaRepository<Member, Long> {
-
     Optional<Member> findByEmail(String email);
-
-    @Query("SELECT CASE WHEN COUNT(m) > 0 THEN true ELSE false END " +
-            "FROM Member m WHERE m.email = :email AND m.status = 'ACTIVE'")
-    boolean existsByEmail(String email);
 
     @Query("SELECT CASE WHEN COUNT(m) > 0 THEN true ELSE false END " +
             "FROM Member m WHERE m.nickname = :nickname AND m.status = 'ACTIVE'")
     boolean existsByNickname(String nickname);
+
+    Optional<Member> findByEmailAndPasswordIsNotNull(String email);
+
+    boolean existsByEmailAndPasswordIsNotNullAndStatus(String email, Member.MemberStatus status);
 
     boolean existsByNicknameAndMemberIdNot(String nickname, Long memberId);
 }

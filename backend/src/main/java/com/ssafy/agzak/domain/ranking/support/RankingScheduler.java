@@ -16,8 +16,8 @@ public class RankingScheduler {
 
     private final RankingService rankingService;
 
-    /** 매일 23시 59분 55초 (KST) */
-    @Scheduled(cron = "55 59 23 * * *", zone = "Asia/Seoul")
+    /** 매 시간 59분 55초 (KST) */
+    @Scheduled(cron = "55 59 * * * *", zone = "Asia/Seoul")
     @SchedulerLock(name = "rankingSnapshot", lockAtMostFor = "PT4M", lockAtLeastFor = "PT20S")
     public void todayRebuild() {
         rankingService.rebuildTodaySnapshot();
