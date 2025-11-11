@@ -11,7 +11,7 @@ pipeline {
     IMAGE_NAME  = 'sso9594/agzak-app'
     REGISTRY    = 'docker.io'
     DEPLOY_USER = 'ubuntu'
-    DEPLOY_HOST = 'k13b102.p.ssafy.io'
+    DEPLOY_HOST = 'https://jenkins.agzak.co.kr'
     DOCKER_BUILDKIT = '1'
   }
 
