@@ -12,7 +12,6 @@ import InventoryImg from "@/assets/ui/CookieInventory.svg";
 import { ActionButton_M } from "@/components/atoms/ActionButton_M";
 import { FortuneGaugeList } from "@/components/molecules/FortuneGaugeList";
 import { CookieInventory } from "@/components/organisms/CookieInventory";
-import { useAuthStore } from "@/store/useAuthStore";
 import { useCookiesStore } from "../../store/useCookiesStore";
 import { useFortuneStore } from "../../store/useFortuneStore";
 import { useMembersStore } from "../../store/useMembersStore";
@@ -52,54 +51,28 @@ const getTodayLocalString = () => {
 
 export default function CookiesPage() {
   // 총운 (날짜별 조회 방식)
-  const today = getTodayLocalString();
-  const { isLoggedIn } = useAuthStore();
-  const fortuneScores = useFortuneStore((s) => s.scores);
-  const totalScore = useFortuneStore((s) => s.scores?.total_score ?? null);
-  const loadingFortune = useFortuneStore((s) => s.loading);
-  const errorFortune = useFortuneStore((s) => s.error);
-  const fetchToday = useFortuneStore((s) => s.fetchToday);
+  const scores = useFortuneStore((s) => s.scores);
+ const today = getTodayLocalString();
+  const { fortuneCache, fortuneLoading, fortuneError, fetchFortuneByDate } = useMembersStore();
+  const totalScore = fortuneCache[today]?.totalScore ?? null;
+  const loadingFortune = fortuneLoading[today] ?? false;
+  const errorFortune = fortuneError[today] ?? null;
   const addStats = useFortuneStore((s) => s.addStats);
 
-  // 날짜별(통계/달력) 캐시
-  const { fortuneCache, fortuneLoading, fortuneError, fetchFortuneByDate } =
-    useMembersStore();
   const todayData = fortuneCache[today] ?? null;
-
-  React.useEffect(() => {
-    if (!isLoggedIn) return;
-    if (loadingFortune || totalScore != null) return;
-    fetchToday();
-  }, [isLoggedIn, loadingFortune, totalScore, fetchToday]);
-
-  React.useEffect(() => {
-    if (!isLoggedIn) return;
-    if (!todayData && !fortuneLoading[today] && !fortuneError[today]) {
-      fetchFortuneByDate(today);
-    }
-  }, [isLoggedIn, today, todayData, fortuneLoading, fortuneError, fetchFortuneByDate]);
-
 
   // 게이지: todayData.aspects → 우선, 없으면 fortuneScores 사용
   const gaugeStats = React.useMemo(() => {
-    if (todayData && Array.isArray(todayData.aspects)) {
-      const s: AdapterScoresLike = {
-        total_score: todayData.totalScore ?? 0,
-        health: 0,
-        achievement: 0,
-        love: 0,
-        money: 0,
-      };
+    if (todayData) {
+      const s: AdapterScoresLike = { total_score:0, health: 0, achievement: 0, love: 0, money: 0 };
+
       todayData.aspects.forEach((a) => {
-        // a.key: "health" | "achievement" | "love" | "money"
-        (s as any)[a.key] = a.score ?? 0;
+        s[a.key] = a.score ?? 0;
       });
       return toGaugeStats(s);
     }
-    // fallback: useFortuneStore.scores
-    return toGaugeStats(pickScores(fortuneScores));
-  }, [todayData, fortuneScores]);
-
+    return toGaugeStats(pickScores(scores));
+  }, [todayData, scores]);
 
   // 쿠키 스토어
   const items = useCookiesStore((s) => s.items);
@@ -133,6 +106,14 @@ export default function CookiesPage() {
   // 돼지 이미지 전환 상태
   const [pigSrc, setPigSrc] = React.useState<string>(Pig);
 
+  // 최초 총운 1회 호출 가드 (오늘 날짜 기준으로 fetch)
+  React.useEffect(() => {
+    if (totalScore == null) {
+      fetchFortuneByDate(today);
+    }
+  }, [today, totalScore, fetchFortuneByDate]);
+
+
   // 쿠키 목록: 최신순 기본 호출
   React.useEffect(() => {
     fetchCookies("recent");
@@ -158,7 +139,25 @@ export default function CookiesPage() {
       },
       { health: 0, achievement: 0, love: 0, money: 0 }
     );
-    addStats(delta); // ✅ UI 즉시 반영
+    // Optimistic: update today's cached fortune (so CookiesPage reflects change immediately)
+    try {
+      const state = useMembersStore.getState();
+      const cur = state.fortuneCache[today];
+      if (cur) {
+        const deltaSum = delta.health + delta.achievement + delta.love + delta.money;
+        const newAspects = cur.aspects.map((a) => {
+          const key = a.key as keyof AdapterScoresLike;
+          const add = (delta as any)[key] ?? 0;
+          return { ...a, score: (a.score ?? 0) + add };
+        });
+        const newUi = { ...cur, aspects: newAspects, totalScore: (cur.totalScore ?? 0) + deltaSum };
+        useMembersStore.setState({ fortuneCache: { ...state.fortuneCache, [today]: newUi } });
+      }
+    } catch (e) {
+      // ignore optimistic update failures
+    }
+
+    addStats(delta); // ✅ total_score까지 일관 반영
 
     // 3) 서버 반영 (USED 처리) + 인벤토리에서 제거
     try {
