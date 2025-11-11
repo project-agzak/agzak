@@ -62,6 +62,12 @@ public class AuthService {
                         Inventory.builder().member(m).build()
                 ));
     }
+    private String socialEmail(String provider, String email, String sub) {
+        String raw = (email != null && !email.isBlank()) ? email.trim() : sub;
+        if (raw == null || raw.isBlank()) raw = "unknown";
+        String val = (provider + "-" + raw);
+        return val.length() > 255 ? val.substring(0, 255) : val;
+    }
 
     private TokenResponse issueTokens(Long memberId) {
         String access = jwt.createAccess(memberId);
@@ -70,7 +76,17 @@ public class AuthService {
         return new TokenResponse(access, refresh, jwt.getAccessExpMinutes() * 60L);
     }
 
-    // === 카카오 로그인 메인 진입 ===
+    private String uniqueNickname(String base) {
+        String sanitized = (base == null || base.isBlank()) ? "user" : base.trim();
+        String candidate = sanitized;
+        int i = 1;
+        while (memberRepo.existsByNickname(candidate)) {
+            candidate = sanitized + "_" + i++;
+        }
+        return candidate;
+    }
+
+    // === 카카오 로그인 ===
     @Transactional
     public SocialLoginResponse kakaoLogin(KakaoLoginRequest req) {
         if (req.authCode() == null || req.authCode().isBlank()
@@ -78,32 +94,30 @@ public class AuthService {
             throw new BadCredentialsException("authCode와 redirectUri가 필요합니다.");
         }
 
-        // 1) 서버에서 토큰 교환
         var token = kakaoOAuth.exchangeCode(req.authCode(), req.redirectUri());
         if (token == null || token.getAccess_token() == null) {
             throw new BadCredentialsException("카카오 토큰 교환 실패");
         }
         String accessToken = token.getAccess_token();
 
-        // 2) 카카오 사용자 조회
         var me = kakao.getUserMe(accessToken);
         if (me == null || me.getId() == null) throw new BadCredentialsException("카카오 인증 실패");
 
         String sub = String.valueOf(me.getId());
-        String kakaoEmail = me.email();     // null 가능
-        String kakaoNick  = me.nickname();  // null 가능
+        String kakaoEmail = me.email();
+        String kakaoNick  = me.nickname();
 
         var existing = oauthRepo.findByIdProviderAndIdSub(OAuthProvider.KAKAO, sub);
 
-        // 공통: 게스트 즉시 전환 함수
+        // 게스트 → 신규 회원 전환(카카오)
         Function<GuestProfile, TokenResponse> signupFromGuest = gp -> {
-            String nickname = gp.nickname() != null ? gp.nickname()
+            String baseNick = (gp.nickname() != null && !gp.nickname().isBlank())
+                    ? gp.nickname()
                     : (kakaoNick != null && !kakaoNick.isBlank() ? kakaoNick : "user");
-            if (memberRepo.existsByNickname(nickname)) {
-                nickname = nickname + "_" + (int)(Math.random()*900+100);
-            }
+            String nickname = uniqueNickname(baseNick);
+
             var m = Member.builder()
-                    .email(kakaoEmail)
+                    .email(socialEmail("kakao", kakaoEmail, sub))
                     .password(null)
                     .nickname(nickname)
                     .gender(gp.gender())
@@ -117,7 +131,6 @@ public class AuthService {
             memberRepo.save(m);
             ensureInventory(m);
 
-            // 현 시점의 sub를 새 회원에 바인딩
             oauthRepo.save(OAuthIdentity.builder()
                     .id(OAuthIdentityId.builder().provider(OAuthProvider.KAKAO).sub(sub).build())
                     .member(m)
@@ -126,28 +139,22 @@ public class AuthService {
             return issueTokens(m.getMemberId());
         };
 
-        // (1) 기존 연동이 있는 경우
         if (existing.isPresent()) {
             var linked = existing.get().getMember();
-
             if (linked.getStatus() == Member.MemberStatus.ACTIVE) {
-                // A) 기존 활성 회원 → 즉시 로그인
                 return SocialLoginResponse.ok(issueTokens(linked.getMemberId()));
             }
 
-            // B) 기존 연결이 탈퇴 회원 → 연동 제거 후 새 가입 흐름
-            oauthRepo.delete(existing.get()); // 고유키 충돌 방지 위해 바로 삭제
+            oauthRepo.delete(existing.get()); // 탈퇴 회원과의 연동 제거
 
             if (req.guestId() != null && !req.guestId().isBlank()) {
                 var gp = guestStore.find(req.guestId());
                 if (gp == null) throw new BadCredentialsException("게스트 정보가 만료되었거나 없습니다.");
 
-                // 게스트 즉시 전환 가입 + 토큰 발급
                 var tokens = signupFromGuest.apply(gp);
                 guestStore.delete(req.guestId());
                 return SocialLoginResponse.ok(tokens);
             } else {
-                // 게스트가 없으면 → 티켓 발급 후 추가정보 단계
                 var payload = new HashMap<String, String>();
                 payload.put("provider", OAuthProvider.KAKAO.name());
                 payload.put("sub", sub);
@@ -158,7 +165,7 @@ public class AuthService {
             }
         }
 
-        // (2) 연동 자체가 없을 때
+        // 신규 연동
         if (req.guestId() != null && !req.guestId().isBlank()) {
             var gp = guestStore.find(req.guestId());
             if (gp == null) throw new BadCredentialsException("게스트 정보가 만료되었거나 없습니다.");
@@ -171,13 +178,12 @@ public class AuthService {
             payload.put("provider", OAuthProvider.KAKAO.name());
             payload.put("sub", sub);
             if (kakaoEmail != null) payload.put("email", kakaoEmail);
-
             String ticket = ticketStore.create(payload);
             return SocialLoginResponse.needInfo(ticket, kakaoEmail, kakaoNick);
         }
     }
 
-    // === 카카오 완료: 티켓 + 추가정보로 가입 완료 ===
+    // === 카카오 완료(추가정보) ===
     @Transactional
     public TokenResponse kakaoCompleteSignup(KakaoCompleteSignupRequest req) {
         var payload = ticketStore.get(req.ticket());
@@ -185,26 +191,20 @@ public class AuthService {
 
         var provider = OAuthProvider.valueOf(payload.get("provider"));
         var sub = payload.get("sub");
-        var email = payload.get("email"); // null 가능
+        var email = payload.get("email");
 
-        // 혹시 그 사이에 가입되었는지 확인
         if (oauthRepo.findByIdProviderAndIdSub(provider, sub).isPresent()) {
-            // 이미 완료 상태라면 바로 로그인 토큰 발급
             var exist = oauthRepo.findByIdProviderAndIdSub(provider, sub).get().getMember();
             ticketStore.delete(req.ticket());
             return issueTokens(exist.getMemberId());
         }
 
-        // 좌표 변환
         LatLng geo = geocodingService.getCoordinates(req.birthCity());
 
-        String nickname = req.nickname();
-        if (memberRepo.existsByNickname(nickname)) {
-            nickname = nickname + "_" + (int)(Math.random()*900+100);
-        }
+        String nickname = uniqueNickname(req.nickname());
 
         var m = Member.builder()
-                .email(email) // 카카오 이메일 동의 안 했으면 null
+                .email(socialEmail("kakao", email, sub))
                 .password(null)
                 .nickname(nickname)
                 .gender(req.gender())
@@ -216,14 +216,10 @@ public class AuthService {
                 .status(Member.MemberStatus.ACTIVE)
                 .build();
         memberRepo.save(m);
-
         ensureInventory(m);
 
         oauthRepo.save(OAuthIdentity.builder()
-                .id(OAuthIdentityId.builder()
-                        .provider(provider)
-                        .sub(sub)
-                        .build())
+                .id(OAuthIdentityId.builder().provider(provider).sub(sub).build())
                 .member(m)
                 .build());
 
@@ -231,12 +227,17 @@ public class AuthService {
         return issueTokens(m.getMemberId());
     }
 
+    // === 일반 회원가입(이메일/비번) ===
     @Transactional
     public void register(RegisterRequest req) {
-        if (memberRepo.existsByEmail(req.email()))
+        // 이메일 중복은 "로컬+ACTIVE"에 대해서만 체크
+        if (memberRepo.existsByEmailAndPasswordIsNotNullAndStatus(req.email(), Member.MemberStatus.ACTIVE)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 가입된 이메일입니다.");
-        if (memberRepo.existsByNickname(req.nickname()))
+        }
+        // 닉네임 중복은 허용하지 않음 → 거절
+        if (memberRepo.existsByNickname(req.nickname())) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 사용중인 닉네임입니다.");
+        }
 
         LatLng geo = geocodingService.getCoordinates(req.birthCity());
 
@@ -256,38 +257,19 @@ public class AuthService {
         ensureInventory(m);
     }
 
-    @Transactional(readOnly = true)
-    public TokenResponse login(LoginRequest req) {
-        var m = memberRepo.findByEmail(req.email())
-                .orElseThrow(() -> new BadCredentialsException("이메일 또는 비밀번호가 올바르지 않습니다."));
-        if (m.getStatus() != Member.MemberStatus.ACTIVE)
-            throw new BadCredentialsException("비활성화된 계정입니다.");
-        if (m.getPassword() == null || !passwordEncoder.matches(req.password(), m.getPassword()))
-            throw new BadCredentialsException("이메일 또는 비밀번호가 올바르지 않습니다.");
-
-        afterCommit(() -> rankingService.refreshTodayForMember(m.getMemberId()));
-        return issueTokens(m.getMemberId());
-    }
-
-    @Transactional
-    public void logout(Long memberId, String accessToken) {
-        refreshStore.delete(memberId);
-        if (accessToken != null) {
-            revokeService.revoke(accessToken, Duration.ofMinutes(jwt.getAccessExpMinutes()));
-        }
-    }
-
+    // === 게스트 → 일반 회원 전환(이메일/비번) ===
     @Transactional
     public TokenResponse registerWithGuest(RegisterWithGuestRequest req) {
-        if (memberRepo.existsByEmail(req.email()))
+        if (memberRepo.existsByEmailAndPasswordIsNotNullAndStatus(req.email(), Member.MemberStatus.ACTIVE)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 가입된 이메일입니다.");
+        }
 
         var gp = guestStore.find(req.guestId());
         if (gp == null) throw new BadCredentialsException("게스트 정보가 만료되었거나 없습니다.");
 
         String nickname = gp.nickname();
         if (memberRepo.existsByNickname(nickname)) {
-            nickname = nickname + "_" + (int)(Math.random()*900+100);
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 사용중인 닉네임입니다.");
         }
 
         var m = Member.builder()
@@ -304,11 +286,22 @@ public class AuthService {
                 .build();
 
         memberRepo.save(m);
-
         ensureInventory(m);
-
         guestStore.delete(req.guestId());
 
+        return issueTokens(m.getMemberId());
+    }
+
+    @Transactional(readOnly = true)
+    public TokenResponse login(LoginRequest req) {
+        var m = memberRepo.findByEmailAndPasswordIsNotNull(req.email())
+                .orElseThrow(() -> new BadCredentialsException("이메일 또는 비밀번호가 올바르지 않습니다."));
+        if (m.getStatus() != Member.MemberStatus.ACTIVE)
+            throw new BadCredentialsException("비활성화된 계정입니다.");
+        if (m.getPassword() == null || !passwordEncoder.matches(req.password(), m.getPassword()))
+            throw new BadCredentialsException("이메일 또는 비밀번호가 올바르지 않습니다.");
+
+        afterCommit(() -> rankingService.refreshTodayForMember(m.getMemberId()));
         return issueTokens(m.getMemberId());
     }
 
@@ -321,28 +314,30 @@ public class AuthService {
             throw new BadCredentialsException("유효하지 않은 리프레시 토큰입니다.");
         }
 
-        // 서버 저장소(redis)에 보관된 최신 리프레시와 일치하는지 확인 (토큰 회전 보안)
         var saved = refreshStore.get(memberId).orElse(null);
         if (saved == null || !saved.equals(refreshToken)) {
             throw new BadCredentialsException("리프레시 토큰이 만료되었거나 회수되었습니다.");
         }
 
-        // 회원 상태 체크 (탈퇴자는 갱신 불가)
         var m = memberRepo.findById(memberId)
                 .orElseThrow(() -> new BadCredentialsException("회원 정보를 찾을 수 없습니다."));
         if (m.getStatus() != Member.MemberStatus.ACTIVE) {
             throw new BadCredentialsException("비활성화된 계정입니다.");
         }
 
-        // 토큰 회전(rotate): 새 access/refresh 발급 + 기존 refresh 대체 저장
         return issueTokens(memberId);
     }
 
     public CheckEmailResponse checkEmail(String email) {
-        if(memberRepo.existsByEmail(email)) {
-            return new CheckEmailResponse(email, false);
-        }
+        boolean available = !memberRepo.existsByEmailAndPasswordIsNotNullAndStatus(email, Member.MemberStatus.ACTIVE);
+        return new CheckEmailResponse(email, available);
+    }
 
-        return new CheckEmailResponse(email, true);
+    @Transactional
+    public void logout(Long memberId, String accessToken) {
+        refreshStore.delete(memberId);
+        if (accessToken != null) {
+            revokeService.revoke(accessToken, Duration.ofMinutes(jwt.getAccessExpMinutes()));
+        }
     }
 }
