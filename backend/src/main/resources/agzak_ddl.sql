@@ -1,5 +1,5 @@
 /* =========================================================
-   0) DB 생성/교체
+   0) DB 생성
    ========================================================= */
 DROP DATABASE IF EXISTS `agzak`;
 CREATE DATABASE `agzak` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */;
@@ -9,22 +9,31 @@ USE `agzak`;
    1) 회원 / 인증
    ========================================================= */
 CREATE TABLE `member` (
-                          `member_id`     BIGINT       NOT NULL AUTO_INCREMENT,
-                          `nickname`      VARCHAR(50)  NOT NULL,
-                          `email`         VARCHAR(255) NOT NULL,
-                          `password`      VARCHAR(255) NULL,
-                          `gender`        VARCHAR(50)  NOT NULL,
-                          `birth_date`    DATE         NOT NULL COMMENT 'YYYY-MM-DD',
-                          `birth_time`    TIME         NOT NULL DEFAULT '00:00:00' COMMENT '태어난 시:분 (:초는 00)',
-                          `birth_city`    VARCHAR(100) NULL,
-                          `latitude`      DOUBLE       NULL COMMENT '위도(y)',
-                          `longitude`     DOUBLE       NULL COMMENT '경도(x)',
-                          `created_at`    DATETIME     NOT NULL,
-                          `updated_at`    DATETIME     NOT NULL,
-                          `status`        VARCHAR(50)  NULL COMMENT 'ENUM(`ACTIVE`, `WITHDRAWN`)',
+                          `member_id`  BIGINT       NOT NULL AUTO_INCREMENT,
+                          `nickname`   VARCHAR(50)  NOT NULL,
+                          `email`      VARCHAR(255) NULL,
+                          `password`   VARCHAR(255) NULL,
+                          `gender`     VARCHAR(50)  NOT NULL,
+                          `birth_date` DATE         NOT NULL COMMENT 'YYYY-MM-DD',
+                          `birth_time` TIME         NOT NULL DEFAULT '00:00:00' COMMENT '태어난 시:분 (:초는 00)',
+                          `birth_city` VARCHAR(100) NULL,
+                          `latitude`   DOUBLE       NULL COMMENT '위도(y)',
+                          `longitude`  DOUBLE       NULL COMMENT '경도(x)',
+                          `created_at` DATETIME     NOT NULL,
+                          `updated_at` DATETIME     NOT NULL,
+                          `status`     VARCHAR(50)  NOT NULL DEFAULT 'ACTIVE' COMMENT 'ENUM(`ACTIVE`, `WITHDRAWN`)',
+
+                          `email_local_unique` VARCHAR(255)
+                              GENERATED ALWAYS AS (
+                                  CASE
+                                      WHEN `password` IS NOT NULL AND `status` = 'ACTIVE' THEN `email`
+                                      ELSE NULL
+                                      END
+                                  ) STORED,
+
                           PRIMARY KEY (`member_id`),
                           UNIQUE KEY `UQ_member_nickname` (`nickname`),
-                          UNIQUE KEY `UQ_member_email` (`email`)
+                          UNIQUE KEY `UQ_member_email_local_active` (`email_local_unique`)
 ) ENGINE=InnoDB;
 
 CREATE TABLE `oauth_identity` (
@@ -44,34 +53,30 @@ CREATE TABLE `oauth_identity` (
 CREATE TABLE `fortune_type` (
                                 `fortune_type_id` BIGINT      NOT NULL AUTO_INCREMENT,
                                 `name`            VARCHAR(50) NOT NULL,
-                                `good_with_id`    BIGINT       NULL,
-                                `bad_with_id`     BIGINT       NULL,
+                                `good_with_id`    BIGINT      NULL,
+                                `bad_with_id`     BIGINT      NULL,
                                 PRIMARY KEY (`fortune_type_id`),
                                 KEY `IDX_fortune_type_good_with` (`good_with_id`),
                                 KEY `IDX_fortune_type_bad_with`  (`bad_with_id`),
-
                                 CONSTRAINT `FK_fortune_type_good_with`
-                                    FOREIGN KEY (`good_with_id`)
-                                        REFERENCES `fortune_type`(`fortune_type_id`)
+                                    FOREIGN KEY (`good_with_id`) REFERENCES `fortune_type`(`fortune_type_id`)
                                         ON DELETE SET NULL ON UPDATE CASCADE,
-
                                 CONSTRAINT `FK_fortune_type_bad_with`
-                                    FOREIGN KEY (`bad_with_id`)
-                                        REFERENCES `fortune_type`(`fortune_type_id`)
+                                    FOREIGN KEY (`bad_with_id`) REFERENCES `fortune_type`(`fortune_type_id`)
                                         ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
 /* =========================================================
-   3) 운세 결과 (일자별 총점/타입)
+   3) 운세 결과
    ========================================================= */
 CREATE TABLE `fortune` (
-                           `fortune_id`      BIGINT       NOT NULL AUTO_INCREMENT,
-                           `member_id`       BIGINT       NOT NULL,
-                           `fortune_type_id` BIGINT       NOT NULL,
-                           `date`            DATE         NOT NULL,
-                           `description`     VARCHAR(1000) NULL,
-                           `total_score`     INT          NOT NULL,
-                           `original_total_score` INT       NOT NULL,
+                           `fortune_id`           BIGINT       NOT NULL AUTO_INCREMENT,
+                           `member_id`            BIGINT       NOT NULL,
+                           `fortune_type_id`      BIGINT       NOT NULL,
+                           `date`                 DATE         NOT NULL,
+                           `description`          VARCHAR(1000) NULL,
+                           `total_score`          INT          NOT NULL,
+                           `original_total_score` INT          NOT NULL,
                            PRIMARY KEY (`fortune_id`),
                            UNIQUE KEY `UQ_fortune_member_date` (`member_id`, `date`),
                            KEY `IDX_fortune_date_score` (`date`, `total_score`),
@@ -84,7 +89,7 @@ CREATE TABLE `fortune` (
 ) ENGINE=InnoDB;
 
 /* =========================================================
-   4) 운세 세부 항목 점수
+   4) 운세 세부
    ========================================================= */
 CREATE TABLE `fortune_aspect` (
                                   `fortune_aspect_id` BIGINT      NOT NULL AUTO_INCREMENT,
@@ -92,7 +97,7 @@ CREATE TABLE `fortune_aspect` (
                                   `name`              VARCHAR(50) NOT NULL COMMENT 'ENUM(`MONEY`, `LOVE`, `ACHIEVEMENT`, `HEALTH`)',
                                   `score`             INT         NOT NULL,
                                   `original_score`    INT         NOT NULL,
-                                  `description`     VARCHAR(1000) NULL,
+                                  `description`       VARCHAR(1000) NULL,
                                   PRIMARY KEY (`fortune_aspect_id`),
                                   UNIQUE KEY `UQ_aspect_per_fortune` (`fortune_id`, `name`),
                                   CONSTRAINT `FK_aspect_fortune`
@@ -101,16 +106,16 @@ CREATE TABLE `fortune_aspect` (
 ) ENGINE=InnoDB;
 
 /* =========================================================
-   5) 인벤토리 & 게임세션 & 포춘쿠키
+   5) 인벤토리/게임/쿠키
    ========================================================= */
 CREATE TABLE `inventory` (
                              `inventory_id` BIGINT NOT NULL AUTO_INCREMENT,
                              `member_id`    BIGINT NOT NULL,
                              PRIMARY KEY (`inventory_id`),
+                             UNIQUE KEY `UQ_inventory_member` (`member_id`),
                              CONSTRAINT `FK_inventory_member`
                                  FOREIGN KEY (`member_id`) REFERENCES `member`(`member_id`)
-                                     ON DELETE CASCADE ON UPDATE CASCADE,
-                             UNIQUE KEY `UQ_inventory_member`  (`member_id`)
+                                     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
 CREATE TABLE `game_session` (
@@ -141,7 +146,7 @@ CREATE TABLE `fortune_cookie` (
                                   `achievement`       INT         NOT NULL,
                                   `health`            INT         NOT NULL,
                                   `status`            VARCHAR(50) NOT NULL DEFAULT 'AVAILABLE' COMMENT 'ENUM(`AVAILABLE`, `USED`)',
-                                  `created_at`    DATETIME     NOT NULL,
+                                  `created_at`        DATETIME    NOT NULL,
                                   PRIMARY KEY (`fortune_cookie_id`),
                                   KEY `IDX_cookie_inventory` (`inventory_id`),
                                   UNIQUE KEY `UQ_cookie_session` (`game_session_id`),
@@ -154,17 +159,17 @@ CREATE TABLE `fortune_cookie` (
 ) ENGINE=InnoDB;
 
 /* =========================================================
-   6) 랭킹 (일자별 스냅샷)
+   6) 랭킹
    ========================================================= */
 CREATE TABLE `ranking` (
-                           `ranking_id`  BIGINT   NOT NULL AUTO_INCREMENT,
-                           `member_id`   BIGINT   NOT NULL,
-                           `date`        DATE     NOT NULL,
-                           `rank_no`     INT      NOT NULL,
-                           `total_score` INT      NOT NULL,
+                           `ranking_id`           BIGINT   NOT NULL AUTO_INCREMENT,
+                           `member_id`            BIGINT   NOT NULL,
+                           `date`                 DATE     NOT NULL,
+                           `rank_no`              INT      NOT NULL,
+                           `total_score`          INT      NOT NULL,
                            `original_total_score` INT      NOT NULL,
-                           `created_at`  DATETIME NOT NULL,
-                           `updated_at`  DATETIME NOT NULL,
+                           `created_at`           DATETIME NOT NULL,
+                           `updated_at`           DATETIME NOT NULL,
                            PRIMARY KEY (`ranking_id`),
                            UNIQUE KEY `UQ_ranking_member_date` (`member_id`, `date`),
                            KEY `IDX_ranking_date_rank` (`date`, `rank_no`),
@@ -174,26 +179,23 @@ CREATE TABLE `ranking` (
 ) ENGINE=InnoDB;
 
 /* =========================================================
-   7) 게임 시도(강화) 로그
+   7) 게임 시도 로그
    ========================================================= */
 CREATE TABLE `game_attempt` (
                                 `game_attempt_id`  BIGINT      NOT NULL AUTO_INCREMENT,
                                 `game_session_id`  BIGINT      NOT NULL,
-                                `attempt_no`       INT         NOT NULL,  -- 1..10
+                                `attempt_no`       INT         NOT NULL,
                                 `aspect_name`      VARCHAR(20) NOT NULL COMMENT 'ENUM(`MONEY`, `LOVE`, `ACHIEVEMENT`, `HEALTH`, `MISFORTUNE`)',
                                 `fire_type`        VARCHAR(20) NOT NULL COMMENT 'ENUM(`WEAK`, `STRONG`)',
 
-    /* 확률 기록 */
-                                `base_prob`        DECIMAL(5,2) NOT NULL,  -- 직전 기본성공확률
-                                `adjustment_pp`    DECIMAL(5,2) NOT NULL,  -- 약한불 +5 / 강한불 -5 (pp)
-                                `applied_prob`     DECIMAL(5,2) NOT NULL,  -- base + adjustment
+                                `base_prob`        DECIMAL(5,2) NOT NULL,
+                                `adjustment_pp`    DECIMAL(5,2) NOT NULL,
+                                `applied_prob`     DECIMAL(5,2) NOT NULL,
 
-    /* 결과 */
                                 `is_success`       TINYINT(1)   NOT NULL,
-                                `delta_value`      INT          NOT NULL,  -- 성공/실패 증감치
-                                `next_base_prob`   DECIMAL(5,2) NOT NULL,  -- 다음 기본성공확률
+                                `delta_value`      INT          NOT NULL,
+                                `next_base_prob`   DECIMAL(5,2) NOT NULL,
 
-    /* 누적 스냅샷 */
                                 `snap_love`        INT          NOT NULL,
                                 `snap_money`       INT          NOT NULL,
                                 `snap_achievement` INT          NOT NULL,

@@ -13,6 +13,7 @@ import com.ssafy.agzak.domain.member.dto.response.MemberGraphResponse;
 import com.ssafy.agzak.domain.member.dto.response.MemberInfoResponse;
 import com.ssafy.agzak.domain.member.entity.Member;
 import com.ssafy.agzak.domain.member.exception.IllegalFortuneAspectException;
+import com.ssafy.agzak.domain.member.exception.MemberNotFoundException;
 import com.ssafy.agzak.domain.member.exception.NoFortuneFoundException;
 import com.ssafy.agzak.domain.member.repository.MemberRepository;
 import com.ssafy.agzak.domain.ranking.service.RankingService;
@@ -41,47 +42,59 @@ public class MemberService {
     private final RefreshTokenStore  refreshStore;
     private final RankingService rankingService;
 
-    public MemberInfoResponse getMemberInfo(Long memberId) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 멤버 아이디입니다."));
+    private Member findMemberOrThrow(long memberId) {
+        return memberRepository.findById(memberId)
+                .orElseThrow(() -> new MemberNotFoundException(memberId));
+    }
 
+    public MemberInfoResponse getMemberInfo(Long memberId) {
+        Member member = findMemberOrThrow(memberId);
         return MemberInfoResponse.fromEntity(member);
     }
 
     public DetailFortuneDataResponse getMemberFortune(Long memberId, LocalDate date) {
-                memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 멤버 아이디입니다."));
+        findMemberOrThrow(memberId);
 
         Fortune fortune = fortuneRepository.findByMember_MemberIdAndDate(memberId, date)
-                .orElseThrow(() -> new NoFortuneFoundException("해당 멤버의 해당 날짜의 운세가 존재하지 않습니다.", memberId, date));
+                .orElseThrow(() -> new NoFortuneFoundException(
+                        "해당 멤버의 해당 날짜의 운세가 존재하지 않습니다. memberId=" + memberId + ", date=" + date,
+                        memberId, date
+                ));
 
         List<FortuneAspect> fortuneAspects = fortuneAspectRepository.findAllByFortune(fortune);
         if (fortuneAspects.size() != 4) {
-            throw new IllegalFortuneAspectException("해당 멤버의 해당 날짜의 운세가 유효하지 않습니다.");
+            throw new IllegalFortuneAspectException(
+                    "해당 멤버의 해당 날짜의 운세가 유효하지 않습니다. memberId=" + memberId + ", date=" + date
+            );
         }
 
         List<FortuneAspectResponse> fortuneAspectResponses = fortuneAspects.stream()
                 .map(FortuneAspectResponse::fromEntity)
                 .toList();
 
-        return new DetailFortuneDataResponse(fortune.getFortuneId(), fortune.getDescription(), fortune.getTotalScore(),
+        return new DetailFortuneDataResponse(
+                fortune.getFortuneId(),
+                fortune.getDescription(),
+                fortune.getTotalScore(),
                 fortune.getOriginalTotalScore(),
                 FortuneTypeResponse.fromEntity(fortune.getFortuneType()),
-                fortuneAspectResponses);
+                fortuneAspectResponses
+        );
     }
 
     public List<MemberGraphResponse> getMemberGraph(long memberId, LocalDate startDate, LocalDate endDate) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 멤버 아이디입니다."));
+        Member member = findMemberOrThrow(memberId);
 
         List<Fortune> fortuneResults = fortuneRepository.findAllByMemberAndDateBetween(member, startDate, endDate);
         Map<LocalDate, DateScore> statMap = fortuneResults.stream()
-                .collect(Collectors.toMap(Fortune::getDate, f -> new DateScore(f.getOriginalTotalScore(), f.getTotalScore()) ));
+                .collect(Collectors.toMap(Fortune::getDate, f -> new DateScore(f.getOriginalTotalScore(), f.getTotalScore())));
 
         return startDate.datesUntil(endDate.plusDays(1))
-                .map(date -> new MemberGraphResponse(date,
-                        statMap.getOrDefault(date, new DateScore(0,0)).originalScore,
-                        statMap.getOrDefault(date, new DateScore(0,0)).totalScore))
+                .map(date -> new MemberGraphResponse(
+                        date,
+                        statMap.getOrDefault(date, new DateScore(0, 0)).originalScore,
+                        statMap.getOrDefault(date, new DateScore(0, 0)).totalScore
+                ))
                 .toList();
     }
 
@@ -89,24 +102,26 @@ public class MemberService {
 
     @Transactional
     public void editMemberInfo(long memberId, MemberEditRequest request) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 멤버 아이디입니다."));
+        Member member = findMemberOrThrow(memberId);
 
-        // 닉네임 변경 처리
+        // 닉네임 변경
         if (request.nickname() != null) {
             String newNick = request.nickname().trim();
             String oldNick = member.getNickname();
 
             if (!newNick.equals(oldNick)) {
                 if (memberRepository.existsByNicknameAndMemberIdNot(newNick, memberId)) {
-                    throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 사용중인 닉네임입니다.");
+                    throw new ResponseStatusException(
+                            HttpStatus.CONFLICT,
+                            "이미 사용중인 닉네임입니다. memberId=" + memberId + ", nickname=" + newNick
+                    );
                 }
                 member.updateNickname(newNick);
                 afterCommit(() -> rankingService.refreshTodayForMember(memberId));
             }
         }
 
-        // 출생시간 변경 처리
+        // 출생시간 변경
         if (request.birthTime() != null) {
             member.updateBirthTime(request.birthTime());
         }
@@ -114,12 +129,10 @@ public class MemberService {
 
     @Transactional
     public void deleteMember(long memberId) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 멤버 아이디입니다."));
+        Member member = findMemberOrThrow(memberId);
         oauthRepo.deleteAllByMember(member);
         refreshStore.delete(memberId);
         member.deleteMember();
         memberRepository.delete(member);
     }
-
 }
