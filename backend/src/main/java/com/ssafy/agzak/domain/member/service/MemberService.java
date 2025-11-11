@@ -134,5 +134,6 @@ public class MemberService {
         refreshStore.delete(memberId);
         member.deleteMember();
         memberRepository.delete(member);
+        afterCommit(() -> rankingService.removeFromToday(memberId));
     }
 }
