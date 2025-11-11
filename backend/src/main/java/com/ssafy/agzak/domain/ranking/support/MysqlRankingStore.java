@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
@@ -28,6 +29,15 @@ public class MysqlRankingStore {
 
     public Optional<Fortune> findFortune(LocalDate date, Long memberId) {
         return fortuneRepository.findByMember_MemberIdAndDate(memberId, date);
+    }
+
+    @Transactional(readOnly = true)
+    public Set<Long> existingMemberIds(Set<Long> ids) {
+        if (ids == null || ids.isEmpty()) return Set.of();
+        return em.createQuery("select m.memberId from Member m where m.memberId in :ids", Long.class)
+                .setParameter("ids", ids)
+                .getResultStream()
+                .collect(java.util.stream.Collectors.toSet());
     }
 
     /** JPA 프록시로 Member 참조 획득 */
