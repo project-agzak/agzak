@@ -47,7 +47,7 @@ function Calendar({
         root: cn(
   // ✅ 전체 배경이 calendar 높이 전체를 덮도록 수정
   "block w-full rounded-xl bg-white shadow-md p-2",
-  "min-h-[320px] sm:min-h-[340px]",  // ✅ 높이 고정 (15일 이후 칸까지 흰배경 유지)
+  "min-h-[360px] sm:min-h-[380px]",  // ✅ 높이 고정 (15일 이후 칸까지 흰배경 유지)
   defaultClassNames.root
 ),
         months: cn(
@@ -89,13 +89,13 @@ function Calendar({
             : "[&>svg]:text-muted-foreground flex h-8 items-center gap-1 rounded-md pl-2 pr-1 text-sm [&>svg]:size-3.5",
           defaultClassNames.caption_label
         ),
-        table: "w-full border-collapse",
+        table: "w-full border-collapse bg-white",
         weekdays: cn("flex", defaultClassNames.weekdays),
         weekday: cn(
           "text-muted-foreground flex-1 select-none rounded-md text-[0.8rem] font-normal",
           defaultClassNames.weekday
         ),
-        week: cn("mt-1 flex w-full", defaultClassNames.week),
+        week: cn("mt-1 flex w-full bg-white", defaultClassNames.week),
         week_number_header: cn(
           "w-[--cell-size] select-none",
           defaultClassNames.week_number_header
