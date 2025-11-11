@@ -152,9 +152,10 @@ pipeline {
       script {
         def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
         def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
+        def buildLink = "https://jenkins.agzak.co.kr/job/${env.JOB_NAME}/${env.BUILD_NUMBER}/"
         sh """
           curl -X POST -H 'Content-Type: application/json' \
-          -d '{"text":"빌드 성공: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name}) (<${env.BUILD_URL}|상세 보기>)"}' \
+          -d '{"text":"빌드 성공: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name}) (<${buildLink}|상세 보기>)"}' \
           https://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo
         """
       }
@@ -163,9 +164,10 @@ pipeline {
       script {
         def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
         def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
+        def buildLink = "https://jenkins.agzak.co.kr/job/${env.JOB_NAME}/${env.BUILD_NUMBER}/"
         sh """
           curl -X POST -H 'Content-Type: application/json' \
-          -d '{"text":"빌드 실패: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name}) (<${env.BUILD_URL}|상세 보기>)"}' \
+          -d '{"text":"빌드 실패: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name}) (<${buildLink}|상세 보기>)"}' \
           https://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo
         """
       }

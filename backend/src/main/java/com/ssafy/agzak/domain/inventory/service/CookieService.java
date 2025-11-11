@@ -45,6 +45,10 @@ public class CookieService {
         FortuneCookie cookie = fortuneCookieRepository.findById(cookieId)
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 쿠키 아이디입니다."));
 
+        if (cookie.getStatus() == FortuneCookie.CookieStatus.USED) {
+            throw new IllegalArgumentException("이미 사용한 쿠키입니다. 사용할 수 없습니다.");
+        }
+
         final int CAP = 250;
 
         int appliedSum = 0;
