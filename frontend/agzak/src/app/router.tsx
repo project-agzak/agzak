@@ -3,7 +3,7 @@ import AppLoader from '@/components/ui/AppLoader';
 import { lazy, Suspense, type ReactNode } from 'react';
 import { createBrowserRouter, Outlet, Navigate } from 'react-router-dom';
 import AppLayout from './layout';
-
+import { ScrollToTop } from "@/components/templates/ScrollToTop";
 import { RequireAuth } from "@/components/templates/RequireAuth";
 
 
@@ -34,7 +34,12 @@ const EmptyLayout = () => <Outlet />;
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <AppLayout />,
+  element: (
+      <>
+        <ScrollToTop />
+        <AppLayout />
+      </>
+    ),
     errorElement: suspense(<AppError />), 
     children: [
       { index: true, element: <Navigate to="/fortune" replace /> },
