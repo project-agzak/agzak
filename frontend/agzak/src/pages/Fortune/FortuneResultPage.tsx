@@ -1,12 +1,13 @@
 // src/pages/Fortune/FortuneResultPage.tsx
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
-import { ExpandableFortune } from "@/components/molecules/ExpandableFortune";
 import { Button_L } from "@/components/atoms/Button_L";
+import { ExpandableFortune } from "@/components/molecules/ExpandableFortune";
 
+import BackCard from "@/components/atoms/BackCard";
 import ShareButton from "@/components/atoms/ShareButton";
 import { PureFlipImage } from "@/components/molecules/PureFlipImage";
-import BackCard from "@/components/atoms/BackCard";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useFortuneStore } from "@/store/useFortuneStore";
 
@@ -98,17 +99,39 @@ export default function FortuneResultPage() {
   const fetchToday     = useFortuneStore((s) => s.fetchToday);
   const getDetailSummary = useFortuneStore((s) => s.getDetailSummary);
   const getScoreValue    = useFortuneStore((s) => s.getScoreValue);
+  const navigate = useNavigate();
+
 
   const shareUrl = "https://www.agzak.co.kr/";
 
 
 useEffect(() => {
-  if (!isLoggedIn) return;
+    if (isLoggedIn) {
+      fetchToday();
+      return;
+    }
 
-  // 로그인 유저면 무조건 오늘 운세 한 번 시도
-  fetchToday();
+    // 2) 비로그인 유저:
+    // - 정상 플로우라면 useFortuneStore에 이미 결과가 존재해야 함
+    const hasFortune = totalScore !== null || !!typeInfo;
 
-}, [isLoggedIn, fetchToday]);
+    // - 회원가입 진행 중(이메일/카카오)일 수도 있으니 그 상태는 허용
+    const hasUserId = !!localStorage.getItem("userId");
+    const hasKakaoTicket = !!sessionStorage.getItem("kakao_ticket");
+
+    // - 어떤 정보도 없으면 직접 접근으로 판단하고 /fortune으로 리디렉트
+    if (!hasFortune && !hasUserId && !hasKakaoTicket && !loadingFortune && !errorFortune) {
+      navigate("/fortune", { replace: true });
+    }
+  }, [
+    isLoggedIn,
+    fetchToday,
+    totalScore,
+    typeInfo,
+    loadingFortune,
+    errorFortune,
+    navigate,
+  ]);
 
   // 🔥 단짝/천적: 추가 API 없이 goodWithId/badWithId로 바로 이미지 찾기
   const goodWithId = typeInfo?.goodWithId ?? null;
