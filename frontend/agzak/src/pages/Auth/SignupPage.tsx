@@ -209,14 +209,57 @@ const emailHasError = !emailValid || (email && !emailChecked);
     alert("회원가입이 완료되었습니다!");
     navigate("/login");
   };
+const handleKakaoLogin = () => {
+    window.history.pushState({}, "", "/login");
+    // Analytics: 로그인 시도
+    trackEvent("auth_login_kakao_attempt");
 
+    if (!window.Kakao || !window.Kakao.isInitialized()) {
+      alert("카카오 SDK가 초기화되지 않았습니다. 새로고침 후 다시 시도해주세요.");
+      return;
+    }
+
+    const redirectUri = `${window.location.origin}${window.location.pathname}`;
+
+    window.Kakao.Auth.authorize({
+      redirectUri,
+      scope: "profile_nickname,account_email",
+    });
+  };
+  
   return (
     <main className="relative z-10 min-h-screen p-4">
       <div className="ml-2 mt-5 flex w-full justify-center">
         <img src={Logo} alt="아그작 로고" className="mx-auto block" />
       </div>
 
-      <div className="mt-8 flex w-full flex-col items-center gap-3">
+        <div className="mt-8 flex w-full flex-col items-center gap-3">
+    {/* 카카오 로그인 */}
+    <button
+      type="button"
+      onClick={handleKakaoLogin}
+      aria-label="카카오로 로그인"
+      className="focus:outline-none focus:ring-2 focus:ring-offset-2 hover:opacity-90"
+    >
+      <img
+        src="/images/kakao_login_medium_wide.svg"
+        alt="카카오 로그인"
+        className="block h-auto w-[270px] cursor-pointer transition"
+        draggable={false}
+      />
+    </button>
+
+    {/* 🔹 구분선 (divider) */}
+    <div className="relative my-6 w-[270px]">
+      <div className="absolute inset-0 flex items-center">
+        <span className="w-full border-t border-[#D1D5DB]" />
+      </div>
+      <div className="relative flex justify-center">
+        <span className="bg-white px-3 text-[10px] text-gray-400 font-galmuri-xsmall">
+          또는 이메일로 가입
+        </span>
+      </div>
+    </div>
         <div className="flex w-full max-w-[300px] flex-col gap-1">
           <div className="right-align w-full pr-7">
             <Button_M

@@ -119,7 +119,7 @@ useEffect(() => {
 
    const bestieDescription = goodWithId ? DESCRIPTION_BY_TYPE[goodWithId] : undefined;
   const enemyDescription = badWithId ? DESCRIPTION_BY_TYPE[badWithId] : undefined;
-  
+  const guestId = localStorage.getItem("guestId");
   return (
     <main className="relative z-10 p-4 min-h-screen">
   <div className="flex flex-col justify-center items-center pb-5 gap-3">
@@ -218,11 +218,11 @@ useEffect(() => {
       
       <div className="flex flex-col items-center pt-20 pb-5">
        <div className="pb-2 relative">
-  <Button_L
-    to="/enforce"
-    label="운세 상승 아이템 얻으러 가기"
-    width={260}
-  />
+<Button_L
+  to={guestId ? "/signup" : "/enforce"}
+  label="운세 상승 아이템 얻으러 가기"
+  width={260}
+/>
 
   <style>
     {`
