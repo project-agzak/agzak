@@ -21,6 +21,11 @@ public class CollectionService {
     private final MemberRepository memberRepository;
     private final AuthMemberProvider authMemberProvider;
 
+    @Transactional
+    public void ensureDefaults(Member member) {
+        collectionRepository.initDefaultsForMember(member.getMemberId());
+    }
+
     /** 내 쿠키도감 */
     public List<CollectionItemResponse> getMyCollection() {
         long memberId = authMemberProvider.currentMemberId();

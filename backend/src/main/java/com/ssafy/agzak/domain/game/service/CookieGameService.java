@@ -253,7 +253,7 @@ public class CookieGameService {
 
         CookieCreatedResponse cookieResult = null;
 
-        // ★ 10회차 완료 → 포춘쿠키 생성
+        // 10회차 완료 → 포춘쿠키 생성
         if (completed) {
             // 1) 액운 재분배 후 최종 능력치 산출
             int[] after = applyMisfortuneRedistribution(
