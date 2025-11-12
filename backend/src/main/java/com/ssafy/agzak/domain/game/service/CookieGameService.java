@@ -1,5 +1,6 @@
 package com.ssafy.agzak.domain.game.service;
 
+import com.ssafy.agzak.domain.collection.service.CollectionService;
 import com.ssafy.agzak.domain.game.dto.request.AttemptRequest;
 import com.ssafy.agzak.domain.game.dto.response.AttemptResponse;
 import com.ssafy.agzak.domain.game.dto.response.CookieCreatedResponse;
@@ -42,6 +43,7 @@ public class CookieGameService {
     private final AuthMemberProvider authMemberProvider;
     private final DateProvider date;
     private final RedisQuotaService quotaService;
+    private final CollectionService collectionService;
 
     private static final BigDecimal INIT_PROB = new BigDecimal("70.00");
     private static final int ATTEMPTS_LIMIT = 10;
@@ -283,6 +285,22 @@ public class CookieGameService {
                     .health(fHealth)
                     .build();
             var saved = fortuneCookieRepository.save(cookieEntity);
+
+            String firstDesc = switch (typeDto) {
+                case ROTTEN -> "행운 10점 이하..";
+                case MIXED -> "행운 항목 3개 이상 동일 + 총점 30점 이상";
+                case LOVE -> "애정운이 가장 높은 쿠키";
+                case MONEY -> "금전운이 가장 높은 쿠키";
+                case ACHIEVEMENT -> "성취운이 가장 높은 쿠키";
+                case HEALTH -> "건강운이 가장 높은 쿠키";
+            };
+
+            collectionService.onCookieCreated(
+                    member.getMemberId(),
+                    typeDto.name(),
+                    firstDesc,
+                    date.todayTime()
+            );
 
             // 5) 응답 DTO
             cookieResult = CookieCreatedResponse.builder()

@@ -1,4 +1,4 @@
-package com.ssafy.agzak.scheduler;
+package com.ssafy.agzak.global.scheduler;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;

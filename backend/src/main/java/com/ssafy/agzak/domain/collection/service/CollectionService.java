@@ -21,9 +21,16 @@ public class CollectionService {
     private final MemberRepository memberRepository;
     private final AuthMemberProvider authMemberProvider;
 
+    /** 회원가입시 도감 생성 */
     @Transactional
     public void ensureDefaults(Member member) {
         collectionRepository.initDefaultsForMember(member.getMemberId());
+    }
+
+    /** 쿠키 도감 등록 */
+    @Transactional
+    public void onCookieCreated(Long memberId, String type, String firstDescription, java.time.LocalDateTime obtainedAt) {
+        collectionRepository.upsertOnCookieCreated(memberId, type, firstDescription, obtainedAt);
     }
 
     /** 내 쿠키도감 */

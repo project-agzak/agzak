@@ -1,4 +1,4 @@
-package com.ssafy.agzak.domain.ranking.support;
+package com.ssafy.agzak.global.scheduler;
 
 import com.ssafy.agzak.domain.ranking.service.RankingService;
 import lombok.RequiredArgsConstructor;

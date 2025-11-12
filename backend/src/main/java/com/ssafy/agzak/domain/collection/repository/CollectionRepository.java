@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface CollectionRepository extends JpaRepository<Collection, Long> {
@@ -19,6 +20,17 @@ public interface CollectionRepository extends JpaRepository<Collection, Long> {
         order by c.type asc
     """)
     List<CollectionItemResponse> findAllByMemberId(Long memberId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query(value = """
+        INSERT INTO collection(member_id, type, `count`, description, obtained_at)
+        VALUES (?1, ?2, 1, ?3, ?4)
+        ON DUPLICATE KEY UPDATE
+          `count` = `count` + 1,
+          obtained_at = IFNULL(obtained_at, VALUES(obtained_at)),
+          description = IFNULL(description, VALUES(description))
+        """, nativeQuery = true)
+    void upsertOnCookieCreated(Long memberId, String type, String firstDescription, LocalDateTime obtainedAt);
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query(value = """
