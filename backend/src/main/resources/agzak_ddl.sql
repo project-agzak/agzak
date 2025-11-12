@@ -211,3 +211,22 @@ CREATE TABLE `game_attempt` (
                                     FOREIGN KEY (`game_session_id`) REFERENCES `game_session`(`game_session_id`)
                                         ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB;
+
+/* =========================================================
+   8) 쿠키 도감 (Collection)
+   ========================================================= */
+CREATE TABLE `collection` (
+                              `collection_id` BIGINT      NOT NULL AUTO_INCREMENT,
+                              `member_id`     BIGINT      NOT NULL,
+                              `type`          VARCHAR(50) NOT NULL COMMENT 'ENUM(`MONEY`, `LOVE`, `ACHIEVEMENT`, `HEALTH`, `MIXED`, `ROTTEN`)',
+                              `count`         INT         NOT NULL DEFAULT 0,
+                              `description`   VARCHAR(255) NULL,
+                              `obtained_at`   DATETIME    NULL,
+                              PRIMARY KEY (`collection_id`),
+                              UNIQUE KEY `UQ_collection_member_type` (`member_id`, `type`),
+                              KEY `IDX_collection_member` (`member_id`),
+                              CONSTRAINT `FK_collection_member`
+                                  FOREIGN KEY (`member_id`) REFERENCES `member`(`member_id`)
+                                      ON DELETE CASCADE ON UPDATE CASCADE,
+                              CONSTRAINT `CK_collection_type_nonblank` CHECK (LENGTH(TRIM(`type`)) > 0)
+) ENGINE=InnoDB;

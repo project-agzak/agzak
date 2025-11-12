@@ -27,7 +27,7 @@ public class OAuthIdentity {
     @Embeddable
     @Getter
     @NoArgsConstructor(access = AccessLevel.PROTECTED)
-    @AllArgsConstructor
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
     @Builder
     public static class OAuthIdentityId {
         @Enumerated(EnumType.STRING)
