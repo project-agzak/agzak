@@ -1,22 +1,22 @@
 // src/pages/Fortune/FortunePage.tsx
-import {  useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import FullnameLogo from "@/assets/Background/agzak-fullname.svg";
 import FortuneCookie from "@/assets/Gifs/FortuneCookie.gif";
-import { Input } from "@/components/atoms/Input";
-import { Button_L } from "@/components/atoms/Button_L";
-import { TimeDropDown } from "@/components/atoms/TimeDropDown";
 import { BirthCitySearch, type BirthCity } from "@/components/atoms/BirthCitySearch";
+import { Button_L } from "@/components/atoms/Button_L";
+import { Input } from "@/components/atoms/Input";
+import { TimeDropDown } from "@/components/atoms/TimeDropDown";
 
 import { DropDown } from "@/components/atoms/DropDown";
-import { useFortuneStore } from "@/store/useFortuneStore";
-import type { GuestFortuneReq } from "@/lib/fortuneAPI"
 import FortuneLoading from "@/components/templates/FortuneLoading";
-import { AuthAPI } from "@/lib/AuthAPI";
-import { useAuthStore } from "@/store/useAuthStore";
-import { SIMPLE_REGIONS } from "@/constants/regions"; 
 import { Calendar } from "@/components/ui/calendar";
+import { SIMPLE_REGIONS } from "@/constants/regions";
+import { AuthAPI } from "@/lib/AuthAPI";
+import type { GuestFortuneReq } from "@/lib/fortuneAPI";
+import { useAuthStore } from "@/store/useAuthStore";
+import { useFortuneStore } from "@/store/useFortuneStore";
 import { CalendarIcon } from "lucide-react";
 
 export default function FortunePage() {
@@ -166,6 +166,8 @@ const [showBirthCalendar, setShowBirthCalendar] = useState(false);
 
  const kakaoTicket = sessionStorage.getItem("kakao_ticket");
     const userInfoStr = localStorage.getItem("userId");
+    const MIN_LOADING_MS = 8000;           // 최소 10초
+    const startTime = Date.now();
 
     
     try {
@@ -186,7 +188,6 @@ const [showBirthCalendar, setShowBirthCalendar] = useState(false);
     : finalBirthCity.sido,
     };
 
-    
     // 1) 카카오 회원가입 완료
     
          if (kakaoTicket) {
@@ -263,15 +264,26 @@ const [showBirthCalendar, setShowBirthCalendar] = useState(false);
       }
 
       // 3) 위 둘 다 없으면 → 순수 게스트 운세
-       await fetchGuest(payload);
-      navigate("/fortune/webtoon");
+  await fetchGuest(payload);
+
+  const elapsed = Date.now() - startTime;
+  const remain = Math.max(0, MIN_LOADING_MS - elapsed);
+  setTimeout(() => {
+    setSubmitting(false);
+    navigate("/fortune/webtoon");
+  }, remain);
     } catch (e) {
       //console.error(e);
       alert("운세 계산 중 오류가 발생했습니다.");
-    }
-     finally {
-      setSubmitting(false);   //  성공/실패 상관없이 로딩 종료
-    }
+  } finally {
+    // ✅ 최소 10초 동안 FortuneLoading 유지
+    const startTime = Date.now();
+    const elapsed = Date.now() - startTime;
+    const remain = Math.max(0, 8000 - elapsed); // 10초 미만이면 나머지 대기
+    setTimeout(() => {
+      setSubmitting(false);
+    }, remain);
+  };
   };
 
 
