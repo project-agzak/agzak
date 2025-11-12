@@ -145,7 +145,7 @@ CREATE TABLE `fortune_cookie` (
                                   `money`             INT         NOT NULL,
                                   `achievement`       INT         NOT NULL,
                                   `health`            INT         NOT NULL,
-                                  `status`            VARCHAR(50) NOT NULL DEFAULT 'AVAILABLE' COMMENT 'ENUM(`AVAILABLE`, `USED`)',
+                                  `status`            VARCHAR(50) NOT NULL DEFAULT 'AVAILABLE' COMMENT 'ENUM(`AVAILABLE`, `USED`, `DELETED`)',
                                   `created_at`        DATETIME    NOT NULL,
                                   PRIMARY KEY (`fortune_cookie_id`),
                                   KEY `IDX_cookie_inventory` (`inventory_id`),

@@ -27,7 +27,6 @@ public class FortuneCookie {
     @Column(name = "fortune_cookie_id", nullable = false)
     private Long fortuneCookieId;
 
-
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "inventory_id", nullable = false,
             foreignKey = @ForeignKey(name = "FK_cookie_inventory"))
@@ -64,10 +63,16 @@ public class FortuneCookie {
     private LocalDateTime createdAt;
 
     public enum CookieType { MONEY, LOVE, ACHIEVEMENT, HEALTH, MIXED, ROTTEN }
-    public enum CookieStatus { AVAILABLE, USED }
+    public enum CookieStatus { AVAILABLE, USED, DELETED }
 
-    public void updateStatus() {
+    /** 사용 처리 */
+    public void markUsed() {
         this.status = CookieStatus.USED;
+    }
+
+    /** 약삭제 처리 */
+    public void markDeleted() {
+        this.status = CookieStatus.DELETED;
     }
 
     public int getTotalScore() {

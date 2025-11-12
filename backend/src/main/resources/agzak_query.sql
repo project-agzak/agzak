@@ -1,4 +1,4 @@
--- agzak MySQL DB update query 2.0 / 25.11.11
+-- agzak MySQL DB update query 2.0.0 / 25.11.11
 
 -- 로컬 + ACTIVE 중복 존재 확인
 SELECT email, COUNT(*) cnt
@@ -35,3 +35,27 @@ ALTER TABLE member
 -- 4) UNIQUE 인덱스 생성 (NULL은 중복 허용 → 소셜/탈퇴는 무제약)
 CREATE UNIQUE INDEX UQ_member_email_local_active ON member (email_local_unique);
 
+-- agzak MySQL DB update query 2.0.1 / 25.11.12
+
+/* =========================================================
+   8) 쿠키 도감 (Collection)
+   ========================================================= */
+CREATE TABLE `collection` (
+                              `collection_id` BIGINT      NOT NULL AUTO_INCREMENT,
+                              `member_id`     BIGINT      NOT NULL,
+                              `type`          VARCHAR(50) NOT NULL COMMENT 'ENUM(`MONEY`, `LOVE`, `ACHIEVEMENT`, `HEALTH`, `MIXED`, `ROTTEN`)',
+                              `count`         INT         NOT NULL DEFAULT 0,
+                              `description`   VARCHAR(255) NULL,
+                              `obtained_at`   DATETIME    NULL,
+                              PRIMARY KEY (`collection_id`),
+                              UNIQUE KEY `UQ_collection_member_type` (`member_id`, `type`),
+                              KEY `IDX_collection_member` (`member_id`),
+                              CONSTRAINT `FK_collection_member`
+                                  FOREIGN KEY (`member_id`) REFERENCES `member`(`member_id`)
+                                      ON DELETE CASCADE ON UPDATE CASCADE,
+                              CONSTRAINT `CK_collection_type_nonblank` CHECK (LENGTH(TRIM(`type`)) > 0)
+) ENGINE=InnoDB;
+
+ALTER TABLE fortune_cookie
+    MODIFY status VARCHAR(50) NOT NULL
+        COMMENT 'ENUM(`AVAILABLE`, `USED`, `DELETED`)';
