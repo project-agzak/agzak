@@ -136,7 +136,7 @@ if (!isAuthRequest && accessToken) {
       });
 
       // 필요하면 여기서 한 번만 얼럿 띄우도록 토글 변수 둘 수도 있음
-      alert("서버 점검 중입니다.\n잠시 후 다시 시도해주세요.");
+   
 
       return {
         ok: false,

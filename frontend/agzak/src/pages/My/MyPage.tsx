@@ -143,6 +143,8 @@ const handleEditToggle = async () => {
 
     // 3) 수정 모드 종료
     setIsEdit(false);
+
+    window.location.reload();
   } catch (err) {
     //console.error(err);
     alert("회원 정보 수정 중 문제가 발생했습니다.");

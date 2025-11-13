@@ -129,7 +129,24 @@ const emailHelperText = (() => {
   return "중복 확인 버튼을 눌러주세요.";
 })();
 const emailHasError = !emailValid || (email && !emailChecked);
+const handleKakaoLogin = () => {
+    window.history.pushState({}, "", "/login");
+    // Analytics: 로그인 시도
+    trackEvent("auth_login_kakao_attempt");
 
+    if (!window.Kakao || !window.Kakao.isInitialized()) {
+      alert("카카오 SDK가 초기화되지 않았습니다. 새로고침 후 다시 시도해주세요.");
+      return;
+    }
+
+    const redirectUri = `${window.location.origin}${window.location.pathname}`;
+
+    window.Kakao.Auth.authorize({
+      redirectUri,
+      scope: "profile_nickname,account_email",
+    });
+  };
+  
   // 회원가입
   const handleRegister = async () => {
     const guestId = localStorage.getItem("guestId");
@@ -209,24 +226,7 @@ const emailHasError = !emailValid || (email && !emailChecked);
     alert("회원가입이 완료되었습니다!");
     navigate("/login");
   };
-const handleKakaoLogin = () => {
-    window.history.pushState({}, "", "/login");
-    // Analytics: 로그인 시도
-    trackEvent("auth_login_kakao_attempt");
 
-    if (!window.Kakao || !window.Kakao.isInitialized()) {
-      alert("카카오 SDK가 초기화되지 않았습니다. 새로고침 후 다시 시도해주세요.");
-      return;
-    }
-
-    const redirectUri = `${window.location.origin}${window.location.pathname}`;
-
-    window.Kakao.Auth.authorize({
-      redirectUri,
-      scope: "profile_nickname,account_email",
-    });
-  };
-  
   return (
     <main className="relative z-10 min-h-screen p-4">
       <div className="ml-2 mt-5 flex w-full justify-center">
@@ -315,29 +315,32 @@ const handleKakaoLogin = () => {
           </p>
         </div>
 
-         {/* 비밀번호 확인 */}
-        <div className="flex w-full max-w-[300px] flex-col gap-1 relative">
-          <div className="flex justify-center relative">
-            <Input
-              placeholder="비밀번호 확인"
-              type={passwordCheckVisible ? "text" : "password"}
-              value={passwordCheck}
-              onChange={handlePasswordCheckChange}
-            />
-            <img
-              src={passwordCheckVisible ? openIcon : closeIcon}
-              alt="비밀번호 확인 보기 토글"
-              className="absolute right-10 top-4 w-5 h-5 cursor-pointer"
-              onClick={() => setPasswordCheckVisible(!passwordCheckVisible)}
-            />
-          </div>
-          {!passwordMatch && (
-            <p className="pl-8 text-left font-galmuri-xsmall text-[#E11D48]">
-              비밀번호가 일치하지 않습니다.
-            </p>
-          )}
-        </div>
+       {/* 비밀번호 확인 */}
+<div className="flex w-full max-w-[300px] flex-col gap-1 relative">
+  <div className="flex justify-center relative">
+    <Input
+      placeholder="비밀번호 확인"
+      type={passwordCheckVisible ? "text" : "password"}
+      value={passwordCheck}
+      onChange={handlePasswordCheckChange}
+    />
+    <img
+      src={passwordCheckVisible ? openIcon : closeIcon}
+      alt="비밀번호 확인 보기 토글"
+      className="absolute right-10 top-4 w-5 h-5 cursor-pointer"
+      onClick={() => setPasswordCheckVisible(!passwordCheckVisible)}
+    />
+  </div>
 
+  {/* 항상 렌더링해서 높이 고정 */}
+  <p
+    className={`pl-8 text-left font-galmuri-xsmall min-h-[16px] ${
+      passwordMatch ? "invisible" : "text-[#E11D48]"
+    }`}
+  >
+    비밀번호가 일치하지 않습니다.
+  </p>
+</div>
         <div className="mt-12 flex justify-center pb-15">
           <Button_L
             label={guestId ? "계정 등록" : "다음 단계로"}

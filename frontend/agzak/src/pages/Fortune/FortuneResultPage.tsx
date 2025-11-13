@@ -1,12 +1,12 @@
 // src/pages/Fortune/FortuneResultPage.tsx
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
-import { ExpandableFortune } from "@/components/molecules/ExpandableFortune";
 import { Button_L } from "@/components/atoms/Button_L";
+import { ExpandableFortune } from "@/components/molecules/ExpandableFortune";
 
+import BackCard from "@/components/atoms/BackCard";
 import ShareButton from "@/components/atoms/ShareButton";
 import { PureFlipImage } from "@/components/molecules/PureFlipImage";
-import BackCard from "@/components/atoms/BackCard";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useFortuneStore } from "@/store/useFortuneStore";
 
@@ -88,6 +88,7 @@ const getFrontByTypeName = (name?: string | null) =>
 
 export default function FortuneResultPage() {
   const { isLoggedIn } = useAuthStore();
+  const [showTooltip, setShowTooltip] = useState(false);
 
   // 기본 운세 데이터
   const totalScore     = useFortuneStore((s) => s.scores?.total_score ?? null);
@@ -99,16 +100,37 @@ export default function FortuneResultPage() {
   const getDetailSummary = useFortuneStore((s) => s.getDetailSummary);
   const getScoreValue    = useFortuneStore((s) => s.getScoreValue);
 
+
   const shareUrl = "https://www.agzak.co.kr/";
 
 
 useEffect(() => {
-  if (!isLoggedIn) return;
+    if (isLoggedIn) {
+      fetchToday();
+      return;
+    }});
 
-  // 로그인 유저면 무조건 오늘 운세 한 번 시도
-  fetchToday();
+  //   // 2) 비로그인 유저:
+  //   // - 정상 플로우라면 useFortuneStore에 이미 결과가 존재해야 함
+  //   const hasFortune = totalScore !== null || !!typeInfo;
 
-}, [isLoggedIn, fetchToday]);
+  //   // - 회원가입 진행 중(이메일/카카오)일 수도 있으니 그 상태는 허용
+  //   const hasUserId = !!localStorage.getItem("userId");
+  //   const hasKakaoTicket = !!sessionStorage.getItem("kakao_ticket");
+
+  //   // - 어떤 정보도 없으면 직접 접근으로 판단하고 /fortune으로 리디렉트
+  //   if (!hasFortune && !hasUserId && !hasKakaoTicket && !loadingFortune && !errorFortune) {
+  //     navigate("/fortune", { replace: true });
+  //   }
+  // }, [
+  //   isLoggedIn,
+  //   fetchToday,
+  //   totalScore,
+  //   typeInfo,
+  //   loadingFortune,
+  //   errorFortune,
+  //   navigate,
+  // ]);
 
   // 🔥 단짝/천적: 추가 API 없이 goodWithId/badWithId로 바로 이미지 찾기
   const goodWithId = typeInfo?.goodWithId ?? null;
@@ -119,10 +141,16 @@ useEffect(() => {
 
    const bestieDescription = goodWithId ? DESCRIPTION_BY_TYPE[goodWithId] : undefined;
   const enemyDescription = badWithId ? DESCRIPTION_BY_TYPE[badWithId] : undefined;
-  const guestId = localStorage.getItem("guestId");
+
+  const userId = localStorage.getItem("userId");
+  const targetPath = isLoggedIn
+  ? "/enforce"
+  : userId
+  ? "/login"
+  : "/signup";
   return (
     <main className="relative z-10 p-4 min-h-screen">
-  <div className="flex flex-col justify-center items-center pb-5 gap-3">
+      <div className="flex flex-col justify-center items-center pb-5 gap-3">
         <p className="text-gray-600 font-galmuri-condensed-small animate-bounce motion-reduce:animate-none">
           카드를 클릭해 뒤집어 보세요!</p>
         <PureFlipImage
@@ -174,66 +202,95 @@ useEffect(() => {
           />
         </div>
       </div>
-<div className="flex flex-col items-center pt-10">
-  {/* 단짝 친구 */}
-  <div className="flex flex-col items-center">
-    <p className="font-galmuri pb-2">오늘의 단짝 친구는?</p>
+        <div className="flex flex-col items-center pt-10">
+          {/* 단짝 친구 */}
+          <div className="flex flex-col items-center">
+            <p className="font-galmuri pb-2">오늘의 단짝 친구는?</p>
 
-    <div className="flex justify-center w-full min-w-0">
-      <img
-        src={bestieSrc}
-        alt="bestie"
-        className="w-[42%] max-w-[140px] h-auto object-contain min-w-0 drop-shadow-[2px_2px_0_#121212]"
-      />
-    </div>
+            <div className="flex justify-center w-full min-w-0">
+              <img
+                src={bestieSrc}
+                alt="bestie"
+                className="w-[42%] max-w-[140px] h-auto object-contain min-w-0 drop-shadow-[2px_2px_0_#121212]"
+              />
+            </div>
 
-    {bestieDescription && (
-      <p className="mt-3 px-6 text-center text-[12px] leading-relaxed text-[#3A3A3A] font-galmuri-xsmall max-w-[240px]">
-        {bestieDescription}
-      </p>
-    )}
-  </div>
+            {bestieDescription && (
+              <p className="mt-3 px-6 text-center text-[12px] leading-relaxed text-[#3A3A3A] font-galmuri-xsmall max-w-[240px]">
+                {bestieDescription}
+              </p>
+            )}
+          </div>
 
-  {/* 엇갈린 친구 */}
-  <div className="flex flex-col items-center mt-15">
-    <p className="font-galmuri pb-2">오늘의 엇갈린 친구는?</p>
+          {/* 엇갈린 친구 */}
+          <div className="flex flex-col items-center mt-15">
+            <p className="font-galmuri pb-2">오늘의 엇갈린 친구는?</p>
 
-    <div className="flex justify-center w-full min-w-0">
-      <img
-        src={enemySrc}
-        alt="enemy"
-        className="w-[42%] max-w-[140px] h-auto object-contain min-w-0 drop-shadow-[2px_2px_0_#121212]"
-      />
-    </div>
+            <div className="flex justify-center w-full min-w-0">
+              <img
+                src={enemySrc}
+                alt="enemy"
+                className="w-[42%] max-w-[140px] h-auto object-contain min-w-0 drop-shadow-[2px_2px_0_#121212]"
+              />
+            </div>
 
-    {enemyDescription && (
-      <p className="mt-3 px-6 text-center text-[12px] leading-relaxed text-[#3A3A3A] font-galmuri-xsmall max-w-[240px]">
-        {enemyDescription}
-      </p>
-    )}
-  </div>
-</div>
-
-
-      
-      <div className="flex flex-col items-center pt-20 pb-5">
-       <div className="pb-2 relative">
-<Button_L
-  to={guestId ? "/signup" : "/enforce"}
-  label="운세 상승 아이템 얻으러 가기"
+            {enemyDescription && (
+              <p className="mt-3 px-6 text-center text-[12px] leading-relaxed text-[#3A3A3A] font-galmuri-xsmall max-w-[240px]">
+                {enemyDescription}
+              </p>
+            )}
+          </div>
+        </div>      
+        <div className="flex flex-col items-center pt-20 pb-5">
+          <div className="pb-2 relative">
+                      {/* 툴팁 */}
+          {showTooltip && !isLoggedIn && (
+            <div
+              className="
+                absolute bottom-full mb-1 left-1/2 -translate-x-1/2
+                w-max max-w-[220px] px-2 py-1
+                bg-white text-gray-800 text-[11px] border border-black/90
+                font-galmuri-xsmall text-center
+                pointer-events-none z-20
+              "
+            >
+              로그인 후 강화 기능을 이용할 수 있습니다.
+            </div>
+          )}
+            <div
+              onMouseOver={() => { if (!isLoggedIn) setShowTooltip(true) }}
+              onMouseOut={() => setShowTooltip(false)}
+            >
+               <div
+      onMouseOver={() => {
+        if (!isLoggedIn) setShowTooltip(true);
+      }}
+      onMouseOut={() => setShowTooltip(false)}
+    >
+      </div>
+   <Button_L
+  to={targetPath}
+  label={
+    isLoggedIn
+      ? "운세 상승 아이템 얻으러 가기"
+      : userId
+      ? "운세 상승 아이템 얻으러 가기"
+      : "운세 상승 아이템 얻으러 가기"
+  }
   width={260}
 />
 
-  <style>
-    {`
-      /* 이 div 안에서만 Button_L 글씨 크기 조정 */
-      .pb-2 .btnL-click {
-        font-size: 16px !important;
-        line-height: 1.1;
-      }
-    `}
-  </style>
-</div>
+
+          <style>
+            {`
+              /* 이 div 안에서만 Button_L 글씨 크기 조정 */
+              .pb-2 .btnL-click {
+                font-size: 16px !important;
+                line-height: 1.1;
+              }
+            `}
+          </style>
+        </div>
 
         <div>
           <ShareButton
@@ -243,7 +300,7 @@ useEffect(() => {
           />
         </div>
       </div>
-      
+      </div>
     </main>
   );
 }
