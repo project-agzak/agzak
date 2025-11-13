@@ -1,7 +1,6 @@
 // @/pages/_shared/NotFoundPage.tsx
 import FortuneCookieGif from "@/assets/Gifs/FortuneCookie.gif";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 
@@ -10,20 +9,6 @@ export default function NotFoundPage() {
   const navigate = useNavigate();
   const HOME_PATH = "/home";
   
-  const [giftOpen, setGiftOpen] = useState(false)
-  const searchUsers = async (q: string) => {
-    // TODO: 실제 API 연결
-    // return await MembersAPI.searchByNickname(q)
-    return [
-      { id: 101, nickname: "쿠키흡입마커비" },
-      { id: 202, nickname: "양피티" },
-    ].filter(u => u.nickname.includes(q))
-  }
-  const handleSubmit = async (payload: { toUserId?: number; nickname?: string; message: string }) => {
-    // TODO: 실제 전송 API
-    // await CookiesAPI.giftCookie({ cookieId, ...payload })
-    console.log("gift submit =>", payload)
-  }
 
   return (
     <main className="relative z-10 min-h-screen flex items-center justify-center p-3">
