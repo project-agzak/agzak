@@ -1,12 +1,36 @@
 // @/pages/_shared/NotFoundPage.tsx
-import { Link, useNavigate } from "react-router-dom";
+import AchievementCookie from "@/assets/Cookies/achievement-cookie.webp";
+import HealthCookie from "@/assets/Cookies/health-cookie.webp";
+import LoveCookie from "@/assets/Cookies/love-cookie.webp";
+import MixedCookie from "@/assets/Cookies/mixed-cookie.webp";
+import MoneyCookie from "@/assets/Cookies/money-cookie.webp";
+import RottenCookie from "@/assets/Cookies/rotten-cookie.webp";
+import FortuneCookieGif from "@/assets/Gifs/FortuneCookie.gif";
+import { GiftModal } from "@/components/organisms/GiftModal";
 import { Button } from "@/components/ui/button";
-import FortuneCookieGif from "@/assets/Gifs/FortuneCookie.gif" 
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+
+
 
 export default function NotFoundPage() {
   const navigate = useNavigate();
-
   const HOME_PATH = "/home";
+  
+  const [giftOpen, setGiftOpen] = useState(false)
+  const searchUsers = async (q: string) => {
+    // TODO: 실제 API 연결
+    // return await MembersAPI.searchByNickname(q)
+    return [
+      { id: 101, nickname: "쿠키흡입마커비" },
+      { id: 202, nickname: "양피티" },
+    ].filter(u => u.nickname.includes(q))
+  }
+  const handleSubmit = async (payload: { toUserId?: number; nickname?: string; message: string }) => {
+    // TODO: 실제 전송 API
+    // await CookiesAPI.giftCookie({ cookieId, ...payload })
+    console.log("gift submit =>", payload)
+  }
 
   return (
     <main className="relative z-10 min-h-screen flex items-center justify-center p-3">
@@ -39,6 +63,18 @@ export default function NotFoundPage() {
         </div>
 
       </div>
+          <>
+      <button className="btn" onClick={() => setGiftOpen(true)}>선물하기</button>
+
+      <GiftModal
+        open={giftOpen}
+        onOpenChange={setGiftOpen}
+        CookieSrc={[HealthCookie, AchievementCookie, LoveCookie, MoneyCookie, MixedCookie, RottenCookie][Math.floor(Math.random() * 6)]}
+        searchUsers={searchUsers}
+        onSubmit={handleSubmit}
+      />
+    </>
+
     </main>
   );
 }
