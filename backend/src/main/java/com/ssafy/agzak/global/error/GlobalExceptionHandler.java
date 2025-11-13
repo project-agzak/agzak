@@ -4,6 +4,7 @@ import com.ssafy.agzak.domain.fortune.exception.IllegalCityNameException;
 import com.ssafy.agzak.domain.game.exception.AttemptLimitReachedException;
 import com.ssafy.agzak.domain.game.exception.DailyQuotaExceededException;
 import com.ssafy.agzak.domain.game.exception.NoActiveSessionException;
+import com.ssafy.agzak.domain.inventory.exception.DailyCookieUseExceededException;
 import com.ssafy.agzak.domain.inventory.exception.InventoryCapacityExceededException;
 import com.ssafy.agzak.domain.member.exception.NoFortuneFoundException;
 import io.jsonwebtoken.JwtException;
@@ -137,6 +138,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InventoryCapacityExceededException.class)
     public ResponseEntity<ErrorResponse> handleInventoryCapacityExceeded(InventoryCapacityExceededException e, HttpServletRequest req) {
         return build(HttpStatus.CONFLICT, "INVENTORY_CAP_EXCEEDED", e.getMessage(), req);
+    }
+
+    @ExceptionHandler(DailyCookieUseExceededException.class)
+    public ResponseEntity<ErrorResponse> handleDailyUseExceeded(DailyCookieUseExceededException e, HttpServletRequest req) {
+        return build(HttpStatus.CONFLICT, "DAILY_USE_EXCEEDED", e.getMessage(), req);
     }
 
     // ===== ResponseStatusException (직접 지정한 상태 사용) =====

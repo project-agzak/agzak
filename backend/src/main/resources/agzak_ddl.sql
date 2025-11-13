@@ -230,3 +230,20 @@ CREATE TABLE `collection` (
                                       ON DELETE CASCADE ON UPDATE CASCADE,
                               CONSTRAINT `CK_collection_type_nonblank` CHECK (LENGTH(TRIM(`type`)) > 0)
 ) ENGINE=InnoDB;
+
+/* =========================================================
+   9) 하루 쿠키 사용 한도 (Daily Cookie Usage)
+   ========================================================= */
+CREATE TABLE `cookie_daily_usage` (
+                                      `cookie_daily_usage_id` BIGINT      NOT NULL AUTO_INCREMENT,
+                                      `member_id`             BIGINT      NOT NULL,
+                                      `use_date`              DATE        NOT NULL,
+                                      `used_count`            INT         NOT NULL,
+                                      `updated_at`            DATETIME    NOT NULL,
+                                      PRIMARY KEY (`cookie_daily_usage_id`),
+                                      UNIQUE KEY `uk_cookie_usage_member_date` (`member_id`, `use_date`),
+                                      KEY `idx_cookie_usage_member_date` (`member_id`, `use_date`),
+                                      CONSTRAINT `fk_cookie_usage_member`
+                                          FOREIGN KEY (`member_id`) REFERENCES `member`(`member_id`)
+                                              ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB;

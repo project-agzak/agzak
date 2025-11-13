@@ -59,3 +59,21 @@ CREATE TABLE `collection` (
 ALTER TABLE fortune_cookie
     MODIFY status VARCHAR(50) NOT NULL
         COMMENT 'ENUM(`AVAILABLE`, `USED`, `DELETED`)';
+
+-- agzak MySQL DB update query 2.0.2 / 25.11.13
+/* =========================================================
+   9) 하루 쿠키 사용 한도 (Daily Cookie Usage)
+   ========================================================= */
+CREATE TABLE IF NOT EXISTS `cookie_daily_usage` (
+                                                    `cookie_daily_usage_id` BIGINT      NOT NULL AUTO_INCREMENT,
+                                                    `member_id`             BIGINT      NOT NULL,
+                                                    `use_date`              DATE        NOT NULL,
+                                                    `used_count`            INT         NOT NULL,
+                                                    `updated_at`            DATETIME    NOT NULL,
+                                                    PRIMARY KEY (`cookie_daily_usage_id`),
+                                                    UNIQUE KEY `uk_cookie_usage_member_date` (`member_id`, `use_date`),
+                                                    KEY `idx_cookie_usage_member_date` (`member_id`, `use_date`),
+                                                    CONSTRAINT `fk_cookie_usage_member`
+                                                        FOREIGN KEY (`member_id`) REFERENCES `member`(`member_id`)
+                                                            ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB;
