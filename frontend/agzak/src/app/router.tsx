@@ -22,7 +22,6 @@ const CookiesPage = lazy(() => import('@/pages/Cookies/CookiesPage'));
 const CalendarPage = lazy(() => import('@/pages/Calendar/CalendarPage'));
 const MyPage = lazy(() => import('@/pages/My/MyPage'));
 
-const Practice = lazy(() => import('@/pages/Practice/Prac'));
 
 const NotFoundPage = lazy(() => import('@/pages/_shared/NotFoundPage'));
 const AppError = lazy(() => import('@/pages/_shared/AppError'));
@@ -97,16 +96,6 @@ export const router = createBrowserRouter([
         </RequireAuth>
       ),
     },
-
-    {
-      path: "practice",  // 컴포넌트 확인 페이지
-      element: (
-        <RequireAuth>
-          {suspense(<Practice />)}
-        </RequireAuth>
-      ),
-    },
-
       { path: '*', element: suspense(<NotFoundPage />) },
   ],
 },
