@@ -1,6 +1,8 @@
 // src/components/atoms/UserFortuneModal.tsx
 import { useEffect } from "react";
 import NoteModal from "@/assets/ui/NoteModal.svg"
+import SampleImg from "@/assets/Friends/FriendCat.webp"
+import { FortuneGaugeList } from "@/components/molecules/FortuneGaugeList";
 
 type UserFortuneModalProps = {
   nickname: string;
@@ -40,8 +42,8 @@ export function UserFortuneModal({ nickname, onClose }: UserFortuneModalProps) {
 
         {/* 내용 영역 (노트 안쪽에 덮어쓰기) */}
         <div className="absolute top-[55px] left-[40px] right-[30px] bottom-[34px] flex flex-col">
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="font-bitbit-small text-[#004c66]">
+          <div className="flex items-center justify-between">
+            <h2 className="font-bitbit text-[#004c66]">
               {nickname}님의 운세
             </h2>
             <button
@@ -53,15 +55,12 @@ export function UserFortuneModal({ nickname, onClose }: UserFortuneModalProps) {
             </button>
           </div>
 
-          {/* TODO: 나중에 운세 / 쿠키 정보 들어갈 자리 */}
-          <div className="mt-2 flex-1 overflow-y-auto font-galmuri-small text-xs text-slate-700 leading-relaxed">
-            <p className="mb-2">
-              여기에서 <b>오늘의 운세</b>와 <b>모아둔 쿠키</b> 정보를 보여줄 예정이에요.
-            </p>
-            <p className="text-[10px] text-slate-500">
-              지금은 디자인 연결만 해 둔 상태입니다.
-            </p>
+        <div className="mt-2 flex flex-row">
+          <img src={SampleImg} alt="" className="w-[40%] max-w-[150px] h-auto"/>
+          <div className="flex flex-col items-center pr-2 w-1/2 max-w-[220px]">
+            <FortuneGaugeList max={250}/>
           </div>
+        </div>
         </div>
       </div>
     </div>

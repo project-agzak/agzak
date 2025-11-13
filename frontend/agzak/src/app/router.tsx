@@ -19,6 +19,8 @@ const FortuneResultPage = lazy(() => import('@/pages/Fortune/FortuneResultPage')
 const EnforcePage = lazy(() => import('@/pages/Enforce/EnforcePage'));
 
 const CookiesPage = lazy(() => import('@/pages/Cookies/CookiesPage'));
+const CookiesCollectionPage = lazy(() => import('@/pages/Cookies/CookiesCollectionPage'));
+
 const CalendarPage = lazy(() => import('@/pages/Calendar/CalendarPage'));
 const MyPage = lazy(() => import('@/pages/My/MyPage'));
 
@@ -76,6 +78,15 @@ export const router = createBrowserRouter([
           {suspense(<CookiesPage />)}
         </RequireAuth>
       ),
+    },
+
+    {
+      path: "collection",
+      element: (
+        <RequireAuth>
+          {suspense(<CookiesCollectionPage />)}
+        </RequireAuth>
+      )
     },
 
     {

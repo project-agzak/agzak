@@ -204,9 +204,11 @@ function SidebarContent({ isLoggedIn, nickname, onLogout }: SidebarContentProps)
                 <Button_M label="로그아웃" width={170} onClick={onLogout} />
               </div>
             </SheetClose>
-            <p className="font-galmuri-small font-extrabold text-[#121212] text-center">
-              {displayName}님, <br />✨ 별처럼 빛나는 <br />하루 되세요 ✨
-            </p>
+            <SheetClose asChild>
+              <div>
+                <Button_M label="운세 강화" width={170} to="/enforce" />
+              </div>
+            </SheetClose>
           </>
         ) : (
           <>
@@ -238,16 +240,6 @@ function SidebarContent({ isLoggedIn, nickname, onLogout }: SidebarContentProps)
         </SheetClose>
 
         <SheetClose asChild>
-          <button
-            onClick={() => canEnforce && navigate("/enforce")}
-            disabled={!canEnforce}
-            className="flex items-center gap-2 rounded-md px-0 py-2 hover:bg-zinc-100 active:bg-zinc-200 transition-colors text-left cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            <span>운세 강화</span>
-          </button>
-        </SheetClose>
-
-        <SheetClose asChild>
           <a
             href="/calendar"
             className="flex items-center gap-2 rounded-md px-0 py-2 hover:bg-zinc-100 active:bg-zinc-200 transition-colors"
@@ -263,6 +255,17 @@ function SidebarContent({ isLoggedIn, nickname, onLogout }: SidebarContentProps)
           >
             <span>쿠키 먹기</span>
           </a>
+        </SheetClose>
+
+        
+        <SheetClose asChild>
+          <button
+            onClick={() => canEnforce && navigate("/collection")}
+            disabled={!canEnforce}
+            className="flex items-center gap-2 rounded-md px-0 py-2 hover:bg-zinc-100 active:bg-zinc-200 transition-colors text-left cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <span>쿠키 도감</span>
+          </button>
         </SheetClose>
 
         <SheetClose asChild>
