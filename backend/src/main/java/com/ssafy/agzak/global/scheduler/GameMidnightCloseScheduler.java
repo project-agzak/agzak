@@ -1,4 +1,4 @@
-package com.ssafy.agzak.domain.game.support;
+package com.ssafy.agzak.global.scheduler;
 
 import com.ssafy.agzak.domain.game.entity.GameSession;
 import com.ssafy.agzak.domain.game.repository.GameSessionRepository;
@@ -14,7 +14,7 @@ import java.util.List;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class GameMidnightCloser {
+public class GameMidnightCloseScheduler {
 
     private final GameSessionRepository gameSessionRepository;
     private final DateProvider date;
