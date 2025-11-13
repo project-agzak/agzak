@@ -11,11 +11,13 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { useFortuneStore } from "@/store/useFortuneStore";
 import { nanoid } from "nanoid";
 import BubbleImg from "@/assets/ui/BubbleMain.svg"
+import HomeLoading from "@/components/templates/HomeLoading";   
+import { useHomeStore } from "@/store/useHomeStore";    
 
 export default function HomePage() {
   const shareUrl = "https://www.agzak.co.kr/";
   const { isLoggedIn } = useAuthStore();
-
+const { loadingToday, errorToday, initHome } = useHomeStore();
     const accessedAtKST = useMemo(() => {
     const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
     const y = kst.getUTCFullYear();
@@ -30,7 +32,6 @@ export default function HomePage() {
   const totalScore       = useFortuneStore((s) => s.scores?.total_score ?? null);
   const loadingFortune   = useFortuneStore((s) => s.loading);
   const errorFortune     = useFortuneStore((s) => s.error);
-  const fetchToday       = useFortuneStore((s) => s.fetchToday);
 
   // 강화 세션 쿼터
   const { quota, loading: quotaLoading, error: quotaError, refresh, claim } = useSessionQuotaStore();
@@ -44,11 +45,10 @@ export default function HomePage() {
   }, [refresh]);
 
 
-  useEffect(() => {
-    if (!isLoggedIn) return;
-    if (loadingFortune || totalScore != null) return;
-    fetchToday();
-  }, [isLoggedIn, loadingFortune, totalScore, fetchToday]);
+useEffect(() => {
+  if (!isLoggedIn) return;
+  initHome();
+}, [isLoggedIn, initHome]);
 
   // 공유 완료 시 → claim +1
   const handleShared = async () => {
@@ -73,7 +73,9 @@ export default function HomePage() {
       console.warn(r.error);
     }
   };
-
+if (loadingToday) {
+  return <HomeLoading />;
+}
   return (
     <main className="relative z-10 p-4 min-h-screen">
       <div className="flex justify-center">
@@ -120,7 +122,7 @@ export default function HomePage() {
         <div className="flex justify-center pb-2">
           <div className="flex w-fit gap-2.5">
             <Button_M
-              label="운세 상세"
+              label="운세 확인"
               to="/fortune/result"
               disabled={!isLoggedIn}
               onClick={() => trackEvent("cta_result_click", { is_logged_in: isLoggedIn, })}

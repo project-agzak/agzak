@@ -218,14 +218,7 @@ useEffect(() => {
       setTokens(accessToken, refreshToken, expiresInSeconds);
 
        sessionStorage.setItem("onboarding", "1");
-  //  if (accessToken && refreshToken && expiresInSeconds) {
-  //         localStorage.setItem("access_token", accessToken);
-  //         localStorage.setItem("refresh_token", refreshToken);
-  //         localStorage.setItem(
-  //           "access_token_expires_at",
-  //           String(Date.now() + expiresInSeconds * 1000),
-  //         );
-  //       }
+
 
       
 
