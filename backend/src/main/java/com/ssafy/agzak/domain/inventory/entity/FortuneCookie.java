@@ -1,6 +1,7 @@
 package com.ssafy.agzak.domain.inventory.entity;
 
 import com.ssafy.agzak.domain.game.entity.GameSession;
+import com.ssafy.agzak.domain.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -63,8 +64,16 @@ public class FortuneCookie {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    public void updateStatusAvailable() {
+        this.status = CookieStatus.AVAILABLE;
+    }
+
+    public void changeInventory(Inventory inventory) {
+        this.inventory = inventory;
+    }
+
     public enum CookieType { MONEY, LOVE, ACHIEVEMENT, HEALTH, MIXED, ROTTEN }
-    public enum CookieStatus { AVAILABLE, USED }
+    public enum CookieStatus { AVAILABLE, USED, PENDING_GIFT }
 
     public void updateStatus() {
         this.status = CookieStatus.USED;

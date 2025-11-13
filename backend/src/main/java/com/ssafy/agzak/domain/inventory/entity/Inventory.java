@@ -25,4 +25,9 @@ public class Inventory {
     @JoinColumn(name = "member_id", nullable = false,
             foreignKey = @ForeignKey(name = "FK_inventory_member"))
     private Member member;
+
+    public Inventory updateMember(Member member) {
+        this.member = member;
+        return this;
+    }
 }
