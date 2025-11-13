@@ -247,3 +247,32 @@ CREATE TABLE `cookie_daily_usage` (
                                           FOREIGN KEY (`member_id`) REFERENCES `member`(`member_id`)
                                               ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB;
+
+/* =========================================================
+   10) 선물 테이블
+   ========================================================= */
+
+CREATE TABLE gifts
+(
+    gift_id     BIGINT AUTO_INCREMENT NOT NULL,
+    sender_id   BIGINT                NOT NULL,
+    receiver_id BIGINT                NOT NULL,
+    cookie_id   BIGINT                NOT NULL,
+    message     VARCHAR(255)          NULL,
+    status      VARCHAR(255)          NOT NULL,
+    sent_at     datetime              NOT NULL,
+    received_at datetime              NULL,
+    CONSTRAINT pk_gifts PRIMARY KEY (gift_id)
+);
+
+ALTER TABLE gifts
+    ADD CONSTRAINT uc_gifts_cookie UNIQUE (cookie_id);
+
+ALTER TABLE gifts
+    ADD CONSTRAINT FK_GIFTS_ON_COOKIE FOREIGN KEY (cookie_id) REFERENCES fortune_cookie (fortune_cookie_id);
+
+ALTER TABLE gifts
+    ADD CONSTRAINT FK_GIFTS_ON_RECEIVER FOREIGN KEY (receiver_id) REFERENCES member (member_id);
+
+ALTER TABLE gifts
+    ADD CONSTRAINT FK_GIFTS_ON_SENDER FOREIGN KEY (sender_id) REFERENCES member (member_id);

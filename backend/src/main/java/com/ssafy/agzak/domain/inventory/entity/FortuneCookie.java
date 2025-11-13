@@ -62,8 +62,17 @@ public class FortuneCookie {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    public void updateStatusAvailable() {
+        this.status = CookieStatus.AVAILABLE;
+    }
+
+    public void changeInventory(Inventory inventory) {
+        this.inventory = inventory;
+    }
+
     public enum CookieType { MONEY, LOVE, ACHIEVEMENT, HEALTH, MIXED, ROTTEN }
-    public enum CookieStatus { AVAILABLE, USED, DELETED }
+
+    public enum CookieStatus { AVAILABLE, USED, PENDING_GIFT , DELETED }
 
     /** 사용 처리 */
     public void markUsed() {
