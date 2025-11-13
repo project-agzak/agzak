@@ -11,6 +11,8 @@ import com.ssafy.agzak.domain.auth.entity.OAuthIdentity.OAuthIdentityId;
 import com.ssafy.agzak.domain.auth.entity.OAuthIdentity.OAuthProvider;
 import com.ssafy.agzak.domain.auth.repository.OAuthIdentityRepository;
 import com.ssafy.agzak.domain.auth.support.SocialSignupTicketStore;
+import com.ssafy.agzak.domain.collection.repository.CollectionRepository;
+import com.ssafy.agzak.domain.collection.service.CollectionService;
 import com.ssafy.agzak.domain.fortune.dto.response.LatLng;
 import com.ssafy.agzak.domain.fortune.service.GeocodingService;
 import com.ssafy.agzak.domain.guest.dto.GuestProfile;
@@ -55,6 +57,7 @@ public class AuthService {
     private final OAuthIdentityRepository oauthRepo;
     private final InventoryRepository inventoryRepo;
     private final RankingService rankingService;
+    private final CollectionService collectionService;
 
     private void ensureInventory(Member m) {
         inventoryRepo.findByMember(m)
@@ -62,6 +65,11 @@ public class AuthService {
                         Inventory.builder().member(m).build()
                 ));
     }
+
+    private void ensureCollection(Member m) {
+        collectionService.ensureDefaults(m);
+    }
+
     private String socialEmail(String provider, String email, String sub) {
         String raw = (email != null && !email.isBlank()) ? email.trim() : sub;
         if (raw == null || raw.isBlank()) raw = "unknown";
@@ -130,6 +138,7 @@ public class AuthService {
                     .build();
             memberRepo.save(m);
             ensureInventory(m);
+            ensureCollection(m);
 
             oauthRepo.save(OAuthIdentity.builder()
                     .id(OAuthIdentityId.builder().provider(OAuthProvider.KAKAO).sub(sub).build())
@@ -217,6 +226,7 @@ public class AuthService {
                 .build();
         memberRepo.save(m);
         ensureInventory(m);
+        ensureCollection(m);
 
         oauthRepo.save(OAuthIdentity.builder()
                 .id(OAuthIdentityId.builder().provider(provider).sub(sub).build())
@@ -255,6 +265,7 @@ public class AuthService {
                 .build());
 
         ensureInventory(m);
+        ensureCollection(m);
     }
 
     // === 게스트 → 일반 회원 전환(이메일/비번) ===
@@ -287,6 +298,7 @@ public class AuthService {
 
         memberRepo.save(m);
         ensureInventory(m);
+        ensureCollection(m);
         guestStore.delete(req.guestId());
 
         return issueTokens(m.getMemberId());

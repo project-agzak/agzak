@@ -145,7 +145,7 @@ CREATE TABLE `fortune_cookie` (
                                   `money`             INT         NOT NULL,
                                   `achievement`       INT         NOT NULL,
                                   `health`            INT         NOT NULL,
-                                  `status`            VARCHAR(50) NOT NULL DEFAULT 'AVAILABLE' COMMENT 'ENUM(`AVAILABLE`, `USED`)',
+                                  `status`            VARCHAR(50) NOT NULL DEFAULT 'AVAILABLE' COMMENT 'ENUM(`AVAILABLE`, `USED`, `DELETED`)',
                                   `created_at`        DATETIME    NOT NULL,
                                   PRIMARY KEY (`fortune_cookie_id`),
                                   KEY `IDX_cookie_inventory` (`inventory_id`),
@@ -186,7 +186,7 @@ CREATE TABLE `game_attempt` (
                                 `game_session_id`  BIGINT      NOT NULL,
                                 `attempt_no`       INT         NOT NULL,
                                 `aspect_name`      VARCHAR(20) NOT NULL COMMENT 'ENUM(`MONEY`, `LOVE`, `ACHIEVEMENT`, `HEALTH`, `MISFORTUNE`)',
-                                `fire_type`        VARCHAR(20) NOT NULL COMMENT 'ENUM(`WEAK`, `STRONG`)',
+                                `fire_type`        VARCHAR(20) NOT NULL COMMENT 'ENUM(`WEAK`, `MEDIUM`, `STRONG`)',
 
                                 `base_prob`        DECIMAL(5,2) NOT NULL,
                                 `adjustment_pp`    DECIMAL(5,2) NOT NULL,
@@ -211,3 +211,68 @@ CREATE TABLE `game_attempt` (
                                     FOREIGN KEY (`game_session_id`) REFERENCES `game_session`(`game_session_id`)
                                         ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB;
+
+/* =========================================================
+   8) 쿠키 도감 (Collection)
+   ========================================================= */
+CREATE TABLE `collection` (
+                              `collection_id` BIGINT      NOT NULL AUTO_INCREMENT,
+                              `member_id`     BIGINT      NOT NULL,
+                              `type`          VARCHAR(50) NOT NULL COMMENT 'ENUM(`MONEY`, `LOVE`, `ACHIEVEMENT`, `HEALTH`, `MIXED`, `ROTTEN`)',
+                              `count`         INT         NOT NULL DEFAULT 0,
+                              `description`   VARCHAR(255) NULL,
+                              `obtained_at`   DATETIME    NULL,
+                              PRIMARY KEY (`collection_id`),
+                              UNIQUE KEY `UQ_collection_member_type` (`member_id`, `type`),
+                              KEY `IDX_collection_member` (`member_id`),
+                              CONSTRAINT `FK_collection_member`
+                                  FOREIGN KEY (`member_id`) REFERENCES `member`(`member_id`)
+                                      ON DELETE CASCADE ON UPDATE CASCADE,
+                              CONSTRAINT `CK_collection_type_nonblank` CHECK (LENGTH(TRIM(`type`)) > 0)
+) ENGINE=InnoDB;
+
+/* =========================================================
+   9) 하루 쿠키 사용 한도 (Daily Cookie Usage)
+   ========================================================= */
+CREATE TABLE `cookie_daily_usage` (
+                                      `cookie_daily_usage_id` BIGINT      NOT NULL AUTO_INCREMENT,
+                                      `member_id`             BIGINT      NOT NULL,
+                                      `use_date`              DATE        NOT NULL,
+                                      `used_count`            INT         NOT NULL,
+                                      `updated_at`            DATETIME    NOT NULL,
+                                      PRIMARY KEY (`cookie_daily_usage_id`),
+                                      UNIQUE KEY `uk_cookie_usage_member_date` (`member_id`, `use_date`),
+                                      KEY `idx_cookie_usage_member_date` (`member_id`, `use_date`),
+                                      CONSTRAINT `fk_cookie_usage_member`
+                                          FOREIGN KEY (`member_id`) REFERENCES `member`(`member_id`)
+                                              ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB;
+
+/* =========================================================
+   10) 선물 테이블
+   ========================================================= */
+
+CREATE TABLE gifts
+(
+    gift_id     BIGINT AUTO_INCREMENT NOT NULL,
+    sender_id   BIGINT                NOT NULL,
+    receiver_id BIGINT                NOT NULL,
+    cookie_id   BIGINT                NOT NULL,
+    message     VARCHAR(255)          NULL,
+    status      VARCHAR(255)          NOT NULL,
+    sent_at     datetime              NOT NULL,
+    received_at datetime              NULL,
+    CONSTRAINT pk_gifts PRIMARY KEY (gift_id)
+);
+
+ALTER TABLE gifts
+    ADD CONSTRAINT uc_gifts_cookie UNIQUE (cookie_id);
+
+ALTER TABLE gifts
+    ADD CONSTRAINT FK_GIFTS_ON_COOKIE FOREIGN KEY (cookie_id) REFERENCES fortune_cookie (fortune_cookie_id);
+
+ALTER TABLE gifts
+    ADD CONSTRAINT FK_GIFTS_ON_RECEIVER FOREIGN KEY (receiver_id) REFERENCES member (member_id);
+
+ALTER TABLE gifts
+    ADD CONSTRAINT FK_GIFTS_ON_SENDER FOREIGN KEY (sender_id) REFERENCES member (member_id);
