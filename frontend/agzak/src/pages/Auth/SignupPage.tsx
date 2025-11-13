@@ -129,7 +129,24 @@ const emailHelperText = (() => {
   return "중복 확인 버튼을 눌러주세요.";
 })();
 const emailHasError = !emailValid || (email && !emailChecked);
+const handleKakaoLogin = () => {
+    window.history.pushState({}, "", "/login");
+    // Analytics: 로그인 시도
+    trackEvent("auth_login_kakao_attempt");
 
+    if (!window.Kakao || !window.Kakao.isInitialized()) {
+      alert("카카오 SDK가 초기화되지 않았습니다. 새로고침 후 다시 시도해주세요.");
+      return;
+    }
+
+    const redirectUri = `${window.location.origin}${window.location.pathname}`;
+
+    window.Kakao.Auth.authorize({
+      redirectUri,
+      scope: "profile_nickname,account_email",
+    });
+  };
+  
   // 회원가입
   const handleRegister = async () => {
     const guestId = localStorage.getItem("guestId");
@@ -216,7 +233,33 @@ const emailHasError = !emailValid || (email && !emailChecked);
         <img src={Logo} alt="아그작 로고" className="mx-auto block" />
       </div>
 
-      <div className="mt-8 flex w-full flex-col items-center gap-3">
+        <div className="mt-8 flex w-full flex-col items-center gap-3">
+    {/* 카카오 로그인 */}
+    <button
+      type="button"
+      onClick={handleKakaoLogin}
+      aria-label="카카오로 로그인"
+      className="focus:outline-none focus:ring-2 focus:ring-offset-2 hover:opacity-90"
+    >
+      <img
+        src="/images/kakao_login_medium_wide.svg"
+        alt="카카오 로그인"
+        className="block h-auto w-[270px] cursor-pointer transition"
+        draggable={false}
+      />
+    </button>
+
+    {/* 🔹 구분선 (divider) */}
+    <div className="relative my-6 w-[270px]">
+      <div className="absolute inset-0 flex items-center">
+        <span className="w-full border-t border-[#D1D5DB]" />
+      </div>
+      <div className="relative flex justify-center">
+        <span className="bg-white px-3 text-[10px] text-gray-400 font-galmuri-xsmall">
+          또는 이메일로 가입
+        </span>
+      </div>
+    </div>
         <div className="flex w-full max-w-[300px] flex-col gap-1">
           <div className="right-align w-full pr-7">
             <Button_M
@@ -272,29 +315,32 @@ const emailHasError = !emailValid || (email && !emailChecked);
           </p>
         </div>
 
-         {/* 비밀번호 확인 */}
-        <div className="flex w-full max-w-[300px] flex-col gap-1 relative">
-          <div className="flex justify-center relative">
-            <Input
-              placeholder="비밀번호 확인"
-              type={passwordCheckVisible ? "text" : "password"}
-              value={passwordCheck}
-              onChange={handlePasswordCheckChange}
-            />
-            <img
-              src={passwordCheckVisible ? openIcon : closeIcon}
-              alt="비밀번호 확인 보기 토글"
-              className="absolute right-10 top-4 w-5 h-5 cursor-pointer"
-              onClick={() => setPasswordCheckVisible(!passwordCheckVisible)}
-            />
-          </div>
-          {!passwordMatch && (
-            <p className="pl-8 text-left font-galmuri-xsmall text-[#E11D48]">
-              비밀번호가 일치하지 않습니다.
-            </p>
-          )}
-        </div>
+       {/* 비밀번호 확인 */}
+<div className="flex w-full max-w-[300px] flex-col gap-1 relative">
+  <div className="flex justify-center relative">
+    <Input
+      placeholder="비밀번호 확인"
+      type={passwordCheckVisible ? "text" : "password"}
+      value={passwordCheck}
+      onChange={handlePasswordCheckChange}
+    />
+    <img
+      src={passwordCheckVisible ? openIcon : closeIcon}
+      alt="비밀번호 확인 보기 토글"
+      className="absolute right-10 top-4 w-5 h-5 cursor-pointer"
+      onClick={() => setPasswordCheckVisible(!passwordCheckVisible)}
+    />
+  </div>
 
+  {/* 항상 렌더링해서 높이 고정 */}
+  <p
+    className={`pl-8 text-left font-galmuri-xsmall min-h-[16px] ${
+      passwordMatch ? "invisible" : "text-[#E11D48]"
+    }`}
+  >
+    비밀번호가 일치하지 않습니다.
+  </p>
+</div>
         <div className="mt-12 flex justify-center pb-15">
           <Button_L
             label={guestId ? "계정 등록" : "다음 단계로"}
