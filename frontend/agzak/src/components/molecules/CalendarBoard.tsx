@@ -60,7 +60,22 @@ export default function BlackboardCalendar({ className, onSelectDate }: Props) {
           />
 
           {/* overlay: 날짜 그리드 */}
-          <div className="absolute inset-0 px-[6%] pt-[10%] pb-[12%]">
+          <div className="absolute inset-0 px-[6%] pt-[4%] pb-[12%]">
+            <div className="flex flex-col h-full">
+              {/* ✅ 상단 연월 표시 */}
+              <div className="flex items-center justify-center mb-[2%]">
+                <span
+                  className="
+                    font-galmuri-condensed
+                    text-[clamp(11px,3vw,18px)]
+                    text-[#FFEFD5]
+                    drop-shadow-[0_1px_0_rgba(0,0,0,0.6)]
+                  "
+                >
+                  {year}년 {month + 1}월
+                </span>
+              </div>
+
             <div
               className={cn(
                 "grid grid-cols-7 gap-x-[6%] gap-y-[6%] h-full",
@@ -69,6 +84,7 @@ export default function BlackboardCalendar({ className, onSelectDate }: Props) {
             >
               {cells.map((num, idx) => {
                 const isSelected = num != null && num === selectedDay;
+                const isToday = num != null && num === today.getDate();
                 return (
                   <button
                     key={idx}
@@ -88,6 +104,8 @@ export default function BlackboardCalendar({ className, onSelectDate }: Props) {
                           "text-white text-[clamp(10px,2.7vw,18px)] font-galmuri-condensed leading-none",
                           isSelected &&
                             "bg-[#9DD36D] font-bold text-white shadow-[0_1px_0_rgba(0,0,0,0.25)]",
+                          isToday && "text-[#FF6666] font-bold",
+
                           !isSelected &&
                             "hover:text-slate-50/90 transition-colors"
                         )}
@@ -102,6 +120,7 @@ export default function BlackboardCalendar({ className, onSelectDate }: Props) {
               })}
             </div>
           </div>
+        </div>
         </div>
       </AspectRatio>
     </div>

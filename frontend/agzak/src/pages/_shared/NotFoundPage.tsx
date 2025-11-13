@@ -1,12 +1,5 @@
 // @/pages/_shared/NotFoundPage.tsx
-import AchievementCookie from "@/assets/Cookies/achievement-cookie.webp";
-import HealthCookie from "@/assets/Cookies/health-cookie.webp";
-import LoveCookie from "@/assets/Cookies/love-cookie.webp";
-import MixedCookie from "@/assets/Cookies/mixed-cookie.webp";
-import MoneyCookie from "@/assets/Cookies/money-cookie.webp";
-import RottenCookie from "@/assets/Cookies/rotten-cookie.webp";
 import FortuneCookieGif from "@/assets/Gifs/FortuneCookie.gif";
-import { GiftModal } from "@/components/organisms/GiftModal";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -63,17 +56,7 @@ export default function NotFoundPage() {
         </div>
 
       </div>
-          <>
-      <button className="btn" onClick={() => setGiftOpen(true)}>선물하기</button>
 
-      <GiftModal
-        open={giftOpen}
-        onOpenChange={setGiftOpen}
-        CookieSrc={[HealthCookie, AchievementCookie, LoveCookie, MoneyCookie, MixedCookie, RottenCookie][Math.floor(Math.random() * 6)]}
-        searchUsers={searchUsers}
-        onSubmit={handleSubmit}
-      />
-    </>
 
     </main>
   );
