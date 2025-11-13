@@ -4,6 +4,7 @@ import com.ssafy.agzak.domain.fortune.exception.IllegalCityNameException;
 import com.ssafy.agzak.domain.game.exception.AttemptLimitReachedException;
 import com.ssafy.agzak.domain.game.exception.DailyQuotaExceededException;
 import com.ssafy.agzak.domain.game.exception.NoActiveSessionException;
+import com.ssafy.agzak.domain.inventory.exception.InventoryCapacityExceededException;
 import com.ssafy.agzak.domain.member.exception.NoFortuneFoundException;
 import io.jsonwebtoken.JwtException;
 import jakarta.persistence.EntityNotFoundException;
@@ -131,6 +132,11 @@ public class GlobalExceptionHandler {
         else if (e instanceof NoActiveSessionException) code = "NO_ACTIVE_SESSION";
         else if (e instanceof AttemptLimitReachedException) code = "ATTEMPT_LIMIT";
         return build(HttpStatus.CONFLICT, code, e.getMessage(), req);
+    }
+
+    @ExceptionHandler(InventoryCapacityExceededException.class)
+    public ResponseEntity<ErrorResponse> handleInventoryCapacityExceeded(InventoryCapacityExceededException e, HttpServletRequest req) {
+        return build(HttpStatus.CONFLICT, "INVENTORY_CAP_EXCEEDED", e.getMessage(), req);
     }
 
     // ===== ResponseStatusException (직접 지정한 상태 사용) =====

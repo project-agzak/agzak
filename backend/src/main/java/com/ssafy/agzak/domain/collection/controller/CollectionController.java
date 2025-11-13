@@ -1,5 +1,6 @@
 package com.ssafy.agzak.domain.collection.controller;
 
+import com.ssafy.agzak.docs.CollectionApiDocs;
 import com.ssafy.agzak.domain.collection.dto.response.CollectionItemResponse;
 import com.ssafy.agzak.domain.collection.service.CollectionService;
 import jakarta.validation.constraints.Min;
@@ -15,7 +16,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/collection")
-public class CollectionController {
+public class CollectionController implements CollectionApiDocs {
 
     private final CollectionService collectionService;
 

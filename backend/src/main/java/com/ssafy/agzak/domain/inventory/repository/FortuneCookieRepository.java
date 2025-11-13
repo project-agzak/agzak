@@ -17,5 +17,21 @@ public interface FortuneCookieRepository extends JpaRepository<FortuneCookie, Lo
     """)
     List<FortuneCookie> findAllByMember(long memberId);
 
+    @Query("""
+        select count(fc) 
+        from FortuneCookie fc 
+        where fc.inventory.member.memberId = :memberId 
+          and fc.status = com.ssafy.agzak.domain.inventory.entity.FortuneCookie.CookieStatus.AVAILABLE
+    """)
+    long countAvailableByMemberId(Long memberId);
+
+    @Query("""
+        select fc 
+        from FortuneCookie fc 
+        where fc.inventory.member.memberId = :memberId 
+          and fc.status = com.ssafy.agzak.domain.inventory.entity.FortuneCookie.CookieStatus.AVAILABLE
+        order by fc.createdAt asc
+    """)
+    List<FortuneCookie> findOldestAvailableByMemberId(Long memberId);
 
 }
