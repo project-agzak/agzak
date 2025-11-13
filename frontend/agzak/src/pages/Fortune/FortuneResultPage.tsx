@@ -105,10 +105,15 @@ export default function FortuneResultPage() {
 
 
 useEffect(() => {
-    if (isLoggedIn) {
+  // 1) 로그인 유저: 오늘 운세 없을 때만 한 번 불러오기
+  if (isLoggedIn) {
+    const hasFortune = totalScore !== null || !!typeInfo;
+    if (!hasFortune && !loadingFortune && !errorFortune) {
       fetchToday();
-      return;
-    }});
+    }
+    return;
+  }
+}, [isLoggedIn, fetchToday, totalScore, typeInfo, loadingFortune, errorFortune]);
 
   //   // 2) 비로그인 유저:
   //   // - 정상 플로우라면 useFortuneStore에 이미 결과가 존재해야 함

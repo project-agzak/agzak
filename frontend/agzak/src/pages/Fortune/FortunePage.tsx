@@ -185,7 +185,24 @@ useEffect(() => {
   alert("태어난 도시를 다시 선택해 주세요.");
   return;
 }
+// 로컬스토리지에 게스트 정보 저장
+  try {
+        localStorage.setItem(
+          "guestId",
+          JSON.stringify({
+            nickname: nickname.trim(),
+            birthDate,
+            gender: gender.toUpperCase() as "MALE" | "FEMALE",
+            birthTime,
+            birthCity: finalBirthCity.address, // 사람이 보는 풀 주소
+          })
+        );
+      } catch {
+        // localStorage 못 쓰는 환경이면 그냥 무시
+      }
 
+      //
+      
         const payload: GuestFortuneReq = {
       nickname: nickname.trim(),
       gender: gender.toUpperCase() as GuestFortuneReq["gender"], // "MALE" | "FEMALE"

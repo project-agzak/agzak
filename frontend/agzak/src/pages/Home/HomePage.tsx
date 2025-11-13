@@ -17,7 +17,7 @@ import { useHomeStore } from "@/store/useHomeStore";
 export default function HomePage() {
   const shareUrl = "https://www.agzak.co.kr/";
   const { isLoggedIn } = useAuthStore();
-const { loadingToday, errorToday, initHome } = useHomeStore();
+const { loadingToday, initHome } = useHomeStore();
     const accessedAtKST = useMemo(() => {
     const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
     const y = kst.getUTCFullYear();

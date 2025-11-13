@@ -195,7 +195,7 @@ isLoggedIn: initialIsLoggedIn,
       expiresAt: null,
     });
 
-      // ✅ reason이 있으면 alert 띄우고 홈으로 이동
+      //  reason이 있으면 alert 띄우고 홈으로 이동
   if (typeof reason === "string") {
     alert(reason);
 
