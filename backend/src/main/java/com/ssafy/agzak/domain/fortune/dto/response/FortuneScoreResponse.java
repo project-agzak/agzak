@@ -33,10 +33,10 @@ public record FortuneScoreResponse(@JsonProperty("total_score") int totalScore,
 
         DetailedSummaries detailed = new DetailedSummaries(love.getDescription(), health.getDescription(), money.getDescription(), achievement.getDescription());
         return new FortuneScoreResponse(fortune.getTotalScore(),
-                love.getOriginalScore(),
-                health.getOriginalScore(),
-                money.getOriginalScore(),
-                achievement.getOriginalScore(),
+                love.getScore(),
+                health.getScore(),
+                money.getScore(),
+                achievement.getScore(),
                 fortune.getDescription(), detailed);
     }
 }
