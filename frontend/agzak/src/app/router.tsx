@@ -1,10 +1,10 @@
 // src/app/router.tsx
+import { RequireAuth } from "@/components/templates/RequireAuth";
+import { ScrollToTop } from "@/components/templates/ScrollToTop";
 import AppLoader from '@/components/ui/AppLoader';
 import { lazy, Suspense, type ReactNode } from 'react';
-import { createBrowserRouter, Outlet, Navigate } from 'react-router-dom';
+import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 import AppLayout from './layout';
-import { ScrollToTop } from "@/components/templates/ScrollToTop";
-import { RequireAuth } from "@/components/templates/RequireAuth";
 
 
 // --- lazy pages ---
@@ -21,6 +21,7 @@ const EnforcePage = lazy(() => import('@/pages/Enforce/EnforcePage'));
 const CookiesPage = lazy(() => import('@/pages/Cookies/CookiesPage'));
 const CalendarPage = lazy(() => import('@/pages/Calendar/CalendarPage'));
 const MyPage = lazy(() => import('@/pages/My/MyPage'));
+
 
 const NotFoundPage = lazy(() => import('@/pages/_shared/NotFoundPage'));
 const AppError = lazy(() => import('@/pages/_shared/AppError'));
@@ -95,7 +96,6 @@ export const router = createBrowserRouter([
         </RequireAuth>
       ),
     },
-
       { path: '*', element: suspense(<NotFoundPage />) },
   ],
 },

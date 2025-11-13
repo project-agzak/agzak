@@ -1,12 +1,14 @@
 // @/pages/_shared/NotFoundPage.tsx
-import { Link, useNavigate } from "react-router-dom";
+import FortuneCookieGif from "@/assets/Gifs/FortuneCookie.gif";
 import { Button } from "@/components/ui/button";
-import FortuneCookieGif from "@/assets/Gifs/FortuneCookie.gif" 
+import { Link, useNavigate } from "react-router-dom";
+
+
 
 export default function NotFoundPage() {
   const navigate = useNavigate();
-
   const HOME_PATH = "/home";
+  
 
   return (
     <main className="relative z-10 min-h-screen flex items-center justify-center p-3">
@@ -39,6 +41,8 @@ export default function NotFoundPage() {
         </div>
 
       </div>
+
+
     </main>
   );
 }
