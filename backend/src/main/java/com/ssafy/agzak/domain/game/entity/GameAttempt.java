@@ -77,5 +77,5 @@ public class GameAttempt {
 
     public enum AspectName { MONEY, LOVE, ACHIEVEMENT, HEALTH, MISFORTUNE }
 
-    public enum FireType { WEAK, STRONG }
+    public enum FireType { WEAK, MEDIUM, STRONG }
 }

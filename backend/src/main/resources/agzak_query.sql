@@ -77,3 +77,7 @@ CREATE TABLE IF NOT EXISTS `cookie_daily_usage` (
                                                         FOREIGN KEY (`member_id`) REFERENCES `member`(`member_id`)
                                                             ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB;
+
+-- agzak MySQL DB update query 2.0.3 / 25.11.13
+ALTER TABLE game_attempt
+    MODIFY fire_type VARCHAR(20) NOT NULL COMMENT 'ENUM(`WEAK`, `MEDIUM`, `STRONG`)';

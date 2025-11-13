@@ -206,9 +206,11 @@ public class CookieGameService {
             snapLove = snapMoney = snapAchievement = snapHealth = snapMisfortune = 0;
         }
 
-        // 적용 확률: base + (약:+5 / 강:-5) → [0,100]
-        BigDecimal adjustment = (req.fireType() == AttemptRequest.FireType.WEAK)
-                ? new BigDecimal("5.00") : new BigDecimal("-5.00");
+        // 적용 확률: base + (약:+5 / 중:0 / 강:-5) → [0,100]
+        BigDecimal adjustment =
+                (req.fireType() == AttemptRequest.FireType.WEAK)   ? new BigDecimal("5.00") :
+                (req.fireType() == AttemptRequest.FireType.MEDIUM) ? new BigDecimal("0.00") :
+                                                                     new BigDecimal("-5.00");
         BigDecimal applied = clamp0to100(baseProb.add(adjustment));
 
         // 성공/실패: 정확히 applied% 확률
@@ -371,14 +373,16 @@ public class CookieGameService {
         if (req.aspectName() == AttemptRequest.AttemptAspect.MISFORTUNE) {
             // 액운
             return switch (req.fireType()) {
-                case WEAK -> success ? +5 : -7;
-                case STRONG -> success ? +14 : -13;
+                case WEAK   -> success ? +4  : -5;
+                case MEDIUM -> success ? +8  : -8;
+                case STRONG -> success ? +12 : -11;
             };
         } else {
             // 행운 4종
             return switch (req.fireType()) {
-                case WEAK -> success ? +7 : -5;
-                case STRONG -> success ? +13 : -14;
+                case WEAK   -> success ? +5  : -4;
+                case MEDIUM -> success ? +8  : -8;
+                case STRONG -> success ? +11 : -12;
             };
         }
     }
