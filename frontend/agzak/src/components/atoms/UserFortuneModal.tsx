@@ -1,22 +1,45 @@
 // src/components/atoms/UserFortuneModal.tsx
-import { useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
 import NoteModal from "@/assets/ui/NoteModal.svg"
 import SampleImg from "@/assets/Friends/FriendCat.webp"
 import { FortuneGaugeList } from "@/components/molecules/FortuneGaugeList";
-// import { CookieInventory } from "../organisms/CookieInventory";
 
 type UserFortuneModalProps = {
   nickname: string;
   onClose: () => void;
 };
 
+const ANIMATION_DURATION = 300;
+
 export function UserFortuneModal({ nickname, onClose }: UserFortuneModalProps) {
-  // ESC 닫기
+  const [entered, setEntered] = useState(false);
+  const [isAnimatingOut, setIsAnimatingOut] = useState(false);
+
+  // 닫기 애니메이션 시작 → 애니 후 onClose 호출
+  const startCloseAnimation = useCallback(() => {
+    if (isAnimatingOut) return; // 여러 번 눌러도 한 번만 실행
+    setIsAnimatingOut(true);
+    setEntered(false);          // 아래로 내려가게 (translate-y, opacity 0)
+
+    setTimeout(() => {
+      onClose();
+    }, ANIMATION_DURATION);
+  }, [isAnimatingOut, onClose]);
+
+  // ESC 닫기 + 처음 열릴 때 위로 올라오는 애니메이션
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        startCloseAnimation();
+      }
+    };
     window.addEventListener("keydown", onKey);
+
+    // 첫 진입 시 한 프레임 뒤에 entered=true로 전환 → 아래에서 위로
+    requestAnimationFrame(() => setEntered(true));
+
     return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, [startCloseAnimation]);
 
   return (
     <div
@@ -29,11 +52,17 @@ export function UserFortuneModal({ nickname, onClose }: UserFortuneModalProps) {
         type="button"
         className="absolute inset-0"
         aria-label="모달 닫기"
-        onClick={onClose}
+        onClick={startCloseAnimation}
       />
 
       {/* 픽셀 노트 박스 */}
-      <div className="relative w-[360px] md:w-[420px] max-w-[95vw]">
+      <div
+        className={
+          "relative w-[360px] md:w-[420px] max-w-[95vw] " +
+          "transition-all duration-300 ease-out " +
+          (entered ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0")
+        }
+      >
         {/* 배경 이미지 */}
         <img
           src={NoteModal}
@@ -41,11 +70,11 @@ export function UserFortuneModal({ nickname, onClose }: UserFortuneModalProps) {
           className="w-full h-auto pointer-events-none select-none"
         />
 
-        <div className="absolute top-[15px] right-[50px]">
+        <div className="absolute top-[10px] right-[50px]">
           <button
             type="button"
-            onClick={onClose}
-            className="font-galmuri-small px-2 cursor-pointer"
+            onClick={startCloseAnimation}
+            className="font-bitbit px-1 cursor-pointer"
           >
             X
           </button>
