@@ -22,10 +22,10 @@ export default function CalendarPage() {
     <main className="relative z-10 p-4">
         {/* 요일 바 */}
         <div className="relative h-[72px] flex items-center justify-center">
-          <div className="w-[300px] h-[87px] origin-top rotate-[-3deg]">
+          <div className="w-[350px] h-[80px] origin-top">
             <img
               src={week}
-              alt="SMTWTFS"
+              alt="요일바"
               className="w-full h-full object-contain drop-shadow-[0_4px_0_rgba(0,0,0,0.35)]"
             />
           </div>

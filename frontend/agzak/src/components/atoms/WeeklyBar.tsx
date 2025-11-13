@@ -10,6 +10,8 @@ import {
 
 import {
   ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
@@ -86,6 +88,17 @@ export function WeeklyFortuneBar({
             animationDuration={600}
             fillOpacity={0.7}
             animationEasing="ease-out"
+          />
+          <ChartLegend
+            content={
+              <ChartLegendContent
+                className="
+                  flex justify-center gap-6
+                  text-[11px] font-galmuri-xsmall text-[#1F1F1F]
+                  pt-0
+                "
+              />
+            }
           />
         </BarChart>
       </ResponsiveContainer>
