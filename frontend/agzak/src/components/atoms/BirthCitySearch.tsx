@@ -2,6 +2,8 @@
 import * as React from "react";
 import { SIMPLE_REGIONS, type SimpleRegion } from "@/constants/regions";
 
+
+
 export type BirthCity = {
   sido: string;
   sgg: string;
@@ -29,7 +31,7 @@ export function BirthCitySearch({
   const [activeIdx, setActiveIdx] = React.useState(-1);
 
   const rootRef = React.useRef<HTMLDivElement>(null);
-
+const activeItemRef = React.useRef<HTMLButtonElement | null>(null);
 
     React.useEffect(() => {
     if (!value) {
@@ -102,22 +104,21 @@ export function BirthCitySearch({
   };
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!open) return;
-
-    if (e.key === "ArrowDown") {
-      e.preventDefault();
-      setActiveIdx((i) => Math.min(i + 1, results.length - 1));
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      setActiveIdx((i) => Math.max(i - 1, 0));
-    } else if (e.key === "Enter") {
-      e.preventDefault();
-      if (activeIdx >= 0 && results[activeIdx]) {
-        commitSelect(results[activeIdx]);
-      }
-    } else if (e.key === "Escape") {
-      setOpen(false);
-      setActiveIdx(-1);
+ if (e.key === "ArrowDown") {
+    e.preventDefault();
+    setActiveIdx((i) => Math.min(i + 1, results.length - 1));
+  } else if (e.key === "ArrowUp") {
+    e.preventDefault();
+    setActiveIdx((i) => Math.max(i - 1, 0));
+  } else if (e.key === "Enter") {
+    e.preventDefault();
+    if (activeIdx >= 0 && results[activeIdx]) {
+      commitSelect(results[activeIdx]);
     }
+  } else if (e.key === "Escape") {
+    setOpen(false);
+    setActiveIdx(-1);
+  }
   };
 
   const commitSelect = (region: SimpleRegion) => {
@@ -135,7 +136,13 @@ export function BirthCitySearch({
    
 
   };
-
+React.useEffect(() => {
+  if (activeItemRef.current) {
+    activeItemRef.current.scrollIntoView({
+      block: "nearest",
+    });
+  }
+}, [activeIdx]);
   return (
     <div ref={rootRef} className="relative w-[260px] overflow-visible">
       {/* 픽셀 프레임 유지 */}
@@ -181,12 +188,12 @@ export function BirthCitySearch({
       </div>
     )}
 
-    {results.map((it, i) => {
-      const active = i === activeIdx;
-      return (
-         <button
+   {results.map((it, i) => {
+  const active = i === activeIdx;
+  return (
+    <button
       key={`${it.sido}-${it.sgg}-${i}`}
-   
+      ref={active ? (el) => { if (el) activeItemRef.current = el; } : undefined}
       onMouseDown={(e) => {
         e.preventDefault();
         commitSelect(it);
@@ -200,8 +207,9 @@ export function BirthCitySearch({
     >
       <div className="font-galmuri-xsmall">{it.label}</div>
     </button>
-      );
-    })}
+  );
+})}
+
   </div>
 )}
   </div>
