@@ -45,4 +45,12 @@ public interface FortuneCookieRepository extends JpaRepository<FortuneCookie, Lo
     @Query("select c from FortuneCookie c where c.fortuneCookieId = :fortuneCookieId")
     Optional<FortuneCookie> findByIdForUpdate(@Param("fortuneCookieId") Long fortuneCookieId);
 
+    @Query("""
+      select fc from FortuneCookie fc
+      join fetch fc.cookieKind ck
+      join fetch ck.rarity r
+      where fc.inventory.member.memberId = :memberId
+        and fc.status = com.ssafy.agzak.domain.inventory.entity.FortuneCookie.CookieStatus.AVAILABLE
+    """)
+    List<FortuneCookie> findAllAvailableWithKindByMember(@Param("memberId") Long memberId);
 }

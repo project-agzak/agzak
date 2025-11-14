@@ -7,13 +7,15 @@ public record CookieCreatedResponse(
         Long fortuneCookieId,
         Long inventoryId,
         Long gameSessionId,
-        CookieTypeDto type,
-        Integer love,
-        Integer money,
-        Integer achievement,
-        Integer health,
-        Integer total,
-        String message
-) {
-    public enum CookieTypeDto { MONEY, LOVE, ACHIEVEMENT, HEALTH, MIXED, ROTTEN }
-}
+        Long cookieKindId,
+        String code,
+        String name,
+        String rarityCode,
+        String recipe,
+        String message,
+        int love,
+        int money,
+        int achievement,
+        int health,
+        int total
+) {}

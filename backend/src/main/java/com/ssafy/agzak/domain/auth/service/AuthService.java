@@ -4,6 +4,7 @@ import com.ssafy.agzak.domain.auth.client.KakaoApiClient;
 import com.ssafy.agzak.domain.auth.client.KakaoOAuthClient;
 import com.ssafy.agzak.domain.auth.dto.request.*;
 import com.ssafy.agzak.domain.auth.dto.response.CheckEmailResponse;
+import com.ssafy.agzak.domain.auth.dto.response.CheckNicknameResponse;
 import com.ssafy.agzak.domain.auth.dto.response.SocialLoginResponse;
 import com.ssafy.agzak.domain.auth.dto.response.TokenResponse;
 import com.ssafy.agzak.domain.auth.entity.OAuthIdentity;
@@ -349,6 +350,15 @@ public class AuthService {
     public CheckEmailResponse checkEmail(String email) {
         boolean available = !memberRepo.existsByEmailAndPasswordIsNotNullAndStatus(email, Member.MemberStatus.ACTIVE);
         return new CheckEmailResponse(email, available);
+    }
+
+    public CheckNicknameResponse checkNickname(String nickname) {
+        if (nickname == null || nickname.isBlank()) {
+            return new CheckNicknameResponse("", false);
+        }
+        String n = nickname.trim();
+        boolean available = !memberRepo.existsByNicknameAndStatus(n, Member.MemberStatus.ACTIVE);
+        return new CheckNicknameResponse(n, available);
     }
 
     @Transactional

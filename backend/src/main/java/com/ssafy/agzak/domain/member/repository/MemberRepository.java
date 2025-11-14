@@ -28,4 +28,6 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     boolean existsByMemberIdAndStatus(Long memberId, Member.MemberStatus memberStatus);
 
     List<Member> findByNicknameStartingWith(@Valid String keyword);
+
+    boolean existsByNicknameAndStatus(String nickname, Member.MemberStatus status);
 }
