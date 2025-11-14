@@ -5,6 +5,7 @@ import com.ssafy.agzak.domain.fortune.dto.response.DetailFortuneDataResponse;
 import com.ssafy.agzak.domain.member.dto.request.MemberEditRequest;
 import com.ssafy.agzak.domain.member.dto.response.MemberGraphResponse;
 import com.ssafy.agzak.domain.member.dto.response.MemberInfoResponse;
+import com.ssafy.agzak.domain.member.dto.response.SearchMemberResponse;
 import com.ssafy.agzak.domain.member.service.MemberService;
 import com.ssafy.agzak.global.security.AuthMemberProvider;
 import jakarta.validation.Valid;
@@ -53,6 +54,11 @@ public class MemberController implements MemberApiDocs {
     public ResponseEntity<DetailFortuneDataResponse> getDetailData(@PathVariable LocalDate date) {
         long memberId = authMemberProvider.currentMemberId();
         return ResponseEntity.ok().body(memberService.getMemberFortune(memberId, date));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<SearchMemberResponse>> searchMembers(@RequestParam @Valid String keyword) {
+        return ResponseEntity.ok(memberService.searchMember(keyword));
     }
 
 }

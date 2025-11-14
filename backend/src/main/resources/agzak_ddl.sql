@@ -274,7 +274,7 @@ CREATE TABLE `gifts` (
                          `receiver_id` BIGINT      NOT NULL,
                          `cookie_id`   BIGINT      NOT NULL,
                          `message`     VARCHAR(255) NULL,
-                         `status`      VARCHAR(50) NOT NULL COMMENT 'ENUM(`PENDING`, `SENT`, `RECEIVED`, `CANCELLED`)',
+                         `status`      VARCHAR(255) NOT NULL COMMENT 'ENUM(`PENDING`, `SENT`, `RECEIVED`, `CANCELLED`)',
                          `sent_at`     DATETIME    NOT NULL,
                          `received_at` DATETIME    NULL,
                          PRIMARY KEY (`gift_id`),

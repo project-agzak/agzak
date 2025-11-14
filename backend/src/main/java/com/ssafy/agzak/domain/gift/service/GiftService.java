@@ -51,6 +51,8 @@ public class GiftService {
         publisher.publishEvent(
                 CreateGiftEvent.builder()
                         .giftId(gift.getId())
+                        .senderId(sender.getMemberId())
+                        .receiverId(receiver.getMemberId())
                         .build()
         );
     }
@@ -90,5 +92,25 @@ public class GiftService {
     public GiftResponse getGiftDetail(Long giftId, Long userId) {
         return customGiftRepository.getGiftDetailByGiftId(giftId, userId)
                 .orElseThrow(() -> new NoSuchGiftException("해당 선물이 존재하지 않습니다."));
+    }
+
+    @Transactional
+    public void rejectGift(Long giftId, Long userId) {
+        Gift gift = customGiftRepository.findGiftByGiftIdForUpdate(giftId)
+                .orElseThrow(() -> new NoSuchGiftException("해당 선물이 존재하지 않습니다."));
+        if(!gift.getReceiver().getMemberId().equals(userId)){
+            throw new IllegalReceiverException("해당 선물을 취소할 수 없는 사용자입니다.");
+        }
+        if(!gift.getStatus().equals(GiftStatus.SENT)){
+            throw new IllegalGiftStateException("이미 취소된 선물입니다.");
+        }
+
+        FortuneCookie cookie = customGiftRepository.findCookieByCookieIdForUpdate(gift.getFortuneCookie().getFortuneCookieId())
+                .orElseThrow(() -> new NoSuchGiftException("해당 선물의 쿠키가 존재하지 않습니다."));
+        if(!cookie.getStatus().equals(FortuneCookie.CookieStatus.PENDING_GIFT)){
+            throw new IllegalCookieSendException("해당 선물의 쿠키를 취소할 수 없습니다.");
+        }
+
+        gift.rejectGift();
     }
 }

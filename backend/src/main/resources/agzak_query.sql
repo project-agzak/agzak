@@ -94,7 +94,7 @@ CREATE TABLE IF NOT EXISTS `gifts` (
                          `receiver_id` BIGINT      NOT NULL,
                          `cookie_id`   BIGINT      NOT NULL,
                          `message`     VARCHAR(255) NULL,
-                         `status`      VARCHAR(50) NOT NULL COMMENT 'ENUM(`SENT`, `RECEIVED`)',
+                         `status`      VARCHAR(255) NOT NULL COMMENT 'ENUM(`SENT`, `RECEIVED`)',
                          `sent_at`     DATETIME    NOT NULL,
                          `received_at` DATETIME    NULL,
 

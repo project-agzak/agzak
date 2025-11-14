@@ -12,13 +12,16 @@ import com.ssafy.agzak.domain.fortune.repository.FortuneRepository;
 import com.ssafy.agzak.domain.member.dto.request.MemberEditRequest;
 import com.ssafy.agzak.domain.member.dto.response.MemberGraphResponse;
 import com.ssafy.agzak.domain.member.dto.response.MemberInfoResponse;
+import com.ssafy.agzak.domain.member.dto.response.SearchMemberResponse;
 import com.ssafy.agzak.domain.member.entity.Member;
 import com.ssafy.agzak.domain.member.exception.IllegalFortuneAspectException;
 import com.ssafy.agzak.domain.member.exception.MemberNotFoundException;
 import com.ssafy.agzak.domain.member.exception.NoFortuneFoundException;
+import com.ssafy.agzak.domain.member.exception.NoSuchNicknameException;
 import com.ssafy.agzak.domain.member.repository.MemberRepository;
 import com.ssafy.agzak.domain.ranking.service.RankingService;
 import com.ssafy.agzak.global.security.RefreshTokenStore;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -96,6 +99,15 @@ public class MemberService {
                         statMap.getOrDefault(date, new DateScore(0, 0)).originalScore,
                         statMap.getOrDefault(date, new DateScore(0, 0)).totalScore
                 ))
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<SearchMemberResponse> searchMember(@Valid String keyword) {
+        List<Member> member = memberRepository.findByNicknameStartingWith(keyword);
+
+        return member.stream()
+                .map(SearchMemberResponse::from)
                 .toList();
     }
 

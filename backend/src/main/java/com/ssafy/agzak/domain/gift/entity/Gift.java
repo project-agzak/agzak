@@ -10,6 +10,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Entity
 @Table(name = "gifts")
@@ -31,7 +32,7 @@ public class Gift {
     @JoinColumn(name = "receiver_id", nullable = false)
     private Member receiver;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cookie_id", nullable = false)
     private FortuneCookie fortuneCookie;
 
@@ -61,6 +62,11 @@ public class Gift {
     public void receiveGift() {
         this.status = GiftStatus.RECEIVED;
         this.fortuneCookie.updateStatusAvailable();
-        this.receivedAt = LocalDateTime.now();
+        this.receivedAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
+    }
+
+    public void rejectGift() {
+        this.status = GiftStatus.REJECTED;
+        this.fortuneCookie.markDeleted();
     }
 }
