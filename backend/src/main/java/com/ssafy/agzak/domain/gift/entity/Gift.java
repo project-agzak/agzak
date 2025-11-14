@@ -31,7 +31,7 @@ public class Gift {
     @JoinColumn(name = "receiver_id", nullable = false)
     private Member receiver;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cookie_id", nullable = false)
     private FortuneCookie fortuneCookie;
 
