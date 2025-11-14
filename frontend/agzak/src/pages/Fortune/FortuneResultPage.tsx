@@ -1,5 +1,7 @@
 // src/pages/Fortune/FortuneResultPage.tsx
 import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { issueFortuneShareLink } from "@/lib/shareAPI";
 
 import { Button_L } from "@/components/atoms/Button_L";
 import { ExpandableFortune } from "@/components/molecules/ExpandableFortune";
@@ -100,20 +102,54 @@ export default function FortuneResultPage() {
   const getDetailSummary = useFortuneStore((s) => s.getDetailSummary);
   const getScoreValue    = useFortuneStore((s) => s.getScoreValue);
 
+  // 공유하기
+  const { token } = useParams<{ token?: string }>();
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const fetchSharedFortune = useFortuneStore((s) => s.fetchSharedFortune);
+  
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    if (token) return; // 공유 링크로 들어온 경우는 2단계에서 처리
 
-  const shareUrl = "https://www.agzak.co.kr/";
+    fetchToday();
 
+    // 공유 URL 발급
+    (async () => {
+      try {
+        const data = await issueFortuneShareLink();
+        setShareUrl(data.url); // "https://agzak.app/share/fortune/..." 그대로
+      } catch (e) {
+        console.error(e);
+        // 실패해도 일단 현재 URL로 공유는 가능하게
+      }
+    })();
+  }, [isLoggedIn, token, fetchToday]);
 
-useEffect(() => {
-  // 1) 로그인 유저: 오늘 운세 없을 때만 한 번 불러오기
-  if (isLoggedIn) {
-    const hasFortune = totalScore !== null || !!typeInfo;
-    if (!hasFortune && !loadingFortune && !errorFortune) {
+  const effectiveShareUrl =
+    shareUrl ??
+    (typeof window !== "undefined" ? window.location.href : "");
+
+  // 진입 시 로딩 로직
+  useEffect(() => {
+    if (token) {
+      // 공유 링크로 들어온 사람 (로그인 여부 상관 없음)
+      fetchSharedFortune(token);
+    } else if (isLoggedIn) {
+      // 그냥 결과 페이지(/fortune/result) – 내 오늘 운세
       fetchToday();
     }
-    return;
-  }
-}, [isLoggedIn, fetchToday, totalScore, typeInfo, loadingFortune, errorFortune]);
+  }, [token, isLoggedIn, fetchToday, fetchSharedFortune]);
+
+  useEffect(() => {
+    // 1) 로그인 유저: 오늘 운세 없을 때만 한 번 불러오기
+    if (isLoggedIn) {
+      const hasFortune = totalScore !== null || !!typeInfo;
+      if (!hasFortune && !loadingFortune && !errorFortune) {
+        fetchToday();
+      }
+      return;
+    }
+  }, [isLoggedIn, fetchToday, totalScore, typeInfo, loadingFortune, errorFortune]);
 
   //   // 2) 비로그인 유저:
   //   // - 정상 플로우라면 useFortuneStore에 이미 결과가 존재해야 함
@@ -301,7 +337,7 @@ useEffect(() => {
           <ShareButton
           label="공유하기"
           width={260}
-          url={shareUrl}
+          url={effectiveShareUrl}
           />
         </div>
       </div>

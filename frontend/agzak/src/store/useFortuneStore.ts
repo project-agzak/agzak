@@ -9,6 +9,7 @@ import {
   type GuestFortuneRes,
   type FortuneTypeDetail,
 } from "@/lib/fortuneAPI";
+import { issueFortuneShareLink, type FortuneShareLinkResponse } from "@/lib/shareAPI"
 
 type ScoreKeys = "health" | "achievement" | "love" | "money";
 
@@ -91,6 +92,7 @@ type FortuneState = {
   fetchToday: () => Promise<void>;
   fetchGuest: (payload: GuestFortuneReq) => Promise<void>;
   fetchTypeDetail: (fortuneTypeId: number, force?: boolean) => Promise<FortuneTypeDetail | null>;
+  fetchSharedFortune: (token: string) => Promise<void>;
   reset: () => void;
 
   // 쿠키 효과 합산
@@ -271,5 +273,29 @@ export const useFortuneStore = create<FortuneState>((set, get) => ({
     return pickTotalSummary(s as any);
   },
 
+
+  // 공유하기
+  async fetchSharedFortune(token: string) {
+    set({ loading: true, error: null });
+    try {
+      const res = await api.get<RawFortuneResponse>(`/fortune/share/${token}`);
+      if (!res.ok || !res.data) throw new Error("공유 운세 조회 실패");
+
+      const adapted = adaptFortune(res.data);
+
+      set({
+        scores: adapted.scores,
+        typeInfo: adapted.type,
+        // fetchToday에서 세팅하는 나머지 값들 동일하게
+        loading: false,
+      });
+    } catch (e) {
+      console.error(e);
+      set({
+        error: "공유된 운세 정보를 불러오지 못했어요.",
+        loading: false,
+      });
+    }
+  },
 }));
 
