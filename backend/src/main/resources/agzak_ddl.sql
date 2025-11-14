@@ -145,7 +145,7 @@ CREATE TABLE `fortune_cookie` (
                                   `money`             INT         NOT NULL,
                                   `achievement`       INT         NOT NULL,
                                   `health`            INT         NOT NULL,
-                                  `status`            VARCHAR(50) NOT NULL DEFAULT 'AVAILABLE' COMMENT 'ENUM(`AVAILABLE`, `USED`, `DELETED`)',
+                                  `status`            VARCHAR(50) NOT NULL DEFAULT 'AVAILABLE' COMMENT 'ENUM(`AVAILABLE`, `USED`, `DELETED`, `PENDING_GIFT`)',
                                   `created_at`        DATETIME    NOT NULL,
                                   PRIMARY KEY (`fortune_cookie_id`),
                                   KEY `IDX_cookie_inventory` (`inventory_id`),
@@ -213,7 +213,7 @@ CREATE TABLE `game_attempt` (
 ) ENGINE=InnoDB;
 
 /* =========================================================
-   8) 쿠키 도감 (Collection)
+   8) 쿠키 도감
    ========================================================= */
 CREATE TABLE `collection` (
                               `collection_id` BIGINT      NOT NULL AUTO_INCREMENT,
@@ -232,7 +232,7 @@ CREATE TABLE `collection` (
 ) ENGINE=InnoDB;
 
 /* =========================================================
-   9) 하루 쿠키 사용 한도 (Daily Cookie Usage)
+   9) 하루 쿠키 사용 한도
    ========================================================= */
 CREATE TABLE `cookie_daily_usage` (
                                       `cookie_daily_usage_id` BIGINT      NOT NULL AUTO_INCREMENT,
@@ -249,30 +249,28 @@ CREATE TABLE `cookie_daily_usage` (
 ) ENGINE=InnoDB;
 
 /* =========================================================
-   10) 선물 테이블
+   10) 선물
    ========================================================= */
+CREATE TABLE `gifts` (
+                         `gift_id`     BIGINT      NOT NULL AUTO_INCREMENT,
+                         `sender_id`   BIGINT      NOT NULL,
+                         `receiver_id` BIGINT      NOT NULL,
+                         `cookie_id`   BIGINT      NOT NULL,
+                         `message`     VARCHAR(255) NULL,
+                         `status`      VARCHAR(50) NOT NULL COMMENT 'ENUM(`PENDING`, `SENT`, `RECEIVED`, `CANCELLED`)',
+                         `sent_at`     DATETIME    NOT NULL,
+                         `received_at` DATETIME    NULL,
 
-CREATE TABLE gifts
-(
-    gift_id     BIGINT AUTO_INCREMENT NOT NULL,
-    sender_id   BIGINT                NOT NULL,
-    receiver_id BIGINT                NOT NULL,
-    cookie_id   BIGINT                NOT NULL,
-    message     VARCHAR(255)          NULL,
-    status      VARCHAR(255)          NOT NULL,
-    sent_at     datetime              NOT NULL,
-    received_at datetime              NULL,
-    CONSTRAINT pk_gifts PRIMARY KEY (gift_id)
-);
-
-ALTER TABLE gifts
-    ADD CONSTRAINT uc_gifts_cookie UNIQUE (cookie_id);
-
-ALTER TABLE gifts
-    ADD CONSTRAINT FK_GIFTS_ON_COOKIE FOREIGN KEY (cookie_id) REFERENCES fortune_cookie (fortune_cookie_id);
-
-ALTER TABLE gifts
-    ADD CONSTRAINT FK_GIFTS_ON_RECEIVER FOREIGN KEY (receiver_id) REFERENCES member (member_id);
-
-ALTER TABLE gifts
-    ADD CONSTRAINT FK_GIFTS_ON_SENDER FOREIGN KEY (sender_id) REFERENCES member (member_id);
+                         PRIMARY KEY (`gift_id`),
+                         KEY `IDX_gifts_sender`   (`sender_id`),
+                         KEY `IDX_gifts_receiver` (`receiver_id`),
+                         CONSTRAINT `FK_gifts_cookie`
+                             FOREIGN KEY (`cookie_id`) REFERENCES `fortune_cookie`(`fortune_cookie_id`)
+                                 ON DELETE CASCADE ON UPDATE CASCADE,
+                         CONSTRAINT `FK_gifts_receiver`
+                             FOREIGN KEY (`receiver_id`) REFERENCES `member`(`member_id`)
+                                 ON DELETE CASCADE ON UPDATE CASCADE,
+                         CONSTRAINT `FK_gifts_sender`
+                             FOREIGN KEY (`sender_id`) REFERENCES `member`(`member_id`)
+                                 ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB;

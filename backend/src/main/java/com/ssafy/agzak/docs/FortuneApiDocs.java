@@ -23,6 +23,62 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface FortuneApiDocs {
 
     @Operation(
+            summary = "특정 회원 오늘 운세 조회",
+            description = "memberId의 '오늘(Asia/Seoul)' 운세를 반환합니다. 이미 계산·저장된 운세를 조회만 하며, 없을 경우 404를 반환합니다.",
+            parameters = @Parameter(name = "memberId", in = ParameterIn.PATH, required = true, example = "123"),
+            security = @SecurityRequirement(name = "BearerAuth")
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "성공",
+                    content = @Content(schema = @Schema(implementation = FinalFortuneResponse.class),
+                            examples = @ExampleObject(
+                                    name = "조회 성공(이미 저장된 운세)",
+                                    value = """
+                                    {
+                                      "scores": {
+                                        "total_score": 689,
+                                        "love": 172,
+                                        "health": 134,
+                                        "money": 184,
+                                        "achievement": 199,
+                                        "total_summary": "오늘은 긍정적인 어스펙트들이 주로 작용하여 다양한 영역에서 좋은 결과를 기대할 수 있는 날입니다.",
+                                        "detailed_summaries": {
+                                          "love": "연애운은 조화롭고 진정성이 더해집니다.",
+                                          "health": "과로를 피하고 페이스 조절이 필요합니다.",
+                                          "money": "재정적으로 행운이 따르니 지출 계획을 점검하세요.",
+                                          "achievement": "집중력이 높아 목표 달성에 유리합니다."
+                                        }
+                                      },
+                                      "type": {
+                                        "id": 9,
+                                        "name": "닭",
+                                        "goodWithId": 12,
+                                        "badWithId": 1
+                                      }
+                                    }
+                                    """
+                            ))),
+            @ApiResponse(responseCode = "404", description = "해당 멤버/해당 날짜의 운세 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class),
+                            examples = @ExampleObject(
+                                    name = "운세 미생성",
+                                    value = """
+                                    {
+                                      "status": 404,
+                                      "code": "NOT_FOUND",
+                                      "message": "해당 멤버의 해당 날짜의 운세가 존재하지 않습니다. memberId=123, date=2025-11-14",
+                                      "path": "/api/v1/fortune/members/123/today"
+                                    }
+                                    """
+                            ))),
+            @ApiResponse(responseCode = "401", description = "인증 필요",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "403", description = "접근 권한 없음",
+                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    ResponseEntity<FinalFortuneResponse> getMemberTodayFortune(@PathVariable long memberId);
+
+    @Operation(
             summary = "회원 오늘의 운세 생성/조회",
             description = "인증된 회원의 오늘 운세를 계산해 저장 후 반환합니다.",
             security = @SecurityRequirement(name = "BearerAuth")
@@ -30,9 +86,9 @@ public interface FortuneApiDocs {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "성공",
                     content = @Content(schema = @Schema(implementation = FinalFortuneResponse.class),
-                    examples = @ExampleObject(
-                            name = "운세 생성",
-                            value = """
+                            examples = @ExampleObject(
+                                    name = "운세 생성",
+                                    value = """
                                     {
                                         "scores": {
                                             "total_score": 689,
@@ -56,7 +112,7 @@ public interface FortuneApiDocs {
                                         }
                                     }
                                     """
-                    ))),
+                            ))),
             @ApiResponse(responseCode = "401", description = "인증 필요",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
@@ -69,9 +125,9 @@ public interface FortuneApiDocs {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "성공",
                     content = @Content(schema = @Schema(implementation = GuestFortuneWithIdResponse.class),
-                    examples = @ExampleObject(
-                            name = "게스트 조회 시 결과",
-                            value = """
+                            examples = @ExampleObject(
+                                    name = "게스트 조회 시 결과",
+                                    value = """
                             {
                                 "fortune": {
                                     "scores": {
@@ -98,7 +154,7 @@ public interface FortuneApiDocs {
                                 "guestId": "9c5c925e-4bae-4a3c-a2d4-8e8872eddcc3"
                             }
                             """
-                    ))),
+                            ))),
             @ApiResponse(responseCode = "400", description = "도시 입력 오류/좌표 변환 실패",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
@@ -112,9 +168,9 @@ public interface FortuneApiDocs {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "성공",
                     content = @Content(schema = @Schema(implementation = FortuneTypeResponse.class),
-                    examples = @ExampleObject(
-                            name = "12가지 중 특정 운세 타입 상세 조회",
-                            value = """
+                            examples = @ExampleObject(
+                                    name = "12가지 중 특정 운세 타입 상세 조회",
+                                    value = """
                             {
                                 "id": 1,
                                 "name": "소",
@@ -122,7 +178,7 @@ public interface FortuneApiDocs {
                                 "badWithId": 9
                             }
                             """
-                    ))),
+                            ))),
             @ApiResponse(responseCode = "404", description = "해당 운세 타입 없음",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
