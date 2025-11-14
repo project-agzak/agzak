@@ -73,7 +73,7 @@ public class CookieService {
     }
 
     public List<CookieResponse> getFortuneCookie(Long memberId, String sortType) {
-        List<FortuneCookie> cookies = fortuneCookieRepository.findAllByMember(memberId);
+        List<FortuneCookie> cookies = fortuneCookieRepository.findAllAvailableWithKindByMember(memberId);
         return switch (sortType.toLowerCase()) {
             case "score" -> cookies.stream()
                     .sorted(Comparator.comparingInt(FortuneCookie::getTotalScore).reversed())

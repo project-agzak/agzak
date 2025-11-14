@@ -285,35 +285,33 @@ public class CookieGameService {
             int fLove = after[0], fMoney = after[1], fAch = after[2], fHealth = after[3];
             int total = fLove + fMoney + fAch + fHealth;
 
-            // 규칙으로 code 결정
-            String code = resolveCookieCode(fLove, fMoney, fAch, fHealth, total);
-            CookieKind kind = cookieKindRepository.getActiveByCodeOrThrow(code);
+            // 1) 규칙으로 code 결정
+            String kindCode = decideCookieKindCode(fLove, fMoney, fAch, fHealth, total);
 
-            var saved = fortuneCookieRepository.save(FortuneCookie.builder()
+            // 2) 종류 로드
+            CookieKind ck = cookieKindRepository.findActiveByCodeWithRarity(kindCode)
+                    .orElseThrow(() -> new IllegalStateException("쿠키 종류 시드 누락/비활성: " + kindCode)); // ★
+
+            // 3) 저장
+            var cookieEntity = FortuneCookie.builder()
                     .inventory(inventory)
                     .gameSession(session)
-                    .cookieKind(kind)
+                    .cookieKind(ck)
                     .love(fLove).money(fMoney).achievement(fAch).health(fHealth)
-                    .status(FortuneCookie.CookieStatus.AVAILABLE)
-                    .createdAt(date.todayTime())
-                    .build());
+                    .build();
+            var saved = fortuneCookieRepository.save(cookieEntity);
 
-            collectionService.onCookieCreated(
-                    member.getMemberId(),
-                    kind.getCookieKindId(),
-                    date.todayTime()
-            );
-
+            // 5) 응답 DTO
             cookieResult = CookieCreatedResponse.builder()
                     .fortuneCookieId(saved.getFortuneCookieId())
                     .inventoryId(inventory.getInventoryId())
                     .gameSessionId(session.getGameSessionId())
-                    .cookieKindId(kind.getCookieKindId())
-                    .code(kind.getCode())
-                    .name(kind.getName())
-                    .rarityCode(kind.getRarity().getCode())
-                    .recipe(kind.getRecipe())
-                    .message(kind.getMessage())
+                    .cookieKindId(ck.getCookieKindId())
+                    .code(ck.getCode())
+                    .name(ck.getName())
+                    .rarityCode(ck.getRarity().getCode())
+                    .recipe(ck.getRecipe())
+                    .message(ck.getMessage())
                     .love(fLove).money(fMoney).achievement(fAch).health(fHealth)
                     .total(total)
                     .build();
@@ -340,7 +338,7 @@ public class CookieGameService {
                 .build();
     }
 
-    private static String resolveCookieCode(int love, int money, int ach, int health, int total) {
+    private static String decideCookieKindCode(int love, int money, int ach, int health, int total) {
         // ---- UNIQUE ----
         if (love <= -20 && money <= -20 && ach <= -20 && health <= -20) return "LAVA";
         if (love >= 12 && health >= 25) return "SANTA";
