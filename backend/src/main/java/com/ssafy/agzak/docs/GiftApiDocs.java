@@ -16,7 +16,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 
-@Tag(name = "쿠키 선물", description = "쿠키 선물 관련 API 문서")
+@Tag(name = "쿠키 선물", description = "쿠키 선물 관련 API")
 public interface GiftApiDocs {
 
     @Operation(

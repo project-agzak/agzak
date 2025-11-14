@@ -20,7 +20,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 
-@Tag(name = "인증", description = "회원가입 / 로그인 / 로그아웃")
+@Tag(name = "인증", description = "회원가입 / 로그인 / 로그아웃 API")
 public interface AuthApiDocs {
     @Operation(
             summary = "카카오 로그인 (Authorization Code)",

@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 
-@Tag(name = "알림", description = "알림 관련 API 문서입니다.")
+@Tag(name = "알림", description = "알림 관련 API")
 public interface NotificationApiDocs {
 
     @Operation(
