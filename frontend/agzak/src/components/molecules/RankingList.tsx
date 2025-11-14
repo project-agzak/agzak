@@ -4,6 +4,7 @@ import Rank2 from "@/assets/ui/Rank2.svg";
 import Rank3 from "@/assets/ui/Rank3.svg";
 import { RankingAPI, type TodayRankingRes } from "@/lib/rankingAPI";
 import { useEffect, useMemo, useState } from "react";
+import { UserFortuneModal } from "../atoms/UserFortuneModal";
 
 type Category = "total" | "original" | "increase";
 
@@ -59,6 +60,7 @@ export default function RankingList() {
   const [data, setData] = useState<TodayRankingRes | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeNickname, setActiveNickname] = useState<string | null>(null);
 
   // 오늘 랭킹 3종 한 번에 가져오기
   useEffect(() => {
@@ -200,8 +202,14 @@ export default function RankingList() {
                 {/* 왼쪽: 메달/순위/닉네임/점수 */}
                 <div className="flex items-center">
                   <RankMedal rank={item.rank} />
-                  <div>
-                    <p className="font-bitbit-small">{item.name}</p>
+                  <div className="flex flex-col items-start">
+                    <button
+                      type="button"
+                      className="font-bitbit-small hover:underline cursor-pointer underline decoration-dotted decoration-dotted underline-offset-2"
+                      onClick={() => setActiveNickname(item.name)}
+                    >
+                      {item.name}
+                    </button>
                     <ScoreBadge score={item.score} label={item.scoreLabel} />
                   </div>
                 </div>
@@ -212,6 +220,14 @@ export default function RankingList() {
             </div>
           ))}
         </div>
+      )}
+
+      {/* 닉네임 클릭 시 모달 */}
+      {activeNickname && (
+        <UserFortuneModal
+          nickname={activeNickname}
+          onClose={() => setActiveNickname(null)}
+        />
       )}
     </div>
   );

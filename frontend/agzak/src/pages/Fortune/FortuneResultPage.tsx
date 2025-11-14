@@ -221,7 +221,7 @@ useEffect(() => {
             </div>
 
             {bestieDescription && (
-              <p className="mt-3 px-6 text-center text-[12px] leading-relaxed text-[#3A3A3A] font-galmuri-xsmall max-w-[240px]">
+              <p className="mt-3 px-6 text-center text-[12px] leading-relaxed text-[#121212] font-galmuri-xsmall max-w-[240px]">
                 {bestieDescription}
               </p>
             )}
@@ -240,7 +240,7 @@ useEffect(() => {
             </div>
 
             {enemyDescription && (
-              <p className="mt-3 px-6 text-center text-[12px] leading-relaxed text-[#3A3A3A] font-galmuri-xsmall max-w-[240px]">
+              <p className="mt-3 px-6 text-center leading-relaxed text-[#121212] font-galmuri-xsmall max-w-[240px]">
                 {enemyDescription}
               </p>
             )}
