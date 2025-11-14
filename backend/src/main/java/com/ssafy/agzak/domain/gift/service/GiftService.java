@@ -51,6 +51,8 @@ public class GiftService {
         publisher.publishEvent(
                 CreateGiftEvent.builder()
                         .giftId(gift.getId())
+                        .senderId(sender.getMemberId())
+                        .receiverId(receiver.getMemberId())
                         .build()
         );
     }
