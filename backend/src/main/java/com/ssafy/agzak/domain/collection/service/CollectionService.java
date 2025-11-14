@@ -21,25 +21,23 @@ public class CollectionService {
     private final MemberRepository memberRepository;
     private final AuthMemberProvider authMemberProvider;
 
-    /** 회원가입시 도감 생성 */
+    /** 회원가입/소셜로그인 완료 직후 도감 기본행 생성(0 카운트, 전종류) */
     @Transactional
     public void ensureDefaults(Member member) {
         collectionRepository.initDefaultsForMember(member.getMemberId());
     }
 
-    /** 쿠키 도감 등록 */
+    /** 쿠키 생성 이벤트 → 해당 종류 도감 카운트 증가 */
     @Transactional
-    public void onCookieCreated(Long memberId, String type, String firstDescription, java.time.LocalDateTime obtainedAt) {
-        collectionRepository.upsertOnCookieCreated(memberId, type, firstDescription, obtainedAt);
+    public void onCookieCreated(Long memberId, Long cookieKindId, java.time.LocalDateTime obtainedAt) {
+        collectionRepository.upsertOnCookieCreated(memberId, cookieKindId, obtainedAt);
     }
 
-    /** 내 쿠키도감 */
     public List<CollectionItemResponse> getMyCollection() {
         long memberId = authMemberProvider.currentMemberId();
         return collectionRepository.findAllByMemberId(memberId);
     }
 
-    /** 멤버 아이디로 조회 */
     public List<CollectionItemResponse> getCollectionByMemberId(Long memberId) {
         if (!memberRepository.existsByMemberIdAndStatus(memberId, Member.MemberStatus.ACTIVE)) {
             throw new MemberNotFoundException(memberId);
@@ -47,9 +45,8 @@ public class CollectionService {
         return collectionRepository.findAllByMemberId(memberId);
     }
 
-    /** 멤버 닉네임으로 조회 */
     public List<CollectionItemResponse> getCollectionByNickname(String nickname) {
-        Member m = memberRepository.findByNicknameAndStatus(nickname, Member.MemberStatus.ACTIVE)
+        var m = memberRepository.findByNicknameAndStatus(nickname, Member.MemberStatus.ACTIVE)
                 .orElseThrow(() -> new MemberNotFoundException(0L));
         return collectionRepository.findAllByMemberId(m.getMemberId());
     }

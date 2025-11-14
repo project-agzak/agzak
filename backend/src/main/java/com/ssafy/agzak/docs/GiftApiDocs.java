@@ -11,14 +11,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@Tag(name = "쿠키 선물 API", description = "쿠키 선물 관련 API 문서")
+@Tag(name = "쿠키 선물", description = "쿠키 선물 관련 API 문서")
 public interface GiftApiDocs {
     @Operation(summary = "쿠키 선물 보내기", description = "쿠키를 다른 회원에게 선물로 보냅니다.")
-    public ResponseEntity<Void> sendGift(@RequestBody @Valid SendGiftRequest request);
+    ResponseEntity<Void> sendGift(@RequestBody @Valid SendGiftRequest request);
     @Operation(summary = "쿠키 선물 받기", description = "선물로 받은 쿠키를 수락하여 내 쿠키로 추가합니다.")
-    public ResponseEntity<Void> receiveGift(@PathVariable @Valid Long giftId);
+    ResponseEntity<Void> receiveGift(@PathVariable @Valid Long giftId);
     @Operation(summary = "쿠키 선물 정보 조회", description = "특정 쿠키 선물의 상세 정보를 조회합니다.")
-    public ResponseEntity<GiftResponse> getGiftInfo(@PathVariable @Valid Long giftId);
+    ResponseEntity<GiftResponse> getGiftInfo(@PathVariable @Valid Long giftId);
     @Operation(summary = "쿠키 선물 거절하기", description = "선물로 받은 쿠키를 거절합니다. 거절한 쿠키는 삭제됩니다.")
-    public ResponseEntity<Void> rejectGift(@PathVariable @Valid Long giftId);
+    ResponseEntity<Void> rejectGift(@PathVariable @Valid Long giftId);
 }

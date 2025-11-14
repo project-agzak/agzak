@@ -270,3 +270,26 @@ FROM fortune_cookie fc
          JOIN cookie_kind ck ON ck.cookie_kind_id = fc.cookie_kind_id
 GROUP BY ck.code
 ORDER BY cnt DESC;
+
+
+ALTER TABLE collection
+    ADD UNIQUE KEY UQ_collection_member_kind (member_id, cookie_kind_id);
+
+/* 2) 모든 활성 회원 × 활성 쿠키종류 조합 생성 (없는 것만 삽입) */
+INSERT INTO collection(member_id, cookie_kind_id, `count`, obtained_at)
+SELECT m.member_id, ck.cookie_kind_id, 0, NULL
+FROM member m
+         JOIN cookie_kind ck ON ck.is_active = 1
+         LEFT JOIN collection c
+                   ON c.member_id = m.member_id AND c.cookie_kind_id = ck.cookie_kind_id
+WHERE m.status = 'ACTIVE'
+  AND c.collection_id IS NULL;
+
+/* 3) 검증 */
+SELECT COUNT(*) AS missing_after
+FROM member m
+         JOIN cookie_kind ck ON ck.is_active = 1
+         LEFT JOIN collection c
+                   ON c.member_id = m.member_id AND c.cookie_kind_id = ck.cookie_kind_id
+WHERE m.status = 'ACTIVE'
+  AND c.collection_id IS NULL;
