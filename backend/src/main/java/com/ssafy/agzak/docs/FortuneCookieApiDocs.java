@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -25,7 +26,21 @@ public interface FortuneCookieApiDocs {
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공",
-                    content = @Content(schema = @Schema(implementation = CookieResponse.class))),
+                    content = @Content(schema = @Schema(implementation = CookieResponse.class),
+                            examples = @ExampleObject("""
+                                {
+                                  "fortuneCookieId": 101,
+                                  "cookieKindId": 6,
+                                  "code": "MONEY",
+                                  "name": "금전 쿠키",
+                                  "rarityCode": "RARE",
+                                  "love": 3,
+                                  "money": 12,
+                                  "achievement": 2,
+                                  "health": 4,
+                                  "createdAt": "2025-11-14T12:34:56"
+                                }
+                                """))),
             @ApiResponse(responseCode = "404", description = "존재하지 않는 쿠키",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
@@ -54,18 +69,40 @@ public interface FortuneCookieApiDocs {
     @Operation(
             summary = "보유 쿠키 목록 조회",
             description = """
-                사용자가 보유한 쿠키(사용 가능 상태만)를 조회합니다.<br/><br/>
+                사용자가 보유한 쿠키를 조회합니다.<br/><br/>
                 <b>정렬 기준(sortType)</b><br/>
                 • <code>recent</code> : 생성 최신순 (기본값)<br/>
                 • <code>score</code> : 쿠키 총점 높은 순<br/>
-                • <code>category</code> : 쿠키 타입명(카테고리) 가나다순
+                • <code>kind</code>  : <code>cookie code</code> 오름차순
                 """
     )
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "조회 성공",
                     content = @Content(
                             mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = CookieResponse.class))
+                            array = @ArraySchema(schema = @Schema(implementation = CookieResponse.class)),
+                            examples = @ExampleObject("""
+                                [
+                                  {
+                                    "fortuneCookieId": 101,
+                                    "cookieKindId": 6,
+                                    "code": "MONEY",
+                                    "name": "금전 쿠키",
+                                    "rarityCode": "RARE",
+                                    "love": 3, "money": 12, "achievement": 2, "health": 4,
+                                    "createdAt": "2025-11-14T12:34:56"
+                                  },
+                                  {
+                                    "fortuneCookieId": 102,
+                                    "cookieKindId": 5,
+                                    "code": "MIXED",
+                                    "name": "믹스 쿠키",
+                                    "rarityCode": "EPIC",
+                                    "love": 7, "money": 8, "achievement": 9, "health": 10,
+                                    "createdAt": "2025-11-14T12:40:00"
+                                  }
+                                ]
+                                """)
                     )),
             @ApiResponse(responseCode = "401", description = "인증 실패",
                     content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
@@ -74,7 +111,7 @@ public interface FortuneCookieApiDocs {
             @Parameter(
                     description = "정렬 기준",
                     example = "recent",
-                    schema = @Schema(allowableValues = {"recent", "score", "category"}, defaultValue = "recent")
+                    schema = @Schema(allowableValues = {"recent", "score", "kind"}, defaultValue = "recent")
             )
             @RequestParam(defaultValue = "recent") String sortType
     );

@@ -8,5 +8,10 @@ import java.util.Optional;
 
 @Repository
 public interface CookieKindRepository extends JpaRepository<CookieKind, Long> {
-    Optional<CookieKind> findByCode(String code); // ex) "MONEY", "LAVA" ...
+    Optional<CookieKind> findByCodeAndActiveTrue(String code);
+
+    default CookieKind getActiveByCodeOrThrow(String code) {
+        return findByCodeAndActiveTrue(code)
+                .orElseThrow(() -> new IllegalStateException("활성 CookieKind 없음: code=" + code));
+    }
 }

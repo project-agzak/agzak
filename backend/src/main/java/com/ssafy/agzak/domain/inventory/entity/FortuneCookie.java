@@ -1,5 +1,6 @@
 package com.ssafy.agzak.domain.inventory.entity;
 
+import com.ssafy.agzak.domain.cookie.entity.CookieKind;
 import com.ssafy.agzak.domain.game.entity.GameSession;
 import jakarta.persistence.*;
 import lombok.*;
@@ -32,14 +33,15 @@ public class FortuneCookie {
             foreignKey = @ForeignKey(name = "FK_cookie_inventory"))
     private Inventory inventory;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "cookie_kind_id",
+            foreignKey = @ForeignKey(name = "FK_cookie_kind"))
+    private CookieKind cookieKind;
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "game_session_id", unique = true,
             foreignKey = @ForeignKey(name = "FK_cookie_session"))
     private GameSession gameSession;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "type", length = 50)
-    private CookieType type;
 
     @Column(name = "love", nullable = false)
     private Integer love;
@@ -69,8 +71,6 @@ public class FortuneCookie {
     public void changeInventory(Inventory inventory) {
         this.inventory = inventory;
     }
-
-    public enum CookieType { MONEY, LOVE, ACHIEVEMENT, HEALTH, MIXED, ROTTEN }
 
     public enum CookieStatus { AVAILABLE, USED, PENDING_GIFT, DELETED }
 

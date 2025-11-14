@@ -87,7 +87,7 @@ ALTER TABLE fortune_cookie
 /* ===============================================
    agzak MySQL DB update query 2.0.3 / 25.11.14
    =============================================== */
-CREATE TABLE IF NOT EXISTS `gifts` (
+CREATE TABLE IF NOT EXISTS `gift` (
                          `gift_id`     BIGINT      NOT NULL AUTO_INCREMENT,
                          `sender_id`   BIGINT      NOT NULL,
                          `receiver_id` BIGINT      NOT NULL,
@@ -236,7 +236,7 @@ ALTER TABLE collection
     DROP COLUMN type;
 
 
-/* 4) notification 테이블 (없으면 생성) */
+/* 4) notifications 테이블 (없으면 생성) */
 CREATE TABLE IF NOT EXISTS notification (
                                             notification_id BIGINT      NOT NULL AUTO_INCREMENT,
                                             member_id       BIGINT      NOT NULL,

@@ -33,7 +33,7 @@ public class CookieService {
     public CookieResponse getCookieInfo(Long cookieId) {
         FortuneCookie cookie = fortuneCookieRepository.findById(cookieId)
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 쿠키 아이디입니다."));
-
+        // FK 기반으로 DTO 구성
         return CookieResponse.fromEntity(cookie);
     }
 
@@ -43,7 +43,6 @@ public class CookieService {
                 .orElseThrow(() -> new NoFortuneFoundException("오늘 운세가 존재하지 않습니다.", memberId, date.today()));
         List<FortuneAspect> fortuneAspects = fortuneAspectRepository.findAllByFortune(fortune);
 
-        // 1) 쿠키 행 잠금
         FortuneCookie cookie = fortuneCookieRepository.findByIdForUpdate(cookieId)
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 쿠키 아이디입니다."));
 
@@ -51,22 +50,20 @@ public class CookieService {
         if (!ownerId.equals(memberId)) {
             throw new IllegalArgumentException("본인 소유의 쿠키만 사용할 수 있습니다.");
         }
-
         if (cookie.getStatus() != FortuneCookie.CookieStatus.AVAILABLE) {
             throw new IllegalArgumentException("사용할 수 없는 상태의 쿠키입니다.");
         }
 
-        // 2) 하루 10개 카운트
         dailyCookieUseService.increaseOrThrow(memberId);
 
         final int CAP = 250;
         int appliedSum = 0;
         for (FortuneAspect aspect : fortuneAspects) {
             switch (aspect.getName()) {
-                case MONEY -> appliedSum += aspect.increaseWithUpperCap(cookie.getMoney(), CAP);
-                case LOVE -> appliedSum += aspect.increaseWithUpperCap(cookie.getLove(), CAP);
+                case MONEY       -> appliedSum += aspect.increaseWithUpperCap(cookie.getMoney(), CAP);
+                case LOVE        -> appliedSum += aspect.increaseWithUpperCap(cookie.getLove(), CAP);
                 case ACHIEVEMENT -> appliedSum += aspect.increaseWithUpperCap(cookie.getAchievement(), CAP);
-                case HEALTH -> appliedSum += aspect.increaseWithUpperCap(cookie.getHealth(), CAP);
+                case HEALTH      -> appliedSum += aspect.increaseWithUpperCap(cookie.getHealth(), CAP);
             }
         }
 
@@ -83,8 +80,12 @@ public class CookieService {
                     .map(CookieResponse::fromEntity)
                     .toList();
 
-            case "category" -> cookies.stream()
-                    .sorted(Comparator.comparing(fortuneCookie -> fortuneCookie.getType().name(), Comparator.nullsLast(String::compareToIgnoreCase)))
+            case "kind" -> cookies.stream()
+                    .sorted(Comparator
+                            .comparing((FortuneCookie fc) ->
+                                    fc.getCookieKind() != null && fc.getCookieKind().getRarity() != null
+                                            ? fc.getCookieKind().getRarity().getSortOrder() : Integer.MAX_VALUE)
+                            .thenComparing(fc -> fc.getCookieKind() != null ? fc.getCookieKind().getCode() : ""))
                     .map(CookieResponse::fromEntity)
                     .toList();
 
@@ -99,15 +100,10 @@ public class CookieService {
     public void deleteCookie(Long memberId, Long cookieId) {
         FortuneCookie cookie = fortuneCookieRepository.findById(cookieId)
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 쿠키 아이디입니다."));
-
         Long ownerId = cookie.getInventory().getMember().getMemberId();
-        if (!ownerId.equals(memberId)) {
-            throw new IllegalArgumentException("본인 소유의 쿠키만 삭제할 수 있습니다.");
-        }
-
-        if (cookie.getStatus() != FortuneCookie.CookieStatus.AVAILABLE) {
+        if (!ownerId.equals(memberId)) throw new IllegalArgumentException("본인 소유의 쿠키만 삭제할 수 있습니다.");
+        if (cookie.getStatus() != FortuneCookie.CookieStatus.AVAILABLE)
             throw new IllegalStateException("해당 상태의 쿠키는 삭제할 수 없습니다.");
-        }
 
         cookie.markDeleted();
     }

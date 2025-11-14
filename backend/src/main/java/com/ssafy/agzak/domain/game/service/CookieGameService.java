@@ -1,6 +1,8 @@
 package com.ssafy.agzak.domain.game.service;
 
 import com.ssafy.agzak.domain.collection.service.CollectionService;
+import com.ssafy.agzak.domain.cookie.entity.CookieKind;
+import com.ssafy.agzak.domain.cookie.repository.CookieKindRepository;
 import com.ssafy.agzak.domain.game.dto.request.AttemptRequest;
 import com.ssafy.agzak.domain.game.dto.response.AttemptResponse;
 import com.ssafy.agzak.domain.game.dto.response.CookieCreatedResponse;
@@ -38,6 +40,7 @@ public class CookieGameService {
 
     private final GameSessionRepository gameSessionRepository;
     private final GameAttemptRepository gameAttemptRepository;
+    private final CookieKindRepository cookieKindRepository;
     private final MemberRepository memberRepository;
     private final InventoryRepository inventoryRepository;
     private final FortuneCookieRepository fortuneCookieRepository;
@@ -266,14 +269,12 @@ public class CookieGameService {
 
         // 10회차 완료 → 포춘쿠키 생성
         if (completed) {
-
             long avail = lockInventoryAndCountAvailable(member);
             if (avail >= INVENTORY_LIMIT) {
                 int needDelete = (int) (avail - (INVENTORY_LIMIT - 1));
                 deleteOldestAvailable(member, needDelete);
             }
 
-            // 1) 재분배 → 2) 타입 판정 → 3) 인벤토리 조회/생성(잠금 유지됨) → 4) 저장
             Inventory inventory = inventoryRepository.findWithPessimisticWriteByMember(member)
                     .orElseGet(() -> inventoryRepository.save(Inventory.builder().member(member).build()));
 
@@ -284,47 +285,37 @@ public class CookieGameService {
             int fLove = after[0], fMoney = after[1], fAch = after[2], fHealth = after[3];
             int total = fLove + fMoney + fAch + fHealth;
 
-            CookieCreatedResponse.CookieTypeDto typeDto = decideType(fLove, fMoney, fAch, fHealth, total);
+            // 규칙으로 code 결정
+            String code = resolveCookieCode(fLove, fMoney, fAch, fHealth, total);
+            CookieKind kind = cookieKindRepository.getActiveByCodeOrThrow(code);
 
-            var cookieEntity = FortuneCookie.builder()
+            var saved = fortuneCookieRepository.save(FortuneCookie.builder()
                     .inventory(inventory)
                     .gameSession(session)
-                    .type(mapCookieType(typeDto))
-                    .love(fLove)
-                    .money(fMoney)
-                    .achievement(fAch)
-                    .health(fHealth)
-                    .build();
-            var saved = fortuneCookieRepository.save(cookieEntity);
-
-            String firstDesc = switch (typeDto) {
-                case ROTTEN -> "행운 10점 이하..";
-                case MIXED -> "행운 항목 3개 이상 동일 + 총점 30점 이상";
-                case LOVE -> "애정운이 가장 높은 쿠키";
-                case MONEY -> "금전운이 가장 높은 쿠키";
-                case ACHIEVEMENT -> "성취운이 가장 높은 쿠키";
-                case HEALTH -> "건강운이 가장 높은 쿠키";
-            };
+                    .cookieKind(kind)
+                    .love(fLove).money(fMoney).achievement(fAch).health(fHealth)
+                    .status(FortuneCookie.CookieStatus.AVAILABLE)
+                    .createdAt(date.todayTime())
+                    .build());
 
             collectionService.onCookieCreated(
                     member.getMemberId(),
-                    typeDto.name(),
-                    firstDesc,
+                    kind.getCookieKindId(),
                     date.todayTime()
             );
 
-            // 5) 응답 DTO
             cookieResult = CookieCreatedResponse.builder()
                     .fortuneCookieId(saved.getFortuneCookieId())
                     .inventoryId(inventory.getInventoryId())
                     .gameSessionId(session.getGameSessionId())
-                    .type(typeDto)
-                    .love(fLove)
-                    .money(fMoney)
-                    .achievement(fAch)
-                    .health(fHealth)
+                    .cookieKindId(kind.getCookieKindId())
+                    .code(kind.getCode())
+                    .name(kind.getName())
+                    .rarityCode(kind.getRarity().getCode())
+                    .recipe(kind.getRecipe())
+                    .message(kind.getMessage())
+                    .love(fLove).money(fMoney).achievement(fAch).health(fHealth)
                     .total(total)
-                    .message(typeMessage(typeDto))
                     .build();
         }
 
@@ -349,7 +340,34 @@ public class CookieGameService {
                 .build();
     }
 
-    /** 인벤토리를 잠그고(비관적 락) 현재 AVAILABLE 개수를 반환 */
+    private static String resolveCookieCode(int love, int money, int ach, int health, int total) {
+        // ---- UNIQUE ----
+        if (love <= -20 && money <= -20 && ach <= -20 && health <= -20) return "LAVA";
+        if (love >= 12 && health >= 25) return "SANTA";
+        if (love >= 22 && money >= 22 && ach >= 22 && health >= 22) return "UNICORN";
+
+        // ---- EPIC ----
+        if (love <= -10 && money <= -10 && ach <= -10 && health <= -10) return "GLOOMY";
+        if (love >= 11 && (money >= 11 || ach >= 11 || health >= 11)) return "PPEPPERO";
+        if (money >= 20 && health >= 20) return "SANSAM";
+        if (money >= 10 && health <= -10) return "DEVELOPER";
+        if (love >= 10 && money >= 10 && ach >= 10 && health >= 10) return "MIXED";
+
+        // ---- RARE ----
+        // 조건: 최대값 ≥ +5 && 총점 ≥ +10, 아니면 전부 ROTTEN
+        if (total <= 10) return "ROTTEN";
+        int max = Math.max(Math.max(love, money), Math.max(ach, health));
+        if (max < 5) return "ROTTEN";
+
+        // 동률 우선순위: 금전 > 애정 > 성취 > 건강
+        if (money == max) return "MONEY";
+        if (love  == max) return "LOVE";
+        if (ach   == max) return "ACHIEVEMENT";
+        return "HEALTH";
+    }
+
+
+        /** 인벤토리를 잠그고(비관적 락) 현재 AVAILABLE 개수를 반환 */
     private long lockInventoryAndCountAvailable(Member member) {
         var inv = inventoryRepository.findWithPessimisticWriteByMember(member)
                 .orElseGet(() -> inventoryRepository.save(Inventory.builder().member(member).build()));
@@ -413,45 +431,6 @@ public class CookieGameService {
                 money  + s * p2,
                 ach    + s * p3,
                 health + s * p4
-        };
-    }
-
-    private static CookieCreatedResponse.CookieTypeDto decideType(int love, int money, int ach, int health, int total) {
-        if (total <= 10) return CookieCreatedResponse.CookieTypeDto.ROTTEN;
-
-        int max = Math.max(Math.max(love, money), Math.max(ach, health));
-        int tie = 0;
-        if (love == max) tie++;
-        if (money == max) tie++;
-        if (ach == max) tie++;
-        if (health == max) tie++;
-
-        if (tie >= 2) return CookieCreatedResponse.CookieTypeDto.MIXED;
-        if (love == max) return CookieCreatedResponse.CookieTypeDto.LOVE;
-        if (money == max) return CookieCreatedResponse.CookieTypeDto.MONEY;
-        if (ach == max) return CookieCreatedResponse.CookieTypeDto.ACHIEVEMENT;
-        return CookieCreatedResponse.CookieTypeDto.HEALTH;
-    }
-
-    private static FortuneCookie.CookieType mapCookieType(CookieCreatedResponse.CookieTypeDto dto) {
-        return switch (dto) {
-            case LOVE -> FortuneCookie.CookieType.LOVE;
-            case MONEY -> FortuneCookie.CookieType.MONEY;
-            case ACHIEVEMENT -> FortuneCookie.CookieType.ACHIEVEMENT;
-            case HEALTH -> FortuneCookie.CookieType.HEALTH;
-            case MIXED -> FortuneCookie.CookieType.MIXED;
-            case ROTTEN -> FortuneCookie.CookieType.ROTTEN;
-        };
-    }
-
-    private static String typeMessage(CookieCreatedResponse.CookieTypeDto type) {
-        return switch (type) {
-            case ROTTEN -> "쿠키가 상했어요..";
-            case MIXED -> "성공적으로 '믹스' 쿠키가 구워졌습니다!";
-            case LOVE -> "성공적으로 '애정' 쿠키가 구워졌습니다!";
-            case MONEY -> "성공적으로 '금전' 쿠키가 구워졌습니다!";
-            case ACHIEVEMENT -> "성공적으로 '성취' 쿠키가 구워졌습니다!";
-            case HEALTH -> "성공적으로 '건강' 쿠키가 구워졌습니다!";
         };
     }
 

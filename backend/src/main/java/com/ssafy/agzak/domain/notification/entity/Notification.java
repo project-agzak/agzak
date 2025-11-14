@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 @Entity
-@Table(name = "notifications")
+@Table(name = "notification")
 @NoArgsConstructor
 @Getter
 @EntityListeners(AuditingEntityListener.class)
