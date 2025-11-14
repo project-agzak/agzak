@@ -290,3 +290,21 @@ CREATE TABLE `gifts` (
                              FOREIGN KEY (`sender_id`) REFERENCES `member`(`member_id`)
                                  ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB;
+
+/* =========================================================
+   9) 알림
+   ========================================================= */
+CREATE TABLE `notification` (
+                                `notification_id` BIGINT      NOT NULL AUTO_INCREMENT,
+                                `member_id`       BIGINT      NOT NULL,
+                                `noti_type`       VARCHAR(255) NOT NULL,
+                                `ref_id`          BIGINT      NOT NULL,
+                                `message`         VARCHAR(50) NULL,
+                                `created_at`      DATETIME    NOT NULL,
+                                `read_at`         DATETIME    NULL,
+                                `is_deleted`      TINYINT(1)  NOT NULL,
+                                PRIMARY KEY (`notification_id`),
+                                CONSTRAINT `FK_notification_member`
+                                    FOREIGN KEY (`member_id`) REFERENCES `member`(`member_id`)
+                                        ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB;
