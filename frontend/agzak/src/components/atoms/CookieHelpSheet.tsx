@@ -36,9 +36,9 @@ export default function CookieHelpSheet({ open, onClose, src }: Props) {
           {/* 이미지: 최대 폭/높이 제한으로 항상 온전히 보이게 */}
           <img
             src={img}
-            alt="강화 쿠키 오븐 도움말"
-            className="block w-full h-auto
-              max-w-[min(92vw,340px)] max-h-[70vh] object-contain"
+            alt=""
+            className="block w-full h-[360px]
+              max-w-[min(92vw,300px)] object-fill"
             draggable={false}
           />
         
@@ -50,11 +50,11 @@ export default function CookieHelpSheet({ open, onClose, src }: Props) {
                 <div className="flex justify-center font-bitbit">
                     쿠키 맛있게 먹는 법<br />
                 </div>
-                <div className="font-galmuri-condensed mt-5">
-                    ① 맛있게 구운 쿠키를 클릭해 보세요.<br />
-                    ② 쿠키 선택 후 먹기 버튼을 누르면 총운이 올라가요.<br />
-                    ③ 쿠키는 유통기한이 없어요. <br />
-                    ‼ 친구에게 선물하기가 곧 추가될 예정입니다.
+                <div className="font-galmuri-condensed mt-5 space-y-1.5">
+                    <p>① 맛있게 구운 쿠키를 클릭해 &nbsp;&nbsp;보세요. </p>
+                    <p>② 쿠키 선택 후 먹기 버튼을 <br /> &nbsp;&nbsp;누르면 총운이 올라가요.</p>
+                    <p>③ 쿠키는 유통기한이 없어요. </p>
+                    <p>‼ 친구에게 선물하기가 곧 추가될 예정입니다.</p>
                 </div>
             </div>
 
