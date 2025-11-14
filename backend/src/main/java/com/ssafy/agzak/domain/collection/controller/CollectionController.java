@@ -26,7 +26,7 @@ public class CollectionController implements CollectionApiDocs {
         return ResponseEntity.ok(collectionService.getMyCollection());
     }
 
-    /** 멤버 ID 또는 닉네임으로 도감 조회 (택1, memberId 우선) */
+    /** 멤버 ID 또는 닉네임으로 도감 조회 (memberId 우선) */
     @GetMapping("/members")
     public ResponseEntity<List<CollectionItemResponse>> collectionByMember(
             @RequestParam(required = false) @Min(1) Long memberId,

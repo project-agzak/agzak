@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -21,15 +22,15 @@ public class CollectionService {
     private final MemberRepository memberRepository;
     private final AuthMemberProvider authMemberProvider;
 
-    /** 회원가입/소셜로그인 완료 직후 도감 기본행 생성(0 카운트, 전종류) */
+    /** 회원가입/소셜로그인 직후 기본행 생성: 활성 쿠키만 */
     @Transactional
     public void ensureDefaults(Member member) {
         collectionRepository.initDefaultsForMember(member.getMemberId());
     }
 
-    /** 쿠키 생성 이벤트 → 해당 종류 도감 카운트 증가 */
+    /** 쿠키 생성 이벤트 → 도감 카운트 증가 (활성/비활성 여부는 FK 단계에서 이미 보장) */
     @Transactional
-    public void onCookieCreated(Long memberId, Long cookieKindId, java.time.LocalDateTime obtainedAt) {
+    public void onCookieCreated(Long memberId, Long cookieKindId, LocalDateTime obtainedAt) {
         collectionRepository.upsertOnCookieCreated(memberId, cookieKindId, obtainedAt);
     }
 
