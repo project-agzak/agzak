@@ -14,6 +14,7 @@ type RankItem = {
   score: number;       // 보여줄 점수 (카테고리별 다름)
   scoreLabel: string;  // "총점" | "원점"
   changePct: number;   // 증가율(우측 표시)
+  memberId: number;    // 모달용
 };
 
 function RankMedal({ rank }: { rank: number }) {
@@ -61,6 +62,7 @@ export default function RankingList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeNickname, setActiveNickname] = useState<string | null>(null);
+  const [activeMemberId, setActiveMemberId] = useState<number | null>(null);
 
   // 오늘 랭킹 3종 한 번에 가져오기
   useEffect(() => {
@@ -97,6 +99,7 @@ export default function RankingList() {
         score: it.totalScore,
         scoreLabel: "총점",
         changePct: it.increasePercent,
+        memberId: it.memberId,
       }));
     }
 
@@ -107,6 +110,7 @@ export default function RankingList() {
         score: it.originalTotalScore,
         scoreLabel: "원점",
         changePct: it.increasePercent,
+        memberId: it.memberId,
       }));
     }
 
@@ -118,6 +122,7 @@ export default function RankingList() {
       score: it.totalScore,
       scoreLabel: "총점",
       changePct: it.increasePercent,
+      memberId: it.memberId,
     }));
   }, [active, data]);
 
@@ -206,7 +211,10 @@ export default function RankingList() {
                     <button
                       type="button"
                       className="font-bitbit-small hover:underline cursor-pointer underline decoration-dotted decoration-dotted underline-offset-2"
-                      onClick={() => setActiveNickname(item.name)}
+                      onClick={() => {
+                        setActiveNickname(item.name);
+                        setActiveMemberId(item.memberId);
+                      }}
                     >
                       {item.name}
                     </button>
@@ -226,7 +234,11 @@ export default function RankingList() {
       {activeNickname && (
         <UserFortuneModal
           nickname={activeNickname}
-          onClose={() => setActiveNickname(null)}
+          memberKey={activeMemberId ?? undefined}
+          onClose={() => {
+            setActiveNickname(null);
+            setActiveMemberId(null);
+          }}
         />
       )}
     </div>
