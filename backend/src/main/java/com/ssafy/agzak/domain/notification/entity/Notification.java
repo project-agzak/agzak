@@ -9,6 +9,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Entity
 @Table(name = "notifications")
@@ -55,7 +56,7 @@ public class Notification {
     }
 
     public void markAsRead() {
-        this.readAt = LocalDateTime.now();
+        this.readAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
     }
 
     public void markAsDeleted() {
