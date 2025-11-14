@@ -63,4 +63,9 @@ public class Gift {
         this.fortuneCookie.updateStatusAvailable();
         this.receivedAt = LocalDateTime.now();
     }
+
+    public void rejectGift() {
+        this.status = GiftStatus.REJECTED;
+        this.fortuneCookie.markDeleted();
+    }
 }

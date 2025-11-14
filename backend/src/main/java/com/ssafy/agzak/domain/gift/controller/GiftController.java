@@ -37,4 +37,10 @@ public class GiftController implements GiftApiDocs {
         GiftResponse response = giftService.getGiftDetail(giftId, authMemberProvider.currentMemberId());
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/{giftId}/reject")
+    public ResponseEntity<Void> rejectGift(@PathVariable @Valid Long giftId) {
+        giftService.rejectGift(giftId, authMemberProvider.currentMemberId());
+        return ResponseEntity.ok().build();
+    }
 }
