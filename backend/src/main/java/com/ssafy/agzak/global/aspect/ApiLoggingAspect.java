@@ -14,6 +14,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Enumeration;
 
 @Slf4j
@@ -35,7 +36,7 @@ public class ApiLoggingAspect {
         Method method = getMethod(joinPoint);
 
         log.info("API 요청 - 이름: {}, 경로: {}, HTTP 메서드: {}", method.getName(), request.getRequestURI(), request.getMethod());
-        log.info("요청 IP: {}, 요청 시간: {}", request.getRemoteAddr(), LocalDateTime.now());
+        log.info("요청 IP: {}, 요청 시간: {}", request.getRemoteAddr(), LocalDateTime.now(ZoneId.of("Asia/Seoul")));
 
         Enumeration<String> headerNames = request.getHeaderNames();
         while (headerNames.hasMoreElements()) {
@@ -54,7 +55,7 @@ public class ApiLoggingAspect {
         Long responseTime = endTime - startTime.get();
         startTime.remove();
         log.info("API 응답 - 이름: {}", method.getName());
-        log.info("응답 시간: {}, 처리 시간: {}ms", LocalDateTime.now(), responseTime);
+        log.info("응답 시간: {}, 처리 시간: {}ms", LocalDateTime.now(ZoneId.of("Asia/Seoul")), responseTime);
     }
 
     private Method getMethod(JoinPoint joinPoint) {

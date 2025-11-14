@@ -47,7 +47,7 @@ public class CustomGiftRepositoryImpl implements CustomGiftRepository {
                                 .and(fortuneCookie.status.eq(CookieStatus.AVAILABLE))
                 )
                 .fetchOne();
-        return count != null ? count : 0;
+        return count != null ? count : 0L;
     }
 
     @Override
@@ -114,7 +114,8 @@ public class CustomGiftRepositoryImpl implements CustomGiftRepository {
                         .join(gift.fortuneCookie, fortuneCookie)
                         .join(fortuneCookie.cookieKind, cookieKind)
                         .join(cookieKind.rarity, rarity)
-                        .where(gift.id.eq(giftId).and(gift.receiver.memberId.eq(userId)))
+                        .where(gift.id.eq(giftId)
+                                .and(gift.receiver.memberId.eq(userId)))
                         .fetchOne()
         );
     }

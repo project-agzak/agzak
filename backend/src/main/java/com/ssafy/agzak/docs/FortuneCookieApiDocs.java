@@ -73,7 +73,7 @@ public interface FortuneCookieApiDocs {
                 <b>정렬 기준(sortType)</b><br/>
                 • <code>recent</code> : 생성 최신순 (기본값)<br/>
                 • <code>score</code> : 쿠키 총점 높은 순<br/>
-                • <code>kind</code>  : <code>cookie code</code> 오름차순
+                • <code>kind</code>  : 희귀도(sortOrder) 오름차순 → 같은 희귀도 내 code 오름차순
                 """
     )
     @ApiResponses({
