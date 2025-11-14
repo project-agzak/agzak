@@ -147,7 +147,7 @@ useEffect(() => {
    const bestieDescription = goodWithId ? DESCRIPTION_BY_TYPE[goodWithId] : undefined;
   const enemyDescription = badWithId ? DESCRIPTION_BY_TYPE[badWithId] : undefined;
 
-  const userId = localStorage.getItem("userId");
+  const userId = sessionStorage.getItem("userId");
   const targetPath = isLoggedIn
   ? "/enforce"
   : userId
@@ -259,7 +259,7 @@ useEffect(() => {
                 pointer-events-none z-20
               "
             >
-              로그인 후 강화 기능을 이용할 수 있습니다.
+              회원가입 후 강화 기능을 이용할 수 있습니다.
             </div>
           )}
             <div

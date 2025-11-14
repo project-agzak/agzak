@@ -171,9 +171,7 @@ const handleEditToggle = async () => {
 
     // 인증 관련은 스토어에 맡김
     logout();
-    // 부가 키 정리
-    localStorage.removeItem("guestId");
-    localStorage.removeItem("userId");
+
 
     alert("계정이 삭제되었습니다.");
     navigate("/login");
