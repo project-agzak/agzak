@@ -31,7 +31,7 @@ public class Gift {
     @JoinColumn(name = "receiver_id", nullable = false)
     private Member receiver;
 
-    @OneToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cookie_id", nullable = false)
     private FortuneCookie fortuneCookie;
 
@@ -62,5 +62,10 @@ public class Gift {
         this.status = GiftStatus.RECEIVED;
         this.fortuneCookie.updateStatusAvailable();
         this.receivedAt = LocalDateTime.now();
+    }
+
+    public void rejectGift() {
+        this.status = GiftStatus.REJECTED;
+        this.fortuneCookie.markDeleted();
     }
 }

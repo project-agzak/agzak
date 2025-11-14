@@ -266,9 +266,6 @@ CREATE TABLE gifts
 );
 
 ALTER TABLE gifts
-    ADD CONSTRAINT uc_gifts_cookie UNIQUE (cookie_id);
-
-ALTER TABLE gifts
     ADD CONSTRAINT FK_GIFTS_ON_COOKIE FOREIGN KEY (cookie_id) REFERENCES fortune_cookie (fortune_cookie_id);
 
 ALTER TABLE gifts

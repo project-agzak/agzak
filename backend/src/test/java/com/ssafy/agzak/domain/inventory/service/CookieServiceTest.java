@@ -53,13 +53,13 @@ class CookieServiceTest {
 
     @BeforeEach
     void setUp() {
-        cookieService = new CookieService(
-                fortuneCookieRepository,
-                fortuneRepository,
-                fortuneAspectRepository,
-                rankingService,
-                date
-        );
+//        cookieService = new CookieService(
+//                fortuneCookieRepository,
+//                fortuneRepository,
+//                fortuneAspectRepository,
+//                rankingService,
+//                date
+//        );
 
         lenient().when(date.today()).thenReturn(FIXED_TODAY);
 
