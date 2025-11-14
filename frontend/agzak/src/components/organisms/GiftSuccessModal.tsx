@@ -1,4 +1,4 @@
-// src/components/organisms/SuccessModal.tsx
+// src/components/organisms/GiftSuccessModal.tsx
 import successModalBg from "@/assets/ui/letter-envelope.webp"
 import { Button_M } from "@/components/atoms/Button_M"
 import { Dialog, DialogContent } from "@/components/ui/Dialog"
