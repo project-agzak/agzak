@@ -87,3 +87,9 @@ logging:
         orm:
           jdbc:
             bind: debug
+
+# === Deep Link ===
+app:
+  share:
+    base-url: https://agzak.co.kr/share/fortune
+    secret: ${SHARE_LINK_SECRET}

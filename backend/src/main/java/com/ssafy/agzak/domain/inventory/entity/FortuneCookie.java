@@ -72,7 +72,7 @@ public class FortuneCookie {
 
     public enum CookieType { MONEY, LOVE, ACHIEVEMENT, HEALTH, MIXED, ROTTEN }
 
-    public enum CookieStatus { AVAILABLE, USED, PENDING_GIFT , DELETED }
+    public enum CookieStatus { AVAILABLE, USED, PENDING_GIFT, DELETED }
 
     /** 사용 처리 */
     public void markUsed() {

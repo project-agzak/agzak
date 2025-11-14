@@ -27,6 +27,18 @@ public class FortuneController implements FortuneApiDocs {
     private final AuthMemberProvider authMemberProvider;
     private final GuestFortuneService guestFortuneService;
 
+    @GetMapping("/members/{memberId}/today")
+    public ResponseEntity<FinalFortuneResponse> getMemberTodayFortune(@PathVariable long memberId) {
+        MemberInfoResponse memberInfo = memberService.getMemberInfo(memberId);
+
+        BirthDataInput input = BirthDataInput.fromMemberInfo(memberInfo);
+        String city = memberInfo.birthCity();
+
+        FinalFortuneResponse result = fortuneService.getMemberFortune(memberId, input, city);
+
+        return ResponseEntity.ok(result);
+    }
+
     @PostMapping
     public ResponseEntity<FinalFortuneResponse> postMemberTodayFortune() {
         long memberId = authMemberProvider.currentMemberId();

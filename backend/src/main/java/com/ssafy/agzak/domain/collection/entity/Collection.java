@@ -32,7 +32,7 @@ public class Collection {
     @Column(name = "count", nullable = false)
     private int count;
 
-    @Column(name = "description", length = 255)
+    @Column(name = "description")
     private String description;
 
     @Column(name = "obtained_at")

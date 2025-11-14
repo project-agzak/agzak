@@ -2,6 +2,7 @@ package com.ssafy.agzak.domain.member.service;
 
 import com.ssafy.agzak.domain.auth.repository.OAuthIdentityRepository;
 import com.ssafy.agzak.domain.fortune.dto.response.DetailFortuneDataResponse;
+import com.ssafy.agzak.domain.fortune.dto.response.FinalFortuneResponse;
 import com.ssafy.agzak.domain.fortune.dto.response.FortuneAspectResponse;
 import com.ssafy.agzak.domain.fortune.dto.response.FortuneTypeResponse;
 import com.ssafy.agzak.domain.fortune.entity.Fortune;
@@ -137,6 +138,23 @@ public class MemberService {
         if (request.birthTime() != null) {
             member.updateBirthTime(request.birthTime());
         }
+    }
+
+    public FinalFortuneResponse getMemberFortuneAsFinal(Long memberId, LocalDate date) {
+        findMemberOrThrow(memberId);
+
+        Fortune fortune = fortuneRepository.findByMember_MemberIdAndDate(memberId, date)
+                .orElseThrow(() -> new NoFortuneFoundException(
+                        "해당 멤버의 해당 날짜의 운세가 존재하지 않습니다. memberId=" + memberId + ", date=" + date,
+                        memberId, date
+                ));
+        List<FortuneAspect> aspects = fortuneAspectRepository.findAllByFortune(fortune);
+        if (aspects.size() != 4) {
+            throw new IllegalFortuneAspectException(
+                    "해당 멤버의 해당 날짜의 운세가 유효하지 않습니다. memberId=" + memberId + ", date=" + date
+            );
+        }
+        return FinalFortuneResponse.fromEntity(fortune, aspects);
     }
 
     @Transactional
