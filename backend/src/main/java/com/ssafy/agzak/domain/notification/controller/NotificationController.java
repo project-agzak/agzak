@@ -1,5 +1,6 @@
 package com.ssafy.agzak.domain.notification.controller;
 
+import com.ssafy.agzak.docs.NotificationApiDocs;
 import com.ssafy.agzak.domain.notification.dto.response.NotificationResponse;
 import com.ssafy.agzak.domain.notification.service.NotificationService;
 import com.ssafy.agzak.global.security.AuthMemberProvider;
@@ -15,7 +16,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/notifications")
 @Validated
-public class NotificationController {
+public class NotificationController implements NotificationApiDocs {
 
     private final NotificationService notificationService;
     private final AuthMemberProvider authMemberProvider;
