@@ -59,11 +59,9 @@ const ANIMATION_DURATION = 300;
 export function UserFortuneModal({ nickname, memberKey, onClose }: UserFortuneModalProps) {
   const [entered, setEntered] = useState(false);
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
-  const { scores, typeInfo, fetchMemberToday } = useFortuneStore((s) => ({
-    scores: s.scores,
-    typeInfo: s.typeInfo,
-    fetchMemberToday: s.fetchMemberToday,
-  }));
+  const scores = useFortuneStore((s) => s.scores);
+  const typeInfo = useFortuneStore((s) => s.typeInfo);
+  const fetchMemberToday = useFortuneStore((s) => s.fetchMemberToday);
 
   // 유저 조회
   useEffect(() => {
@@ -152,7 +150,7 @@ export function UserFortuneModal({ nickname, memberKey, onClose }: UserFortuneMo
         <div className="absolute top-[55px] left-[40px] right-[30px] bottom-[34px] flex flex-col">
           <div className="flex items-center justify-center">
             <h2 className="font-bitbit text-[#121212]">
-              {nickname}님의 운세
+              {nickname} 님의 운세
             </h2>
           </div>
 
