@@ -17,13 +17,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 
-/**
- * 쿠키 굽기 게임 API (일일 가변 쿼터: 기본 3회, 최대 10회)
- * - /sessions/start : 진행중 세션 재개 또는 새 세션 시작(쿼터 검증)
- * - /attempts       : 굽기 시도(강/약불 + 항목), 서버가 성공/실패 판정
- * - /today          : 오늘의 cap/used/remaining 조회
- * - /claim          : 증빙을 바탕으로 cap +1 (멱등)
- */
 @Tag(name = "쿠키 굽기 게임", description = "쿠키 굽기 게임 API (일일 가변 쿼터: 기본 3회, 최대 10회)")
 public interface CookieGameApiDocs {
 
@@ -61,18 +54,9 @@ public interface CookieGameApiDocs {
                                   "snapMisfortune": 0,
                                   "remaining": 2
                                 }
-                                """)))
-            ,
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "회원 없음",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-            ),
-            @ApiResponse(
-                    responseCode = "409",
-                    description = "일일 cap(기본 3, 가변) 소진으로 인해 새 시작 불가",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-            )
+                                """))),
+            @ApiResponse(responseCode = "404", description = "회원 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "409", description = "일일 cap(기본 3, 가변) 소진으로 인해 새 시작 불가", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     ResponseEntity<StartGameResponse> start();
 
@@ -85,6 +69,8 @@ public interface CookieGameApiDocs {
                 
                 10회 시도에 도달하면 세션이 자동으로 COMPLETED로 전환되며,
                 해당 시점에 포춘쿠키가 생성되어 응답의 cookie 필드로 내려갑니다.
+                cookie에는 **쿠키 종류(cookieKind)** 정보(코드/이름/희귀도/레시피/메시지)와
+                각 능력치(love/money/achievement/health)가 포함됩니다.
                 """
     )
     @ApiResponses({
@@ -95,7 +81,7 @@ public interface CookieGameApiDocs {
                             examples = @ExampleObject(value = """
                                 {
                                   "gameSessionId": 123,
-                                  "attemptNo": 4,
+                                  "attemptNo": 10,
                                   "aspectName": "LOVE",
                                   "fireType": "WEAK",
                                   "baseProb": 60.00,
@@ -109,20 +95,26 @@ public interface CookieGameApiDocs {
                                   "snapAchievement": 0,
                                   "snapHealth": 0,
                                   "snapMisfortune": 0,
-                                  "cookie": null
+                                  "cookie": {
+                                    "fortuneCookieId": 999,
+                                    "inventoryId": 10,
+                                    "gameSessionId": 123,
+                                    "cookieKindId": 6,
+                                    "code": "MONEY",
+                                    "name": "금전 쿠키",
+                                    "rarityCode": "RARE",
+                                    "recipe": "금전운이 가장 높고, 금전운이 +5 이상, 총운이 +10 이상일 때",
+                                    "message": "성공적으로 금전 쿠키가 구워졌습니다!",
+                                    "love": 3,
+                                    "money": 12,
+                                    "achievement": 2,
+                                    "health": 4,
+                                    "total": 21
+                                  }
                                 }
-                                """)))
-            ,
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "회원 없음 / 진행 중 세션 없음",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-            ),
-            @ApiResponse(
-                    responseCode = "409",
-                    description = "시도 한도(10회) 도달",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-            )
+                                """))),
+            @ApiResponse(responseCode = "404", description = "회원 없음 / 진행 중 세션 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "409", description = "시도 한도(10회) 도달", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     ResponseEntity<AttemptResponse> attempt(
             @RequestBody(
@@ -149,13 +141,8 @@ public interface CookieGameApiDocs {
                     content = @Content(schema = @Schema(implementation = TodayQuotaResponse.class),
                             examples = @ExampleObject(value = """
                                 { "cap": 4, "used": 1, "remaining": 3, "maxCap": 10, "unlockable": 6 }
-                                """)))
-            ,
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "회원 없음",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-            )
+                                """))),
+            @ApiResponse(responseCode = "404", description = "회원 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     ResponseEntity<TodayQuotaResponse> today();
 
@@ -186,23 +173,10 @@ public interface CookieGameApiDocs {
                                   "unlockable": 5,
                                   "message": "하루 허용 횟수가 1 증가했습니다."
                                 }
-                                """)))
-            ,
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "유효하지 않은 proof/type 등 요청 오류",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "회원 없음",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-            ),
-            @ApiResponse(
-                    responseCode = "409",
-                    description = "이미 최대 cap(10) 도달",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))
-            )
+                                """))),
+            @ApiResponse(responseCode = "400", description = "유효하지 않은 proof/type 등 요청 오류", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "회원 없음", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "409", description = "이미 최대 cap(10) 도달", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     ResponseEntity<ClaimResponse> claim(
             @RequestBody(

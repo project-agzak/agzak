@@ -1,10 +1,7 @@
 package com.ssafy.agzak.docs;
 
 import com.ssafy.agzak.domain.auth.dto.request.*;
-import com.ssafy.agzak.domain.auth.dto.response.CheckEmailResponse;
-import com.ssafy.agzak.domain.auth.dto.response.OkResponse;
-import com.ssafy.agzak.domain.auth.dto.response.SocialLoginResponse;
-import com.ssafy.agzak.domain.auth.dto.response.TokenResponse;
+import com.ssafy.agzak.domain.auth.dto.response.*;
 import com.ssafy.agzak.global.error.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -235,4 +232,29 @@ public interface AuthApiDocs {
             }
     )
     ResponseEntity<CheckEmailResponse> checkEmailAvailability(@RequestParam String email);
+
+    @Operation(
+            summary = "닉네임 중복 확인 (ACTIVE 회원 기준)",
+            description = """
+            ACTIVE 상태의 회원을 기준으로 닉네임 중복을 확인합니다.
+            - available=true: 가입 가능
+            - available=false: 중복(또는 유효하지 않은 입력)
+            """,
+            parameters = @Parameter(
+                    name = "nickname",
+                    description = "확인할 닉네임",
+                    required = true,
+                    example = "오리구이"
+            ),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "OK",
+                            content = @Content(schema = @Schema(implementation = CheckNicknameResponse.class),
+                                    examples = @ExampleObject(value = """
+                                    { "nickname": "오리구이", "available": false }
+                                    """)
+                            )
+                    )
+            }
+    )
+    ResponseEntity<CheckNicknameResponse> checkNicknameAvailability(@RequestParam String nickname);
 }

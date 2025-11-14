@@ -268,7 +268,7 @@ CREATE TABLE `collection` (
 /* =========================================================
    8) 선물
    ========================================================= */
-CREATE TABLE `gifts` (
+CREATE TABLE `gift` (
                          `gift_id`     BIGINT      NOT NULL AUTO_INCREMENT,
                          `sender_id`   BIGINT      NOT NULL,
                          `receiver_id` BIGINT      NOT NULL,

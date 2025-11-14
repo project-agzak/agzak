@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -21,25 +22,23 @@ public class CollectionService {
     private final MemberRepository memberRepository;
     private final AuthMemberProvider authMemberProvider;
 
-    /** 회원가입시 도감 생성 */
+    /** 회원가입/소셜로그인 직후 기본행 생성: 활성 쿠키만 */
     @Transactional
     public void ensureDefaults(Member member) {
         collectionRepository.initDefaultsForMember(member.getMemberId());
     }
 
-    /** 쿠키 도감 등록 */
+    /** 쿠키 생성 이벤트 → 도감 카운트 증가 (활성/비활성 여부는 FK 단계에서 이미 보장) */
     @Transactional
-    public void onCookieCreated(Long memberId, String type, String firstDescription, java.time.LocalDateTime obtainedAt) {
-        collectionRepository.upsertOnCookieCreated(memberId, type, firstDescription, obtainedAt);
+    public void onCookieCreated(Long memberId, Long cookieKindId, LocalDateTime obtainedAt) {
+        collectionRepository.upsertOnCookieCreated(memberId, cookieKindId, obtainedAt);
     }
 
-    /** 내 쿠키도감 */
     public List<CollectionItemResponse> getMyCollection() {
         long memberId = authMemberProvider.currentMemberId();
         return collectionRepository.findAllByMemberId(memberId);
     }
 
-    /** 멤버 아이디로 조회 */
     public List<CollectionItemResponse> getCollectionByMemberId(Long memberId) {
         if (!memberRepository.existsByMemberIdAndStatus(memberId, Member.MemberStatus.ACTIVE)) {
             throw new MemberNotFoundException(memberId);
@@ -47,9 +46,8 @@ public class CollectionService {
         return collectionRepository.findAllByMemberId(memberId);
     }
 
-    /** 멤버 닉네임으로 조회 */
     public List<CollectionItemResponse> getCollectionByNickname(String nickname) {
-        Member m = memberRepository.findByNicknameAndStatus(nickname, Member.MemberStatus.ACTIVE)
+        var m = memberRepository.findByNicknameAndStatus(nickname, Member.MemberStatus.ACTIVE)
                 .orElseThrow(() -> new MemberNotFoundException(0L));
         return collectionRepository.findAllByMemberId(m.getMemberId());
     }

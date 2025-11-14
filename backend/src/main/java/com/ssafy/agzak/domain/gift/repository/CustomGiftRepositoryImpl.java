@@ -10,9 +10,6 @@ import com.ssafy.agzak.domain.inventory.entity.FortuneCookie.CookieStatus;
 import com.ssafy.agzak.domain.inventory.entity.Inventory;
 import jakarta.persistence.LockModeType;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -21,6 +18,8 @@ import static com.ssafy.agzak.domain.gift.entity.QGift.gift;
 import static com.ssafy.agzak.domain.inventory.entity.QFortuneCookie.fortuneCookie;
 import static com.ssafy.agzak.domain.inventory.entity.QInventory.inventory;
 import static com.ssafy.agzak.domain.member.entity.QMember.member;
+import static com.ssafy.agzak.domain.cookie.entity.QCookieKind.cookieKind;
+import static com.ssafy.agzak.domain.cookie.entity.QRarity.rarity;
 
 @Repository
 @RequiredArgsConstructor
@@ -35,7 +34,6 @@ public class CustomGiftRepositoryImpl implements CustomGiftRepository {
                 .where(inventory.member.memberId.eq(userId))
                 .setLockMode(LockModeType.PESSIMISTIC_WRITE)
                 .fetchOne();
-
         return Optional.ofNullable(targetInv);
     }
 
@@ -49,8 +47,7 @@ public class CustomGiftRepositoryImpl implements CustomGiftRepository {
                                 .and(fortuneCookie.status.eq(CookieStatus.AVAILABLE))
                 )
                 .fetchOne();
-
-        return count != null ? count : 0;
+        return count != null ? count : 0L;
     }
 
     @Override
@@ -60,7 +57,6 @@ public class CustomGiftRepositoryImpl implements CustomGiftRepository {
                 .where(gift.id.eq(giftId))
                 .setLockMode(LockModeType.PESSIMISTIC_WRITE)
                 .fetchOne();
-
         return Optional.ofNullable(targetGift);
     }
 
@@ -71,7 +67,6 @@ public class CustomGiftRepositoryImpl implements CustomGiftRepository {
                 .where(fortuneCookie.fortuneCookieId.eq(fortuneCookieId))
                 .setLockMode(LockModeType.PESSIMISTIC_WRITE)
                 .fetchOne();
-
         return Optional.ofNullable(targetCookie);
     }
 
@@ -83,37 +78,45 @@ public class CustomGiftRepositoryImpl implements CustomGiftRepository {
                 .where(
                         fortuneCookie.fortuneCookieId.eq(cookieId)
                                 .and(fortuneCookie.status.eq(CookieStatus.AVAILABLE))
-                                .and(
-                                        fortuneCookie.inventory.member.memberId.eq(senderId)
-                                )
+                                .and(fortuneCookie.inventory.member.memberId.eq(senderId))
                 )
                 .execute();
     }
 
     @Override
     public Optional<GiftResponse> getGiftDetailByGiftId(Long giftId, Long userId) {
-        return Optional.ofNullable(queryFactory
-                .select(Projections.constructor(
-                        GiftResponse.class,
-                        gift.id,
-                        gift.sender.memberId,
-                        gift.sender.nickname,
-                        Projections.constructor(
-                                CookieResponse.class,
-                                fortuneCookie.fortuneCookieId,
-                                fortuneCookie.type.stringValue(),
-                                fortuneCookie.love,
-                                fortuneCookie.money,
-                                fortuneCookie.achievement,
-                                fortuneCookie.health,
-                                fortuneCookie.createdAt
-                        ),
-                        gift.message
-                ))
-                .from(gift)
-                .join(gift.sender, member)
-                .join(gift.fortuneCookie, fortuneCookie)
-                .where(gift.id.eq(giftId).and(gift.receiver.memberId.eq(userId)))
-                .fetchOne());
+        return Optional.ofNullable(
+                queryFactory
+                        .select(Projections.constructor(
+                                GiftResponse.class,
+                                gift.id,
+                                gift.sender.memberId,
+                                gift.sender.nickname,
+                                Projections.constructor(
+                                        CookieResponse.class,
+                                        fortuneCookie.fortuneCookieId,
+                                        cookieKind.cookieKindId,
+                                        cookieKind.code,
+                                        cookieKind.name,
+                                        rarity.code,
+                                        cookieKind.recipe,
+                                        cookieKind.message,
+                                        fortuneCookie.love,
+                                        fortuneCookie.money,
+                                        fortuneCookie.achievement,
+                                        fortuneCookie.health,
+                                        fortuneCookie.createdAt
+                                ),
+                                gift.message
+                        ))
+                        .from(gift)
+                        .join(gift.sender, member)
+                        .join(gift.fortuneCookie, fortuneCookie)
+                        .join(fortuneCookie.cookieKind, cookieKind)
+                        .join(cookieKind.rarity, rarity)
+                        .where(gift.id.eq(giftId)
+                                .and(gift.receiver.memberId.eq(userId)))
+                        .fetchOne()
+        );
     }
 }
