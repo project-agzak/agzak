@@ -10,6 +10,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Entity
 @Table(name = "gifts")
@@ -61,7 +62,7 @@ public class Gift {
     public void receiveGift() {
         this.status = GiftStatus.RECEIVED;
         this.fortuneCookie.updateStatusAvailable();
-        this.receivedAt = LocalDateTime.now();
+        this.receivedAt = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
     }
 
     public void rejectGift() {
