@@ -49,7 +49,7 @@ export default function OvenHelpSheet({ open, onClose, src }: Props) {
               aria-label="도움말 닫기"
               onClick={onClose}
               className="absolute top-2 right-2
-                w-55 h-15 rounded-full
+                w-55 h-15 rounded-full cursor-pointer
                 text-[#70431B] font-extrabold
                 "
             >
