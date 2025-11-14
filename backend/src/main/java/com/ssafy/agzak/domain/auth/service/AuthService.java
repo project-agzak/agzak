@@ -11,7 +11,6 @@ import com.ssafy.agzak.domain.auth.entity.OAuthIdentity.OAuthIdentityId;
 import com.ssafy.agzak.domain.auth.entity.OAuthIdentity.OAuthProvider;
 import com.ssafy.agzak.domain.auth.repository.OAuthIdentityRepository;
 import com.ssafy.agzak.domain.auth.support.SocialSignupTicketStore;
-import com.ssafy.agzak.domain.collection.repository.CollectionRepository;
 import com.ssafy.agzak.domain.collection.service.CollectionService;
 import com.ssafy.agzak.domain.fortune.dto.response.LatLng;
 import com.ssafy.agzak.domain.fortune.service.GeocodingService;
@@ -210,7 +209,14 @@ public class AuthService {
 
         LatLng geo = geocodingService.getCoordinates(req.birthCity());
 
-        String nickname = uniqueNickname(req.nickname());
+        String nickname = req.nickname();
+        if (nickname == null || nickname.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "닉네임은 비어 있을 수 없습니다.");
+        }
+        nickname = nickname.trim();
+        if (memberRepo.existsByNickname(nickname)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "이미 사용중인 닉네임입니다.");
+        }
 
         var m = Member.builder()
                 .email(socialEmail("kakao", email, sub))
