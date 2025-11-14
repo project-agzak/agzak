@@ -132,9 +132,9 @@ type SidebarContentProps = {
 };
 
 /** 사이드바 내용 */
-function SidebarContent({ isLoggedIn, nickname, onLogout }: SidebarContentProps) {
+function SidebarContent({ isLoggedIn, onLogout }: SidebarContentProps) {
   const navigate = useNavigate();
-  const displayName = nickname || "사용자";
+
   // 설치
   const [deferred, setDeferred] = useState<any>(null);
 
