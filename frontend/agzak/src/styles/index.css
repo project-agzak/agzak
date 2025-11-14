@@ -5,6 +5,7 @@
 :root {
   --app-width: 360px;
   --bg-pattern: url("@/assets/Background/fortune-tile.png");
+  --fz-caption: 9pt;
   --fz-xsmall: 10pt;
   --fz-small: 12pt;
   --fz-medium: 16pt;
@@ -122,6 +123,7 @@ body {
 }
 
 /* ===== Galmuri (5종) ===== */
+.font-galmuri-caption { font-family: var(--font-galmuri); font-size: var(--fz-caption); line-height: var(--lh-tight); }
 .font-galmuri-xsmall { font-family: var(--font-galmuri); font-size: var(--fz-xsmall); line-height: var(--lh-tight); }
 .font-galmuri-small  { font-family: var(--font-galmuri); font-size: var(--fz-small);  line-height: var(--lh-tight); }
 .font-galmuri { font-family: var(--font-galmuri); font-size: var(--fz-medium); line-height: var(--lh-tight); }
@@ -142,3 +144,9 @@ body {
 .scrollbar-thin { scrollbar-width: thin; }
 .scrollbar-thin::-webkit-scrollbar { width: 6px; }
 .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(0,0,0,.2); border-radius: 9999px; }
+
+.font-galmuri-caption-force {
+  font-family: var(--font-galmuri);
+  font-size: var(--fz-caption) !important;
+  line-height: var(--lh-tight);
+}
