@@ -7,7 +7,8 @@ import MoneyGif from "@/assets/Gifs/money-cookie.gif";
 import RottenGif from "@/assets/Gifs/rotten-cookie.gif";
 import Pig from "@/assets/ui/MainPig.svg";
 import * as React from "react";
-
+import { CookieHeader } from "@/components/atoms/CookieHeader";
+import CookieHelpSheet from "@/components/atoms/CookieHelpSheet";
 import InventoryImg from "@/assets/ui/CookieInventory.svg";
 import { ActionButton_M } from "@/components/atoms/ActionButton_M";
 import { FortuneGaugeList } from "@/components/molecules/FortuneGaugeList";
@@ -52,7 +53,7 @@ const getTodayLocalString = () => {
 export default function CookiesPage() {
   // 총운 (날짜별 조회 방식)
   const scores = useFortuneStore((s) => s.scores);
- const today = getTodayLocalString();
+  const today = getTodayLocalString();
   const { fortuneCache, fortuneLoading, fortuneError, fetchFortuneByDate } = useMembersStore();
   const totalScore = fortuneCache[today]?.totalScore ?? null;
   const loadingFortune = fortuneLoading[today] ?? false;
@@ -60,6 +61,8 @@ export default function CookiesPage() {
   const addStats = useFortuneStore((s) => s.addStats);
 
   const todayData = fortuneCache[today] ?? null;
+
+  const [helpOpen, setHelpOpen] = React.useState(false)
 
   // 게이지: todayData.aspects → 우선, 없으면 fortuneScores 사용
   const gaugeStats = React.useMemo(() => {
@@ -182,6 +185,7 @@ export default function CookiesPage() {
 
   return (
     <main className="relative z-10 p-4 min-h-screen">
+      <CookieHeader onHelp={() => setHelpOpen(true)} />
       <div className="flex flex-row justify-center items-center">
         <img src={pigSrc} alt="" className="w-1/2 max-w-[220px] h-auto mt-5" />
         <div className="flex flex-col items-center pr-2 w-1/2 max-w-[220px]">
@@ -248,6 +252,7 @@ export default function CookiesPage() {
           />
         )}
       </div>
+      <CookieHelpSheet open={helpOpen} onClose={() => setHelpOpen(false)} />
     </main>
   );
 }
