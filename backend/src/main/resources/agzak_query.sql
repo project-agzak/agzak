@@ -26,10 +26,7 @@ ALTER TABLE member MODIFY status VARCHAR(50) NOT NULL DEFAULT 'ACTIVE';
 ALTER TABLE member
     ADD COLUMN email_local_unique VARCHAR(255)
         GENERATED ALWAYS AS (
-            CASE
-                WHEN password IS NOT NULL AND status = 'ACTIVE' THEN email
-                ELSE NULL
-                END
+            IF(password IS NOT NULL AND status = 'ACTIVE', email, NULL)
             ) STORED;
 
 -- 4) UNIQUE 인덱스 생성 (NULL은 중복 허용 → 소셜/탈퇴는 무제약)
