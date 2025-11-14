@@ -34,7 +34,7 @@ public class Notification {
     @Column(name = "ref_id", nullable = false)
     private Long refId;
 
-    @Column(name = "message", nullable = false, length = 50)
+    @Column(name = "message", length = 50)
     private String message;
 
     @Column(name = "created_at", nullable = false)
