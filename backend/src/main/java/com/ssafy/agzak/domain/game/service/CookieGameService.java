@@ -301,6 +301,13 @@ public class CookieGameService {
                     .build();
             var saved = fortuneCookieRepository.save(cookieEntity);
 
+            // 4) 도감 갱신
+            collectionService.onCookieCreated(
+                    member.getMemberId(),
+                    ck.getCookieKindId(),
+                    date.todayTime()
+            );
+
             // 5) 응답 DTO
             cookieResult = CookieCreatedResponse.builder()
                     .fortuneCookieId(saved.getFortuneCookieId())
