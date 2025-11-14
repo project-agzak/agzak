@@ -17,7 +17,7 @@ import { useHomeStore } from "@/store/useHomeStore";
 export default function HomePage() {
   const shareUrl = "https://www.agzak.co.kr/";
   const { isLoggedIn } = useAuthStore();
-const { loadingToday, initHome } = useHomeStore();
+const { initHome } = useHomeStore();
     const accessedAtKST = useMemo(() => {
     const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
     const y = kst.getUTCFullYear();
@@ -39,11 +39,12 @@ const { loadingToday, initHome } = useHomeStore();
   const remainingSessions = quota?.remaining ?? 0;
   const canEnforce = remainingSessions > 0; // 세션이 남아야 강화 페이지 진입 허용
   const canUnlockMore = quota?.unlockable ? quota.unlockable > 0 : false; // 더 획득 가능한지
+const shouldShowLoading =
+  isLoggedIn && (loadingFortune || totalScore === null);
 
   useEffect(() => {
     refresh(); // KST 자정 기준 새로고침해도 여기서 갱신됨
   }, [refresh]);
-
 
 useEffect(() => {
   if (!isLoggedIn) return;
@@ -73,7 +74,8 @@ useEffect(() => {
       console.warn(r.error);
     }
   };
-if (loadingToday) {
+
+if (shouldShowLoading) {
   return <HomeLoading />;
 }
   return (

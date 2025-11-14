@@ -22,17 +22,24 @@ export const useHomeStore = create<HomeStoreState>((set) => ({
   errorToday: null,
 
   initHome: async () => {
-    set({ loadingToday: true, errorToday: null });
+    console.log("[HomeStore] initHome() 호출됨");
 
+    set({ loadingToday: true, errorToday: null });
+console.log("[HomeStore] loadingToday = true 설정");
     try {
       // ✅ Fortune 스토어의 fetchToday() 호출
       const { fetchToday } = useFortuneStore.getState();
+       console.log("[HomeStore] fetchToday 실행 직전");
       await fetchToday();
-
+ console.log("[HomeStore] fetchToday 실행 완료");
       // Fortune 쪽 에러를 홈 에러로도 복사해두고 싶다면:
       const fortuneError = useFortuneStore.getState().error;
       if (fortuneError) {
+         console.log("[HomeStore] FortuneStore.error 감지:", fortuneError);
         set({ errorToday: fortuneError });
+      }
+      else {
+        console.log("[HomeStore] FortuneStore.error = 없음");
       }
     } catch (e: any) {
       console.error("Home init 실패:", e);
@@ -45,5 +52,8 @@ export const useHomeStore = create<HomeStoreState>((set) => ({
     }
   },
 
-  resetHome: () => set({ loadingToday: false, errorToday: null }),
+  resetHome: () => {
+    console.log("[HomeStore] resetHome() 호출됨");
+    set({ loadingToday: false, errorToday: null });
+  },
 }));

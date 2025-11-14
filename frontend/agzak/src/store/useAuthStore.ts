@@ -75,24 +75,6 @@ let initialExpiresAt: number | null = expRaw ? Number(expRaw) : null;
 
 let initialIsLoggedIn = !!initialAccessToken;
 
-// 이미 만료된 토큰이면 싹 정리
-// if (initialAccessToken && initialExpiresAt && initialExpiresAt <= Date.now()) {
-//   const keysToRemove = [
-//     "access_token",
-//     "refresh_token",
-//     "accessToken",
-//     "refreshToken",
-//     "accessTokenExpiresAt",
-//     "access_token_expires_at",
-//     "member",
-//     "userId",
-//     "guestId",
-//   ];
-//   keysToRemove.forEach((k) => localStorage.removeItem(k));
-
-//   initialIsLoggedIn = false;
-//   initialExpiresAt = null;
-// }
 
 export const useAuthStore = create<AuthState>((set,get) => ({
 isLoggedIn: initialIsLoggedIn,
@@ -181,7 +163,7 @@ isLoggedIn: initialIsLoggedIn,
       "access_token_expires_at",
       "member",
       "userId",
-      "guestId",
+      "guestProfile",
     ];
     keysToRemove.forEach((k) => localStorage.removeItem(k));
 
