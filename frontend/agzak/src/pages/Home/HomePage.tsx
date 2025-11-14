@@ -43,7 +43,6 @@ export default function HomePage() {
     refresh(); // KST 자정 기준 새로고침해도 여기서 갱신됨
   }, [refresh]);
 
-
   useEffect(() => {
     if (!isLoggedIn) return;
     if (loadingFortune || totalScore != null) return;

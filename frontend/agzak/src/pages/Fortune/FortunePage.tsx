@@ -36,11 +36,19 @@ const [birthCityText, setBirthCityText] = useState("");
 const [showBirthCalendar, setShowBirthCalendar] = useState(false);
    const [submitting,setSubmitting] = useState(false);
 
-     useEffect(() => {
-    if (isLoggedIn) {
-      navigate("/home", { replace: true });
-    }
-  }, [isLoggedIn, navigate]);
+useEffect(() => {
+  //  온보딩 중 판정: kakao_ticket, userId, submitting, onboarding 플래그
+  const inOnboarding =
+    submitting ||
+    !!sessionStorage.getItem("kakao_ticket") ||
+    !!sessionStorage.getItem("onboarding") ||   // ← 추가
+    !!localStorage.getItem("userId");
+
+  if (isLoggedIn && !inOnboarding) {
+    navigate("/home", { replace: true });
+  }
+}, [isLoggedIn, submitting, navigate]);
+
 
 
    const handleFortuneSubmit = async () => {
@@ -209,6 +217,7 @@ const [showBirthCalendar, setShowBirthCalendar] = useState(false);
 
       setTokens(accessToken, refreshToken, expiresInSeconds);
 
+       sessionStorage.setItem("onboarding", "1");
   //  if (accessToken && refreshToken && expiresInSeconds) {
   //         localStorage.setItem("access_token", accessToken);
   //         localStorage.setItem("refresh_token", refreshToken);
@@ -218,17 +227,24 @@ const [showBirthCalendar, setShowBirthCalendar] = useState(false);
   //         );
   //       }
 
-        // 카카오용 임시 값 정리
+      
+
+
+ await fetchGuest(payload);
+       //  최소 로딩 시간 보장 후 이동
+  const elapsed = Date.now() - startTime;
+  const remain = Math.max(0, MIN_LOADING_MS - elapsed);
+  setTimeout(() => {
+    navigate("/fortune/webtoon", { replace: true });
+
+      // 카카오용 임시 값 정리
         sessionStorage.removeItem("kakao_ticket");
         sessionStorage.removeItem("kakao_email");
         sessionStorage.removeItem("kakao_suggestedNickname");
 
 
- await fetchGuest(payload);
-      //  게스트 운세를 store를 통해 호출(= POST /fortune/guest)
-      // await fetchGuest(payload);
-      // navigate("/fortune/result", { state: { fromSignupOrKakao: false } });
-        navigate("/fortune/webtoon");
+    setSubmitting(false);
+  }, remain);
         return;
       }
 
@@ -256,10 +272,16 @@ const [showBirthCalendar, setShowBirthCalendar] = useState(false);
         }
 
         // 임시 저장한 userId 제거
-        localStorage.removeItem("userId");
+      
 
        await fetchGuest(payload);
-        navigate("/fortune/webtoon");
+        //  최소 로딩 시간 보장 후 이동
+  const elapsed = Date.now() - startTime;
+  const remain = Math.max(0, MIN_LOADING_MS - elapsed);
+  setTimeout(() => {
+    navigate("/fortune/webtoon", { replace: true });
+    setSubmitting(false);
+  }, remain);
         return;
       }
 
@@ -275,15 +297,7 @@ const [showBirthCalendar, setShowBirthCalendar] = useState(false);
     } catch (e) {
       //console.error(e);
       alert("운세 계산 중 오류가 발생했습니다.");
-  } finally {
-    // ✅ 최소 10초 동안 FortuneLoading 유지
-    const startTime = Date.now();
-    const elapsed = Date.now() - startTime;
-    const remain = Math.max(0, 8000 - elapsed); // 10초 미만이면 나머지 대기
-    setTimeout(() => {
-      setSubmitting(false);
-    }, remain);
-  };
+  } 
   };
 
 

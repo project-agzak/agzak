@@ -1,6 +1,5 @@
 // src/pages/Fortune/FortuneResultPage.tsx
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 import { Button_L } from "@/components/atoms/Button_L";
 import { ExpandableFortune } from "@/components/molecules/ExpandableFortune";
@@ -100,38 +99,43 @@ export default function FortuneResultPage() {
   const fetchToday     = useFortuneStore((s) => s.fetchToday);
   const getDetailSummary = useFortuneStore((s) => s.getDetailSummary);
   const getScoreValue    = useFortuneStore((s) => s.getScoreValue);
-  const navigate = useNavigate();
+
 
   const shareUrl = "https://www.agzak.co.kr/";
 
 
 useEffect(() => {
-    if (isLoggedIn) {
-      fetchToday();
-      return;
-    }
-
-    // 2) 비로그인 유저:
-    // - 정상 플로우라면 useFortuneStore에 이미 결과가 존재해야 함
+  // 1) 로그인 유저: 오늘 운세 없을 때만 한 번 불러오기
+  if (isLoggedIn) {
     const hasFortune = totalScore !== null || !!typeInfo;
-
-    // - 회원가입 진행 중(이메일/카카오)일 수도 있으니 그 상태는 허용
-    const hasUserId = !!localStorage.getItem("userId");
-    const hasKakaoTicket = !!sessionStorage.getItem("kakao_ticket");
-
-    // - 어떤 정보도 없으면 직접 접근으로 판단하고 /fortune으로 리디렉트
-    if (!hasFortune && !hasUserId && !hasKakaoTicket && !loadingFortune && !errorFortune) {
-      navigate("/fortune", { replace: true });
+    if (!hasFortune && !loadingFortune && !errorFortune) {
+      fetchToday();
     }
-  }, [
-    isLoggedIn,
-    fetchToday,
-    totalScore,
-    typeInfo,
-    loadingFortune,
-    errorFortune,
-    navigate,
-  ]);
+    return;
+  }
+}, [isLoggedIn, fetchToday, totalScore, typeInfo, loadingFortune, errorFortune]);
+
+  //   // 2) 비로그인 유저:
+  //   // - 정상 플로우라면 useFortuneStore에 이미 결과가 존재해야 함
+  //   const hasFortune = totalScore !== null || !!typeInfo;
+
+  //   // - 회원가입 진행 중(이메일/카카오)일 수도 있으니 그 상태는 허용
+  //   const hasUserId = !!localStorage.getItem("userId");
+  //   const hasKakaoTicket = !!sessionStorage.getItem("kakao_ticket");
+
+  //   // - 어떤 정보도 없으면 직접 접근으로 판단하고 /fortune으로 리디렉트
+  //   if (!hasFortune && !hasUserId && !hasKakaoTicket && !loadingFortune && !errorFortune) {
+  //     navigate("/fortune", { replace: true });
+  //   }
+  // }, [
+  //   isLoggedIn,
+  //   fetchToday,
+  //   totalScore,
+  //   typeInfo,
+  //   loadingFortune,
+  //   errorFortune,
+  //   navigate,
+  // ]);
 
   // 🔥 단짝/천적: 추가 API 없이 goodWithId/badWithId로 바로 이미지 찾기
   const goodWithId = typeInfo?.goodWithId ?? null;
@@ -142,7 +146,13 @@ useEffect(() => {
 
    const bestieDescription = goodWithId ? DESCRIPTION_BY_TYPE[goodWithId] : undefined;
   const enemyDescription = badWithId ? DESCRIPTION_BY_TYPE[badWithId] : undefined;
-  
+
+  const userId = localStorage.getItem("userId");
+  const targetPath = isLoggedIn
+  ? "/enforce"
+  : userId
+  ? "/login"
+  : "/signup";
   return (
     <main className="relative z-10 p-4 min-h-screen">
       <div className="flex flex-col justify-center items-center pb-5 gap-3">
@@ -256,12 +266,25 @@ useEffect(() => {
               onMouseOver={() => { if (!isLoggedIn) setShowTooltip(true) }}
               onMouseOut={() => setShowTooltip(false)}
             >
-              <Button_L
-                to={"/enforce"}
-                label="운세 상승 아이템 얻으러 가기"
-                width={260}
-              />
-            </div>
+               <div
+      onMouseOver={() => {
+        if (!isLoggedIn) setShowTooltip(true);
+      }}
+      onMouseOut={() => setShowTooltip(false)}
+    >
+      </div>
+   <Button_L
+  to={targetPath}
+  label={
+    isLoggedIn
+      ? "운세 상승 아이템 얻으러 가기"
+      : userId
+      ? "운세 상승 아이템 얻으러 가기"
+      : "운세 상승 아이템 얻으러 가기"
+  }
+  width={260}
+/>
+
 
           <style>
             {`
@@ -282,7 +305,7 @@ useEffect(() => {
           />
         </div>
       </div>
-      
+      </div>
     </main>
   );
 }

@@ -20,6 +20,7 @@ if (isAuthRequest || status == null) return;
 
     // 401: 세션 만료 등
   if (status === 401) {
+    localStorage.removeItem("guestId");
     logout("로그인 정보가 만료되었습니다. 다시 로그인해주세요.");
     window.location.replace("/login");
     return;
@@ -27,6 +28,7 @@ if (isAuthRequest || status == null) return;
 
   // 400: 깨진 세션/회원 정보 문제라고 보고 처리
   if (status === 400) {
+    localStorage.removeItem("guestId");
     logout("계정 정보에 문제가 있어 로그아웃되었습니다. 다시 로그인해주세요.");
     window.location.replace("/login");
     return;
@@ -134,7 +136,7 @@ if (!isAuthRequest && accessToken) {
       });
 
       // 필요하면 여기서 한 번만 얼럿 띄우도록 토글 변수 둘 수도 있음
-      alert("서버 점검 중입니다.\n잠시 후 다시 시도해주세요.");
+   
 
       return {
         ok: false,
