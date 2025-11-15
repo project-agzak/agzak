@@ -348,19 +348,19 @@ public class CookieGameService {
     private static String decideCookieKindCode(int love, int money, int ach, int health, int total) {
         // ---- UNIQUE ----
         if (love <= -20 && money <= -20 && ach <= -20 && health <= -20) return "LAVA";
-        if (love >= 12 && health >= 25) return "SANTA";
+        if (love == 12 && health == 25) return "SANTA";
         if (love >= 22 && money >= 22 && ach >= 22 && health >= 22) return "UNICORN";
 
         // ---- EPIC ----
         if (love <= -10 && money <= -10 && ach <= -10 && health <= -10) return "GLOOMY";
-        if (love >= 11 && (money >= 11 || ach >= 11 || health >= 11)) return "PPEPPERO";
+        if (love == 11 && (money == 11 || ach == 11 || health == 11)) return "PPEPPERO";
         if (money >= 20 && health >= 20) return "SANSAM";
         if (money >= 10 && health <= -10) return "DEVELOPER";
         if (love >= 10 && money >= 10 && ach >= 10 && health >= 10) return "MIXED";
 
         // ---- RARE ----
         // 조건: 최대값 ≥ +5 && 총점 ≥ +10, 아니면 전부 ROTTEN
-        if (total <= 10) return "ROTTEN";
+        if (total < 10) return "ROTTEN";
         int max = Math.max(Math.max(love, money), Math.max(ach, health));
         if (max < 5) return "ROTTEN";
 

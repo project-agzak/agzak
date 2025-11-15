@@ -96,7 +96,12 @@ public interface GiftApiDocs {
                                   "senderNickname": "cookieMaster",
                                   "cookie": {
                                     "fortuneCookieId": 987,
-                                    "type": "MONEY",
+                                    "cookieKindId": 6,
+                                    "code": "MONEY",
+                                    "name": "금전 쿠키",
+                                    "rarityCode": "RARE",
+                                    "recipe": "성공 투자 레시피",
+                                    "message": "금전운이 가득한 쿠키!",
                                     "love": 3,
                                     "money": 12,
                                     "achievement": 2,
