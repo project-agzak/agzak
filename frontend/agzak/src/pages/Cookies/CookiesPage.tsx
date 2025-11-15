@@ -44,6 +44,14 @@ const titleToGif: Record<string, string> = {
   "금전쿠키": MoneyGif,
   "믹스쿠키": MixedGif,
   "시련쿠키": RottenGif,
+  // 실제 gif로 교체해야 함
+  "먹구름쿠키": MixedGif,
+  "빼빼로쿠키": MixedGif,
+  "산삼쿠키": MixedGif,
+  "개발자쿠키": MixedGif,
+  "용암쿠키": MixedGif,
+  "산타쿠키": MixedGif,
+  "유니콘쿠키": MixedGif,
 };
 
 const getTodayLocalString = () => {

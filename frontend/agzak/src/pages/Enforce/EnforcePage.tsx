@@ -23,7 +23,7 @@ export default function EnforcePage() {
   const [helpOpen, setHelpOpen] = useState(false)
   const [shakeKey, setShakeKey] = useState(0)
   const [view, setView] = useState<"game" | "loading" | "result">("game")
-  const [fire, setFire] = useState<OvenFireType>("WEAK") // 강/약불 상태
+  const [fire, setFire] = useState<OvenFireType>("WEAK") // 강/중/약불 상태
   const navigate = useNavigate()
   const ENFORCE_HELP_KEY = "agzak:enforce_help_seen"
 
@@ -55,7 +55,7 @@ export default function EnforcePage() {
 
   // ✅ 훅이 아닌 "일반 변수"로 즉시 계산 (조건부 return보다 위에 위치)
   const base = Number(game.successProb) || 0
-  const delta = fire === "WEAK" ? +5 : -5
+  const delta = fire === "WEAK" ? +5 : fire === "MEDIUM" ? 0 : -5
   const displayProb = Math.min(100, Math.max(0, base + delta))
   // 에러 발생 시 안전하게 홈으로 리디렉션
   useEffect(() => {

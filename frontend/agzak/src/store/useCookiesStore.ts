@@ -117,6 +117,9 @@ export type CookieData = {
     effects: { label: string; value: number }[];
   };
   createdAt: number;
+  name: string;
+  code: string;
+  rarityCode: string;
 };
 
 import HealthCookie from "@/assets/Cookies/health-cookie.webp";
@@ -141,13 +144,28 @@ const typeToMeta = (t: string) => {
       return { title: "믹스쿠키", img: MixedCookie };
     case "ROTTEN":
       return { title: "시련쿠키", img: RottenCookie };
+    // 실제 이미지로 교체해야 함
+    case "GLOOMY":
+      return { title: "먹구름쿠키", img: MixedCookie };
+    case "PPEPPERO":
+      return { title: "빼빼로쿠키", img: MixedCookie };
+    case "SANSAM":
+      return { title: "산삼쿠키", img: MixedCookie };
+    case "DEVELOPER":
+      return { title: "개발자쿠키", img: MixedCookie };
+    case "LAVA":
+      return { title: "용암쿠키", img: MixedCookie };
+    case "SANTA":
+      return { title: "산타쿠키", img: MixedCookie };
+    case "UNICORN":
+      return { title: "유니콘쿠키", img: MixedCookie };
     default:
       return { title: t, img: MixedCookie };
   }
 };
 
 const mapRaw = (r: CookieDetail): CookieData => {
-  const meta = typeToMeta(r.type);
+  const meta = typeToMeta(r.code);
   const effects = [
     { label: "건강운", value: r.health },
     { label: "성취운", value: r.achievement },
@@ -159,6 +177,10 @@ const mapRaw = (r: CookieDetail): CookieData => {
     imgSrc: meta.img,
     detail: { title: meta.title, effects },
     createdAt: Date.parse(r.createdAt),
+    name: r.name,      
+    code: r.code,        
+    rarityCode: r.rarityCode,
+
   };
 };
 
