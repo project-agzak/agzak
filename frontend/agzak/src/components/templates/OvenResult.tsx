@@ -9,6 +9,7 @@ import cookieLove from "@/assets/Cookies/love-cookie.webp"
 import cookieMixed from "@/assets/Cookies/mixed-cookie.webp"
 import cookieMoney from "@/assets/Cookies/money-cookie.webp"
 import cookieRotten from "@/assets/Cookies/rotten-cookie.webp"
+// 여기서 쿠키 이미지 가져와야 함
 import speechBubble from "@/assets/ui/speech-bubble.svg"
 import { Button_L } from "@/components/atoms/Button_L"
 import { trackEvent } from "@/lib/analytics"
@@ -19,7 +20,11 @@ const mockFortuneCookie: FortuneCookieResult = {
   fortuneCookieId: 99,
   inventoryId: 15,
   gameSessionId: 42,
-  type: "HEALTH",
+  code: "HEALTH",
+  name: "건강 쿠키",
+  cookieKindId: 1,
+  rarityCode: "RARE",
+  recipe: "건강을 담은 쿠키",
   love: 10,
   money: -5,
   achievement: 12,
@@ -28,42 +33,45 @@ const mockFortuneCookie: FortuneCookieResult = {
   message: "오늘은 몸과 마음이 모두 건강한 하루네요!",
 };
 
-const cookieImageMap: Record<FortuneCookieResult["type"], string> = {
+const cookieImageMap: Record<FortuneCookieResult["code"], string> = {
   HEALTH: cookieHealth,
   LOVE: cookieLove,
   MONEY: cookieMoney,
   ACHIEVEMENT: cookieAchievement,
   MIXED: cookieMixed,
   ROTTEN: cookieRotten,
+  // 새로운 타입들 추가 (이미지 추가 필요)
+  GLOOMY: cookieMixed,
+  PPEPPERO: cookieMixed,
+  SANSAM: cookieMixed,
+  DEVELOPER: cookieMixed,
+  LAVA: cookieMixed,
+  SANTA: cookieMixed,
+  UNICORN: cookieMixed,
 }
 
-const labelMap: Record<FortuneCookieResult["type"], string> = {
+const labelMap: Record<FortuneCookieResult["code"], string> = {
   HEALTH: "초록빛 건강쿠키",
   LOVE: "핑크빛 사랑쿠키",
   MONEY: "황금색 금전쿠키",
   ACHIEVEMENT: "푸르른 성취쿠키",
   MIXED: "영롱한 믹스쿠키",
   ROTTEN: "새까만 시련쿠키",
+  GLOOMY: "이런.. 먹구름쿠키",
+  PPEPPERO: "11.11엔 빼빼로쿠키",
+  SANSAM: "건강팔팔 산삼쿠키",
+  DEVELOPER: "체크남방 개발자쿠키",
+  LAVA: "먹으면 안돼 용암쿠키",
+  SANTA: "크리스마스 산타쿠키",
+  UNICORN: "초럭키 유니콘쿠키",
 }
-
-// 항목별 컬러(양/음 구분)
-const colorByLabel = (label: string, v: number) => {
-  const base =
-    label === "건강운" ? "text-emerald-600" :
-    label === "성취운" ? "text-sky-600"    :
-    label === "애정운" ? "text-pink-600"   :
-    label === "금전운" ? "text-amber-600"  : "text-gray-700";
-
-  if (v === 0) return "text-gray-500";
-  return v > 0 ? base : "text-rose-600";
-};
 
 export default function OvenResult({
   cookie = mockFortuneCookie,
 }: {
   cookie?: FortuneCookieResult;
 }) {
-  const imgSrc = cookieImageMap[cookie.type] ?? cookieMixed
+  const imgSrc = cookieImageMap[cookie.code] ?? cookieMixed
   const stats = useMemo(() => {
     return [
       { label: "건강운", value: cookie.health },
@@ -85,7 +93,7 @@ export default function OvenResult({
   useEffect(() => {
     if (!cookie) return;
     trackEvent("page_result_view", {
-      cookie_type: cookie.type,
+      cookie_type: cookie.code,
       total: cookie.total,
     });
   }, [cookie]);
@@ -97,12 +105,12 @@ export default function OvenResult({
         오븐에서 나온 건...
       </p>
       <p className="font-bitbit-large text-lg text-[#1f1f1f]">
-        {labelMap[cookie.type]}
+        {labelMap[cookie.code]}
       </p>
 
       <img
         src={imgSrc}
-        alt={labelMap[cookie.type]}
+        alt={labelMap[cookie.code]}
         className="w-[200px] h-auto mb-4"
         draggable={false}
       />
@@ -111,7 +119,7 @@ export default function OvenResult({
         {stats.map((s) => (
           <li
             key={s.label}
-            className={`font-galmuri text-sm leading-none ${colorByLabel(s.label, s.value)}`}
+            className={`font-galmuri text-sm leading-none`}
             >
             {s.label}
             <span >
@@ -136,7 +144,7 @@ export default function OvenResult({
       <Button_L
         label="쿠키 먹으러 가기"
         to="/cookies"
-        onClick={() => trackEvent("cookie_consume_click", { cookie_type: cookie.type })}
+        onClick={() => trackEvent("cookie_consume_click", { cookie_type: cookie.code })}
       />
     </div>
   )
