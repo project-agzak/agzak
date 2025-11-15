@@ -5,14 +5,18 @@ import LoveGif from "@/assets/Gifs/love-cookie.gif";
 import MixedGif from "@/assets/Gifs/mixed-cookie.gif";
 import MoneyGif from "@/assets/Gifs/money-cookie.gif";
 import RottenGif from "@/assets/Gifs/rotten-cookie.gif";
+import BinButton from "@/assets/ui/bin-button.webp";
+import InventoryImg from "@/assets/ui/CookieInventory.svg";
 import Pig from "@/assets/ui/MainPig.svg";
-import * as React from "react";
+import SendButton from "@/assets/ui/send-button.webp";
+import { ActionButton_M } from "@/components/atoms/ActionButton_M";
 import { CookieHeader } from "@/components/atoms/CookieHeader";
 import CookieHelpSheet from "@/components/atoms/CookieHelpSheet";
-import InventoryImg from "@/assets/ui/CookieInventory.svg";
-import { ActionButton_M } from "@/components/atoms/ActionButton_M";
 import { FortuneGaugeList } from "@/components/molecules/FortuneGaugeList";
 import { CookieInventory } from "@/components/organisms/CookieInventory";
+import { GiftModal } from "@/components/organisms/GiftModal";
+import { useGiftStore } from "@/store/useGiftStore";
+import * as React from "react";
 import { useCookiesStore } from "../../store/useCookiesStore";
 import { useFortuneStore } from "../../store/useFortuneStore";
 import { useMembersStore } from "../../store/useMembersStore";
@@ -51,6 +55,10 @@ const getTodayLocalString = () => {
 };
 
 export default function CookiesPage() {
+  const [giftOpen, setGiftOpen] = React.useState(false);
+  const { searchUsers, sendGift } = useGiftStore();
+
+
   // 총운 (날짜별 조회 방식)
   const scores = useFortuneStore((s) => s.scores);
   const today = getTodayLocalString();
@@ -122,6 +130,51 @@ export default function CookiesPage() {
     fetchCookies("recent");
   }, [fetchCookies]);
 
+  // 유저 검색 핸들러 (API 연결)
+  const handleSearchUsers = async (query: string) => {
+    const results = await searchUsers(query);
+    
+    // GiftModal이 요구하는 형식으로 변환
+    return results.map(user => ({
+      id: user.memberId,      // memberId → id
+      nickname: user.nickname
+    }));
+  };
+
+  // 선물 전송 핸들러 (API 연결)
+  const handleGiftSubmit = async (payload: { 
+    toUserId?: number; 
+    nickname?: string; 
+    message: string 
+  }) => {
+    if (!payload.toUserId) {
+      throw new Error("받는 사람을 선택해주세요");
+    }
+
+    if (!selectedCookie) {
+      throw new Error("선물할 쿠키를 선택해주세요");
+    }
+
+    // 선택된 쿠키의 실제 ID 사용
+    const cookieId = Number(selectedCookie.id);
+
+    // API 호출
+    await sendGift({
+      receiverId: payload.toUserId,
+      cookieId: cookieId,
+      message: payload.message
+    });
+
+    // 선물 성공 후 쿠키 목록 새로고침
+    await fetchCookies("recent");
+  };
+
+  // 선물하기 버튼 클릭
+  const giftSelected = () => {
+    if (!selectedCookie) return;
+    setGiftOpen(true);
+  };
+
   // 쿠키 먹기
     const eatSelected = async () => {
     if (!selectedCookie) return;
@@ -160,7 +213,7 @@ export default function CookiesPage() {
       // ignore optimistic update failures
     }
 
-    addStats(delta); // ✅ total_score까지 일관 반영
+    addStats(delta);
 
     // 3) 서버 반영 (USED 처리) + 인벤토리에서 제거
     try {
@@ -207,12 +260,20 @@ export default function CookiesPage() {
             onClick={eatSelected}
             disabled={!selectedCookie || isDetailLoading || isEating || isDeleting}
           />
-          <ActionButton_M
-            className="shrink-0 !mx-0"
-            label= "쿠키 삭제"  
+          <button
             onClick={removeSelected}
             disabled={!selectedCookie || isDeleting}
-          />
+            className="disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition"
+          >
+            <img src={BinButton} alt="삭제하기" className="w-auto h-[50px]" />
+          </button>
+          <button
+            onClick={giftSelected}
+            disabled={!selectedCookie || isDetailLoading || isDeleting}
+            className="disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition"
+          >
+            <img src={SendButton} alt="선물하기" className="w-auto h-[50px]" />
+          </button>
         </div>
       </div>
 
@@ -252,6 +313,16 @@ export default function CookiesPage() {
           />
         )}
       </div>
+      {selectedCookie && (
+        <GiftModal
+          open={giftOpen}
+          onOpenChange={setGiftOpen}
+          CookieSrc={selectedCookie.imgSrc}  // 선택된 쿠키 이미지
+          searchUsers={handleSearchUsers}
+          onSubmit={handleGiftSubmit}
+        />
+      )}
+
       <CookieHelpSheet open={helpOpen} onClose={() => setHelpOpen(false)} />
     </main>
   );
