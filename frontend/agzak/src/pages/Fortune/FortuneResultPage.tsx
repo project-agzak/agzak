@@ -147,7 +147,7 @@ useEffect(() => {
    const bestieDescription = goodWithId ? DESCRIPTION_BY_TYPE[goodWithId] : undefined;
   const enemyDescription = badWithId ? DESCRIPTION_BY_TYPE[badWithId] : undefined;
 
-  const userId = localStorage.getItem("userId");
+  const userId = sessionStorage.getItem("userId");
   const targetPath = isLoggedIn
   ? "/enforce"
   : userId
@@ -221,7 +221,7 @@ useEffect(() => {
             </div>
 
             {bestieDescription && (
-              <p className="mt-3 px-6 text-center text-[12px] leading-relaxed text-[#3A3A3A] font-galmuri-xsmall max-w-[240px]">
+              <p className="mt-3 px-6 text-center text-[12px] leading-relaxed text-[#121212] font-galmuri-xsmall max-w-[240px]">
                 {bestieDescription}
               </p>
             )}
@@ -240,7 +240,7 @@ useEffect(() => {
             </div>
 
             {enemyDescription && (
-              <p className="mt-3 px-6 text-center text-[12px] leading-relaxed text-[#3A3A3A] font-galmuri-xsmall max-w-[240px]">
+              <p className="mt-3 px-6 text-center leading-relaxed text-[#121212] font-galmuri-xsmall max-w-[240px]">
                 {enemyDescription}
               </p>
             )}
@@ -259,7 +259,7 @@ useEffect(() => {
                 pointer-events-none z-20
               "
             >
-              로그인 후 강화 기능을 이용할 수 있습니다.
+              회원가입 후 강화 기능을 이용할 수 있습니다.
             </div>
           )}
             <div

@@ -4,6 +4,7 @@ import Rank2 from "@/assets/ui/Rank2.svg";
 import Rank3 from "@/assets/ui/Rank3.svg";
 import { RankingAPI, type TodayRankingRes } from "@/lib/rankingAPI";
 import { useEffect, useMemo, useState } from "react";
+import { UserFortuneModal } from "../atoms/UserFortuneModal";
 
 type Category = "total" | "original" | "increase";
 
@@ -13,6 +14,7 @@ type RankItem = {
   score: number;       // 보여줄 점수 (카테고리별 다름)
   scoreLabel: string;  // "총점" | "원점"
   changePct: number;   // 증가율(우측 표시)
+  memberId: number;    // 모달용
 };
 
 function RankMedal({ rank }: { rank: number }) {
@@ -59,6 +61,8 @@ export default function RankingList() {
   const [data, setData] = useState<TodayRankingRes | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeNickname, setActiveNickname] = useState<string | null>(null);
+  const [activeMemberId, setActiveMemberId] = useState<number | null>(null);
 
   // 오늘 랭킹 3종 한 번에 가져오기
   useEffect(() => {
@@ -95,6 +99,7 @@ export default function RankingList() {
         score: it.totalScore,
         scoreLabel: "총점",
         changePct: it.increasePercent,
+        memberId: it.memberId,
       }));
     }
 
@@ -105,6 +110,7 @@ export default function RankingList() {
         score: it.originalTotalScore,
         scoreLabel: "원점",
         changePct: it.increasePercent,
+        memberId: it.memberId,
       }));
     }
 
@@ -116,6 +122,7 @@ export default function RankingList() {
       score: it.totalScore,
       scoreLabel: "총점",
       changePct: it.increasePercent,
+      memberId: it.memberId,
     }));
   }, [active, data]);
 
@@ -200,8 +207,17 @@ export default function RankingList() {
                 {/* 왼쪽: 메달/순위/닉네임/점수 */}
                 <div className="flex items-center">
                   <RankMedal rank={item.rank} />
-                  <div>
-                    <p className="font-bitbit-small">{item.name}</p>
+                  <div className="flex flex-col items-start">
+                    <button
+                      type="button"
+                      className="font-bitbit-small hover:underline cursor-pointer underline decoration-dotted decoration-dotted underline-offset-2"
+                      onClick={() => {
+                        setActiveNickname(item.name);
+                        setActiveMemberId(item.memberId);
+                      }}
+                    >
+                      {item.name}
+                    </button>
                     <ScoreBadge score={item.score} label={item.scoreLabel} />
                   </div>
                 </div>
@@ -212,6 +228,18 @@ export default function RankingList() {
             </div>
           ))}
         </div>
+      )}
+
+      {/* 닉네임 클릭 시 모달 */}
+      {activeNickname && (
+        <UserFortuneModal
+          nickname={activeNickname}
+          memberKey={activeMemberId ?? undefined}
+          onClose={() => {
+            setActiveNickname(null);
+            setActiveMemberId(null);
+          }}
+        />
       )}
     </div>
   );

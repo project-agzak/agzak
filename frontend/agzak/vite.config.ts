@@ -44,7 +44,7 @@ export default defineConfig(({ mode }) => {
       proxy: {
         // 개발용 프록시 (배포에서는 웹서버에서 처리)
         '/api': {
-          target: 'http://k13b102.p.ssafy.io:8082',
+          target: 'http://k13b102.p.ssafy.io:18082',
           changeOrigin: true,
           secure: false,
         },
@@ -60,6 +60,6 @@ export default defineConfig(({ mode }) => {
     },
 
     // console 제거
-    esbuild: { drop: ['console', 'debugger'] },
+    // esbuild: { drop: ['console', 'debugger'] },
   }
 })
