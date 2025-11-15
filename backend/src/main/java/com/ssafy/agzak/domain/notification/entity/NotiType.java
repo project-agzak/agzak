@@ -1,15 +1,15 @@
 package com.ssafy.agzak.domain.notification.entity;
 
-public enum NotiType {
-    GIFT_RECEIVED("선물이 도착했습니다!");
+import lombok.Getter;
 
-    private String message;
+@Getter
+public enum NotiType {
+    GIFT_RECEIVED("선물이 도착했습니다!"),
+    SYSTEM_NOTICE("시스템 알림입니다!");
+
+    private final String message;
 
     NotiType(String message) {
         this.message = message;
-    }
-
-    public String getMessage() {
-        return message;
     }
 }
