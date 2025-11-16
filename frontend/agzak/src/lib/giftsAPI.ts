@@ -37,7 +37,7 @@ export type SendGiftResponse = {
 export const giftsAPI = {
   /** 선물 보내기 (POST) */
   send: (payload: SendGiftPayload) =>
-    api.post<void>("/gifts/send", payload),
+    api.post<SendGiftResponse>("/gifts/send", payload),
 
   /** 유저 검색 (GET) */
   searchUsers: (keyword: string) =>
