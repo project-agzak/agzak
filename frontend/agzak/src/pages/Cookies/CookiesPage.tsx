@@ -151,30 +151,17 @@ export default function CookiesPage() {
 
   // 선물 전송 핸들러 (API 연결)
   const handleGiftSubmit = async (payload: { 
-    toUserId?: number; 
-    nickname?: string; 
+    receiverId: number;
+    cookieId: number;
     message: string 
-  }) => {
-    if (!payload.toUserId) {
-      throw new Error("받는 사람을 선택해주세요");
-    }
+    }) => {
+      console.log('CookiesPage handleGiftSubmit:', payload)
 
-    if (!selectedCookie) {
-      throw new Error("선물할 쿠키를 선택해주세요");
-    }
+      await sendGift(payload);
 
-    // 선택된 쿠키의 실제 ID 사용
-    const cookieId = Number(selectedCookie.id);
 
-    // API 호출
-    await sendGift({
-      receiverId: payload.toUserId,
-      cookieId: cookieId,
-      message: payload.message
-    });
-
-    // 선물 성공 후 쿠키 목록 새로고침
-    await fetchCookies("recent");
+    // // 선물 성공 후 쿠키 목록 새로고침
+    // await fetchCookies("recent");
   };
 
   // 선물하기 버튼 클릭
@@ -325,9 +312,13 @@ export default function CookiesPage() {
         <GiftModal
           open={giftOpen}
           onOpenChange={setGiftOpen}
-          CookieSrc={selectedCookie.imgSrc}  // 선택된 쿠키 이미지
+          CookieSrc={selectedCookie.imgSrc}
+          cookieId={Number(selectedCookie.id)}
           searchUsers={handleSearchUsers}
           onSubmit={handleGiftSubmit}
+          onSuccessClose={async () => {
+            await fetchCookies("recent")
+          }}
         />
       )}
 

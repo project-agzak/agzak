@@ -59,6 +59,17 @@ export const router = createBrowserRouter([
         ],
       },
 
+      {
+        path: 'share',
+        element: <EmptyLayout />,
+        children: [
+          {
+            path: 'fortune/:token',
+            element: suspense(<FortuneResultPage />),
+          },
+        ],
+      },
+
      {
       path: "enforce",
       element: (

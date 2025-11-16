@@ -41,8 +41,8 @@ export function SuccessModal({ open, onClose }: SuccessModalProps) {
             "
           >
             <div className="text-center space-y-6">
-              <h3 className="text-lg font-galmuri-small font-bold text-gray-800 flex flex-col items-center">
-                달콤한 행운이 <br /> 성공적으로 전송되었습니다!
+              <h3 className="text-lg font-galmuri-small font-bold text-gray-800 flex flex-col items-center pt-4 pl-2">
+                전송되었습니다!
               </h3>
               
               <div className="pt-2">

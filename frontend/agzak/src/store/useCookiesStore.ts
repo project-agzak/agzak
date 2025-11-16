@@ -1,6 +1,6 @@
 // src/store/useCookiesStore.ts
 import { create } from "zustand";
-import { cookiesAPI, deleteCookieAPI, type CookieDetail } from "@/lib/cookiesAPI";
+import { cookiesAPI, type CookieDetail } from "@/lib/cookiesAPI";
 
 // type CookiesState = {
 //   // 캐시 (상세)
@@ -333,7 +333,7 @@ export const useCookiesStore = create<State>((set, get) => ({
     }
 
     try {
-      await deleteCookieAPI(id); 
+      await cookiesAPI.remove(Number(id));
       // 성공
     } catch (e: any) {
       // 실패: 롤백
