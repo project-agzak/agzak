@@ -91,6 +91,7 @@ type FortuneState = {
   fetchToday: () => Promise<void>;
   fetchGuest: (payload: GuestFortuneReq) => Promise<void>;
   fetchTypeDetail: (fortuneTypeId: number, force?: boolean) => Promise<FortuneTypeDetail | null>;
+  fetchMemberToday: (memberId: number) => Promise<void>;
   reset: () => void;
 
   // 쿠키 효과 합산
@@ -269,6 +270,38 @@ export const useFortuneStore = create<FortuneState>((set, get) => ({
   getTotalSummary: () => {
     const s = get().scores;
     return pickTotalSummary(s as any);
+  },
+
+  // 특정 회원 오늘의 운세 조회
+  fetchMemberToday: async (memberId) => {
+    const { loading } = get();
+    if (loading) return;
+
+    set({ loading: true, error: null });
+    try {
+      const res = await fortuneAPI.getMemberToday(memberId);
+      if (res.ok && res.data) {
+        const d: FortuneResponse | any = res.data;
+        const { scores, type } = pickScoresTypeGuestId(d);
+
+        // 해당 회원의 점수/타입만 갱신
+        set({
+          scores: scores ?? null,
+          typeInfo: type ?? null,
+          loading: false,
+        });
+      } else {
+        set({
+          loading: false,
+          error: toErrorMsg(res.error) ?? "회원의 오늘 운세를 불러오지 못했습니다.",
+        });
+      }
+    } catch (e) {
+      set({
+        loading: false,
+        error: toErrorMsg(e) ?? "회원의 오늘 운세를 불러오지 못했습니다.",
+      });
+    }
   },
 
 }));

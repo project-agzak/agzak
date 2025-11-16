@@ -4,13 +4,17 @@ import { apiClient } from "@/lib/axios";
 
 
 export type CookieDetail = {
-  fortuneCookieId: number;
-  type: string;
-  love: number;
-  money: number;
-  achievement: number;
-  health: number;
-  createdAt: string; // ISO
+  fortuneCookieId: number,
+  cookieKindId: number,
+  code: string,        // "MONEY", "MIXED" 등
+  name: string,
+  rarityCode: string,
+  love: number,
+  money: number,
+  achievement: number,
+  health: number,
+  createdAt: string
+
 };
 
 export type CookieSortType = "recent" | "score" | "category";

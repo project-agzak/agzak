@@ -9,8 +9,7 @@ import LoveCookie from "@/assets/Cookies/love-cookie.webp";
 import MixedCookie from "@/assets/Cookies/mixed-cookie.webp";
 import RottenCookie from "@/assets/Cookies/rotten-cookie.webp";
 import MoneyCookie from "@/assets/Cookies/money-cookie.webp";
-
-
+import { useCookiesStore } from "./useCookiesStore";
 
 import {
   alarmAPI,
@@ -140,7 +139,7 @@ type AlarmState = {
   fetchNotifications: () => Promise<void>;
   openNotification: (item: NotificationItem) => Promise<void>;
   closeNotification: () => void;
-  acceptSelectedGift: (inventoryCount: number) => Promise<AcceptGiftResult>;
+  acceptSelectedGift: () => Promise<AcceptGiftResult>;
   reset: () => void;
 };
 
@@ -170,82 +169,99 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
   },
 
   // 알림 클릭 시 - 읽음 처리 + (선물이면) 선물 상세 호출
-  openNotification: async (item: NotificationItem) => {
-    // ✅ 읽음 처리 API (fire-and-forget)
+ openNotification: async (item: NotificationItem) => {
+  const isGift = item.type === "GIFT" || item.notiType === "GIFT_RECEIVED";
+
+  // ✅ 일반 알림은 열자마자 읽음 처리
+  if (!isGift) {
+    // 서버 읽음 처리
     alarmAPI.markAsRead(item.notificationId);
 
-    // ✅ 로컬 상태에서 isRead 업데이트
+    // 로컬 상태 업데이트
     set((state) => ({
       notifications: state.notifications.map((n) =>
         n.notificationId === item.notificationId ? { ...n, isRead: true } : n
       ),
+      selectedNotification: { ...item, isRead: true },
     }));
 
-    // 🎯 일반 알림이면 모달만 열고 종료
-    if (item.type !== "GIFT" && item.notiType !== "GIFT_RECEIVED") {
-      set({ selectedNotification: { ...item, isRead: true } });
-      return;
-    }
+    return; // 일반 알림은 여기서 끝
+  }
 
-    // 🎁 선물 알림이면 refId를 giftId로 사용해서 상세 조회
-    const res = await giftAPI.getGiftDetail(item.referenceId);
+  // 🎁 선물 알림: **여기서는 읽음 처리 하지 않고**, 상세만 가져오기
+  const res = await giftAPI.getGiftDetail(item.referenceId);
 
-    if (!res.ok || !res.data) {
-      // TODO: 필요하면 에러 토스트 추가
-      set({ selectedNotification: { ...item, isRead: true } });
-      return;
-    }
+  if (!res.ok || !res.data) {
+    // 에러 났어도 모달은 띄워줄 수 있음 (원한다면 메시지 유지)
+    set({ selectedNotification: { ...item, isRead: item.isRead } });
+    return;
+  }
 
-    const gift = res.data;
+  const gift = res.data;
 
-    set({
-      selectedNotification: {
-        ...item,
-        isRead: true,
-        senderName: gift.senderNickname,
-        // ✅ cookie.code ("MONEY" 등) 기준으로 이미지 선택
-        cookieImageSrc: getCookieImageByCode(gift.cookie.code),
-        message: gift.message,
-        giftId: gift.giftId,
-        type: "GIFT",
-      },
-    });
-  },
+  set({
+    selectedNotification: {
+      ...item,
+      // 아직 읽음 처리 안 했으니 isRead는 기존 값 유지 (대부분 false일 것)
+      isRead: item.isRead,
+      senderName: gift.senderNickname,
+      cookieImageSrc: getCookieImageByCode(gift.cookie.code),
+      message: gift.message,
+      giftId: gift.giftId,
+      type: "GIFT",
+    },
+  });
+},
 
   // 모달 닫기
   closeNotification: () => {
     set({ selectedNotification: null });
   },
 
-  // 선택된 선물 수락
-  acceptSelectedGift: async (
-    inventoryCount: number
-  ): Promise<AcceptGiftResult> => {
-    const { selectedNotification } = get();
-    if (!selectedNotification || selectedNotification.type !== "GIFT") {
-      return "NO_SELECTION";
-    }
+ // 선택된 선물 수락
+acceptSelectedGift: async (): Promise<AcceptGiftResult> => {
+  const { selectedNotification, notifications } = get();
 
-    if (inventoryCount >= 50) {
-      return "FULL";
-    }
+  // 선물 알림이 선택되어 있지 않으면
+  if (!selectedNotification || selectedNotification.type !== "GIFT") {
+    return "NO_SELECTION";
+  }
 
-    // giftId 우선, 없으면 referenceId 사용
-    const giftId = selectedNotification.giftId ?? selectedNotification.referenceId;
+  // ✅ 여기서 최신 인벤토리 개수 가져오기 (useCookiesStore.getState 사용)
+   let cookiesState = useCookiesStore.getState();
+  let inventoryCount = cookiesState.items.length;
 
-    set({ acceptingGift: true });
-    const res = await giftAPI.acceptGift(giftId);
-    set({ acceptingGift: false });
+ console.log("[ACCEPT_GIFT] inventoryCount =", inventoryCount);
+  if (inventoryCount >= 50) {
+    return "FULL";
+  }
 
-    if (!res.ok) {
-      return "ERROR";
-    }
+  // giftId 우선, 없으면 referenceId 사용
+  const giftId = selectedNotification.giftId ?? selectedNotification.referenceId;
 
-    // 선택 모달 닫기 (원하면 여기서 notifications에서도 제거 가능)
-    set({ selectedNotification: null });
+  set({ acceptingGift: true });
+  const res = await giftAPI.acceptGift(giftId);
+  set({ acceptingGift: false });
 
-    return "OK";
-  },
+  if (!res.ok) {
+    return "ERROR";
+  }
+
+  // ✅ 여기서 읽음 처리 API 호출 (선물 수락 완료 시점)
+  alarmAPI.markAsRead(selectedNotification.notificationId);
+
+  // ✅ 로컬 알림 리스트에서도 isRead = true로 업데이트
+  set({
+    selectedNotification: null, // 모달 닫기
+    notifications: notifications.map((n) =>
+      n.notificationId === selectedNotification.notificationId
+        ? { ...n, isRead: true }
+        : n
+    ),
+  });
+
+  return "OK";
+},
 
   // 상태 초기화 (로그아웃 시 등)
   reset: () =>

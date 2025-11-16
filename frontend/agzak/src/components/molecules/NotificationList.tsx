@@ -78,9 +78,7 @@ export function NotificationList({
                           {isGift ? "선물 알림" : "공지 알림"}
                         </span>
 
-                        {!n.isRead && (
-                          <span className="w-2 h-2 bg-red-500 rounded-full" />
-                        )}
+                     
                       </div>
 
                      {/* 메시지 전체 표시 (bold/줄임표 제거) */}

@@ -379,7 +379,7 @@ function NotificationSidebar() {
   const { isLoggedIn } = useAuthStore();
  
 
-   const inventoryCount = useCookiesStore((s) => s.items.length);
+
 
  
    // ✅ [추가] 알림 스토어 사용
@@ -396,13 +396,17 @@ function NotificationSidebar() {
     reset,
   } = useAlarmStore();
 
+    const fetchCookies = useCookiesStore((s) => s.fetchCookies);
+
   useEffect(() => {
     if (!isLoggedIn) {
       reset();
       return;
     }
     fetchNotifications();
-  }, [isLoggedIn, fetchNotifications, reset]);
+      fetchCookies("recent");
+
+  }, [isLoggedIn, fetchNotifications, fetchCookies,reset]);
 
   // PWA 설치 이벤트 구독 (햄버거 사이드바와 동일)
   useEffect(() => {
@@ -433,24 +437,28 @@ function NotificationSidebar() {
     setDeferred(null);
   };
   // ✅ [변경] 선물 쿠키 확인 버튼 핸들러 (스토어 액션 호출)
-  const handleGiftConfirm = async () => {
-    const result = await acceptSelectedGift(inventoryCount);
+const handleGiftConfirm = async () => {
+  // ✅ 인벤토리 체크 + 서버 호출 여부는 스토어에서 알아서 처리
+  const result = await acceptSelectedGift();
 
-    if (result === "NO_SELECTION") return;
+  if (result === "NO_SELECTION") {
+    return;
+  }
 
-    if (result === "FULL") {
-      alert("인벤토리가 꽉 찼습니다. 삭제 후 다시 확인해 주세요.");
-      return;
-    }
+  if (result === "FULL") {
+    alert("인벤토리가 꽉 찼습니다. 삭제 후 다시 확인해 주세요.");
+    return;
+  }
 
-    if (result === "ERROR") {
-      alert("선물을 수락하는 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.");
-      return;
-    }
+  if (result === "ERROR") {
+    alert("선물을 수락하는 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.");
+    return;
+  }
 
-    // OK
-    alert("선물 받은 쿠키가 인벤토리에 담겼어요!");
-  };
+  // OK
+  alert("선물 받은 쿠키가 인벤토리에 담겼어요!");
+   window.location.reload();
+};
   return (
     <div className="h-full flex flex-col">
       {/* 로고 */}
