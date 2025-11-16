@@ -5,6 +5,14 @@ import LoveGif from "@/assets/Gifs/love-cookie.gif";
 import MixedGif from "@/assets/Gifs/mixed-cookie.gif";
 import MoneyGif from "@/assets/Gifs/money-cookie.gif";
 import RottenGif from "@/assets/Gifs/rotten-cookie.gif";
+import GloomyGif from "@/assets/Gifs/gloomy-cookie.gif";
+import PpepperoGif from "@/assets/Gifs/ppeppero-cookie.gif";
+import SansamGif from "@/assets/Gifs/sansam-cookie.gif";
+import DeveloperGif from "@/assets/Gifs/developer-cookie.gif";
+import LavaGif from "@/assets/Gifs/lava-cookie.gif";
+import SantaGif from "@/assets/Gifs/santa-cookie.gif";
+import UnicornGif from "@/assets/Gifs/unicorn-cookie.gif";
+
 import BinButton from "@/assets/ui/bin-button.webp";
 import InventoryImg from "@/assets/ui/CookieInventory.svg";
 import Pig from "@/assets/ui/MainPig.svg";
@@ -45,13 +53,13 @@ const titleToGif: Record<string, string> = {
   "믹스쿠키": MixedGif,
   "시련쿠키": RottenGif,
   // 실제 gif로 교체해야 함
-  "먹구름쿠키": MixedGif,
-  "빼빼로쿠키": MixedGif,
-  "산삼쿠키": MixedGif,
-  "개발자쿠키": MixedGif,
-  "용암쿠키": MixedGif,
-  "산타쿠키": MixedGif,
-  "유니콘쿠키": MixedGif,
+  "먹구름쿠키": GloomyGif,
+  "빼빼로쿠키": PpepperoGif,
+  "산삼쿠키": SansamGif,
+  "개발자쿠키": DeveloperGif,
+  "용암쿠키": LavaGif,
+  "산타쿠키": SantaGif,
+  "유니콘쿠키": UnicornGif,
 };
 
 const getTodayLocalString = () => {
