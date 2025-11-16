@@ -1,5 +1,6 @@
 // src/store/useFortuneStore.ts
 import { create } from "zustand";
+import { api } from "@/lib/api";
 import {
   fortuneAPI,
   type FortuneResponse,
@@ -9,7 +10,11 @@ import {
   type GuestFortuneRes,
   type FortuneTypeDetail,
 } from "@/lib/fortuneAPI";
-import { issueFortuneShareLink, type FortuneShareLinkResponse } from "@/lib/shareAPI"
+
+import {
+  adaptFortune,
+  type RawFortuneResponse,
+} from "@/adapters/fortuneAdapter";
 
 type ScoreKeys = "health" | "achievement" | "love" | "money";
 
