@@ -39,6 +39,13 @@ export function GiftRecipient({ searchUsers, onChange, value, placeholder = "받
     }, 250)
     return () => clearTimeout(t)
   }, [query, searchUsers])
+  
+  const handleSelect = React.useCallback((user: UserOption) => {
+    console.log('Selected user:', user) // 디버깅용
+    onChange({ userId: user.id, nickname: user.nickname })
+    setOpen(false)
+    setQuery("") // 검색어 초기화
+  }, [onChange])
 
   return (
     <div className="w-full space-y-2 flex flex-row">
@@ -74,10 +81,8 @@ export function GiftRecipient({ searchUsers, onChange, value, placeholder = "받
                 <CommandItem
                   key={u.id}
                   value={u.nickname}
-                  onSelect={() => {
-                    onChange({ userId: u.id, nickname: u.nickname })
-                    setOpen(false)
-                  }}
+                  onSelect={() => handleSelect(u)}
+                  className="cursor-pointer"
                 >
                   <span className="font-galmuri">{u.nickname}</span>
                   <span className="ml-auto text-[11px] text-gray-500">@{u.id}</span>

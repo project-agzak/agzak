@@ -10,58 +10,113 @@ import { SuccessModal } from "@/components/organisms/GiftSuccessModal"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/Dialog"
 import * as React from "react"
 
-type SubmitPayload = { toUserId?: number; nickname?: string; message: string }
+type SubmitPayload = { 
+  receiverId: number
+  cookieId: number
+  message: string 
+}
 
 type Props = {
   open: boolean
   onOpenChange: (v: boolean) => void
   CookieSrc: string
+  cookieId: number
   /** 닉네임 검색 API */
   searchUsers: (q: string) => Promise<{ id: number; nickname: string }[]>
   /** 전송 핸들러 */
   onSubmit: (payload: SubmitPayload) => Promise<void>
+  onSuccessClose?: () => void 
 }
 
-export function GiftModal({ open, onOpenChange, CookieSrc, searchUsers, onSubmit }: Props) {
+export function GiftModal({ open, onOpenChange, CookieSrc, cookieId, searchUsers, onSubmit, onSuccessClose }: Props) {
   const [to, setTo] = React.useState<{ userId?: number; nickname?: string }>({})
   const [msg, setMsg] = React.useState("")
   const [loading, setLoading] = React.useState(false)
   const [showSuccess, setShowSuccess] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
 
   const canSubmit =
     (!!to.userId || !!(to.nickname && to.nickname.trim().length > 0)) &&
     msg.trim().length > 0
 
   const handleSubmit = async () => {
-    if (!canSubmit || loading) return
+    console.log('Submit attempt:', { to, msg, cookieId, canSubmit })
+    
+    if (!canSubmit || loading) {
+      console.warn('Cannot submit:', { canSubmit, loading })
+      return
+    }
+    
+    if (!to.userId) {
+      console.error('No userId selected')
+      setError("받는 사람을 선택해주세요")
+      return
+    }
+    
     setLoading(true)
+    setError(null)
     try {
-      await onSubmit({ ...to, message: msg.trim() })
+      const payload = {
+        receiverId: to.userId,
+        cookieId: cookieId,
+        message: msg.trim()
+      }
+      console.log('Sending payload:', payload)
+      
+      await onSubmit(payload)
       setShowSuccess(true)
+    } catch (error) {
+      console.error('Submit error:', error)
+      const errorMessage = error instanceof Error ? error.message : "선물 전송에 실패했습니다"
+      setError(errorMessage)
+      alert(errorMessage)
     } finally {
       setLoading(false)
     }
   }
 
   const handleSuccessClose = () => {
+    console.log('Closing success modal')
     setShowSuccess(false)
     onOpenChange(false)
     setTo({})
     setMsg("")
+    setError(null)
+    // 부모에게 "성공 모달 닫힘" 알림
+    onSuccessClose?.()
   }
+
+  React.useEffect(() => {
+    if (!open) {
+      setTo({})
+      setMsg("")
+      setError(null)
+      setShowSuccess(false)
+    }
+  }, [open])
+
+  if (showSuccess) {
+    return (
+      <SuccessModal
+        open={showSuccess}
+        onClose={handleSuccessClose}
+      />
+    )
+  }
+
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onOpenChange}>
+      <Dialog open={open && !showSuccess} onOpenChange={onOpenChange}>
         <DialogContent
-          showCloseButton={false}
-          className="
-            p-0
-            bg-transparent border-none
-            overflow-visible
-            flex items-center justify-center
-          "
-        >
+            showCloseButton={false}
+            className="
+              p-0
+              bg-transparent border-none
+              overflow-visible
+              flex items-center justify-center
+            "
+          >
           {/* 봉투 배경 */}
           <div className="relative w-[340px]">
             <img
@@ -96,6 +151,11 @@ export function GiftModal({ open, onOpenChange, CookieSrc, searchUsers, onSubmit
               />
 
               <GiftMessageBox value={msg} onChange={setMsg} maxLength={50} className="mb-3" />
+              {error && (
+                  <p className="text-red-500 text-xs font-galmuri-small text-center">
+                    {error}
+                  </p>
+                )}
                 <div className="flex justify-center pr-1 ml-1.5">
                   <button
                     type="button"
@@ -130,25 +190,3 @@ export function GiftModal({ open, onOpenChange, CookieSrc, searchUsers, onSubmit
     </>
   )
 }
-
-
- // 사용하는 법
-// import { GiftModal } from "@/components/organisms/GiftModal";
-// import AchievementCookie from "@/assets/Cookies/achievement-cookie.webp";
-// import HealthCookie from "@/assets/Cookies/health-cookie.webp";
-// import LoveCookie from "@/assets/Cookies/love-cookie.webp";
-// import MixedCookie from "@/assets/Cookies/mixed-cookie.webp";
-// import MoneyCookie from "@/assets/Cookies/money-cookie.webp";
-// import RottenCookie from "@/assets/Cookies/rotten-cookie.webp";
-
-    // <>
-    //   <button className="btn" onClick={() => setGiftOpen(true)}>선물하기</button>
-
-    //   <GiftModal
-    //     open={giftOpen}
-    //     onOpenChange={setGiftOpen}
-    //     CookieSrc={[HealthCookie, AchievementCookie, LoveCookie, MoneyCookie, MixedCookie, RottenCookie][Math.floor(Math.random() * 6)]}
-    //     searchUsers={searchUsers}
-    //     onSubmit={handleSubmit}
-    //   />
-    // </>

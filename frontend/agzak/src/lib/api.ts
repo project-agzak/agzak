@@ -3,7 +3,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 import type { AxiosRequestConfig, AxiosResponse } from "axios";
 import { apiClient } from "./axios";
 
-export type ApiError = { status?: number; code?: string | number; message: string; raw?: any };
+export type ApiError = { status?: number; code?: string | number; message: string; raw?: any; timestamp?:string; path?:string };
 export type ApiResponse<T> = {
   ok: boolean;
   data?: T | undefined;
