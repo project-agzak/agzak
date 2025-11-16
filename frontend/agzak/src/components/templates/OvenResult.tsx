@@ -47,7 +47,6 @@ const cookieImageMap: Record<FortuneCookieResult["code"], string> = {
   ACHIEVEMENT: cookieAchievement,
   MIXED: cookieMixed,
   ROTTEN: cookieRotten,
-  // 새로운 타입들 추가 (이미지 추가 필요)
   GLOOMY: cookieGloomy,
   PPEPPERO: cookiePpeppero,
   SANSAM: cookieSansam,
@@ -64,12 +63,12 @@ const labelMap: Record<FortuneCookieResult["code"], string> = {
   ACHIEVEMENT: "푸르른 성취쿠키",
   MIXED: "영롱한 믹스쿠키",
   ROTTEN: "새까만 시련쿠키",
-  GLOOMY: "이런.. 먹구름쿠키",
-  PPEPPERO: "11.11엔 빼빼로쿠키",
+  GLOOMY: "축축한 먹구름쿠키",
+  PPEPPERO: "오도독 빼빼로쿠키",
   SANSAM: "건강팔팔 산삼쿠키",
   DEVELOPER: "체크남방 개발자쿠키",
-  LAVA: "먹으면 안돼 용암쿠키",
-  SANTA: "크리스마스 산타쿠키",
+  LAVA: "뜨거운 용암쿠키",
+  SANTA: "두근두근 산타쿠키",
   UNICORN: "신비한 유니콘쿠키",
 }
 

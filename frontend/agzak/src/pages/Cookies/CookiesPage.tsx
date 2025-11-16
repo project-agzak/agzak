@@ -52,7 +52,6 @@ const titleToGif: Record<string, string> = {
   "금전쿠키": MoneyGif,
   "믹스쿠키": MixedGif,
   "시련쿠키": RottenGif,
-  // 실제 gif로 교체해야 함
   "먹구름쿠키": GloomyGif,
   "빼빼로쿠키": PpepperoGif,
   "산삼쿠키": SansamGif,
@@ -268,14 +267,14 @@ export default function CookiesPage() {
             disabled={!selectedCookie || isDeleting}
             className="disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition"
           >
-            <img src={BinButton} alt="삭제하기" className="w-auto h-[50px]" />
+            <img src={BinButton} alt="삭제하기" className="w-auto h-[50px] cursor-pointer" />
           </button>
           <button
             onClick={giftSelected}
             disabled={!selectedCookie || isDetailLoading || isDeleting}
             className="disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition"
           >
-            <img src={SendButton} alt="선물하기" className="w-auto h-[50px]" />
+            <img src={SendButton} alt="선물하기" className="w-auto h-[50px] cursor-pointer" />
           </button>
         </div>
       </div>
