@@ -156,6 +156,7 @@ export default function CookiesPage() {
     message: string 
     }) => {
       console.log('CookiesPage handleGiftSubmit:', payload)
+
       await sendGift(payload);
 
 
