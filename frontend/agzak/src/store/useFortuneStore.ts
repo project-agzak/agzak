@@ -95,6 +95,7 @@ type FortuneState = {
 
   // actions
   fetchToday: () => Promise<void>;
+  fetchMemberToday: (memberId: number) => Promise<void>;
   fetchGuest: (payload: GuestFortuneReq) => Promise<void>;
   fetchTypeDetail: (fortuneTypeId: number, force?: boolean) => Promise<FortuneTypeDetail | null>;
   fetchSharedFortune: (token: string) => Promise<void>;
@@ -299,6 +300,42 @@ export const useFortuneStore = create<FortuneState>((set, get) => ({
       set({
         error: "공유된 운세 정보를 불러오지 못했어요.",
         loading: false,
+      });
+    }
+  },
+
+  // 특정 회원 오늘 운세 조회
+  fetchMemberToday: async (memberId) => {
+    const { loading } = get();
+    if (loading) return;
+
+    set({ loading: true, error: null });
+    try {
+      const res = await fortuneAPI.getMemberToday(memberId);
+      if (res.ok && res.data) {
+        const d: FortuneResponse | any = res.data;
+        const { scores, type } = pickScoresTypeGuestId(d);
+
+        set({
+          scores: scores ?? null,
+          typeInfo: type ?? null,
+          loading: false,
+        });
+      } else {
+        set({
+          loading: false,
+          error:
+            res.error?.code === 404
+              ? "해당 회원의 오늘 운세가 아직 없습니다."
+              : toErrorMsg(res.error) ??
+                "해당 회원의 오늘 운세를 불러오지 못했습니다.",
+        });
+      }
+    } catch (e) {
+      set({
+        loading: false,
+        error:
+          toErrorMsg(e) ?? "해당 회원의 오늘 운세를 불러오지 못했습니다.",
       });
     }
   },
