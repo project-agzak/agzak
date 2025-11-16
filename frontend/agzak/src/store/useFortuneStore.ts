@@ -1,5 +1,6 @@
 // src/store/useFortuneStore.ts
 import { create } from "zustand";
+import { api } from "@/lib/api";
 import {
   fortuneAPI,
   type FortuneResponse,
@@ -9,6 +10,11 @@ import {
   type GuestFortuneRes,
   type FortuneTypeDetail,
 } from "@/lib/fortuneAPI";
+
+import {
+  adaptFortune,
+  type RawFortuneResponse,
+} from "@/adapters/fortuneAdapter";
 
 type ScoreKeys = "health" | "achievement" | "love" | "money";
 
@@ -91,7 +97,7 @@ type FortuneState = {
   fetchToday: () => Promise<void>;
   fetchGuest: (payload: GuestFortuneReq) => Promise<void>;
   fetchTypeDetail: (fortuneTypeId: number, force?: boolean) => Promise<FortuneTypeDetail | null>;
-  fetchMemberToday: (memberId: number) => Promise<void>;
+  fetchSharedFortune: (token: string) => Promise<void>;
   reset: () => void;
 
   // 쿠키 효과 합산
@@ -272,37 +278,29 @@ export const useFortuneStore = create<FortuneState>((set, get) => ({
     return pickTotalSummary(s as any);
   },
 
-  // 특정 회원 오늘의 운세 조회
-  fetchMemberToday: async (memberId) => {
-    const { loading } = get();
-    if (loading) return;
 
+  // 공유하기
+  async fetchSharedFortune(token: string) {
     set({ loading: true, error: null });
     try {
-      const res = await fortuneAPI.getMemberToday(memberId);
-      if (res.ok && res.data) {
-        const d: FortuneResponse | any = res.data;
-        const { scores, type } = pickScoresTypeGuestId(d);
+      const res = await api.get<RawFortuneResponse>(`/fortune/share/${token}`);
+      if (!res.ok || !res.data) throw new Error("공유 운세 조회 실패");
 
-        // 해당 회원의 점수/타입만 갱신
-        set({
-          scores: scores ?? null,
-          typeInfo: type ?? null,
-          loading: false,
-        });
-      } else {
-        set({
-          loading: false,
-          error: toErrorMsg(res.error) ?? "회원의 오늘 운세를 불러오지 못했습니다.",
-        });
-      }
-    } catch (e) {
+      const adapted = adaptFortune(res.data);
+
       set({
+        scores: adapted.scores,
+        typeInfo: adapted.type,
+        // fetchToday에서 세팅하는 나머지 값들 동일하게
         loading: false,
-        error: toErrorMsg(e) ?? "회원의 오늘 운세를 불러오지 못했습니다.",
+      });
+    } catch (e) {
+      console.error(e);
+      set({
+        error: "공유된 운세 정보를 불러오지 못했어요.",
+        loading: false,
       });
     }
   },
-
 }));
 
