@@ -9,6 +9,13 @@ import cookieLove from "@/assets/Cookies/love-cookie.webp"
 import cookieMixed from "@/assets/Cookies/mixed-cookie.webp"
 import cookieMoney from "@/assets/Cookies/money-cookie.webp"
 import cookieRotten from "@/assets/Cookies/rotten-cookie.webp"
+import cookieGloomy from "@/assets/Cookies/gloomy-cookie.webp"
+import cookiePpeppero from "@/assets/Cookies/ppeppero-cookie.webp"
+import cookieSansam from "@/assets/Cookies/sansam-cookie.webp"
+import cookieDeveloper from "@/assets/Cookies/developer-cookie.webp"
+import cookieLava from "@/assets/Cookies/lava-cookie.webp"
+import cookieSanta from "@/assets/Cookies/santa-cookie.webp"
+import cookieUnicorn from "@/assets/Cookies/unicorn-cookie.webp"
 // 여기서 쿠키 이미지 가져와야 함
 import speechBubble from "@/assets/ui/speech-bubble.svg"
 import { Button_L } from "@/components/atoms/Button_L"
@@ -40,14 +47,13 @@ const cookieImageMap: Record<FortuneCookieResult["code"], string> = {
   ACHIEVEMENT: cookieAchievement,
   MIXED: cookieMixed,
   ROTTEN: cookieRotten,
-  // 새로운 타입들 추가 (이미지 추가 필요)
-  GLOOMY: cookieMixed,
-  PPEPPERO: cookieMixed,
-  SANSAM: cookieMixed,
-  DEVELOPER: cookieMixed,
-  LAVA: cookieMixed,
-  SANTA: cookieMixed,
-  UNICORN: cookieMixed,
+  GLOOMY: cookieGloomy,
+  PPEPPERO: cookiePpeppero,
+  SANSAM: cookieSansam,
+  DEVELOPER: cookieDeveloper,
+  LAVA: cookieLava,
+  SANTA: cookieSanta,
+  UNICORN: cookieUnicorn,
 }
 
 const labelMap: Record<FortuneCookieResult["code"], string> = {
@@ -57,13 +63,13 @@ const labelMap: Record<FortuneCookieResult["code"], string> = {
   ACHIEVEMENT: "푸르른 성취쿠키",
   MIXED: "영롱한 믹스쿠키",
   ROTTEN: "새까만 시련쿠키",
-  GLOOMY: "이런.. 먹구름쿠키",
-  PPEPPERO: "11.11엔 빼빼로쿠키",
+  GLOOMY: "축축한 먹구름쿠키",
+  PPEPPERO: "오도독 빼빼로쿠키",
   SANSAM: "건강팔팔 산삼쿠키",
   DEVELOPER: "체크남방 개발자쿠키",
-  LAVA: "먹으면 안돼 용암쿠키",
-  SANTA: "크리스마스 산타쿠키",
-  UNICORN: "초럭키 유니콘쿠키",
+  LAVA: "뜨거운 용암쿠키",
+  SANTA: "두근두근 산타쿠키",
+  UNICORN: "신비한 유니콘쿠키",
 }
 
 export default function OvenResult({
