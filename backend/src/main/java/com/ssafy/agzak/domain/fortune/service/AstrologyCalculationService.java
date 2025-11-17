@@ -16,20 +16,20 @@ import java.util.Map;
 public class AstrologyCalculationService {
 
     private final SwissEphDataService swissEphDataService;
-    private static final int BASE_SCORE = 125;
+    private static final int BASE_SCORE = 135;
     private static final int SCORE_MIN = 0;
     private static final int SCORE_MAX = 250;
 
     // 점수 가중치 (부정적 1.5배)
     private static final int WEIGHT_POSITIVE_MAJOR = 40; // 목성, 토성, 태양 등
-    private static final int WEIGHT_NEGATIVE_MAJOR = -60; // (1.5x)
+    private static final int WEIGHT_NEGATIVE_MAJOR = -40;
 
     private static final int WEIGHT_POSITIVE_MINOR = 25; // 금성, 화성, 수성
-    private static final int WEIGHT_NEGATIVE_MINOR = -38; // (약 1.5x)
+    private static final int WEIGHT_NEGATIVE_MINOR = -25;
 
     // 달 가중치 (일일 변동성)
     private static final int WEIGHT_POSITIVE_MOON = 20; // 프롬프트: 40~50%의 변동성
-    private static final int WEIGHT_NEGATIVE_MOON = -30; // (1.5x)
+    private static final int WEIGHT_NEGATIVE_MOON = -20;
 
     // 어스펙트 이름 상수
     private static final String CONJUNCTION = "Conjunction";
