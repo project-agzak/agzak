@@ -346,6 +346,9 @@ public class CookieGameService {
     }
 
     private static String decideCookieKindCode(int love, int money, int ach, int health, int total) {
+        // ---- LEGENDARY ----
+        if (total == 77) return "LUCKY";
+
         // ---- UNIQUE ----
         if (love <= -20 && money <= -20 && ach <= -20 && health <= -20) return "LAVA";
         if (love == 12 && health == 25) return "SANTA";
