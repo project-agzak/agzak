@@ -16,7 +16,13 @@ type KakaoShareButtonProps = {
   className?: string;
   imgClassName?: string;
   /** ShareButton처럼 보상 콜백 (선택) */
-  onShared?: () => void;
+   /** 공유 전에 실행할 로직 (예: 세션 남았는지 체크). false 반환하면 공유 취소 */
+  beforeShare?: () => Promise<boolean> | boolean;
+
+  /** 공유 후에 실행할 로직 (예: 세션 +1 claim) */
+  afterShare?: () => Promise<void> | void;
+
+
 };
 
 export function KakaoShareButton({
@@ -26,7 +32,8 @@ export function KakaoShareButton({
   imageUrl = "https://www.agzak.co.kr/images/Sample.png",
   className,
   imgClassName = "w-[50px]",
-  onShared,
+   beforeShare,
+  afterShare,
 }: KakaoShareButtonProps) {
   const [busy, setBusy] = React.useState(false);
 
@@ -35,9 +42,19 @@ export function KakaoShareButton({
     setBusy(true);
 
     trackEvent("share_click", { origin: url, method: "kakao" });
+  try {
+      // 1) 공유 전에 할 일 (세션 확인 등)
+      if (beforeShare) {
+        const ok = await beforeShare();
+        if (!ok) {
+          // 세션 없으면 여기서 끝 (카카오 공유 안 띄움)
+          return;
+        }
+      }
 
-    try {
-      // 실제 카카오 공유 호출
+      // 2) 실제 카카오 공유 호출
+      trackEvent("share_click", { origin: url, method: "kakao" });
+
       shareKakaoFeed({
         title,
         description,
@@ -45,9 +62,13 @@ export function KakaoShareButton({
         url,
       });
 
-      // SDK가 콜백을 안 주니까 "요청 성공"을 성공으로 간주
+      // SDK는 콜백이 없으니까 "요청 보냄" = 성공으로 간주
       trackEvent("share_success", { origin: url, method: "kakao" });
-      onShared?.(); // 필요할 때만 세션 +1 같은 보상 처리
+
+      // 3) 공유 이후 처리 (세션 +1 같은 보상)
+      if (afterShare) {
+        await afterShare();
+      }
     } catch (err: any) {
       trackError(
         "share_kakao_fail",
@@ -59,7 +80,6 @@ export function KakaoShareButton({
       setBusy(false);
     }
   };
-
   return (
     <button
       type="button"
