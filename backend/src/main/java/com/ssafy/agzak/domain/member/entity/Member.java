@@ -1,5 +1,6 @@
 package com.ssafy.agzak.domain.member.entity;
 
+import com.ssafy.agzak.domain.fortune.dto.response.LatLng;
 import com.ssafy.agzak.domain.member.dto.request.MemberEditRequest;
 import jakarta.persistence.*;
 import lombok.*;
@@ -81,6 +82,11 @@ public class Member {
         this.birthDate = request.birthDate();
         this.birthTime = request.birthTime();
         this.birthCity = request.birthCity();
+    }
+
+    public void updateLatlng(LatLng request) {
+        this.latitude = request.latitude();
+        this.longitude = request.longitude();
     }
 
     public void deleteMember() {

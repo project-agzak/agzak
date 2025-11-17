@@ -1,14 +1,12 @@
 package com.ssafy.agzak.domain.member.service;
 
 import com.ssafy.agzak.domain.auth.repository.OAuthIdentityRepository;
-import com.ssafy.agzak.domain.fortune.dto.response.DetailFortuneDataResponse;
-import com.ssafy.agzak.domain.fortune.dto.response.FinalFortuneResponse;
-import com.ssafy.agzak.domain.fortune.dto.response.FortuneAspectResponse;
-import com.ssafy.agzak.domain.fortune.dto.response.FortuneTypeResponse;
+import com.ssafy.agzak.domain.fortune.dto.response.*;
 import com.ssafy.agzak.domain.fortune.entity.Fortune;
 import com.ssafy.agzak.domain.fortune.entity.FortuneAspect;
 import com.ssafy.agzak.domain.fortune.repository.FortuneAspectRepository;
 import com.ssafy.agzak.domain.fortune.repository.FortuneRepository;
+import com.ssafy.agzak.domain.fortune.service.GeocodingService;
 import com.ssafy.agzak.domain.member.dto.request.MemberEditRequest;
 import com.ssafy.agzak.domain.member.dto.response.MemberGraphResponse;
 import com.ssafy.agzak.domain.member.dto.response.MemberInfoResponse;
@@ -45,6 +43,8 @@ public class MemberService {
     private final OAuthIdentityRepository oauthRepo;
     private final RefreshTokenStore  refreshStore;
     private final RankingService rankingService;
+    private final GeocodingService geocodingService;
+
 
     private Member findMemberOrThrow(long memberId) {
         return memberRepository.findById(memberId)
@@ -135,6 +135,9 @@ public class MemberService {
         }
 
         member.updateInfo(request);
+        //위경도 변환
+        LatLng geo = geocodingService.getCoordinates(request.birthCity());
+        member.updateLatlng(geo);
     }
 
     public FinalFortuneResponse getMemberFortuneAsFinal(Long memberId, LocalDate date) {
