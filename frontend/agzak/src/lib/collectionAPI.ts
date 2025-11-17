@@ -4,7 +4,6 @@ import { api, type ApiResponse } from "@/lib/api";
 
 export const COLLECTION_COOKIE_CODES = [
   "GLOOMY",
-  "PPEPPERO",
   "SANSAM",
   "DEVELOPER",
   "MIXED",

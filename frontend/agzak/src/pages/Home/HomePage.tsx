@@ -40,7 +40,7 @@ const { initHome } = useHomeStore();
   const canEnforce = remainingSessions > 0; // 세션이 남아야 강화 페이지 진입 허용
   const canUnlockMore = quota?.unlockable ? quota.unlockable > 0 : false; // 더 획득 가능한지
 const shouldShowLoading =
-  isLoggedIn && (loadingFortune || totalScore === null);
+  isLoggedIn && loadingFortune && totalScore === null;
 
   useEffect(() => {
     refresh(); // KST 자정 기준 새로고침해도 여기서 갱신됨
