@@ -7,6 +7,7 @@ export type CookieCollectionItemProps = {
   detail: FortuneCookieDetail;
   selected: boolean;
   onSelect?: (id: string) => void;
+  clickable?: boolean;
 };
 
 const rarityColorMap: Record<string, string> = {
@@ -22,28 +23,35 @@ export function CookieCollectionItem({
   detail,
   selected,
   onSelect,
+  clickable = true,
 }: CookieCollectionItemProps) {
   const handleClick = () => {
+    if (!clickable) return;
     onSelect?.(id);
   };
 
-  // 등급 텍스트 계산 ("등급: " 제거)
   const rawRarity = detail.effects?.[1]?.label?.replace("등급: ", "") ?? "";
   const rarityColor = rarityColorMap[rawRarity] ?? "#121212";
 
   return (
     <div className="relative flex flex-col items-center justify-center">
-      {/* 쿠키 버튼 */}
+       {/* 쿠키 버튼 */}
       <button
         type="button"
         onClick={handleClick}
-        className="relative flex items-center justify-center focus:outline-none"
+        className={
+          "relative flex items-center justify-center focus:outline-none " +
+          "transition-transform active:scale-95 cursor-pointer"
+        }
       >
         <img
           src={imgSrc}
           alt={detail.title}
-          className="h-[90px] w-[90px] object-contain"
           draggable={false}
+          className={
+            "h-[90px] w-[90px] object-contain pixelated " +
+            (selected ? "animate-bounce motion-reduce:animate-none" : "")
+          }
         />
       </button>
 

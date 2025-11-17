@@ -162,8 +162,9 @@ export default function CookiesCollectionPage() {
                     imgSrc={slot.imageSrc}
                     detail={detail}
                     selected={selectedCode === slot.code}
+                    clickable={discovered}
                     onSelect={(id) => {
-                      if (!discovered) return; // 못 얻은 쿠키는 클릭 무시
+                      if (!discovered) return;
                       setSelectedCode((prev) =>
                         prev === id ? null : (id as CollectionCookieCode)
                       );
