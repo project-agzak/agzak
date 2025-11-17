@@ -29,7 +29,6 @@ import LavaCookie from "@/assets/Cookies/lava-cookie.webp";
 import LoveCookie from "@/assets/Cookies/love-cookie.webp";
 import MixedCookie from "@/assets/Cookies/mixed-cookie.webp";
 import MoneyCookie from "@/assets/Cookies/money-cookie.webp";
-import PpepperroCookie from "@/assets/Cookies/ppeppero-cookie.webp";
 import RottenCookie from "@/assets/Cookies/rotten-cookie.webp";
 import SansamCookie from "@/assets/Cookies/sansam-cookie.webp";
 import SantaCookie from "@/assets/Cookies/santa-cookie.webp";
@@ -64,7 +63,6 @@ const TYPE_IMAGE_MAP: Record<string, string> = {
 
 const COOKIE_IMAGE_MAP: Record<CollectionCookieCode, string> = {
   GLOOMY: GloomyCookie,
-  PPEPPERO: PpepperroCookie,
   SANSAM: SansamCookie,
   DEVELOPER: DeveloperCookie,
   MIXED: MixedCookie,

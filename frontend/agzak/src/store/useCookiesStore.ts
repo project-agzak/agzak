@@ -130,7 +130,6 @@ import LavaCookie from "@/assets/Cookies/lava-cookie.webp";
 import LoveCookie from "@/assets/Cookies/love-cookie.webp";
 import MixedCookie from "@/assets/Cookies/mixed-cookie.webp";
 import MoneyCookie from "@/assets/Cookies/money-cookie.webp";
-import PpepperoCookie from "@/assets/Cookies/ppeppero-cookie.webp";
 import RottenCookie from "@/assets/Cookies/rotten-cookie.webp";
 import SansamCookie from "@/assets/Cookies/sansam-cookie.webp";
 import SantaCookie from "@/assets/Cookies/santa-cookie.webp";
@@ -153,8 +152,6 @@ const typeToMeta = (t: string) => {
       return { title: "시련쿠키", img: RottenCookie };
     case "GLOOMY":
       return { title: "먹구름쿠키", img: GloomyCookie };
-    case "PPEPPERO":
-      return { title: "빼빼로쿠키", img: PpepperoCookie };
     case "SANSAM":
       return { title: "산삼쿠키", img: SansamCookie };
     case "DEVELOPER":
