@@ -34,6 +34,7 @@ import SansamCookie from "@/assets/Cookies/sansam-cookie.webp";
 import SantaCookie from "@/assets/Cookies/santa-cookie.webp";
 import UnicornCookie from "@/assets/Cookies/unicorn-cookie.webp";
 import SecretCookie from "@/assets/Cookies/secret-cookie.webp";
+import LuckyCookie from "@/assets/Cookies/lucky-cookie.webp";
 
 import {
   COLLECTION_COOKIE_CODES,
@@ -74,6 +75,7 @@ const COOKIE_IMAGE_MAP: Record<CollectionCookieCode, string> = {
   LAVA: LavaCookie,
   SANTA: SantaCookie,
   UNICORN: UnicornCookie,
+  LUCKY: LuckyCookie,
 };
 
 const pickScores = (s: any): AdapterScoresLike | undefined => {
@@ -174,12 +176,14 @@ const typeInfo = useFortuneStore((s) => s.memberTypeInfo);
         (memberCollection ?? []).map((item) => [item.code, item])
       );
 
-      return COLLECTION_COOKIE_CODES.map((code) => {
-        const dto = map.get(code);
-        const collected = !!dto && (dto.count ?? 0) > 0;
+      return COLLECTION_COOKIE_CODES
+        .filter((code) => code !== "LUCKY")
+        .map((code) => {
+          const dto = map.get(code);
+          const collected = !!dto && (dto.count ?? 0) > 0;
 
-        return { code, dto, collected };
-      });
+          return { code, dto, collected };
+        });
     },
     [memberCollection]
   );

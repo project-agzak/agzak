@@ -18,16 +18,27 @@ export function ActionButton_M({
 }: ActionButtonMProps) {
   const [pressed, setPressed] = React.useState(false);
 
-  const handleMouseDown = () => !disabled && setPressed(true);
+  const handleMouseDown = () => {
+    if (!disabled) setPressed(true);
+  };
   const handleMouseUp = () => setPressed(false);
   const handleMouseLeave = () => setPressed(false);
   const handleClick = () => {
     if (!disabled && onClick) onClick();
   };
 
+  const wrapperClassName = [
+    "btnM-wrap",
+    pressed && !disabled ? "is-pressed" : "",
+    disabled ? "opacity-50 cursor-not-allowed" : "",
+    className ?? "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+
   return (
     <div
-      className={`btnM-wrap ${pressed ? "is-pressed" : ""} ${className ?? ""} ${disabled ? "is-disabled" : ""}`}
+      className={wrapperClassName}
       style={{ "--btn-width": `${width}px` } as React.CSSProperties}
       aria-disabled={disabled}
     >
