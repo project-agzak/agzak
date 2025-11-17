@@ -308,3 +308,16 @@ CREATE TABLE `notification` (
                                     FOREIGN KEY (`member_id`) REFERENCES `member`(`member_id`)
                                         ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB;
+
+/* =========================================================
+   10) 운세 해석
+   ========================================================= */
+CREATE TABLE `interpretations` (
+                             `id` BIGINT NOT NULL AUTO_INCREMENT,
+                             `aspect_key` VARCHAR(100) NOT NULL,
+                            `category` VARCHAR(50) NULL,
+                            `interpretation_text` TEXT NOT NULL,
+                            `created_at` DATETIME NOT NULL DEFAULT NOW(),
+                            PRIMARY KEY (`id`),
+                            UNIQUE KEY `UK_interpretations_aspect_key` (`aspect_key`)
+) ENGINE=InnoDB;
