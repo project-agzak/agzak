@@ -5,7 +5,7 @@ import ShareButton from "@/components/atoms/ShareButton";
 import RankingList from "@/components/molecules/RankingList";
 import { trackEvent } from "@/lib/analytics";
 import { useEffect, useMemo } from "react";
-
+import { KakaoShareButton } from "@/components/atoms/KakaoShareButton";
 import { useSessionQuotaStore } from "@/store/sessionQuotaStore";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useFortuneStore } from "@/store/useFortuneStore";
@@ -138,11 +138,30 @@ if (shouldShowLoading) {
             />
           </div>
         </div>
-        <ShareButton
-          label={canUnlockMore ? "공유하고 강화 횟수 +1" : "오늘의 세션 한도 도달"}
-          url={shareUrl}
-          onShared={handleShared}
-        />
+        <p className="text-center font-galmuri-xsmall text-[#777] mt-1 mb-2">
+    아래 버튼으로 공유하고 강화 횟수 +1
+  </p>
+         {/* 🔽 여기 부분만 변경 */}
+        <div className="flex justify-center pb-2 mt-2">
+          <div className="flex w-fit gap-[10px]">
+            <ShareButton
+              label={
+                canUnlockMore
+                  ? "공유하기"
+                  : "세션 끝"
+              }
+              url={shareUrl}
+              onShared={handleShared}
+            />
+          <KakaoShareButton
+            title="아그작 🥠 오늘의 운세"
+  description="쿠키 깨물고 운세 강화해봐!"
+  label="카카오로 공유하기"
+  url={shareUrl}
+  onShared={handleShared}   // ShareButton의 onShared와 동일한 콜백 재사용 가능
+/>
+          </div>
+        </div>
       </div>
       
       <div className="mt-1">

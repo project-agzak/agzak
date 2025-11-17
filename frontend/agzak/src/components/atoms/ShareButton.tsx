@@ -16,7 +16,7 @@ type ShareButtonProps = {
 
 export default function ShareButton({
   label = "공유하기",
-  width = 260,
+  width = 130,
   title = "아그작",
   text = "오늘의 운세를 확인하고 강화 해보세요. 점성술 기반 운세 + 쿠키 강화 게임!",
   url = typeof window !== "undefined" ? window.location.href : "",
@@ -91,21 +91,21 @@ export default function ShareButton({
 
   return (
     <div
-      className={`btnL-wrap ${pressed ? "is-pressed" : ""} ${className ?? ""}`}
+      className={`btnM-wrap ${pressed ? "is-pressed" : ""} ${className ?? ""}`}
       style={{ "--btn-width": `${width}px` } as React.CSSProperties}
       aria-busy={busy}
       aria-live="polite"
     >
       <img
-        src="/images/Button_Large.svg"
+        src="/images/Button_Medium.svg"
         alt=""
-        className="btnL-img"
+        className="btnM-img"
         draggable={false}
         aria-hidden="true"
       />
       <button
         type="button"
-        className="btnL-click"
+        className="btnM-click"
         onClick={shareOrCopy}
         onMouseDown={() => setPressed(true)}
         onMouseUp={() => setPressed(false)}
