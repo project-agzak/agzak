@@ -132,7 +132,7 @@ export const COOKIE_DETAIL_BY_CODE: Record<CollectionCookieCode, FortuneCookieDe
   LAVA: {
     title: TITLE,
     effects: [
-      { label: "금전운·애정운·성취운·건강운이 모두 -20 이하일 때" },
+      { label: "모든 운이 -20 이하일 때" },
       { label: "등급: UNIQUE" },
     ],
   },
