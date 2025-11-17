@@ -10,7 +10,6 @@ import LavaCookie from "@/assets/Cookies/lava-cookie.webp";
 import LoveCookie from "@/assets/Cookies/love-cookie.webp";
 import MixedCookie from "@/assets/Cookies/mixed-cookie.webp";
 import MoneyCookie from "@/assets/Cookies/money-cookie.webp";
-import PpepperoCookie from "@/assets/Cookies/ppeppero-cookie.webp";
 import RottenCookie from "@/assets/Cookies/rotten-cookie.webp";
 import SansamCookie from "@/assets/Cookies/sansam-cookie.webp";
 import SantaCookie from "@/assets/Cookies/santa-cookie.webp";
@@ -32,7 +31,7 @@ export type CookieKindInfo = {
 };
 export const COOKIE_KIND_BY_ID: Record<number, CookieKindInfo> = {
   1: { id: 1, code: "GLOOMY",      name: "먹구름 쿠키" },
-  2: { id: 2, code: "PPEPPERO",    name: "빼빼로 쿠키" },
+  // 2: { id: 2, code: "PPEPPERO",    name: "빼빼로 쿠키" },
   3: { id: 3, code: "SANSAM",      name: "산삼 쿠키" },
   4: { id: 4, code: "DEVELOPER",   name: "개발자 쿠키" },
   5: { id: 5, code: "MIXED",       name: "믹스 쿠키" },
@@ -114,7 +113,6 @@ const COOKIE_IMAGE_BY_CODE: Record<string, string> = {
   MIXED: MixedCookie,
   ROTTEN: RottenCookie,
   MONEY: MoneyCookie,
-  PPEPPERO: PpepperoCookie,
   GLOOMY: GloomyCookie,
   DEVELOPER: DeveloperCookie,
   SANSAM: SansamCookie,
