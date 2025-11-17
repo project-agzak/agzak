@@ -1,5 +1,6 @@
 package com.ssafy.agzak.domain.member.entity;
 
+import com.ssafy.agzak.domain.member.dto.request.MemberEditRequest;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -75,8 +76,11 @@ public class Member {
         this.nickname = nickname;
     }
 
-    public void updateBirthTime(LocalTime time) {
-        this.birthTime = time;
+    public void updateInfo(MemberEditRequest request) {
+        this.gender = request.gender();
+        this.birthDate = request.birthDate();
+        this.birthTime = request.birthTime();
+        this.birthCity = request.birthCity();
     }
 
     public void deleteMember() {

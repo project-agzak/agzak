@@ -134,10 +134,7 @@ public class MemberService {
             }
         }
 
-        // 출생시간 변경
-        if (request.birthTime() != null) {
-            member.updateBirthTime(request.birthTime());
-        }
+        member.updateInfo(request);
     }
 
     public FinalFortuneResponse getMemberFortuneAsFinal(Long memberId, LocalDate date) {
