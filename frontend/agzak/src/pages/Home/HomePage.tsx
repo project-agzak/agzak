@@ -34,7 +34,36 @@ const { initHome } = useHomeStore();
   const errorFortune     = useFortuneStore((s) => s.error);
 
   // 강화 세션 쿼터
-  const { quota, loading: quotaLoading, error: quotaError, refresh, claim } = useSessionQuotaStore();
+  const { quota, loading: quotaLoading, error: quotaError, refresh, claim } =
+  useSessionQuotaStore();
+
+// 🔹 카카오 공유 전에: 세션 남았는지 확인
+const checkShareQuota = async () => {
+  if (!quota?.unlockable || quota.unlockable <= 0) {
+    alert("오늘은 더 이상 세션을 획득할 수 없습니다.");
+    return false;
+  }
+  return true;
+};
+
+// 🔹 카카오 공유 후: 실제 세션 +1 처리
+const rewardAfterShare = async () => {
+  if (!quota?.unlockable || quota.unlockable <= 0) return;
+
+  const req = {
+    type: "ad" as const,
+    proof: "sdk-server-callback-token",
+    idempotencyKey: `${new Date().toISOString()}:ad:${nanoid(6)}`,
+  };
+
+  const r = await claim(req);
+  if (r.ok) {
+    await refresh();
+  } else {
+    alert(r.error || "세션 획득에 실패했습니다.");
+    console.warn(r.error);
+  }
+};
   // 현재 사용 가능한 세션 정보
   const remainingSessions = quota?.remaining ?? 0;
   const canEnforce = remainingSessions > 0; // 세션이 남아야 강화 페이지 진입 허용
@@ -158,7 +187,8 @@ if (shouldShowLoading) {
   description="쿠키 깨물고 운세 강화해봐!"
   label="카카오로 공유하기"
   url={shareUrl}
-  onShared={handleShared}   // ShareButton의 onShared와 동일한 콜백 재사용 가능
+  beforeShare={checkShareQuota}
+        afterShare={rewardAfterShare}  // ShareButton의 onShared와 동일한 콜백 재사용 가능
 />
           </div>
         </div>
