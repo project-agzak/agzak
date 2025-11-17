@@ -36,6 +36,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/auth/kakao/login", "/api/v1/auth/kakao/complete").permitAll()
                         .requestMatchers("/api/v1/auth/refresh").permitAll()
                         // 게스트 운세 조회/좌표/랭킹 조회 등 비회원 접근
+                        .requestMatchers(HttpMethod.GET, "/api/v1/fortune/share/**").permitAll()
                         .requestMatchers("/api/v1/fortune/guest", "/api/v1/fortune/city").permitAll()
                         .requestMatchers("/api/v1/rankings/today", "/api/v1/rankings/{date}").permitAll()
                         .anyRequest().authenticated()

@@ -43,7 +43,8 @@ UPDATE fortune_type SET good_with_id=9 , bad_with_id=4  WHERE fortune_type_id=12
 INSERT INTO rarity(code, name, sort_order)
 VALUES ('RARE', '레어', 1),
        ('EPIC', '에픽', 2),
-       ('UNIQUE', '유니크', 3);
+       ('UNIQUE', '유니크', 3),
+       ('LEGENDARY', '레전더리', 4);
 
 -- cookie_kind
 -- 13종 쿠키 시드 (레시피 포함)
@@ -106,6 +107,12 @@ FROM (
          SELECT 'UNICORN',     '유니콘 쿠키',
                 '금전운·애정운·성취운·건강운이 모두 +22 이상일 때',
                 '쿠키 굽기 대대성공!', 'UNIQUE'
+
+         /* ===== LEGENDARY ===== */
+         UNION ALL
+         SELECT 'LUCKY',       '럭키 쿠키',
+                '총점 77점 일 때',
+                '오늘의 행운은 전부 당신 거예요!', 'LEGENDARY'
      ) AS t
          JOIN rarity r ON r.code = t.r
 ON DUPLICATE KEY UPDATE
@@ -144,8 +151,3 @@ INSERT IGNORE INTO `interpretations` (`id`, `aspect_key`, `category`, `interpret
 (25,'MONEY_JUPITER_NEGATIVE','money','목성의 부정적 영향은 과도한 낙관주의와 무분별한 지출을 초래하여 재정적 손실을 불러올 수 있다. 투자나 금전 거래에서 현실적인 판단이 흐려지기 쉬우므로 신중한 계획과 검토가 필요하다. 전문가들은 재정 관리를 강화하고 충동적인 결정은 피할 것을 권장한다.','2025-11-16 11:46:27'),
 (26,'MONEY_VENUS_NEGATIVE','money','금성의 부정적 위치는 재정적 낭비, 과도한 소비 성향, 또는 물질적 만족에 대한 집착을 나타낸다. 이로 인해 금전 관리에 어려움이 발생할 수 있으며, 감정적 충동구매나 불필요한 지출이 잦아질 수 있다. 전문가 조언으로는 예산을 엄격히 관리하고, 물질적 욕구와 감정적 욕구를 구분하는 훈련이 필요하다.','2025-11-16 11:46:27'),
 (27,'MONEY_MOON_NEGATIVE','money','달이 부정적 위치에 있을 때, 감정적 불안정과 재정 관리의 어려움이 나타날 수 있으며, 충동적 소비나 금전적 손실 위험이 증가한다. 감정에 휘둘려 재정 결정을 내리기보다는 냉철한 분석과 계획이 필요하며, 예산 수립과 지출 기록을 철저히 하는 것이 중요하다. 전문가 조언으로는 감정적 안정과 자기 통제력을 강화하여 재정적 안정성을 확보하는 데 집중할 것을 권장한다.','2025-11-16 11:46:27');
-
-UPDATE cookie_kind
-SET is_active = 0,
-    updated_at = NOW()
-WHERE code = 'PPEPPERO';
