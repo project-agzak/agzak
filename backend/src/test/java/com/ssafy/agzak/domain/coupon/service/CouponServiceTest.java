@@ -3,9 +3,12 @@ package com.ssafy.agzak.domain.coupon.service;
 import com.ssafy.agzak.domain.coupon.dto.request.CreateCouponRequest;
 import com.ssafy.agzak.domain.coupon.entity.Coupon;
 import com.ssafy.agzak.domain.coupon.entity.CouponType;
+import com.ssafy.agzak.domain.coupon.entity.MemberCoupon;
 import com.ssafy.agzak.domain.coupon.repository.CouponRepository;
 import com.ssafy.agzak.domain.coupon.repository.CouponTypeRepository;
+import com.ssafy.agzak.domain.coupon.repository.CustomCouponRepository;
 import com.ssafy.agzak.domain.coupon.repository.MemberCouponRepository;
+import com.ssafy.agzak.domain.member.entity.Member;
 import com.ssafy.agzak.domain.member.repository.MemberRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,11 +18,11 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -40,6 +43,8 @@ class CouponServiceTest {
     private MemberRepository memberRepository;
     @Mock
     private CouponType couponType;
+    @Mock
+    private CustomCouponRepository customCouponRepository;
 
     @Test
     void createCoupon_정상_생성() {
@@ -102,6 +107,8 @@ class CouponServiceTest {
         Coupon coupon = mock(Coupon.class);
 
         when(couponRepository.findById(couponId)).thenReturn(Optional.of(coupon));
+//        when(customCouponRepository.findByCouponIdForUpdate(couponId)).thenReturn(Optional.of(coupon));
+        when(couponRepository.findById(couponId)).thenReturn(Optional.of(coupon));
         when(coupon.getTotalQuantity()).thenReturn(10);
         when(coupon.getIssuedQuantity()).thenReturn(5);
 
@@ -110,6 +117,38 @@ class CouponServiceTest {
 
         // then
         verify(coupon).issue();
+    }
+
+    @Test
+    void issueCoupon_정상_발급2() {
+        // given
+        Long couponId = 1L;
+        Long memberId = 1L;
+
+        Coupon coupon = mock(Coupon.class);
+        Member member = mock(Member.class);
+
+        // 수량 1개 증가에 성공했다고 가정 (영향받은 row = 1)
+        when(customCouponRepository.updateCouponQuantity(couponId)).thenReturn(1L);
+
+        // save용 reference 반환
+        when(couponRepository.getReferenceById(couponId)).thenReturn(coupon);
+        when(memberRepository.getReferenceById(memberId)).thenReturn(member);
+
+        // when
+        couponService.issueCoupon(couponId, memberId);
+
+        // then
+        // 1) 재고 증가 쿼리가 호출되었는지
+        verify(customCouponRepository).updateCouponQuantity(couponId);
+
+        // 2) MemberCoupon이 저장되었는지 + 안에 들어간 coupon/member가 맞는지
+        ArgumentCaptor<MemberCoupon> captor = ArgumentCaptor.forClass(MemberCoupon.class);
+        verify(memberCouponRepository).save(captor.capture());
+
+        MemberCoupon saved = captor.getValue();
+        assertThat(saved.getCoupon()).isEqualTo(coupon);
+        assertThat(saved.getMember()).isEqualTo(member);
     }
 
     @Test
@@ -148,7 +187,7 @@ class CouponServiceTest {
     }
 
     @Test
-    void issueCoupon_동시에_여러_사용자_접근시_정상_발급() throws InterruptedException {
+    void issueCoupon_동시에_여러_사용자_접근시_쿠폰_정상_카운트() throws InterruptedException {
         // given
         int count = 100;
         Long couponId = 1L;
@@ -164,16 +203,13 @@ class CouponServiceTest {
 
         ExecutorService executorService = Executors.newFixedThreadPool(10);
         CountDownLatch countDownLatch = new CountDownLatch(count);
-        ConcurrentLinkedQueue<Throwable> errors = new ConcurrentLinkedQueue<>();
 
         // when
         for (int i = 0; i < count; i++) {
             executorService.submit(() -> {
                 try {
                     couponService.issueCoupon(couponId, memberId);
-                } catch (Throwable t) {
-                    errors.add(t);
-                }finally {
+                } finally {
                     countDownLatch.countDown();
                 }
             });

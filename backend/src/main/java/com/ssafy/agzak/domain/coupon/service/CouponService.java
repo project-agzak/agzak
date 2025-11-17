@@ -1,11 +1,11 @@
 package com.ssafy.agzak.domain.coupon.service;
 
 import com.ssafy.agzak.domain.coupon.dto.request.CreateCouponRequest;
+import com.ssafy.agzak.domain.coupon.dto.response.CouponIssueResultResponse;
 import com.ssafy.agzak.domain.coupon.entity.Coupon;
+import com.ssafy.agzak.domain.coupon.entity.CouponEventCounter;
 import com.ssafy.agzak.domain.coupon.entity.MemberCoupon;
-import com.ssafy.agzak.domain.coupon.repository.CouponRepository;
-import com.ssafy.agzak.domain.coupon.repository.CouponTypeRepository;
-import com.ssafy.agzak.domain.coupon.repository.MemberCouponRepository;
+import com.ssafy.agzak.domain.coupon.repository.*;
 import com.ssafy.agzak.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,6 +19,8 @@ public class CouponService {
     private final CouponTypeRepository couponTypeRepository;
     private final MemberCouponRepository memberCouponRepository;
     private final MemberRepository memberRepository;
+    private final CustomCouponRepository customCouponRepository;
+    private final CouponEventCounterRepository couponEventCounterRepository;
 
     @Transactional
     public void createCoupon(CreateCouponRequest request) {
@@ -40,19 +42,104 @@ public class CouponService {
         coupon.expire();
     }
 
+
+    // 기본 버전: 동시성 문제로 인해 발급 수량 초과 가능
+//    @Transactional
+//    public void issueCoupon(Long couponId, Long memberId) {
+//        Coupon coupon = couponRepository.findById(couponId)
+//                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 쿠폰입니다."));
+//        if(coupon.getTotalQuantity() <= coupon.getIssuedQuantity()) {
+//            throw new IllegalArgumentException("발급 가능한 쿠폰 수량이 없습니다.");
+//        }
+//        coupon.issue();
+//        memberCouponRepository.save(
+//                MemberCoupon.builder()
+//                        .coupon(coupon)
+//                        .member(memberRepository.getReferenceById(memberId))
+//                        .build()
+//        );
+//    }
+
+    // synchronized 버전: 동시성 해결 불가
+//    @Transactional
+//    public synchronized void issueCoupon(Long couponId, Long memberId) {
+//        Coupon coupon = couponRepository.findById(couponId)
+//                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 쿠폰입니다."));
+//        if(coupon.getTotalQuantity() <= coupon.getIssuedQuantity()) {
+//            throw new IllegalArgumentException("발급 가능한 쿠폰 수량이 없습니다.");
+//        }
+//        coupon.issue();
+//        memberCouponRepository.save(
+//                MemberCoupon.builder()
+//                        .coupon(coupon)
+//                        .member(memberRepository.getReferenceById(memberId))
+//                        .build()
+//        );
+//    }
+
+    // 잠금 버전: 동시성 문제 해결, 처리 속도 저하 가능
+//    @Transactional
+//    public void issueCoupon(Long couponId, Long memberId) {
+//        Coupon coupon = customCouponRepository.findByCouponIdForUpdate(couponId)
+//                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 쿠폰입니다."));
+//        if(coupon.getTotalQuantity() <= coupon.getIssuedQuantity()) {
+//            throw new IllegalArgumentException("발급 가능한 쿠폰 수량이 없습니다.");
+//        }
+//        coupon.issue();
+//        memberCouponRepository.save(
+//                MemberCoupon.builder()
+//                        .coupon(coupon)
+//                        .member(memberRepository.getReferenceById(memberId))
+//                        .build()
+//        );
+//    }
+
+    // atomic update 버전: 동시성 문제 해결, 처리 속도 배타락 시도 대비 향상
+//    @Transactional
+//    public void issueCoupon(Long couponId, Long memberId) {
+//        long updated = customCouponRepository.updateCouponQuantity(couponId);
+//
+//        if (updated == 0) {
+//            throw new IllegalArgumentException("발급 가능한 쿠폰 수량이 없습니다.");
+//        }
+//
+//        memberCouponRepository.save(
+//                MemberCoupon.builder()
+//                        .coupon(couponRepository.getReferenceById(couponId))
+//                        .member(memberRepository.getReferenceById(memberId))
+//                        .build()
+//        );
+//    }
+
+//    // atomic update 버전: 동시성 문제 해결, 처리 속도 배타락 시도 대비 향상
     @Transactional
-    public void issueCoupon(Long couponId, Long memberId) {
-        Coupon coupon = couponRepository.findById(couponId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 쿠폰입니다."));
-        if(coupon.getTotalQuantity() <= coupon.getIssuedQuantity()) {
-            throw new IllegalArgumentException("발급 가능한 쿠폰 수량이 없습니다.");
+    public CouponIssueResultResponse issueCoupon(Long couponId, Long memberId) {
+
+        int inc = couponEventCounterRepository.increaseAttemptCount(couponId);
+
+        if (inc == 0) {
+            couponEventCounterRepository.save(
+                    CouponEventCounter.builder()
+                            .coupon(couponRepository.getReferenceById(couponId))
+                            .build()
+            );
         }
-        coupon.issue();
-        memberCouponRepository.save(
+
+        int order = couponEventCounterRepository.getAttemptCount(couponId);
+        long updated = customCouponRepository.updateCouponQuantity(couponId);
+
+        if (updated == 0) {
+            return CouponIssueResultResponse.failDueToSoldOut(order);
+        }
+
+        MemberCoupon saved = memberCouponRepository.save(
                 MemberCoupon.builder()
-                        .coupon(coupon)
+                        .coupon(couponRepository.getReferenceById(couponId))
                         .member(memberRepository.getReferenceById(memberId))
                         .build()
         );
+
+        return CouponIssueResultResponse.success(saved.getMemberCouponId(), order);
     }
+
 }
