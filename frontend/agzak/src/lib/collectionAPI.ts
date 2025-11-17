@@ -43,7 +43,7 @@ export type MemberCollectionParams = {
   nickname?: string;
 };
 
-const BASE_URL = "/api/v1/collection";
+const BASE_URL = "/collection";
 
 /**
  * 내 쿠키 도감 조회
