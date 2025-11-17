@@ -293,3 +293,47 @@ FROM member m
                    ON c.member_id = m.member_id AND c.cookie_kind_id = ck.cookie_kind_id
 WHERE m.status = 'ACTIVE'
   AND c.collection_id IS NULL;
+
+/* ===============================================
+   agzak MySQL DB update query 2.2.0 / 25.11.17
+   =============================================== */
+CREATE TABLE `interpretations` (
+                                   `id` BIGINT NOT NULL AUTO_INCREMENT,
+                                   `aspect_key` VARCHAR(100) NOT NULL,
+                                   `category` VARCHAR(50) NULL,
+                                   `interpretation_text` TEXT NOT NULL,
+                                   `created_at` DATETIME NOT NULL DEFAULT NOW(),
+                                   PRIMARY KEY (`id`),
+                                   UNIQUE KEY `UK_interpretations_aspect_key` (`aspect_key`)
+) ENGINE=InnoDB;
+
+UPDATE cookie_kind
+SET is_active = 0,
+    updated_at = NOW()
+WHERE code = 'PPEPPERO';
+
+
+INSERT INTO rarity (code, name, sort_order)
+VALUES ('LEGENDARY', '레전더리', 4)
+ON DUPLICATE KEY UPDATE
+                     name       = VALUES(name),
+                     sort_order = VALUES(sort_order);
+
+
+INSERT INTO cookie_kind (rarity_id, code, name, recipe, message, created_at, updated_at)
+SELECT r.rarity_id,
+       'LUCKY',
+       '럭키 쿠키',
+       '총점 77점 일 때',
+       '오늘의 행운은 전부 당신 거예요!',
+       NOW(),
+       NOW()
+FROM rarity r
+
+WHERE r.code = 'LEGENDARY'
+ON DUPLICATE KEY UPDATE
+                     rarity_id = VALUES(rarity_id),
+                     name      = VALUES(name),
+                     recipe    = VALUES(recipe),
+                     message   = VALUES(message),
+                     updated_at= NOW();
