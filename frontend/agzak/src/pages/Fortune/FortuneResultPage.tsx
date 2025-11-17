@@ -37,6 +37,7 @@ import FriendRabbit from "@/assets/Friends/FriendRabbit.webp";
 import FriendSheep from "@/assets/Friends/FriendSheep.webp";
 import FriendSnake from "@/assets/Friends/FriendSnake.webp";
 import FriendTiger from "@/assets/Friends/FriendTiger.webp";
+import { KakaoShareButton } from "@/components/atoms/KakaoShareButton";
 
 /** 앞면 카드: 이름 → 이미지 */
 const FRONT_BY_TYPE: Record<string, string> = {
@@ -333,13 +334,19 @@ export default function FortuneResultPage() {
           </style>
         </div>
 
-        <div>
-          <ShareButton
-          label="공유하기"
-          width={260}
-          url={effectiveShareUrl}
-          />
-        </div>
+       <div className="flex justify-center pt-4 pb-5">
+  <div className="flex w-fit gap-[10px] items-center">
+    <ShareButton
+      label="공유하기"
+      width={130}
+      url={effectiveShareUrl}
+    />
+    <KakaoShareButton   url={effectiveShareUrl}
+  title="오늘의 내 운세 카드 🔮"
+  description="운세 결과 공유하기"
+  imgClassName="w-[40px]" />
+  </div>
+</div>
       </div>
       </div>
     </main>
