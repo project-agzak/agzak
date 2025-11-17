@@ -1,4 +1,5 @@
-import { useEffect, useMemo } from "react";
+// src/pages/Cookies/CookiesCollectionPage.tsx
+import { useEffect, useMemo, useState } from "react";
 import CollectionImg from "@/assets/Background/Collection.svg";
 
 import AchievementCookie from "@/assets/Cookies/achievement-cookie.webp";
@@ -21,6 +22,8 @@ import {
   type CollectionCookieCode,
 } from "@/lib/collectionAPI";
 import { useCollectionStore } from "@/store/useCollectionStore";
+import { CookieCloverItem } from "@/components/molecules/CookieCloverItem";
+import type { FortuneCookieDetail } from "@/types/cookies";
 
 const COOKIE_IMAGE_BY_CODE: Record<CollectionCookieCode, string> = {
   GLOOMY: GloomyCookie,
@@ -54,10 +57,122 @@ const COOKIE_LABEL_BY_CODE: Partial<Record<CollectionCookieCode, string>> = {
   LUCKY: "럭키 쿠키",
 };
 
+const TITLE = "레시피"
+
+export const COOKIE_DETAIL_BY_CODE: Record<CollectionCookieCode, FortuneCookieDetail> = {
+  GLOOMY: {
+    title: TITLE,
+    effects: [
+      { label: "모든 운이 -10 이하" },
+      { label: "등급: EPIC" },
+    ],
+  },
+
+  SANSAM: {
+    title: TITLE,
+    effects: [
+      { label: "금전운이 +20 이상, 건강운이 +20 이상일 때"},
+      { label: "등급: EPIC" },
+    ],
+  },
+
+  DEVELOPER: {
+    title: TITLE,
+    effects: [
+      { label: "금전운이 +10 이상, 동시에 건강운이 -10 이하일 때" },
+      { label: "등급: EPIC" },
+    ],
+  },
+
+  MIXED: {
+    title: TITLE,
+    effects: [
+      { label: "모든 운 +10 이상" },
+      { label: "등급: EPIC" },
+    ],
+  },
+
+  MONEY: {
+    title: TITLE,
+    effects: [
+      { label: "금전운이 가장 높고, 금전운이 +5 이상, 총운이 +10 이상일 때" },
+      { label: "등급: RARE" },
+    ],
+  },
+
+  LOVE: {
+    title: TITLE,
+    effects: [
+      { label: "애정운이 가장 높고, 애정운이 +5 이상, 총운이 +10 이상일 때" },
+      { label: "등급: RARE" },
+    ],
+  },
+
+  ACHIEVEMENT: {
+    title: TITLE,
+    effects: [
+      { label: "성취운이 가장 높고, 성취운이 +5 이상, 총운이 +10 이상일 때"},
+      { label: "등급: RARE"},
+    ],
+  },
+
+  HEALTH: {
+    title: TITLE,
+    effects: [
+      { label: "건강운이 가장 높고, 건강운이 +5 이상, 총운이 +10 이상일 때" },
+      { label: "등급: RARE" },
+    ],
+  },
+
+  ROTTEN: {
+    title: TITLE,
+    effects: [
+      { label: "잘 구워 주세요..." },
+      { label: "등급: RARE" },
+    ],
+  },
+
+  LAVA: {
+    title: TITLE,
+    effects: [
+      { label: "모든 운이 -20 이하일 때" },
+      { label: "등급: UNIQUE" },
+    ],
+  },
+
+  SANTA: {
+    title: TITLE,
+    effects: [
+      { label: "애정운이 +12, 동시에 건강운이 +25일 때" },
+      { label: "등급: UNIQUE" },
+    ],
+  },
+
+  UNICORN: {
+    title: TITLE,
+    effects: [
+      { label: "모든 운 +22 이상" },
+      { label: "등급: UNIQUE",},
+    ],
+  },
+
+  LUCKY: {
+    title: TITLE,
+    effects: [
+      { label: "모든 운 +22 이상" },
+      { label: "등급: UNIQUE",},
+    ],
+  },
+};
+
+
 export default function CookiesCollectionPage() {
   const { myCollection, isLoadingMy, myError, loadMyCollection } =
     useCollectionStore();
 
+  const [selectedCode, setSelectedCode] = useState<CollectionCookieCode | null>(null);
+
+  // 첫 마운트 시 내 도감 불러오기
   useEffect(() => {
     if (!myCollection) {
       void loadMyCollection();
@@ -129,28 +244,46 @@ export default function CookiesCollectionPage() {
 
           <div
             className="
-              pointer-events-none
+              pointer-events-auto
               absolute inset-x-0 top-[1.5%] bottom-[8%] left-[3%] right-[3%]
               grid grid-cols-3 justify-items-center
             "
           >
-            {pageSlots.map((slot) => (
-              <div
-                key={slot.code}
-                className="flex items-center justify-center flex-col"
-              >
-                <img
-                  src={slot.imageSrc}
-                  alt=""
-                  className="h-[90px] w-[90px] object-contain"
-                />
-                <span className="font-galmuri-xsmall text-center -translate-y-3">
-                  {slot.discovered
-                    ? COOKIE_LABEL_BY_CODE[slot.code] ?? "???"
-                    : "???"}
-                </span>
-              </div>
-            ))}
+            {pageSlots.map((slot) => {
+              const discovered = slot.discovered;
+
+              // 발견 안 한 쿠키는 ??? / 버블도 대충 막아주고 싶으면 이렇게
+              const detail: FortuneCookieDetail = discovered
+                ? COOKIE_DETAIL_BY_CODE[slot.code]
+                : {
+                    title: "???",
+                    effects: [],
+                  };
+
+              return (
+                <div
+                  key={slot.code}
+                  className="flex items-center justify-center flex-col"
+                >
+                  <CookieCloverItem
+                    id={slot.code}
+                    imgSrc={slot.imageSrc}
+                    detail={detail}
+                    selected={selectedCode === slot.code}
+                    onSelect={(id) => {
+                      if (!discovered) return;
+                      setSelectedCode(prev => (prev === id ? null : id as CollectionCookieCode));
+                    }}
+                  />
+
+                  <span className="font-galmuri-xsmall text-center -translate-y-3">
+                    {discovered
+                      ? COOKIE_LABEL_BY_CODE[slot.code] ?? "???"
+                      : "???"}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
