@@ -53,7 +53,6 @@ export type FortuneCookieType =
   | "MIXED"
   | "ROTTEN"
   | "GLOOMY"
-  | "PPEPPERO"
   | "SANSAM"
   | "DEVELOPER"
   | "LAVA"
