@@ -2,13 +2,20 @@
 
 // ✅ 알림 전용 zustand 스토어
 
-import { create } from "zustand";
 import AchievementCookie from "@/assets/Cookies/achievement-cookie.webp";
+import DeveloperCookie from "@/assets/Cookies/developer-cookie.webp";
+import GloomyCookie from "@/assets/Cookies/gloomy-cookie.webp";
 import HealthCookie from "@/assets/Cookies/health-cookie.webp";
+import LavaCookie from "@/assets/Cookies/lava-cookie.webp";
 import LoveCookie from "@/assets/Cookies/love-cookie.webp";
 import MixedCookie from "@/assets/Cookies/mixed-cookie.webp";
-import RottenCookie from "@/assets/Cookies/rotten-cookie.webp";
 import MoneyCookie from "@/assets/Cookies/money-cookie.webp";
+import PpepperoCookie from "@/assets/Cookies/ppeppero-cookie.webp";
+import RottenCookie from "@/assets/Cookies/rotten-cookie.webp";
+import SansamCookie from "@/assets/Cookies/sansam-cookie.webp";
+import SantaCookie from "@/assets/Cookies/santa-cookie.webp";
+import UnicornCookie from "@/assets/Cookies/unicorn-cookie.webp";
+import { create } from "zustand";
 import { useCookiesStore } from "./useCookiesStore";
 
 import {
@@ -106,9 +113,14 @@ const COOKIE_IMAGE_BY_CODE: Record<string, string> = {
   ACHIEVEMENT: AchievementCookie,
   MIXED: MixedCookie,
   ROTTEN: RottenCookie,
-
-  // TODO: MONEY 전용 이미지 생기면 여기를 교체
   MONEY: MoneyCookie,
+  PPEPPERO: PpepperoCookie,
+  GLOOMY: GloomyCookie,
+  DEVELOPER: DeveloperCookie,
+  SANSAM: SansamCookie,
+  LAVA: LavaCookie,
+  SANTA: SantaCookie,
+  UNICORN: UnicornCookie,
 };
 
 // 기본값: 못 찾으면 믹스쿠키로

@@ -1,6 +1,6 @@
 // src/store/useCookiesStore.ts
-import { create } from "zustand";
 import { cookiesAPI, type CookieDetail } from "@/lib/cookiesAPI";
+import { create } from "zustand";
 
 // type CookiesState = {
 //   // 캐시 (상세)
@@ -122,12 +122,19 @@ export type CookieData = {
   rarityCode: string;
 };
 
-import HealthCookie from "@/assets/Cookies/health-cookie.webp";
 import AchievementCookie from "@/assets/Cookies/achievement-cookie.webp";
+import DeveloperCookie from "@/assets/Cookies/developer-cookie.webp";
+import GloomyCookie from "@/assets/Cookies/gloomy-cookie.webp";
+import HealthCookie from "@/assets/Cookies/health-cookie.webp";
+import LavaCookie from "@/assets/Cookies/lava-cookie.webp";
 import LoveCookie from "@/assets/Cookies/love-cookie.webp";
-import MoneyCookie from "@/assets/Cookies/money-cookie.webp";
 import MixedCookie from "@/assets/Cookies/mixed-cookie.webp";
+import MoneyCookie from "@/assets/Cookies/money-cookie.webp";
+import PpepperoCookie from "@/assets/Cookies/ppeppero-cookie.webp";
 import RottenCookie from "@/assets/Cookies/rotten-cookie.webp";
+import SansamCookie from "@/assets/Cookies/sansam-cookie.webp";
+import SantaCookie from "@/assets/Cookies/santa-cookie.webp";
+import UnicornCookie from "@/assets/Cookies/unicorn-cookie.webp";
 
 const typeToMeta = (t: string) => {
   const key = t.toUpperCase();
@@ -144,21 +151,20 @@ const typeToMeta = (t: string) => {
       return { title: "믹스쿠키", img: MixedCookie };
     case "ROTTEN":
       return { title: "시련쿠키", img: RottenCookie };
-    // 실제 이미지로 교체해야 함
     case "GLOOMY":
-      return { title: "먹구름쿠키", img: MixedCookie };
+      return { title: "먹구름쿠키", img: GloomyCookie };
     case "PPEPPERO":
-      return { title: "빼빼로쿠키", img: MixedCookie };
+      return { title: "빼빼로쿠키", img: PpepperoCookie };
     case "SANSAM":
-      return { title: "산삼쿠키", img: MixedCookie };
+      return { title: "산삼쿠키", img: SansamCookie };
     case "DEVELOPER":
-      return { title: "개발자쿠키", img: MixedCookie };
+      return { title: "개발자쿠키", img: DeveloperCookie };
     case "LAVA":
-      return { title: "용암쿠키", img: MixedCookie };
+      return { title: "용암쿠키", img: LavaCookie };
     case "SANTA":
-      return { title: "산타쿠키", img: MixedCookie };
+      return { title: "산타쿠키", img: SantaCookie };
     case "UNICORN":
-      return { title: "유니콘쿠키", img: MixedCookie };
+      return { title: "유니콘쿠키", img: UnicornCookie };
     default:
       return { title: t, img: MixedCookie };
   }
