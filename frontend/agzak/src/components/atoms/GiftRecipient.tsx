@@ -22,29 +22,49 @@ export function GiftRecipient({ searchUsers, onChange, value, placeholder = "받
   const [items, setItems] = React.useState<UserOption[]>([])
   const [loading, setLoading] = React.useState(false)
 
+  //마지막으로 api호출한 query를 기억 
+   const lastFetchedRef = React.useRef<string | null>(null)
   // 디바운스 검색
   React.useEffect(() => {
+    const trimmed = query.trim()
+
+    // 입력이 없으면: 목록 초기화 + 상태 리셋
+    if (!trimmed) {
+      setItems([])
+      setLoading(false)
+      lastFetchedRef.current = null
+      return
+    }
+
+    // 🔒 같은 query로 이미 호출했으면 더 이상 호출 X
+    if (lastFetchedRef.current === trimmed) {
+      return
+    }
+
     const t = setTimeout(async () => {
-      if (!query.trim()) {
-        setItems([])
-        return
-      }
       setLoading(true)
       try {
-        const r = await searchUsers(query.trim())
+        const r = await searchUsers(trimmed)
         setItems(r ?? [])
+        // ✅ 이 query로는 호출 완료했다고 기록
+        lastFetchedRef.current = trimmed
       } finally {
         setLoading(false)
       }
-    }, 250)
+    }, 300)
+
     return () => clearTimeout(t)
-  }, [query, searchUsers])
-  
+    //  query만 의존하게: searchUsers는 바뀌지 않는다고 가정
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query])
+
   const handleSelect = React.useCallback((user: UserOption) => {
-    console.log('Selected user:', user) // 디버깅용
+    console.log('Selected user:', user)
     onChange({ userId: user.id, nickname: user.nickname })
     setOpen(false)
-    setQuery("") // 검색어 초기화
+    setQuery("")          // 검색어 초기화
+    setItems([])          // 목록도 정리
+    lastFetchedRef.current = null // 다시 검색 가능하게 리셋
   }, [onChange])
 
   return (

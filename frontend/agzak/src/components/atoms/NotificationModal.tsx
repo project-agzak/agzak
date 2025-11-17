@@ -24,8 +24,8 @@ const senderName = notification.senderName ?? "누군가";
 
 // 9글자 초과면 ... 처리
 const displayName =
-  senderName.length > 7
-    ? senderName.slice(0, 7) + "…"
+  senderName.length > 5
+    ? senderName.slice(0, 5) + "…"
     : senderName;
 
 const titleText = `${displayName}님이 보낸 쿠키`;
@@ -69,26 +69,26 @@ const titleText = `${displayName}님이 보낸 쿠키`;
 </p>
 
             {/* 쿠키 이미지 + 메시지 영역 */}
-            <div className="mt-1 flex-1 flex flex-col items-center">
+            <div className="flex-1 flex flex-col items-center">
               {notification.cookieImageSrc && (
-                <div className="mb-0">
+            
                   <img
                     src={notification.cookieImageSrc}
                     alt="선물 쿠키"
                     className="w-[96px] h-[96px] object-contain"
                   />
-                </div>
+              
               )}
 
                 {/* 메시지 박스 */}
            {/* 메시지 박스 - GiftMessageBox와 비슷한 Textarea 스타일 적용 */}
-<div className="mt-1 w-full flex justify-center">
+<div className="w-full flex justify-center">
   <Textarea
     value={notification.message}
     readOnly
     className="
       w-[270px]
-      h-[100px]
+      h-[80px]
       bg-white
       border border-[#121212]/10
       px-3 py-2

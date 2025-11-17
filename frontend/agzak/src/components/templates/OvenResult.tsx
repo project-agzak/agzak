@@ -10,13 +10,12 @@ import cookieMixed from "@/assets/Cookies/mixed-cookie.webp"
 import cookieMoney from "@/assets/Cookies/money-cookie.webp"
 import cookieRotten from "@/assets/Cookies/rotten-cookie.webp"
 import cookieGloomy from "@/assets/Cookies/gloomy-cookie.webp"
-import cookiePpeppero from "@/assets/Cookies/ppeppero-cookie.webp"
 import cookieSansam from "@/assets/Cookies/sansam-cookie.webp"
 import cookieDeveloper from "@/assets/Cookies/developer-cookie.webp"
 import cookieLava from "@/assets/Cookies/lava-cookie.webp"
 import cookieSanta from "@/assets/Cookies/santa-cookie.webp"
 import cookieUnicorn from "@/assets/Cookies/unicorn-cookie.webp"
-// 여기서 쿠키 이미지 가져와야 함
+
 import speechBubble from "@/assets/ui/speech-bubble.svg"
 import { Button_L } from "@/components/atoms/Button_L"
 import { trackEvent } from "@/lib/analytics"
@@ -48,7 +47,6 @@ const cookieImageMap: Record<FortuneCookieResult["code"], string> = {
   MIXED: cookieMixed,
   ROTTEN: cookieRotten,
   GLOOMY: cookieGloomy,
-  PPEPPERO: cookiePpeppero,
   SANSAM: cookieSansam,
   DEVELOPER: cookieDeveloper,
   LAVA: cookieLava,
@@ -64,7 +62,6 @@ const labelMap: Record<FortuneCookieResult["code"], string> = {
   MIXED: "영롱한 믹스쿠키",
   ROTTEN: "새까만 시련쿠키",
   GLOOMY: "축축한 먹구름쿠키",
-  PPEPPERO: "오도독 빼빼로쿠키",
   SANSAM: "건강팔팔 산삼쿠키",
   DEVELOPER: "체크남방 개발자쿠키",
   LAVA: "뜨거운 용암쿠키",

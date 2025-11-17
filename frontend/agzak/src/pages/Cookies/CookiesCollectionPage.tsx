@@ -10,7 +10,6 @@ import LavaCookie from "@/assets/Cookies/lava-cookie.webp";
 import LoveCookie from "@/assets/Cookies/love-cookie.webp";
 import MixedCookie from "@/assets/Cookies/mixed-cookie.webp";
 import MoneyCookie from "@/assets/Cookies/money-cookie.webp";
-import PpepperoCookie from "@/assets/Cookies/ppeppero-cookie.webp";
 import RottenCookie from "@/assets/Cookies/rotten-cookie.webp";
 import SansamCookie from "@/assets/Cookies/sansam-cookie.webp";
 import SantaCookie from "@/assets/Cookies/santa-cookie.webp";
@@ -25,7 +24,6 @@ import { useCollectionStore } from "@/store/useCollectionStore";
 
 const COOKIE_IMAGE_BY_CODE: Record<CollectionCookieCode, string> = {
   GLOOMY: GloomyCookie,
-  PPEPPERO: PpepperoCookie,
   SANSAM: SansamCookie,
   DEVELOPER: DeveloperCookie,
   MIXED: MixedCookie,
@@ -37,6 +35,21 @@ const COOKIE_IMAGE_BY_CODE: Record<CollectionCookieCode, string> = {
   LAVA: LavaCookie,
   SANTA: SantaCookie,
   UNICORN: UnicornCookie,
+};
+
+const COOKIE_LABEL_BY_CODE: Partial<Record<CollectionCookieCode, string>> = {
+  GLOOMY: "먹구름 쿠키",
+  SANSAM: "산삼 쿠키",
+  DEVELOPER: "개발자 쿠키",
+  MIXED: "믹스 쿠키",
+  MONEY: "금전 쿠키",
+  LOVE: "애정 쿠키",
+  ACHIEVEMENT: "성취 쿠키",
+  HEALTH: "건강 쿠키",
+  ROTTEN: "썩은 쿠키",
+  LAVA: "용암 쿠키",
+  SANTA: "산타 쿠키",
+  UNICORN: "유니콘 쿠키",
 };
 
 export default function CookiesCollectionPage() {
@@ -60,7 +73,7 @@ export default function CookiesCollectionPage() {
       return {
         code,
         discovered,
-        imageSrc: discovered ? COOKIE_IMAGE_BY_CODE[code] : SecretCookie,
+        imageSrc: discovered ? COOKIE_IMAGE_BY_CODE[code] ?? SecretCookie : SecretCookie,
       };
     });
 
@@ -108,18 +121,22 @@ export default function CookiesCollectionPage() {
           <div
             className="
               pointer-events-none
-              absolute inset-x-0 top-[5%] bottom-[8%] left-[3%] right-[3%]
+              absolute inset-x-0 top-[1.5%] bottom-[8%] left-[3%] right-[3%]
               grid grid-cols-3 justify-items-center
-              gap-y-3
             "
           >
             {pageSlots.map((slot) => (
-              <div key={slot.code} className="flex items-center justify-center">
+              <div key={slot.code} className="flex items-center justify-center flex-col">
                 <img
                   src={slot.imageSrc}
                   alt=""
                   className="h-[90px] w-[90px] object-contain"
                 />
+                <span className="font-galmuri-xsmall text-center -translate-y-3">
+                  {slot.discovered
+                      ? COOKIE_LABEL_BY_CODE[slot.code] ?? "???"
+                      : "???"}
+                </span>
               </div>
             ))}
           </div>

@@ -53,8 +53,7 @@ export default function CookieHelpSheet({ open, onClose, src }: Props) {
                 <div className="font-galmuri-condensed mt-5 space-y-1.5">
                     <p>① 맛있게 구운 쿠키를 클릭해 &nbsp;&nbsp;보세요. </p>
                     <p>② 쿠키 선택 후 먹기 버튼을 <br /> &nbsp;&nbsp;누르면 총운이 올라가요.</p>
-                    <p>③ 쿠키는 유통기한이 없어요. </p>
-                    <p>‼ 친구에게 선물하기가 곧 추가될 예정입니다.</p>
+                    <p>③ 쿠키는 소비기한이 없어요. </p>
                 </div>
             </div>
 
