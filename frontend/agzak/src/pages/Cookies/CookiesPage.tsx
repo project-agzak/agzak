@@ -11,6 +11,7 @@ import DeveloperGif from "@/assets/Gifs/developer-cookie.gif";
 import LavaGif from "@/assets/Gifs/lava-cookie.gif";
 import SantaGif from "@/assets/Gifs/santa-cookie.gif";
 import UnicornGif from "@/assets/Gifs/unicorn-cookie.gif";
+// import LuckyGif from "@/assets/Gifs/lucky-cookie.gif";
 
 import BinButton from "@/assets/ui/bin-button.webp";
 import InventoryImg from "@/assets/ui/CookieInventory.svg";
@@ -57,6 +58,7 @@ const titleToGif: Record<string, string> = {
   "용암쿠키": LavaGif,
   "산타쿠키": SantaGif,
   "유니콘쿠키": UnicornGif,
+  // "행운쿠키": LuckyGif
 };
 
 const getTodayLocalString = () => {
@@ -121,6 +123,12 @@ export default function CookiesPage() {
   const selectedCookie = useCookiesStore((s) =>
     s.items.find((c) => c.id === s.selectedId) ?? null
   );
+
+const isLuckySelected =
+  !!selectedCookie &&
+  (selectedCookie.code === "LUCKY" ||
+    selectedCookie.detail?.title === "럭키쿠키");
+
   const isDetailLoading = loadingDetailId === selectedId;
 
   const isDeleting = deletingId === selectedId;  
@@ -178,6 +186,14 @@ export default function CookiesPage() {
   // 쿠키 먹기
     const eatSelected = async () => {
     if (!selectedCookie) return;
+
+    if (
+      selectedCookie.code === "LUCKY" ||
+      selectedCookie.detail?.title === "럭키쿠키"
+    ) {
+      alert("행운 쿠키는 사용할 수 없는 기념 쿠키예요!");
+      return;
+    }
 
     // 1) 돼지 GIF로 전환 (타입 매핑)
     const gif = titleToGif[selectedCookie.detail.title] ?? MixedGif;
@@ -258,7 +274,7 @@ export default function CookiesPage() {
             className="shrink-0 !mx-0"
             label= "쿠키 먹기"
             onClick={eatSelected}
-            disabled={!selectedCookie || isDetailLoading || isEating || isDeleting}
+            disabled={!selectedCookie || isDetailLoading || isEating || isDeleting || isLuckySelected}
           />
           <button
             onClick={removeSelected}

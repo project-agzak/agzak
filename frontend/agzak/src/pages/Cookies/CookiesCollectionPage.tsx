@@ -1,4 +1,3 @@
-// src/pages/Cookies/CookiesCollectionPage.tsx
 import { useEffect, useMemo } from "react";
 import CollectionImg from "@/assets/Background/Collection.svg";
 
@@ -15,6 +14,7 @@ import SansamCookie from "@/assets/Cookies/sansam-cookie.webp";
 import SantaCookie from "@/assets/Cookies/santa-cookie.webp";
 import UnicornCookie from "@/assets/Cookies/unicorn-cookie.webp";
 import SecretCookie from "@/assets/Cookies/secret-cookie.webp";
+import LuckyCookie from "@/assets/Cookies/lucky-cookie.webp";
 
 import {
   COLLECTION_COOKIE_CODES,
@@ -35,6 +35,7 @@ const COOKIE_IMAGE_BY_CODE: Record<CollectionCookieCode, string> = {
   LAVA: LavaCookie,
   SANTA: SantaCookie,
   UNICORN: UnicornCookie,
+  LUCKY: LuckyCookie,
 };
 
 const COOKIE_LABEL_BY_CODE: Partial<Record<CollectionCookieCode, string>> = {
@@ -50,13 +51,13 @@ const COOKIE_LABEL_BY_CODE: Partial<Record<CollectionCookieCode, string>> = {
   LAVA: "용암 쿠키",
   SANTA: "산타 쿠키",
   UNICORN: "유니콘 쿠키",
+  LUCKY: "럭키 쿠키",
 };
 
 export default function CookiesCollectionPage() {
   const { myCollection, isLoadingMy, myError, loadMyCollection } =
     useCollectionStore();
 
-  // 첫 마운트 시 내 도감 불러오기
   useEffect(() => {
     if (!myCollection) {
       void loadMyCollection();
@@ -65,28 +66,35 @@ export default function CookiesCollectionPage() {
 
   const totalTypes = COLLECTION_COOKIE_CODES.length;
 
-  const { collectedCount, orderedSlots } = useMemo(() => {
+  const { collectedCount, orderedSlots, luckySlot } = useMemo(() => {
     const slots = COLLECTION_COOKIE_CODES.map((code) => {
       const dto = myCollection?.find((c) => c.code === code);
-      const discovered = dto && dto.count > 0;
+      const discovered = !!dto && (dto.count ?? 0) > 0;
 
       return {
         code,
         discovered,
-        imageSrc: discovered ? COOKIE_IMAGE_BY_CODE[code] ?? SecretCookie : SecretCookie,
+        dto,
+        imageSrc: discovered
+          ? COOKIE_IMAGE_BY_CODE[code] ?? SecretCookie
+          : SecretCookie,
       };
     });
 
     const collected = slots.filter((s) => s.discovered).length;
+    const lucky = slots.find((s) => s.code === "LUCKY") ?? null;
 
     return {
       collectedCount: collected,
       orderedSlots: slots,
+      luckySlot: lucky,
     };
   }, [myCollection]);
 
-  // 한 페이지에 12개 (3 x 4)
-  const pageSlots = orderedSlots.slice(0, 12);
+  // 3 x 4 그리드에는 LUCKY 제외
+  const pageSlots = orderedSlots
+    .filter((s) => s.code !== "LUCKY")
+    .slice(0, 12);
 
   return (
     <main className="relative z-10 min-h-screen p-4">
@@ -101,7 +109,9 @@ export default function CookiesCollectionPage() {
 
       {/* 로딩 / 에러 메시지 */}
       {isLoadingMy && (
-        <p className="mt-4 text-center font-galmuri text-sm">불러오는 중...</p>
+        <p className="mt-4 text-center font-galmuri text-sm">
+          불러오는 중...
+        </p>
       )}
       {myError && !isLoadingMy && (
         <p className="mt-4 text-center font-galmuri text-sm text-red-500">
@@ -111,7 +121,6 @@ export default function CookiesCollectionPage() {
 
       <div className="mt-8 flex justify-center">
         <div className="relative w-[300px] max-w-full">
-          {/* 선반 배경 */}
           <img
             src={CollectionImg}
             alt=""
@@ -126,7 +135,10 @@ export default function CookiesCollectionPage() {
             "
           >
             {pageSlots.map((slot) => (
-              <div key={slot.code} className="flex items-center justify-center flex-col">
+              <div
+                key={slot.code}
+                className="flex items-center justify-center flex-col"
+              >
                 <img
                   src={slot.imageSrc}
                   alt=""
@@ -134,13 +146,30 @@ export default function CookiesCollectionPage() {
                 />
                 <span className="font-galmuri-xsmall text-center -translate-y-3">
                   {slot.discovered
-                      ? COOKIE_LABEL_BY_CODE[slot.code] ?? "???"
-                      : "???"}
+                    ? COOKIE_LABEL_BY_CODE[slot.code] ?? "???"
+                    : "???"}
                 </span>
               </div>
             ))}
           </div>
         </div>
+      </div>
+
+      {/* 럭키 쿠키: 아래에 크게 1칸 */}
+      <div className="mt-10 flex flex-col items-center justify-center">
+        <p className="font-galmuri-small mb-2">특별한 행운 쿠키</p>
+        <img
+          src={
+            luckySlot?.discovered
+              ? COOKIE_IMAGE_BY_CODE.LUCKY
+              : SecretCookie
+          }
+          alt={luckySlot?.discovered ? "럭키 쿠키" : "???"}
+          className="h-[130px] w-[130px] object-contain"
+        />
+        <span className="font-galmuri text-center mt-1">
+          {luckySlot?.discovered ? "럭키 쿠키" : "???"}
+        </span>
       </div>
     </main>
   );
