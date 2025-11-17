@@ -54,6 +54,11 @@ public class CookieService {
             throw new IllegalArgumentException("사용할 수 없는 상태의 쿠키입니다.");
         }
 
+        if (cookie.getCookieKind() != null
+                && "LUCKY".equals(cookie.getCookieKind().getCode())) {
+            throw new IllegalArgumentException("행운 쿠키는 사용할 수 없는 기념 쿠키입니다.");
+        }
+
         dailyCookieUseService.increaseOrThrow(memberId);
 
         final int CAP = 250;
