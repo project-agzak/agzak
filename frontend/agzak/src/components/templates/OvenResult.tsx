@@ -15,6 +15,7 @@ import cookieDeveloper from "@/assets/Cookies/developer-cookie.webp"
 import cookieLava from "@/assets/Cookies/lava-cookie.webp"
 import cookieSanta from "@/assets/Cookies/santa-cookie.webp"
 import cookieUnicorn from "@/assets/Cookies/unicorn-cookie.webp"
+import cookieLucky from "@/assets/Cookies/lucky-cookie.webp";
 
 import speechBubble from "@/assets/ui/speech-bubble.svg"
 import { Button_L } from "@/components/atoms/Button_L"
@@ -39,7 +40,9 @@ const mockFortuneCookie: FortuneCookieResult = {
   message: "오늘은 몸과 마음이 모두 건강한 하루네요!",
 };
 
-const cookieImageMap: Record<FortuneCookieResult["code"], string> = {
+type OvenCookieCode = FortuneCookieResult["code"];
+
+const cookieImageMap: Record<OvenCookieCode, string> = {
   HEALTH: cookieHealth,
   LOVE: cookieLove,
   MONEY: cookieMoney,
@@ -52,21 +55,23 @@ const cookieImageMap: Record<FortuneCookieResult["code"], string> = {
   LAVA: cookieLava,
   SANTA: cookieSanta,
   UNICORN: cookieUnicorn,
+  LUCKY: cookieLucky,
 }
 
-const labelMap: Record<FortuneCookieResult["code"], string> = {
+const labelMap: Record<OvenCookieCode, string> = {
   HEALTH: "초록빛 건강쿠키",
   LOVE: "핑크빛 사랑쿠키",
   MONEY: "황금색 금전쿠키",
   ACHIEVEMENT: "푸르른 성취쿠키",
   MIXED: "영롱한 믹스쿠키",
-  ROTTEN: "새까만 시련쿠키",
+  ROTTEN: "새까만 썩은쿠키",
   GLOOMY: "축축한 먹구름쿠키",
   SANSAM: "건강팔팔 산삼쿠키",
   DEVELOPER: "체크남방 개발자쿠키",
   LAVA: "뜨거운 용암쿠키",
   SANTA: "두근두근 산타쿠키",
   UNICORN: "신비한 유니콘쿠키",
+  LUCKY: "행운듬뿍 럭키쿠키",
 }
 
 export default function OvenResult({

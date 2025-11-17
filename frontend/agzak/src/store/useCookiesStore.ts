@@ -134,6 +134,7 @@ import RottenCookie from "@/assets/Cookies/rotten-cookie.webp";
 import SansamCookie from "@/assets/Cookies/sansam-cookie.webp";
 import SantaCookie from "@/assets/Cookies/santa-cookie.webp";
 import UnicornCookie from "@/assets/Cookies/unicorn-cookie.webp";
+import LuckyCookie from "@/assets/Cookies/lucky-cookie.webp";
 
 const typeToMeta = (t: string) => {
   const key = t.toUpperCase();
@@ -149,7 +150,7 @@ const typeToMeta = (t: string) => {
     case "MIXED":
       return { title: "믹스쿠키", img: MixedCookie };
     case "ROTTEN":
-      return { title: "시련쿠키", img: RottenCookie };
+      return { title: "썩은쿠키", img: RottenCookie };
     case "GLOOMY":
       return { title: "먹구름쿠키", img: GloomyCookie };
     case "SANSAM":
@@ -162,6 +163,8 @@ const typeToMeta = (t: string) => {
       return { title: "산타쿠키", img: SantaCookie };
     case "UNICORN":
       return { title: "유니콘쿠키", img: UnicornCookie };
+    case "LUCKY":
+      return { title: "럭키쿠키", img: LuckyCookie };
     default:
       return { title: t, img: MixedCookie };
   }
@@ -354,6 +357,16 @@ export const useCookiesStore = create<State>((set, get) => ({
 
   eatCookie: async (id) => {
     if (!id) return;
+
+    const state = get();
+    const target = state.items.find((c) => c.id === id);
+    if (target?.code === "LUCKY") {
+      set({
+        error: "럭키 쿠키는 사용할 수 없는 기념 쿠키예요!",
+      });
+      return;
+    }
+
     try {
       set({ eatingId: id, error: null });
       await cookiesAPI.useCookie(Number(id)); 
