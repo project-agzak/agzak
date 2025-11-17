@@ -24,8 +24,8 @@ const senderName = notification.senderName ?? "누군가";
 
 // 9글자 초과면 ... 처리
 const displayName =
-  senderName.length > 5
-    ? senderName.slice(0, 5) + "…"
+  senderName.length > 7
+    ? senderName.slice(0, 7) + "…"
     : senderName;
 
 const titleText = `${displayName}님이 보낸 쿠키`;
@@ -88,7 +88,7 @@ const titleText = `${displayName}님이 보낸 쿠키`;
     readOnly
     className="
       w-[270px]
-      h-[80px]
+      h-[100px]
       bg-white
       border border-[#121212]/10
       px-3 py-2
@@ -106,7 +106,7 @@ const titleText = `${displayName}님이 보낸 쿠키`;
 
             </div>
    {/* 🔹 메시지 박스 아래 닫기 버튼 (GiftModal 과 같은 스타일/위치) */}
-            <div className="flex justify-center mt-0 mb-8">
+            <div className="flex justify-center mt-0 mb-10">
               <button
                 type="button"
                 onClick={onClose}

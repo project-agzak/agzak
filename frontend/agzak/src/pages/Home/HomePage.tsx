@@ -180,7 +180,8 @@ if (shouldShowLoading) {
                   : "세션 끝"
               }
               url={shareUrl}
-              onShared={handleShared}
+                 beforeShare={checkShareQuota}   // ⬅️ 먼저 세션 확인
+              onShared={rewardAfterShare}     // ⬅️ 공유 성공 시 세션 +1
             />
           <KakaoShareButton
             title="아그작 🥠 오늘의 운세"
