@@ -16,7 +16,7 @@ type FortuneBubbleProps = FortuneCookieDetail & {
 export function FortuneBubble({
   title,
   effects,
-  width = 140,
+  width = 160,
   className,
   viewportPadding = 8,
   isLeftSide,
@@ -95,7 +95,7 @@ export function FortuneBubble({
           {effects.map((eff) => (
             <li
               key={eff.label}
-              className="font-galmuri-condensed-small pl-2 leading-none text-[#121212]"
+              className="font-galmuri-condensed-small pl-2 leading-none text-[#121212] break-keep"
             >
               {eff.label}{" "}
               <span className="font-bold">
