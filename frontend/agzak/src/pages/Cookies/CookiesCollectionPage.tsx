@@ -20,9 +20,11 @@ import LuckyCookie from "@/assets/Cookies/lucky-cookie.webp";
 import {
   COLLECTION_COOKIE_CODES,
   type CollectionCookieCode,
+  type CollectionCookieDto,
 } from "@/lib/collectionAPI";
+
 import { useCollectionStore } from "@/store/useCollectionStore";
-import { CookieCloverItem } from "@/components/molecules/CookieCloverItem";
+import { CookieCollectionItem } from "@/components/molecules/CookieCollectionItem";
 import type { FortuneCookieDetail } from "@/types/cookies";
 
 const COOKIE_IMAGE_BY_CODE: Record<CollectionCookieCode, string> = {
@@ -41,136 +43,22 @@ const COOKIE_IMAGE_BY_CODE: Record<CollectionCookieCode, string> = {
   LUCKY: LuckyCookie,
 };
 
-const COOKIE_LABEL_BY_CODE: Partial<Record<CollectionCookieCode, string>> = {
-  GLOOMY: "먹구름 쿠키",
-  SANSAM: "산삼 쿠키",
-  DEVELOPER: "개발자 쿠키",
-  MIXED: "믹스 쿠키",
-  MONEY: "금전 쿠키",
-  LOVE: "애정 쿠키",
-  ACHIEVEMENT: "성취 쿠키",
-  HEALTH: "건강 쿠키",
-  ROTTEN: "썩은 쿠키",
-  LAVA: "용암 쿠키",
-  SANTA: "산타 쿠키",
-  UNICORN: "유니콘 쿠키",
-  LUCKY: "럭키 쿠키",
+const buildDetailFromDto = (dto: CollectionCookieDto): FortuneCookieDetail => {
+  return {
+    title: "레시피",
+    effects: [
+      { label: dto.recipe },
+      { label: `등급: ${dto.rarityCode}` },
+    ],
+  };
 };
-
-const TITLE = "레시피"
-
-export const COOKIE_DETAIL_BY_CODE: Record<CollectionCookieCode, FortuneCookieDetail> = {
-  GLOOMY: {
-    title: TITLE,
-    effects: [
-      { label: "모든 운이 -10 이하" },
-      { label: "등급: EPIC" },
-    ],
-  },
-
-  SANSAM: {
-    title: TITLE,
-    effects: [
-      { label: "금전운이 +20 이상, 건강운이 +20 이상일 때"},
-      { label: "등급: EPIC" },
-    ],
-  },
-
-  DEVELOPER: {
-    title: TITLE,
-    effects: [
-      { label: "금전운이 +10 이상, 동시에 건강운이 -10 이하일 때" },
-      { label: "등급: EPIC" },
-    ],
-  },
-
-  MIXED: {
-    title: TITLE,
-    effects: [
-      { label: "모든 운 +10 이상" },
-      { label: "등급: EPIC" },
-    ],
-  },
-
-  MONEY: {
-    title: TITLE,
-    effects: [
-      { label: "금전운이 가장 높고, 금전운이 +5 이상, 총운이 +10 이상일 때" },
-      { label: "등급: RARE" },
-    ],
-  },
-
-  LOVE: {
-    title: TITLE,
-    effects: [
-      { label: "애정운이 가장 높고, 애정운이 +5 이상, 총운이 +10 이상일 때" },
-      { label: "등급: RARE" },
-    ],
-  },
-
-  ACHIEVEMENT: {
-    title: TITLE,
-    effects: [
-      { label: "성취운이 가장 높고, 성취운이 +5 이상, 총운이 +10 이상일 때"},
-      { label: "등급: RARE"},
-    ],
-  },
-
-  HEALTH: {
-    title: TITLE,
-    effects: [
-      { label: "건강운이 가장 높고, 건강운이 +5 이상, 총운이 +10 이상일 때" },
-      { label: "등급: RARE" },
-    ],
-  },
-
-  ROTTEN: {
-    title: TITLE,
-    effects: [
-      { label: "잘 구워 주세요..." },
-      { label: "등급: RARE" },
-    ],
-  },
-
-  LAVA: {
-    title: TITLE,
-    effects: [
-      { label: "모든 운이 -20 이하일 때" },
-      { label: "등급: UNIQUE" },
-    ],
-  },
-
-  SANTA: {
-    title: TITLE,
-    effects: [
-      { label: "애정운이 +12, 동시에 건강운이 +25일 때" },
-      { label: "등급: UNIQUE" },
-    ],
-  },
-
-  UNICORN: {
-    title: TITLE,
-    effects: [
-      { label: "모든 운 +22 이상" },
-      { label: "등급: UNIQUE",},
-    ],
-  },
-
-  LUCKY: {
-    title: TITLE,
-    effects: [
-      { label: "모든 운 +22 이상" },
-      { label: "등급: UNIQUE",},
-    ],
-  },
-};
-
 
 export default function CookiesCollectionPage() {
   const { myCollection, isLoadingMy, myError, loadMyCollection } =
     useCollectionStore();
 
-  const [selectedCode, setSelectedCode] = useState<CollectionCookieCode | null>(null);
+  const [selectedCode, setSelectedCode] =
+    useState<CollectionCookieCode | null>(null);
 
   // 첫 마운트 시 내 도감 불러오기
   useEffect(() => {
@@ -211,6 +99,11 @@ export default function CookiesCollectionPage() {
     .filter((s) => s.code !== "LUCKY")
     .slice(0, 12);
 
+  const luckyDetail: FortuneCookieDetail =
+    luckySlot?.discovered && luckySlot.dto
+      ? buildDetailFromDto(luckySlot.dto)
+      : { title: "???", effects: [] };
+
   return (
     <main className="relative z-10 min-h-screen p-4">
       <div className="flex flex-col items-center justify-center">
@@ -224,9 +117,7 @@ export default function CookiesCollectionPage() {
 
       {/* 로딩 / 에러 메시지 */}
       {isLoadingMy && (
-        <p className="mt-4 text-center font-galmuri text-sm">
-          불러오는 중...
-        </p>
+        <p className="mt-4 text-center font-galmuri text-sm">불러오는 중...</p>
       )}
       {myError && !isLoadingMy && (
         <p className="mt-4 text-center font-galmuri text-sm text-red-500">
@@ -251,35 +142,36 @@ export default function CookiesCollectionPage() {
           >
             {pageSlots.map((slot) => {
               const discovered = slot.discovered;
+              const dto = slot.dto ?? undefined;
 
-              // 발견 안 한 쿠키는 ??? / 버블도 대충 막아주고 싶으면 이렇게
-              const detail: FortuneCookieDetail = discovered
-                ? COOKIE_DETAIL_BY_CODE[slot.code]
-                : {
-                    title: "???",
-                    effects: [],
-                  };
+              const detail: FortuneCookieDetail =
+                discovered && dto
+                  ? buildDetailFromDto(dto)
+                  : {
+                      title: "???",
+                      effects: [],
+                    };
 
               return (
                 <div
                   key={slot.code}
                   className="flex items-center justify-center flex-col"
                 >
-                  <CookieCloverItem
+                  <CookieCollectionItem
                     id={slot.code}
                     imgSrc={slot.imageSrc}
                     detail={detail}
                     selected={selectedCode === slot.code}
                     onSelect={(id) => {
-                      if (!discovered) return;
-                      setSelectedCode(prev => (prev === id ? null : id as CollectionCookieCode));
+                      if (!discovered) return; // 못 얻은 쿠키는 클릭 무시
+                      setSelectedCode((prev) =>
+                        prev === id ? null : (id as CollectionCookieCode)
+                      );
                     }}
                   />
 
                   <span className="font-galmuri-xsmall text-center -translate-y-3">
-                    {discovered
-                      ? COOKIE_LABEL_BY_CODE[slot.code] ?? "???"
-                      : "???"}
+                    {discovered ? dto?.name ?? "???" : "???"}
                   </span>
                 </div>
               );
@@ -291,17 +183,22 @@ export default function CookiesCollectionPage() {
       {/* 럭키 쿠키: 아래에 크게 1칸 */}
       <div className="mt-10 flex flex-col items-center justify-center">
         <p className="font-galmuri-small mb-2">특별한 행운 쿠키</p>
-        <img
-          src={
-            luckySlot?.discovered
-              ? COOKIE_IMAGE_BY_CODE.LUCKY
-              : SecretCookie
-          }
-          alt={luckySlot?.discovered ? "럭키 쿠키" : "???"}
-          className="h-[130px] w-[130px] object-contain"
+
+        <CookieCollectionItem
+          id="LUCKY"
+          imgSrc={luckySlot?.discovered ? COOKIE_IMAGE_BY_CODE.LUCKY : SecretCookie}
+          detail={luckyDetail}
+          selected={selectedCode === "LUCKY"}
+          onSelect={(id) => {
+            if (!luckySlot?.discovered) return;
+            setSelectedCode((prev) =>
+              prev === id ? null : (id as CollectionCookieCode)
+            );
+          }}
         />
+
         <span className="font-galmuri text-center mt-1">
-          {luckySlot?.discovered ? "럭키 쿠키" : "???"}
+          {luckySlot?.discovered ? luckySlot.dto?.name ?? "럭키 쿠키" : "???"}
         </span>
       </div>
     </main>
