@@ -339,7 +339,7 @@ export default function FortuneResultPage() {
     <div className="flex w-fit gap-[10px] items-center">
       <ShareButton
         label="공유하기"
-        width={130}
+        width={140}
         url={effectiveShareUrl}
       />
 

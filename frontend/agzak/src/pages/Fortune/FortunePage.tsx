@@ -20,6 +20,7 @@ import { useFortuneStore } from "@/store/useFortuneStore";
 import { CalendarIcon } from "lucide-react";
 import { setWithTTL, getWithTTL, removeWithTTL } from "@/lib/storage";
 
+
 export default function FortunePage() {
   const navigate = useNavigate();
   const fetchGuest = useFortuneStore((s) => s.fetchGuest);

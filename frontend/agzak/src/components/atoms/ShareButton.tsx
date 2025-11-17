@@ -12,6 +12,8 @@ type ShareButtonProps = {
   files?: File[];          // Web Share Level 2 (선택)
   onShared?: () => void;   // ✅ 성공 콜백(네이티브/복사 모두)
   className?: string;      // 선택: 추가 클래스
+
+   beforeShare?: () => boolean | Promise<boolean>;
 };
 
 export default function ShareButton({
@@ -23,6 +25,8 @@ export default function ShareButton({
   files,
   onShared,
   className,
+
+    beforeShare,
 }: ShareButtonProps) {
   const [pressed, setPressed] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
@@ -42,8 +46,21 @@ export default function ShareButton({
     // 트래킹: 클릭
     trackEvent("share_click", { origin });
 
+    
     try {
-      // 1) 파일까지 포함 가능한 경우
+      // 🔹 0. 세션/조건 체크 (예: 남은 unlockable 확인)
+      if (beforeShare) {
+        const ok = await beforeShare();
+        if (!ok) {
+          // 세션 없어서 공유 중단
+          return;
+        }
+      }
+
+      // 1. 트래킹: 공유 버튼 클릭
+      trackEvent("share_click", { origin });
+
+      // 2-1. 파일 공유 가능
       if (canShareFiles) {
         await (navigator as any).share({ title, text, files });
         trackEvent("share_success", { origin, method: "files" });
@@ -51,7 +68,7 @@ export default function ShareButton({
         return;
       }
 
-      // 2) 일반 네이티브 공유
+      // 2-2. 일반 네이티브 공유
       if (canNativeShare) {
         await (navigator as any).share({ title, text, url });
         trackEvent("share_success", { origin, method: "native" });

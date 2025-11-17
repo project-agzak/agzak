@@ -81,28 +81,28 @@ useEffect(() => {
 }, [isLoggedIn, initHome]);
 
   // 공유 완료 시 → claim +1
-  const handleShared = async () => {
-    if (!quota?.unlockable || quota.unlockable <= 0) {
-      alert("오늘은 더 이상 세션을 획득할 수 없습니다.");
-      return;
-    }
+  // const handleShared = async () => {
+  //   if (!quota?.unlockable || quota.unlockable <= 0) {
+  //     alert("오늘은 더 이상 세션을 획득할 수 없습니다.");
+  //     return;
+  //   }
 
-    // 실제론 광고 SDK 콜백/미션 코드/구매 영수증 등으로 채움
-    const req = {
-      type: "ad" as const,
-      proof: "sdk-server-callback-token",
-      idempotencyKey: `${new Date().toISOString()}:ad:${nanoid(6)}`
-    };
-    const r = await claim(req);
-    if (r.ok) {
-      // 최신 수치는 claim 응답에서 이미 반영됨. 혹시 몰라 재조회해도 OK
-      await refresh();
-    } else {
-      // 사용자에게 에러 메시지 표시
-      alert(r.error || "세션 획득에 실패했습니다.");
-      console.warn(r.error);
-    }
-  };
+  //   // 실제론 광고 SDK 콜백/미션 코드/구매 영수증 등으로 채움
+  //   const req = {
+  //     type: "ad" as const,
+  //     proof: "sdk-server-callback-token",
+  //     idempotencyKey: `${new Date().toISOString()}:ad:${nanoid(6)}`
+  //   };
+  //   const r = await claim(req);
+  //   if (r.ok) {
+  //     // 최신 수치는 claim 응답에서 이미 반영됨. 혹시 몰라 재조회해도 OK
+  //     await refresh();
+  //   } else {
+  //     // 사용자에게 에러 메시지 표시
+  //     alert(r.error || "세션 획득에 실패했습니다.");
+  //     console.warn(r.error);
+  //   }
+  // };
 
 if (shouldShowLoading) {
   return <HomeLoading />;
@@ -180,7 +180,8 @@ if (shouldShowLoading) {
                   : "세션 끝"
               }
               url={shareUrl}
-              onShared={handleShared}
+                 beforeShare={checkShareQuota}   // ⬅️ 먼저 세션 확인
+              onShared={rewardAfterShare}     // ⬅️ 공유 성공 시 세션 +1
             />
           <KakaoShareButton
             title="아그작 🥠 오늘의 운세"

@@ -47,6 +47,12 @@ export default function Header() {
   const { notifications, fetchNotifications, reset } = useAlarmStore();
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
+
+   // 🔥 알림 시트 open 상태 + 쿠키페이지 리로드 플래그
+  const [notifyOpen, setNotifyOpen] = useState(false);
+  const [shouldReloadAfterClose, setShouldReloadAfterClose] = useState(false);
+
+
 useEffect(() => {
   const fetchMember = async () => {
     if (!isLoggedIn || member) return;
@@ -116,7 +122,19 @@ useEffect(() => {
 
           <div className="ml-auto">
             {/* 🔔 알림 사이드바 */}
-            <Sheet>
+            <Sheet
+               open={notifyOpen}
+              onOpenChange={(open) => {
+                // 닫히는 순간 + 플래그 true + /cookies 에 있을 때만 reload
+                if (!open && shouldReloadAfterClose) {
+                  if (window.location.pathname.startsWith("/cookies")) {
+                    window.location.reload();
+                  }
+                  setShouldReloadAfterClose(false);
+                }
+                setNotifyOpen(open);
+              }}
+            >
               <SheetTrigger asChild>
                 <button
                   className="rounded-full hover:bg-zinc-900/5 p-2 cursor-pointer relative"
@@ -137,7 +155,10 @@ useEffect(() => {
                   sm:!w-[260px]
                 "
               >
-                <NotificationSidebar />
+                   {/* 🔥 선물 수락 후 reload 플래그만 세팅 */}
+                <NotificationSidebar
+                  onGiftAccepted={() => setShouldReloadAfterClose(true)}
+                />
               </SheetContent>
             </Sheet>
  
@@ -375,7 +396,11 @@ function SidebarContent({ isLoggedIn, onLogout }: SidebarContentProps) {
 
 
 
-function NotificationSidebar() {
+function NotificationSidebar({
+  onGiftAccepted,
+}: {
+  onGiftAccepted?: () => void;
+}) {
   const [deferred, setDeferred] = useState<any>(null);
   const { isLoggedIn } = useAuthStore();
  
@@ -458,7 +483,8 @@ const handleGiftConfirm = async () => {
 
   // OK
   alert("선물 받은 쿠키가 인벤토리에 담겼어요!");
-   window.location.reload();
+   // 🔥 현재 URL이 /cookies 또는 /cookies?xxx 일 때만 reload
+  onGiftAccepted?.();
 };
   return (
     <div className="h-full flex flex-col">
