@@ -334,19 +334,24 @@ export default function FortuneResultPage() {
           </style>
         </div>
 
-       <div className="flex justify-center pt-4 pb-5">
-  <div className="flex w-fit gap-[10px] items-center">
-    <ShareButton
-      label="공유하기"
-      width={130}
-      url={effectiveShareUrl}
-    />
-    <KakaoShareButton   url={effectiveShareUrl}
-  title="오늘의 내 운세 카드 🔮"
-  description="운세 결과 공유하기"
-  imgClassName="w-[40px]" />
+     {isLoggedIn && (
+  <div className="flex justify-center pt-4 pb-5">
+    <div className="flex w-fit gap-[10px] items-center">
+      <ShareButton
+        label="공유하기"
+        width={130}
+        url={effectiveShareUrl}
+      />
+
+      <KakaoShareButton
+        url={effectiveShareUrl}
+        title="오늘의 내 운세 카드 🔮"
+        description="운세 결과 공유하기"
+        imgClassName="w-[40px]"
+      />
+    </div>
   </div>
-</div>
+)}
       </div>
       </div>
     </main>
