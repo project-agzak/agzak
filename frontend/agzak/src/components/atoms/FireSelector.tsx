@@ -30,8 +30,8 @@ export function FireSelector({ selected, onChange }: Props) {
   // 아래 확률 안내 메시지가 다소 불친절
   const gainText = 
     current === "WEAK" ? "성공 시 +6" : 
-    current === "MEDIUM" ? "성공 시 +12" :
-    "성공 시 +19";
+    current === "MEDIUM" ? "성공 시 +9" :
+    "성공 시 +12";
 
   const handleToggle = () => {
     onChange(getNextFire(current));
