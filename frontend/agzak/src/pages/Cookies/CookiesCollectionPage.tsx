@@ -100,7 +100,7 @@ export const COOKIE_DETAIL_BY_CODE: Record<CollectionCookieCode, FortuneCookieDe
   LOVE: {
     title: TITLE,
     effects: [
-      { label: "애정운이 가장 높고 +5 이상 & 총운 +10 이상" },
+      { label: "애정운이 가장 높고, 애정운이 +5 이상, 총운이 +10 이상일 때" },
       { label: "등급: RARE" },
     ],
   },
