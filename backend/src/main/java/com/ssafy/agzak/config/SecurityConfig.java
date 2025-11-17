@@ -23,6 +23,7 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                .cors(cors -> {})
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
@@ -31,7 +32,7 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/health", "/actuator/health/**", "/actuator/info", "/actuator/prometheus").permitAll()
                         // 인증 공개
                         .requestMatchers("/api/v1/auth/register", "/api/v1/auth/login").permitAll()
-                        .requestMatchers("/api/v1/auth/register/with-guest", "/api/v1/auth/check-email").permitAll()
+                        .requestMatchers("/api/v1/auth/register/with-guest", "/api/v1/auth/check-email", "/api/v1/auth/check-nickname").permitAll()
                         .requestMatchers("/api/v1/auth/kakao/login", "/api/v1/auth/kakao/complete").permitAll()
                         .requestMatchers("/api/v1/auth/refresh").permitAll()
                         // 게스트 운세 조회/좌표/랭킹 조회 등 비회원 접근
