@@ -51,7 +51,7 @@ const titleToGif: Record<string, string> = {
   "애정쿠키": LoveGif,
   "금전쿠키": MoneyGif,
   "믹스쿠키": MixedGif,
-  "시련쿠키": RottenGif,
+  "썩은쿠키": RottenGif,
   "먹구름쿠키": GloomyGif,
   "산삼쿠키": SansamGif,
   "개발자쿠키": DeveloperGif,

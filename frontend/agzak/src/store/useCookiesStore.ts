@@ -150,7 +150,7 @@ const typeToMeta = (t: string) => {
     case "MIXED":
       return { title: "믹스쿠키", img: MixedCookie };
     case "ROTTEN":
-      return { title: "시련쿠키", img: RottenCookie };
+      return { title: "썩은쿠키", img: RottenCookie };
     case "GLOOMY":
       return { title: "먹구름쿠키", img: GloomyCookie };
     case "SANSAM":

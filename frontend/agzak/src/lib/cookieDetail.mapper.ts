@@ -8,13 +8,14 @@ const TYPE_TITLE: Record<string, string> = {
   love: "애정쿠키",
   money: "금전쿠키",
   mix: "믹스쿠키",
-  rotten: "시련쿠키",
+  rotten: "썩은쿠키",
   gloomy:"먹구름쿠키",
   sansam:"산삼쿠키",
   developer:"개발자쿠키",
   lava:"용암쿠키",
   santa:"산타쿠키",
   unicorn:"유니콘쿠키",
+  lucky:"럭키쿠키",
 };
 
 export function toFortuneCookieDetail(dto: CookieDetail): FortuneCookieDetail {

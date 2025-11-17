@@ -45,7 +45,7 @@ export const COOKIE_KIND_BY_ID: Record<number, CookieKindInfo> = {
  11: { id: 11, code: "LAVA",       name: "용암 쿠키" },
  12: { id: 12, code: "SANTA",      name: "산타 쿠키" },
  13: { id: 13, code: "UNICORN",    name: "유니콘 쿠키" },
- 16: { id: 16, code: "LUCKY",      name: "럭키 쿠키" },
+ 14: { id: 14, code: "LUCKY",      name: "럭키 쿠키" },
 };
 
 // ✅ [추가] cookieKindId로 info 가져오는 헬퍼
