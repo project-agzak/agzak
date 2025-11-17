@@ -78,8 +78,8 @@ public class FortuneController implements FortuneApiDocs {
 
     @Hidden
     @PostMapping("/test")
-    public ResponseEntity<AiPromptData> test(@RequestBody BirthDataInput test) {
-        return ResponseEntity.ok().body(astrologyCalculationService.generateAiPromptData(test));
+    public ResponseEntity<ScoreCalculationResult> test(@RequestBody BirthDataInput test) {
+        return ResponseEntity.ok().body(astrologyCalculationService.calculateScores(test));
     }
 
     @Hidden

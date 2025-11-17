@@ -93,3 +93,8 @@ app:
   share:
     base-url: https://agzak.co.kr/share/fortune
     secret: ${SHARE_LINK_SECRET}
+
+# === FastAPI ===
+fastapi:
+  gateway:
+    url: ${AI_GATEWAY_URL}
