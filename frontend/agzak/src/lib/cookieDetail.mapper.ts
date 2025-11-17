@@ -10,7 +10,6 @@ const TYPE_TITLE: Record<string, string> = {
   mix: "믹스쿠키",
   rotten: "시련쿠키",
   gloomy:"먹구름쿠키",
-  ppeppero:"빼빼로쿠키",
   sansam:"산삼쿠키",
   developer:"개발자쿠키",
   lava:"용암쿠키",

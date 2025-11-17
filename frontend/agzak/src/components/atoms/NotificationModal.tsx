@@ -20,7 +20,15 @@ export function NotificationModal({
 }: NotificationModalProps) {
   const isGift = notification.type === "GIFT";
   const isSystemNotice = notification.notiType === "SYSTEM_NOTICE";
+const senderName = notification.senderName ?? "누군가";
 
+// 9글자 초과면 ... 처리
+const displayName =
+  senderName.length > 5
+    ? senderName.slice(0, 5) + "…"
+    : senderName;
+
+const titleText = `${displayName}님이 보낸 쿠키`;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       {isGift ? (
@@ -46,32 +54,41 @@ export function NotificationModal({
               items-center
             "
           >
+            
            {/* 제목 */}
-            <p className="font-bitbit text-[#121212] text-[14px] text-center">
-              {notification.senderName ?? "누군가"}님이 보낸 쿠키
-            </p>
+ <p
+  className="
+    font-bitbit text-[#121212] text-[14px] text-center
+    leading-tight
+    h-[36px]
+    flex-none
+    overflow-hidden
+  "
+>
+  {titleText}
+</p>
 
             {/* 쿠키 이미지 + 메시지 영역 */}
-            <div className="mt-1 flex-1 flex flex-col items-center">
+            <div className="flex-1 flex flex-col items-center">
               {notification.cookieImageSrc && (
-                <div className="mb-0">
+            
                   <img
                     src={notification.cookieImageSrc}
                     alt="선물 쿠키"
                     className="w-[96px] h-[96px] object-contain"
                   />
-                </div>
+              
               )}
 
                 {/* 메시지 박스 */}
            {/* 메시지 박스 - GiftMessageBox와 비슷한 Textarea 스타일 적용 */}
-<div className="mt-1 w-full flex justify-center">
+<div className="w-full flex justify-center">
   <Textarea
     value={notification.message}
     readOnly
     className="
       w-[270px]
-      h-[100px]
+      h-[80px]
       bg-white
       border border-[#121212]/10
       px-3 py-2
