@@ -42,12 +42,13 @@ if (isAuthRequest || status == null) return;
 async function request<T>(config: AxiosRequestConfig): Promise<ApiResponse<T>> {
   try {
 
-     const { accessToken, expiresAt, logout, isLoggedIn } = useAuthStore.getState();
+    const { accessToken, expiresAt, logout, isLoggedIn } = useAuthStore.getState();
 
-     const url = typeof config.url === "string" ? config.url : "";
+    const url = typeof config.url === "string" ? config.url : "";
     const isAuthRequest = url.startsWith("/auth/");
-
     const isGameRequest = url.startsWith("/game/");
+
+    const isShareRequest = url.startsWith("/fortune/share/");
 
       // 공통 요청 로깅 (최상단)
     console.group("[API_REQUEST]");
@@ -93,7 +94,7 @@ async function request<T>(config: AxiosRequestConfig): Promise<ApiResponse<T>> {
       });
     }
 
-if (!isAuthRequest && accessToken) {
+if (!isAuthRequest && !isShareRequest && accessToken) {
       // 토큰 만료 체크 (프론트 기준)
       if (expiresAt && expiresAt <= Date.now()) {
         logout("세션이 만료되었습니다. 다시 로그인해주세요.");
