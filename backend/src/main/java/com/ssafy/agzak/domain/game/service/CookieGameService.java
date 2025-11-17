@@ -353,7 +353,7 @@ public class CookieGameService {
 
         // ---- EPIC ----
         if (love <= -10 && money <= -10 && ach <= -10 && health <= -10) return "GLOOMY";
-        if (love == 11 && (money == 11 || ach == 11 || health == 11)) return "PPEPPERO";
+//        if (love == 11 && (money == 11 || ach == 11 || health == 11)) return "PPEPPERO";
         if (money >= 20 && health >= 20) return "SANSAM";
         if (money >= 10 && health <= -10) return "DEVELOPER";
         if (love >= 10 && money >= 10 && ach >= 10 && health >= 10) return "MIXED";

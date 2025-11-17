@@ -114,3 +114,8 @@ ON DUPLICATE KEY UPDATE
                      recipe    = VALUES(recipe),
                      message   = VALUES(message),
                      updated_at= NOW();
+
+UPDATE cookie_kind
+SET is_active = 0,
+    updated_at = NOW()
+WHERE code = 'PPEPPERO';
