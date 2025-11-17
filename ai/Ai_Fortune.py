@@ -8,6 +8,11 @@ import aiomysql
 from openai import AsyncOpenAI 
 from config import settings
 import aiomysql
+import logging
+
+logging.basicConfig(level=logging.INFO,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 # 1. Java 서비스로부터 받을 입력 모델 (ScoreCalculationResult)
 class ScoreInput(BaseModel):
@@ -34,12 +39,13 @@ try:
         base_url=settings.GMS_BASE_URL
     )
 except Exception as e:
-    print(f"CRITICAL: Failed to initialize GMS/OpenAI client: {e}")
+    logger.error(f"CRITICAL: Failed to initialize GMS/OpenAI client: {e}")
     async_client = None
 
 
 @app.on_event("startup")
 async def startup_event():
+    
     """
     FastAPI 서버가 시작될 때 MySQL 커넥션 풀을 생성합니다.
     """
@@ -51,7 +57,7 @@ async def startup_event():
             db=settings.DB_NAME, autocommit=True,
             charset='utf8mb4'
         )
-        print(f"FastAPI: MySQL ({settings.DB_HOST}:{settings.DB_PORT}) 커넥션 풀 생성 완료.")
+        logger.info(f"FastAPI: MySQL ({settings.DB_HOST}:{settings.DB_PORT}) 커넥션 풀 생성 완료.")
     except Exception as e:
         print(f"FastAPI: DB 커넥션 풀 생성 실패: {e}")
         db_pool = None
@@ -64,7 +70,6 @@ async def shutdown_event():
     if db_pool:
         db_pool.close()
         await db_pool.wait_closed()
-        print("FastAPI: MySQL 커넥션 풀 종료.")
 
 # --- RAG 서비스 로직 (DB 쿼리) ---
 
@@ -74,10 +79,8 @@ async def get_interpretation_from_db(driver_key: str) -> str:
     MySQL DB에서 '핵심 근거(key)'로 '전문가 해설'을 비동기로 조회합니다.
     """
     if not db_pool:
-        print("오류: DB 풀이 초기화되지 않았습니다.")
+        logger.error("오류: DB 풀이 초기화되지 않았습니다.")
         raise HTTPException(status_code=503, detail="데이터베이스 연결이 준비되지 않았습니다.")
-
-    print(f"FastAPI: RAG DB(MySQL)에서 '{driver_key}' 쿼리 중...")
     
     sql = "SELECT interpretation_text FROM interpretations WHERE aspect_key = %s"
     
@@ -90,7 +93,7 @@ async def get_interpretation_from_db(driver_key: str) -> str:
         if result:
             return result['interpretation_text']
         else:
-            print(f"FastAPI: '{driver_key}'에 대한 해설이 없어 DEFAULT 조회")
+            logger.info(f"FastAPI: '{driver_key}'에 대한 해설이 없어 DEFAULT 조회")
             async with db_pool.acquire() as conn:
                 async with conn.cursor(aiomysql.DictCursor) as cursor:
                     await cursor.execute(sql, ("DEFAULT_POSITIVE",))
@@ -99,7 +102,7 @@ async def get_interpretation_from_db(driver_key: str) -> str:
             return result_default['interpretation_text'] if result_default else "오늘 하루도 순조롭게 보낼 수 있습니다."
     
     except Exception as e:
-        print(f"FastAPI: DB 쿼리 중 오류 발생: {e}")
+        logger.error(f"FastAPI: DB 쿼리 중 오류 발생: {e}")
         return "운세 해설을 가져오는 중 오류가 발생했습니다."
 
 
@@ -136,7 +139,7 @@ async def generate_summary(score: int, expert_text: str, category: str) -> str:
         summary = completion.choices[0].message.content.strip()
         return summary
     except Exception as e:
-        print(f"OpenAI API 호출 오류 (영역: {category}): {e}")
+        logger.error(f"OpenAI API 호출 오류 (영역: {category}): {e}")
         return f"오늘의 {category} 운세에 대한 정보를 가져오는 데 실패했습니다."
 
 async def generate_total_summary(summaries: Dict[str, str]) -> str:
@@ -168,7 +171,7 @@ async def generate_total_summary(summaries: Dict[str, str]) -> str:
         summary = completion.choices[0].message.content.strip()
         return summary
     except Exception as e:
-        print(f"OpenAI API 총 요약 생성 오류: {e}")
+        logger.error(f"OpenAI API 총 요약 생성 오류: {e}")
         return "오늘 하루 긍정적인 마음으로 기회를 잡아보세요."
 
 
@@ -180,7 +183,7 @@ async def summarize_fortune(input_data: ScoreInput):
     Java 엔진으로부터 점수와 핵심 근거를 받아,
     MySQL RAG DB + LLM을 통해 최종 요약을 생성합니다.
     """
-    print(f"FastAPI: Java로부터 요청 받음: {input_data.model_dump_json(indent=2)}")
+    # print(f"FastAPI: Java로부터 요청 받음: {input_data.model_dump_json(indent=2)}")
     
     scores = input_data.scores
     drivers = input_data.keyDrivers
@@ -194,7 +197,7 @@ async def summarize_fortune(input_data: ScoreInput):
     
     # asyncio.gather를 사용해 모든 DB 조회를 동시에 실행
     expert_texts = await asyncio.gather(*retrieval_tasks) # ["해설1", "해설2", ...]
-    print(f"FastAPI: RAG DB 조회 완료. 해설: {expert_texts}")
+    # print(f"FastAPI: RAG DB 조회 완료. 해설: {expert_texts}")
 
     # --- 2. [Generation] 각 영역별 '요약'을 병렬로 생성 ---
     summary_tasks = []
@@ -205,13 +208,13 @@ async def summarize_fortune(input_data: ScoreInput):
         
     # asyncio.gather를 사용해 모든 LLM 호출을 동시에 실행
     detailed_summary_list = await asyncio.gather(*summary_tasks) # ["요약1", "요약2", ...]
-    print(f"FastAPI: LLM 개별 요약 생성 완료.")
+    # print(f"FastAPI: LLM 개별 요약 생성 완료.")
     
     detailed_summaries = dict(zip(categories, detailed_summary_list))
 
     # --- 3. [Generation] '총 운세 요약' 생성 ---
     total_summary = await generate_total_summary(detailed_summaries)
-    print(f"FastAPI: LLM 총 요약 생성 완료.")
+    # print(f"FastAPI: LLM 총 요약 생성 완료.")
 
     # --- 4. 최종 응답 조립 ---
     total_score = sum(scores.values())
@@ -226,11 +229,11 @@ async def summarize_fortune(input_data: ScoreInput):
         detailed_summaries=detailed_summaries
     )
     
-    print(f"FastAPI: Java로 최종 응답 전송: {response_data.model_dump_json(indent=2)}")
+    # print(f"FastAPI: Java로 최종 응답 전송: {response_data.model_dump_json(indent=2)}")
     
     return response_data
 
 if __name__ == "__main__":
     # 터미널에서 실행: uvicorn Ai_Fortune:app --reload --port 8000
-    print("FastAPI server start")
+    logger.info("FastAPI server start")
     uvicorn.run("Ai_Fortune:app", host=settings.SERVER_HOST, port=settings.SERVER_HOST, reload=True)
