@@ -230,7 +230,7 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
 
  // 선택된 선물 수락
 acceptSelectedGift: async (): Promise<AcceptGiftResult> => {
-  const { selectedNotification, notifications } = get();
+  const { selectedNotification } = get();
 
   // 선물 알림이 선택되어 있지 않으면
   if (!selectedNotification || selectedNotification.type !== "GIFT") {
@@ -258,17 +258,19 @@ acceptSelectedGift: async (): Promise<AcceptGiftResult> => {
   }
 
   // ✅ 여기서 읽음 처리 API 호출 (선물 수락 완료 시점)
-  alarmAPI.markAsRead(selectedNotification.notificationId);
+try {
+  await alarmAPI.markAsRead(selectedNotification.notificationId);
+} catch (e) {
+  console.error("읽음 처리 실패:", e);
+}
 
   // ✅ 로컬 알림 리스트에서도 isRead = true로 업데이트
-  set({
-    selectedNotification: null, // 모달 닫기
-    notifications: notifications.map((n) =>
-      n.notificationId === selectedNotification.notificationId
-        ? { ...n, isRead: true }
-        : n
-    ),
-  });
+  set((state) => ({
+  selectedNotification: null, // 모달 닫기
+  notifications: state.notifications.filter(
+    (n) => n.notificationId !== selectedNotification.notificationId
+  ),
+}));
 
   return "OK";
 },

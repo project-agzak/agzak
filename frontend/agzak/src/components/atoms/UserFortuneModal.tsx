@@ -96,8 +96,8 @@ export function UserFortuneModal({ nickname, memberKey, onClose }: UserFortuneMo
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
 
   // 운세 정보
-  const scores = useFortuneStore((s) => s.scores);
-  const typeInfo = useFortuneStore((s) => s.typeInfo);
+const scores = useFortuneStore((s) => s.memberScores);
+const typeInfo = useFortuneStore((s) => s.memberTypeInfo);
   const fetchMemberToday = useFortuneStore((s) => s.fetchMemberToday);
 
   // 쿠키 도감 상태

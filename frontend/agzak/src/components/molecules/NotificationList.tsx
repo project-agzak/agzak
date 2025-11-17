@@ -30,9 +30,16 @@ export function NotificationList({
           </p>
         ) : notifications.length > 0 ? (
           <ul className="space-y-3">
-            {notifications.map((n) => {
-              const isGift =
-                n.type === "GIFT" || n.notiType === "GIFT_RECEIVED";
+             {/* 정렬 추가: 최신(createdAt) 순으로 */}
+    {([...notifications]
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() -
+          new Date(a.createdAt).getTime()
+      )
+    ).map((n) => {
+      const isGift =
+        n.type === "GIFT" || n.notiType === "GIFT_RECEIVED";
 
               return (
                 <li key={n.id}>

@@ -78,6 +78,8 @@ type FortuneState = {
   scores: FortuneScores | null; // 실제 런타임에서는 flat/nested 둘 다 허용(아래 유틸이 처리)
   typeInfo: FortuneTypeInfo | null;
 
+    memberScores: FortuneScores | null;
+  memberTypeInfo: FortuneTypeInfo | null;
   // 게스트 전용
   guestId: string | null;
 
@@ -126,6 +128,10 @@ const pickTotalSummary = (src: any): string | undefined => {
 export const useFortuneStore = create<FortuneState>((set, get) => ({
   scores: null,
   typeInfo: null,
+
+   memberScores: null,
+  memberTypeInfo: null,
+
   guestId: typeof window !== "undefined" ? localStorage.getItem("guestId") : null,
 
   typeDetails: {},
@@ -236,6 +242,10 @@ export const useFortuneStore = create<FortuneState>((set, get) => ({
     set({
       scores: null,
       typeInfo: null,
+
+       memberScores: null,      
+    memberTypeInfo: null,  
+
       guestId: null,
       typeDetails: {},
       loading: false,
@@ -317,8 +327,8 @@ export const useFortuneStore = create<FortuneState>((set, get) => ({
         const { scores, type } = pickScoresTypeGuestId(d);
 
         set({
-          scores: scores ?? null,
-          typeInfo: type ?? null,
+          memberScores: scores ?? null,      //  다른 사람용 필드에만 저장
+        memberTypeInfo: type ?? null,
           loading: false,
         });
       } else {
