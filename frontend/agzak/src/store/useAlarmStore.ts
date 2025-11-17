@@ -14,6 +14,8 @@ import RottenCookie from "@/assets/Cookies/rotten-cookie.webp";
 import SansamCookie from "@/assets/Cookies/sansam-cookie.webp";
 import SantaCookie from "@/assets/Cookies/santa-cookie.webp";
 import UnicornCookie from "@/assets/Cookies/unicorn-cookie.webp";
+import LuckyCookie from "@/assets/Cookies/lucky-cookie.webp";
+
 import { create } from "zustand";
 import { useCookiesStore } from "./useCookiesStore";
 
@@ -43,6 +45,7 @@ export const COOKIE_KIND_BY_ID: Record<number, CookieKindInfo> = {
  11: { id: 11, code: "LAVA",       name: "용암 쿠키" },
  12: { id: 12, code: "SANTA",      name: "산타 쿠키" },
  13: { id: 13, code: "UNICORN",    name: "유니콘 쿠키" },
+ 14: { id: 14, code: "LUCKY",      name: "럭키 쿠키" },
 };
 
 // ✅ [추가] cookieKindId로 info 가져오는 헬퍼
@@ -119,6 +122,7 @@ const COOKIE_IMAGE_BY_CODE: Record<string, string> = {
   LAVA: LavaCookie,
   SANTA: SantaCookie,
   UNICORN: UnicornCookie,
+  LUCKY: LuckyCookie,
 };
 
 // 기본값: 못 찾으면 믹스쿠키로
@@ -238,8 +242,8 @@ acceptSelectedGift: async (): Promise<AcceptGiftResult> => {
   }
 
   // ✅ 여기서 최신 인벤토리 개수 가져오기 (useCookiesStore.getState 사용)
-   let cookiesState = useCookiesStore.getState();
-  let inventoryCount = cookiesState.items.length;
+  const cookiesState = useCookiesStore.getState();
+  const inventoryCount = cookiesState.items.length;
 
  console.log("[ACCEPT_GIFT] inventoryCount =", inventoryCount);
   if (inventoryCount >= 50) {

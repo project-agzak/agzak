@@ -58,6 +58,7 @@ export type FortuneCookieType =
   | "LAVA"
   | "SANTA"
   | "UNICORN"
+  | "LUCKY"
 
 
 export interface FortuneCookieResult {

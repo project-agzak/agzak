@@ -15,6 +15,7 @@ export const COLLECTION_COOKIE_CODES = [
   "LAVA",
   "SANTA",
   "UNICORN",
+  "LUCKY",
 ] as const;
 
 export type CollectionCookieCode = (typeof COLLECTION_COOKIE_CODES)[number];
