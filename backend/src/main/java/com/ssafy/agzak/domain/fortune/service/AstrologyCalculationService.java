@@ -2,184 +2,315 @@ package com.ssafy.agzak.domain.fortune.service;
 
 
 import com.ssafy.agzak.domain.fortune.dto.request.BirthDataInput;
-import com.ssafy.agzak.domain.fortune.dto.response.AiPromptData;
-import com.ssafy.agzak.domain.fortune.dto.response.AspectInfo;
-import com.ssafy.agzak.domain.fortune.dto.response.NatalPlanetInfo;
-import com.ssafy.agzak.domain.fortune.dto.response.TransitPlanetInfo;
+import com.ssafy.agzak.domain.fortune.dto.response.*;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import swisseph.SweConst;
-import swisseph.SweDate;
-import swisseph.SwissEph;
 
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-//Swiss Ephemeris 라이브러리를 사용하여 점성술 데이터를 계산하는 서비스
+//점수 계산
 @Service
+@RequiredArgsConstructor
 public class AstrologyCalculationService {
 
-    private SwissEph swissEph;
-    private final String EPHE_PATH = "src/main/resources/ephe";
+    private final SwissEphDataService swissEphDataService;
+    private static final int BASE_SCORE = 125;
+    private static final int SCORE_MIN = 0;
+    private static final int SCORE_MAX = 250;
 
-    private static final Map<Integer, String> PLANETS_MAP = Map.of(
-            SweConst.SE_SUN, "Sun",
-            SweConst.SE_MOON, "Moon",
-            SweConst.SE_MERCURY, "Mercury",
-            SweConst.SE_VENUS, "Venus",
-            SweConst.SE_MARS, "Mars",
-            SweConst.SE_JUPITER, "Jupiter",
-            SweConst.SE_SATURN, "Saturn",
-            SweConst.SE_URANUS, "Uranus",
-            SweConst.SE_NEPTUNE, "Neptune",
-            SweConst.SE_PLUTO, "Pluto"
-    );
-    private static final String[] ZODIAC_SIGNS = {
-            "Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo",
-            "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"
-    };
+    // 점수 가중치 (부정적 1.5배)
+    private static final int WEIGHT_POSITIVE_MAJOR = 40; // 목성, 토성, 태양 등
+    private static final int WEIGHT_NEGATIVE_MAJOR = -60; // (1.5x)
 
-    public AstrologyCalculationService() {
-        this.swissEph = new SwissEph(EPHE_PATH);
+    private static final int WEIGHT_POSITIVE_MINOR = 25; // 금성, 화성, 수성
+    private static final int WEIGHT_NEGATIVE_MINOR = -38; // (약 1.5x)
+
+    // 달 가중치 (일일 변동성)
+    private static final int WEIGHT_POSITIVE_MOON = 20; // 프롬프트: 40~50%의 변동성
+    private static final int WEIGHT_NEGATIVE_MOON = -30; // (1.5x)
+
+    // 어스펙트 이름 상수
+    private static final String CONJUNCTION = "Conjunction";
+    private static final String OPPOSITION = "Opposition";
+    private static final String SQUARE = "Square";
+    private static final String TRINE = "Trine";
+    private static final String SEXTILE = "Sextile";
+
+    private static final double MAX_ORB = 5.0;
+
+    public ScoreCalculationResult calculateScores(BirthDataInput input) {
+
+        AstrologyData data = swissEphDataService.getAstrologicalData(input);
+
+        ScoreAndDriver achievementResult = calculateAchievementScore(data.natalPlanets(), data.aspects(), data.mcLongitude());
+        ScoreAndDriver loveResult = calculateLoveScore(data.natalPlanets(), data.aspects());
+        ScoreAndDriver healthResult = calculateHealthScore(data.natalPlanets(), data.aspects());
+        ScoreAndDriver moneyResult = calculateMoneyScore(data.natalPlanets(), data.aspects());
+
+        return new ScoreCalculationResult(
+                Map.of(
+                        "love", loveResult.score(),
+                        "health", healthResult.score(),
+                        "money", moneyResult.score(),
+                        "achievement", achievementResult.score()
+                ),
+                Map.of(
+                        "love", loveResult.driverKey(),
+                        "health", healthResult.driverKey(),
+                        "money", moneyResult.driverKey(),
+                        "achievement", achievementResult.driverKey()
+                )
+        );
     }
 
-    public AiPromptData generateAiPromptData(BirthDataInput input) {
+    private record ScoreAndDriver(int score, String driverKey) {}
 
-        ZoneId birthZone = ZoneId.of("Asia/Seoul");
-        ZonedDateTime natalZonedTime = input.birthDate().atTime(input.birthTime()).atZone(birthZone);
-        ZonedDateTime natalUtTime = natalZonedTime.withZoneSameInstant(birthZone);
-        ZonedDateTime transitUtTime = ZonedDateTime.now(birthZone);
+    private static class ScoringContext {
+        int score = BASE_SCORE;
+        String driverKey = "DEFAULT_POSITIVE";
+        int priority = 100; // 낮을수록 높은 우선순위
+        double scoreChange = 0.0;
 
-        double natalJulDay = getJulianDay(natalUtTime);
-        double transitJulDay = getJulianDay(transitUtTime);
-
-        double[] cusps = new double[13];
-        double[] ascmc = new double[10];
-
-        int iflags = 0;
-        int houseSystem = SweConst.SE_HSYS_PLACIDUS;
-
-        swissEph.swe_houses(natalJulDay, iflags, input.latitude(), input.longitude(), houseSystem, cusps, ascmc);
-
-        String ascendantSign = getSignWithDegree(ascmc[SweConst.SE_ASC]);
-        String mcSign = getSignWithDegree(ascmc[SweConst.SE_MC]);
-
-        List<NatalPlanetInfo> natalPlanets = new ArrayList<>();
-        for (Map.Entry<Integer, String> entry : PLANETS_MAP.entrySet()) {
-            double[] results = calculatePlanetPosition(natalJulDay, entry.getKey());
-            double longitude = results[0];
-
-            natalPlanets.add(new NatalPlanetInfo(
-                    entry.getValue(),
-                    getSignWithDegree(longitude),
-                    longitude,
-                    getHousePosition(longitude, cusps)
-            ));
-        }
-
-        // 4. 현재 행성 위치 계산
-        List<TransitPlanetInfo> transitPlanets = new ArrayList<>();
-        for (Map.Entry<Integer, String> entry : PLANETS_MAP.entrySet()) {
-            double[] results = calculatePlanetPosition(transitJulDay, entry.getKey());
-            double longitude = results[0];
-
-            transitPlanets.add(new TransitPlanetInfo(
-                    entry.getValue(),
-                    getSignWithDegree(longitude),
-                    longitude
-            ));
-        }
-
-        // 5. 어스펙트(Aspects) 계산
-        List<AspectInfo> aspects = calculateAspects(transitPlanets, natalPlanets);
-
-        return new AiPromptData(natalPlanets, transitPlanets, aspects, ascendantSign, mcSign);
-    }
-
-
-    private double getJulianDay(ZonedDateTime utTime) {
-        double utHour = utTime.getHour() + (utTime.getMinute() / 60.0) + (utTime.getSecond() / 3600.0);
-        SweDate sweDate = new SweDate(utTime.getYear(), utTime.getMonthValue(), utTime.getDayOfMonth(), utHour, SweDate.SE_GREG_CAL);
-        return sweDate.getJulDay();
-    }
-
-    private double[] calculatePlanetPosition(double julianDay, int planetId) {
-        double[] results = new double[6];
-        StringBuffer errorBuffer = new StringBuffer();
-        int flags = SweConst.SEFLG_SPEED;
-
-        int result = swissEph.swe_calc_ut(julianDay, planetId, flags, results, errorBuffer);
-        if (result < 0) {
-            System.err.println("Warning: " + errorBuffer.toString());
-        }
-        return results;
-    }
-
-    private String getSignWithDegree(double longitude) {
-        String sign = ZODIAC_SIGNS[(int) Math.floor(longitude / 30.0)];
-        double degree = longitude % 30.0;
-        return String.format("%s %.1f°", sign, degree);
-    }
-
-    private int getHousePosition(double planetLongitude, double[] cusps) {
-        double asc = cusps[1];
-
-        // 행성 위치를 0/360도 경계(ASC) 기준으로 정규화 (한 번만 수행)
-        if (planetLongitude < asc) {
-            planetLongitude += 360.0;
-        }
-
-        for (int i = 1; i <= 12; i++) {
-            double cuspStart = cusps[i];
-            double cuspEnd;
-
-            if (i == 12) {
-                // 12번 하우스는 12번 커스프에서 시작하여 다음 ASC(cusps[1] + 360)에서 끝남
-                cuspEnd = asc + 360.0;
-            } else {
-                cuspEnd = cusps[i + 1];
-            }
-
-            // 하우스 커스프가 0/360도를 넘어가는 경우 (예: 11하우스 290도, 12하우스 340도, 1하우스 20도)
-            if (cuspEnd < cuspStart) {
-                cuspEnd += 360.0;
-            }
-
-            // 정규화된 행성 위치가 현재 하우스 범위 내에 있는지 확인
-            if (planetLongitude >= cuspStart && planetLongitude < cuspEnd) {
-                return i;
+        void applyScore(double points, String key, int keyPriority) {
+            this.scoreChange += points;
+            if (keyPriority < this.priority) {
+                this.priority = keyPriority;
+                this.driverKey = key;
             }
         }
 
-        // 모든 범위를 벗어난 경우 (논리적으로는 발생하기 어려움)
-        return 1;
+        // 점수를 0~250 사이로 고정
+        int getFinalScore() {
+            int finalScore = BASE_SCORE + (int) Math.round(this.scoreChange);
+            return Math.max(SCORE_MIN, Math.min(SCORE_MAX, finalScore));
+        }
     }
 
-    private List<AspectInfo> calculateAspects(List<TransitPlanetInfo> transits, List<NatalPlanetInfo> natals) {
-        List<AspectInfo> aspects = new ArrayList<>();
-        double orb = 5.0; // 허용 오차 범위
+    private double calculateWeightedScore(AspectInfo aspect, int baseWeight) {
+        if (aspect == null) {
+            return 0.0;
+        }
+        double orb = aspect.orb(); // 0.0 ~ 5.0
 
-        for (TransitPlanetInfo transit : transits) {
-            for (NatalPlanetInfo natal : natals) {
-                double angle = Math.abs(transit.longitude() - natal.longitude());
-                if (angle > 180.0) angle = 360.0 - angle;
+        // 선형 감소: 0도일 때 100%, 5도일 때 0%
+        double weight = (MAX_ORB - orb) / MAX_ORB;
 
-                checkAspect(aspects, transit.name(), natal.name(), angle, 0.0, "Conjunction (0°)", orb);
-                checkAspect(aspects, transit.name(), natal.name(), angle, 60.0, "Sextile (60°)", orb);
-                checkAspect(aspects, transit.name(), natal.name(), angle, 90.0, "Square (90°)", orb);
-                checkAspect(aspects, transit.name(), natal.name(), angle, 120.0, "Trine (120°)", orb);
-                checkAspect(aspects, transit.name(), natal.name(), angle, 180.0, "Opposition (180°)", orb);
+        return baseWeight * weight;
+    }
+
+    private NatalPlanetInfo findNatalPlanet(List<NatalPlanetInfo> natals, String name) {
+        return natals.stream().filter(p -> p.name().equals(name)).findFirst().orElse(null);
+    }
+
+    private List<NatalPlanetInfo> getNatalPlanetsInHouse(List<NatalPlanetInfo> natals, int house) {
+        return natals.stream().filter(p -> p.house() == house).toList();
+    }
+
+    // --- 4가지 핵심 점수 계산 로직 (Orb 가중치 적용) --
+    private ScoreAndDriver calculateAchievementScore(List<NatalPlanetInfo> natals, List<AspectInfo> aspects, double mcLongitude) {
+        ScoringContext ctx = new ScoringContext();
+
+        // 1. 성취운 관련 Natal "행성" 정의
+        List<NatalPlanetInfo> relevantNatals = new ArrayList<>();
+        relevantNatals.add(findNatalPlanet(natals, "Sun"));
+        relevantNatals.add(findNatalPlanet(natals, "Mars"));
+
+        for (AspectInfo aspect : aspects) {
+            String tName = aspect.transitPlanet();
+            String nName = aspect.natalPlanet();
+
+            boolean isRelevant = relevantNatals.stream().anyMatch(p -> p != null && p.name().equals(nName));
+            if (!isRelevant) continue;
+
+            int baseWeight = 0;
+            String key = "";
+            int priority = 100;
+
+            // 2. 어스펙트 타입과 행성에 따라 가중치/키/우선순위 결정
+            if (aspect.aspectType().contains(SQUARE) || aspect.aspectType().contains(OPPOSITION)) {
+                // 1순위: Veto 감점 규칙
+                if ((tName.equals("Mars") || tName.equals("Saturn"))) {
+                    baseWeight = WEIGHT_NEGATIVE_MAJOR * 2;
+                    key = "VETO_ACHIEVEMENT_HARD_ASPECT";
+                    priority = 0; // 최우선 순위
+                }
+            } else if (aspect.aspectType().contains(TRINE) || aspect.aspectType().contains(SEXTILE)) {
+                // 2순위: '높은 성과' 가점
+                if (tName.equals("Jupiter") || tName.equals("Sun")) {
+                    baseWeight = WEIGHT_POSITIVE_MAJOR;
+                    key = "ACHIEVEMENT_MAJOR_POSITIVE";
+                    priority = 5;
+                }
+                // 3순위: '일반 성과' 가점
+                else if (tName.equals("Mars")) {
+                    baseWeight = WEIGHT_POSITIVE_MINOR;
+                    key = "ACHIEVEMENT_MARS_POSITIVE";
+                    priority = 10;
+                }
+            }
+
+            // 4순위: 달의 영향 (소폭)
+            if (tName.equals("Moon")) {
+                if (aspect.aspectType().contains("Positive")) {
+                    baseWeight = WEIGHT_POSITIVE_MOON / 2; // 소폭
+                    key = "ACHIEVEMENT_MOON_POSITIVE";
+                    priority = 50;
+                } else if (aspect.aspectType().contains("Negative")) {
+                    baseWeight = WEIGHT_NEGATIVE_MOON / 2; // 소폭
+                    key = "ACHIEVEMENT_MOON_NEGATIVE";
+                    priority = 40;
+                }
+            }
+
+            // 3. Orb 가중치를 적용한 실제 점수 계산
+            if (baseWeight != 0) {
+                double weightedScore = calculateWeightedScore(aspect, baseWeight);
+                ctx.applyScore(weightedScore, key, priority);
             }
         }
-        return aspects;
+
+        return new ScoreAndDriver(ctx.getFinalScore(), ctx.driverKey);
     }
 
-    private void checkAspect(List<AspectInfo> aspects, String tName, String nName, double angle, double aspectAngle, String aspectName, double orb) {
-        double orbDiff = Math.abs(angle - aspectAngle);
-        if (orbDiff <= orb) {
-            aspects.add(new AspectInfo(tName, aspectName, nName, orbDiff));
+    /**
+     * 연애운 계산 로직 (Orb 가중치 적용 - 기준 템플릿)
+     */
+    private ScoreAndDriver calculateLoveScore(List<NatalPlanetInfo> natals, List<AspectInfo> aspects) {
+        ScoringContext ctx = new ScoringContext();
+        List<NatalPlanetInfo> relevantNatals = new ArrayList<>();
+        relevantNatals.add(findNatalPlanet(natals, "Venus"));
+        relevantNatals.add(findNatalPlanet(natals, "Mars"));
+        relevantNatals.addAll(getNatalPlanetsInHouse(natals, 5));
+        relevantNatals.addAll(getNatalPlanetsInHouse(natals, 7));
+
+        for (AspectInfo aspect : aspects) {
+            String tName = aspect.transitPlanet();
+            String nName = aspect.natalPlanet();
+
+            boolean isRelevant = relevantNatals.stream().anyMatch(p -> p != null && p.name().equals(nName));
+            if (!isRelevant) continue;
+
+            int baseWeight = 0;
+            String key = "";
+            int priority = 100;
+
+            if (aspect.aspectType().contains(TRINE) || aspect.aspectType().contains(SEXTILE)) {
+                // 긍정 어스펙트
+                if (tName.equals("Jupiter")) { baseWeight = WEIGHT_POSITIVE_MAJOR; key = "LOVE_JUPITER_POSITIVE"; priority = 5; }
+                else if (tName.equals("Venus")) { baseWeight = WEIGHT_POSITIVE_MINOR; key = "LOVE_VENUS_POSITIVE"; priority = 10; }
+                else if (tName.equals("Mars")) { baseWeight = WEIGHT_POSITIVE_MINOR; key = "LOVE_MARS_POSITIVE"; priority = 10; }
+                else if (tName.equals("Moon")) { baseWeight = WEIGHT_POSITIVE_MOON; key = "LOVE_MOON_POSITIVE"; priority = 20; }
+
+            } else if (aspect.aspectType().contains(SQUARE) || aspect.aspectType().contains(OPPOSITION)) {
+                // 부정 어스펙트
+                if (tName.equals("Saturn")) { baseWeight = WEIGHT_NEGATIVE_MAJOR; key = "LOVE_SATURN_NEGATIVE"; priority = 5; }
+                else if (tName.equals("Venus")) { baseWeight = WEIGHT_NEGATIVE_MINOR; key = "LOVE_VENUS_NEGATIVE"; priority = 15; }
+                else if (tName.equals("Mars")) { baseWeight = WEIGHT_NEGATIVE_MINOR; key = "LOVE_MARS_NEGATIVE"; priority = 15; }
+                else if (tName.equals("Moon")) { baseWeight = WEIGHT_NEGATIVE_MOON; key = "LOVE_MOON_NEGATIVE"; priority = 30; }
+            }
+
+            if (baseWeight != 0) {
+                double weightedScore = calculateWeightedScore(aspect, baseWeight);
+                ctx.applyScore(weightedScore, key, priority);
+            }
         }
+
+        return new ScoreAndDriver(ctx.getFinalScore(), ctx.driverKey);
     }
+
+    private ScoreAndDriver calculateHealthScore(List<NatalPlanetInfo> natals, List<AspectInfo> aspects) {
+        ScoringContext ctx = new ScoringContext();
+
+        // 1. 건강운 관련 Natal 행성 정의
+        List<NatalPlanetInfo> positiveNatals = List.of(findNatalPlanet(natals, "Sun"), findNatalPlanet(natals, "Jupiter"), findNatalPlanet(natals, "Venus"));
+        List<NatalPlanetInfo> negativeNatals = new ArrayList<>();
+        negativeNatals.add(findNatalPlanet(natals, "Saturn"));
+        negativeNatals.addAll(getNatalPlanetsInHouse(natals, 6));
+
+        for (AspectInfo aspect : aspects) {
+            String tName = aspect.transitPlanet();
+            String nName = aspect.natalPlanet();
+
+            if (tName.equals("Mars") || nName.equals("Mars")) continue;
+
+            int baseWeight = 0;
+            String key = "";
+            int priority = 100;
+
+            // 2. 가점 요인 (Positive Natals)
+            boolean isPosRelevant = positiveNatals.stream().anyMatch(p -> p != null && p.name().equals(nName));
+            if (isPosRelevant && (aspect.aspectType().contains(TRINE) || aspect.aspectType().contains(SEXTILE))) {
+                if (tName.equals("Jupiter") || tName.equals("Sun")) { baseWeight = WEIGHT_POSITIVE_MAJOR; key = "HEALTH_POSITIVE_MAJOR"; priority = 10; }
+                else if (tName.equals("Venus")) { baseWeight = WEIGHT_POSITIVE_MINOR; key = "HEALTH_POSITIVE_MINOR"; priority = 15; }
+            }
+
+            // 3. 감점 요인 (Negative Natals)
+            boolean isNegRelevant = negativeNatals.stream().anyMatch(p -> p != null && p.name().equals(nName));
+            if (isNegRelevant && (aspect.aspectType().contains(SQUARE) || aspect.aspectType().contains(OPPOSITION) || aspect.aspectType().contains(CONJUNCTION))) {
+                if (tName.equals("Saturn")) { baseWeight = WEIGHT_NEGATIVE_MAJOR; key = "HEALTH_SATURN_NEGATIVE"; priority = 5; }
+                else { baseWeight = WEIGHT_NEGATIVE_MINOR; key = "HEALTH_NEGATIVE_MINOR"; priority = 15; }
+            }
+
+            // 4. 달의 영향 (소폭)
+            if (tName.equals("Moon")) {
+                if (aspect.aspectType().contains("Positive")) { baseWeight = WEIGHT_POSITIVE_MOON / 2; key = "HEALTH_MOON_POSITIVE"; priority = 50; }
+                else if (aspect.aspectType().contains("Negative")) { baseWeight = WEIGHT_NEGATIVE_MOON / 2; key = "HEALTH_MOON_NEGATIVE"; priority = 40; }
+            }
+
+            if (baseWeight != 0) {
+                double weightedScore = calculateWeightedScore(aspect, baseWeight);
+                ctx.applyScore(weightedScore, key, priority);
+            }
+        }
+
+        return new ScoreAndDriver(ctx.getFinalScore(), ctx.driverKey);
+    }
+
+    /**
+     * 금전운 계산 로직 (Orb 가중치 적용)
+     */
+    private ScoreAndDriver calculateMoneyScore(List<NatalPlanetInfo> natals, List<AspectInfo> aspects) {
+        ScoringContext ctx = new ScoringContext();
+        List<NatalPlanetInfo> relevantNatals = new ArrayList<>();
+        relevantNatals.add(findNatalPlanet(natals, "Venus"));
+        relevantNatals.add(findNatalPlanet(natals, "Jupiter"));
+        relevantNatals.addAll(getNatalPlanetsInHouse(natals, 2));
+        relevantNatals.addAll(getNatalPlanetsInHouse(natals, 8));
+
+        for (AspectInfo aspect : aspects) {
+            String tName = aspect.transitPlanet();
+            String nName = aspect.natalPlanet();
+
+            boolean isRelevant = relevantNatals.stream().anyMatch(p -> p != null && p.name().equals(nName));
+            if (!isRelevant) continue;
+
+            int baseWeight = 0;
+            String key = "";
+            int priority = 100;
+
+            if (aspect.aspectType().contains(TRINE) || aspect.aspectType().contains(SEXTILE)) {
+                // 긍정 어스펙트
+                if (tName.equals("Jupiter")) { baseWeight = WEIGHT_POSITIVE_MAJOR; key = "MONEY_JUPITER_POSITIVE"; priority = 10; }
+                else if (tName.equals("Venus")) { baseWeight = WEIGHT_POSITIVE_MINOR; key = "MONEY_VENUS_POSITIVE"; priority = 15; }
+                else if (tName.equals("Moon")) { baseWeight = WEIGHT_POSITIVE_MOON; key = "MONEY_MOON_POSITIVE"; priority = 20; }
+
+            } else if (aspect.aspectType().contains(SQUARE) || aspect.aspectType().contains(OPPOSITION)) {
+                // 부정 어스펙트
+                if (tName.equals("Saturn")) { baseWeight = WEIGHT_NEGATIVE_MAJOR; key = "MONEY_SATURN_NEGATIVE"; priority = 5; }
+                else if (tName.equals("Jupiter")) { baseWeight = WEIGHT_NEGATIVE_MAJOR; key = "MONEY_JUPITER_NEGATIVE"; priority = 15; }
+                else if (tName.equals("Venus")) { baseWeight = WEIGHT_NEGATIVE_MINOR; key = "MONEY_VENUS_NEGATIVE"; priority = 20; }
+                else if (tName.equals("Moon")) { baseWeight = WEIGHT_NEGATIVE_MOON; key = "MONEY_MOON_NEGATIVE"; priority = 30; }
+            }
+
+            if (baseWeight != 0) {
+                double weightedScore = calculateWeightedScore(aspect, baseWeight);
+                ctx.applyScore(weightedScore, key, priority);
+            }
+        }
+
+        return new ScoreAndDriver(ctx.getFinalScore(), ctx.driverKey);
+    }
+
 }
