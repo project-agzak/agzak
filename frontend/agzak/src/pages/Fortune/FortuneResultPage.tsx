@@ -347,7 +347,7 @@ export default function FortuneResultPage() {
         url={effectiveShareUrl}
         title="오늘의 내 운세 카드 🔮"
         description="운세 결과 공유하기"
-        imgClassName="w-[40px]"
+        imgClassName="w-[50px]"
       />
     </div>
   </div>
