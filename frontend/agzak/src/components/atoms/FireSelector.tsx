@@ -11,21 +11,37 @@ type Props = {
 
 export function FireSelector({ selected, onChange }: Props) {
   const current: OvenFireType = selected || "WEAK"
-  const isWeak = current === "WEAK"
 
-  const modeLabel = isWeak ? "약불" : "강불"
-  const probText = isWeak ? "성공 확률 +5%p" : "성공 확률 -5%p"
-  const gainText = isWeak ? "성공 시 +7" : "성공 시 +13"
+  const getNextFire = (curr: OvenFireType): OvenFireType => {
+    if (curr === "WEAK") return "MEDIUM";
+    if (curr === "MEDIUM") return "STRONG";
+    return "WEAK";
+  };
+
+  const modeLabel = 
+    current === "WEAK" ? "약불" : 
+    current === "MEDIUM" ? "중불" : 
+    "강불";
+    
+  const probText = 
+    current === "WEAK" ? "성공 확률 +5%p" : 
+    current === "MEDIUM" ? "성공 확률 +0%p" :
+    "성공 확률 -5%p";
+  // 아래 확률 안내 메시지가 다소 불친절
+  const gainText = 
+    current === "WEAK" ? "성공 시 +6" : 
+    current === "MEDIUM" ? "성공 시 +9" :
+    "성공 시 +12";
+
   const handleToggle = () => {
-    onChange(isWeak ? "STRONG" : "WEAK")
-  }
+    onChange(getNextFire(current));
+  };
 
   return (
     <div className="flex flex-row items-center max-w-[360px] mx-auto mb-1 select-none">
       <button
         type="button"
         onClick={handleToggle}
-        aria-pressed={!isWeak}
         className={[
           "flex flex-col items-center gap-3 px-3 py-2 rounded-2xl transition-all",
           "cursor-pointer",
@@ -36,7 +52,9 @@ export function FireSelector({ selected, onChange }: Props) {
               src={fireKnob}
               alt={`${modeLabel} 선택`}
               className={`w-15 h-15 transition-transform duration-200 ${
-                isWeak ? "-rotate-45" : "rotate-45"
+              current === "WEAK" ? "-rotate-45" : 
+              current === "MEDIUM" ? "" : 
+              "rotate-45"
               }`}
             />          
           <div className="font-galmuri-small text-[14px]">
@@ -49,7 +67,9 @@ export function FireSelector({ selected, onChange }: Props) {
           <span>
           <div
             className={`font-galmuri-xsmall text-[11px] ${
-              isWeak ? "text-amber-600" : "text-rose-600"
+              current === "WEAK" ? "text-amber-600" : 
+              current === "MEDIUM" ? "text-yellow-600" :
+              "text-rose-600"
             }`}
           >
             {probText}

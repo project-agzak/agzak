@@ -18,6 +18,8 @@ import type { GuestFortuneReq } from "@/lib/fortuneAPI";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useFortuneStore } from "@/store/useFortuneStore";
 import { CalendarIcon } from "lucide-react";
+import { setWithTTL, getWithTTL, removeWithTTL } from "@/lib/storage";
+
 
 export default function FortunePage() {
   const navigate = useNavigate();
@@ -34,26 +36,20 @@ export default function FortunePage() {
 const [birthCityText, setBirthCityText] = useState("");
   const { isLoggedIn } = useAuthStore();
 const [showBirthCalendar, setShowBirthCalendar] = useState(false);
-   const [submitting,setSubmitting] = useState(false);
+const [clickLocked, setClickLocked] = useState(false); // 더블클릭 방지용
+const [showLoading, setShowLoading] = useState(false); 
 
 useEffect(() => {
-  //  온보딩 중 판정: kakao_ticket, userId, submitting, onboarding 플래그
-  const inOnboarding =
-    submitting ||
-    !!sessionStorage.getItem("kakao_ticket") ||
-    !!sessionStorage.getItem("onboarding") ||   // ← 추가
-    !!localStorage.getItem("userId");
-
-  if (isLoggedIn && !inOnboarding) {
+  if (isLoggedIn) {
     navigate("/home", { replace: true });
   }
-}, [isLoggedIn, submitting, navigate]);
+}, [isLoggedIn, navigate]);
 
 
 
    const handleFortuneSubmit = async () => {
     
-      if (submitting) return; //  중복 클릭 방지
+      if (clickLocked) return; // 중복 클릭 방지
 
   // 1) 닉네임
   if (!nickname || nickname.trim().length === 0) {
@@ -173,19 +169,30 @@ useEffect(() => {
     }
 
  const kakaoTicket = sessionStorage.getItem("kakao_ticket");
-    const userInfoStr = localStorage.getItem("userId");
+    const userInfoStr = sessionStorage.getItem("userId");
     const MIN_LOADING_MS = 8000;           // 최소 10초
     const startTime = Date.now();
 
-    
+
+// 로컬스토리지에 게스트 정보 저장
+  const guestProfile = {
+    nickname: nickname.trim(),
+    birthDate,
+    gender: gender.toUpperCase() as "MALE" | "FEMALE",
+    birthTime,
+    birthCity: finalBirthCity.address,
+  };
+
+  //  userId / kakao_ticket 둘 다 *없을 때만* guestProfile 저장
+  if (!kakaoTicket && !userInfoStr) {
     try {
-       setSubmitting(true);
-
-       if (!finalBirthCity) {
-  alert("태어난 도시를 다시 선택해 주세요.");
-  return;
-}
-
+    setWithTTL("guestProfile", guestProfile, 24 * 60 * 60 * 1000); //  24시간 TTL
+  } catch (e) {
+    console.warn("[guestProfile] TTL 저장 실패:", e);
+  }
+  }
+      //
+      
         const payload: GuestFortuneReq = {
       nickname: nickname.trim(),
       gender: gender.toUpperCase() as GuestFortuneReq["gender"], // "MALE" | "FEMALE"
@@ -195,9 +202,11 @@ useEffect(() => {
     ? `${finalBirthCity.sido} ${finalBirthCity.sgg}`
     : finalBirthCity.sido,
     };
-
+setClickLocked(true);
     // 1) 카카오 회원가입 완료
-    
+      try {
+     // setSubmitting(true);
+      
          if (kakaoTicket) {
         const res = await AuthAPI.kakaoComplete({
           ticket: kakaoTicket,
@@ -208,34 +217,42 @@ useEffect(() => {
           birthCity: birthCity.address,
         });
 
-        if (!res.ok || !res.data) {
-          //console.error("카카오 회원가입(/auth/kakao/complete) 오류:", res.error);
-          alert(res.error?.message ?? "카카오 회원가입 중 오류가 발생했습니다.");
-          return;
-        }
+     if (!res.ok || !res.data) {
+    const status = res.error?.status;
+    const rawMsg = res.error?.message ?? "";
+
+    if (status === 409) {
+      if (rawMsg.includes("UQ_member_email")) {
+        alert("이미 가입된 이메일입니다. 로그인 해주세요.");
+      } else if (rawMsg.includes("UQ_member_nickname")) {
+        alert("이미 사용 중인 닉네임입니다. 다른 닉네임을 입력해주세요.");
+      } else {
+        alert("이미 존재하는 회원 정보입니다.");
+      }
+    } else if (status === 400) {
+      alert("입력한 정보를 다시 확인해주세요.");
+    } else {
+      alert("회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+    }
+
+    // ❗ 실패면 여기서 끝
+    // setClickLocked(false);
+    return;
+  }
+  
  const { accessToken, refreshToken, expiresInSeconds } = res.data;
 
       setTokens(accessToken, refreshToken, expiresInSeconds);
 
-       sessionStorage.setItem("onboarding", "1");
-  //  if (accessToken && refreshToken && expiresInSeconds) {
-  //         localStorage.setItem("access_token", accessToken);
-  //         localStorage.setItem("refresh_token", refreshToken);
-  //         localStorage.setItem(
-  //           "access_token_expires_at",
-  //           String(Date.now() + expiresInSeconds * 1000),
-  //         );
-  //       }
+     
 
+      removeWithTTL("guestProfile");
       
 
 
  await fetchGuest(payload);
        //  최소 로딩 시간 보장 후 이동
-  const elapsed = Date.now() - startTime;
-  const remain = Math.max(0, MIN_LOADING_MS - elapsed);
-  setTimeout(() => {
-    navigate("/fortune/webtoon", { replace: true });
+  
 
       // 카카오용 임시 값 정리
         sessionStorage.removeItem("kakao_ticket");
@@ -243,8 +260,8 @@ useEffect(() => {
         sessionStorage.removeItem("kakao_suggestedNickname");
 
 
-    setSubmitting(false);
-  }, remain);
+    setClickLocked(false);
+    navigate("/login", { replace: true });
         return;
       }
 
@@ -265,38 +282,56 @@ useEffect(() => {
           birthCity: birthCity.address,
         });
 
-        if (!res.ok) {
-          //console.error("회원가입(/auth/register) 오류:", res.error);
-          alert(res.error?.message ?? "회원가입 중 오류가 발생했습니다.");
-          return;
-        }
+       if (!res.ok) {
+  const status = res.error?.status;
+  const rawMsg = res.error?.message ?? "";
+
+  if (status === 409) {
+    // 이메일 중복인지 닉네임 중복인지 구분할 수도 있음
+    if (rawMsg.includes("UQ_member_email")) {
+      alert("이미 가입된 이메일입니다. 로그인 해주세요.");
+    } else if (rawMsg.includes("UQ_member_nickname")) {
+      alert("이미 사용 중인 닉네임입니다. 다른 닉네임을 입력해주세요.");
+    } else {
+      alert("이미 존재하는 회원 정보입니다.");
+    }
+  } else if (status === 400) {
+    alert("입력한 정보를 다시 확인해주세요.");
+  } else {
+    alert("회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+  }
+
+  setClickLocked(false);
+  return;
+}
 
         // 임시 저장한 userId 제거
-      
+     removeWithTTL("guestProfile");
+       sessionStorage.removeItem("userId"); 
 
        await fetchGuest(payload);
-        //  최소 로딩 시간 보장 후 이동
-  const elapsed = Date.now() - startTime;
-  const remain = Math.max(0, MIN_LOADING_MS - elapsed);
-  setTimeout(() => {
-    navigate("/fortune/webtoon", { replace: true });
-    setSubmitting(false);
-  }, remain);
+
+
+    setClickLocked(false);
+    navigate("/login", { replace: true });
+
         return;
       }
-
+ setShowLoading(true);
       // 3) 위 둘 다 없으면 → 순수 게스트 운세
   await fetchGuest(payload);
 
   const elapsed = Date.now() - startTime;
   const remain = Math.max(0, MIN_LOADING_MS - elapsed);
+  
   setTimeout(() => {
-    setSubmitting(false);
+    setShowLoading(false);
     navigate("/fortune/webtoon");
   }, remain);
     } catch (e) {
       //console.error(e);
       alert("운세 계산 중 오류가 발생했습니다.");
+      setClickLocked(false);
   } 
   };
 
@@ -306,14 +341,69 @@ useEffect(() => {
 
 
   
-    const hasUserId = !!localStorage.getItem("userId");
+    const hasUserId = !!sessionStorage.getItem("userId");
     const hasKakaoTicket = !!sessionStorage.getItem("kakao_ticket");
 
-    //  userId 또는 kakao_ticket이 있으면 안내문 숨김
+    //  userId 또는 kakao_ticket이 없으면 안내문 숨김
    setShowGuide(hasUserId || hasKakaoTicket);
-  }, []);
+ try {
+     const parsed = getWithTTL<{
+    nickname?: string;
+    birthDate?: string;
+    gender?: "MALE" | "FEMALE";
+    birthTime?: string;
+    birthCity?: string;
+  }>("guestProfile");
+
+  if (!parsed) {
+    // 만료됐거나 없으면 그냥 리턴
+    return;
+  }
   
-   if (submitting) {
+      if (parsed.birthDate) setBirthDate(parsed.birthDate);
+
+      if (parsed.gender === "MALE") setGender("male");
+      if (parsed.gender === "FEMALE") setGender("female");
+
+      if (parsed.birthTime) {
+        if (parsed.birthTime === "00:00") {
+          setUnknownTime(true);
+          setHour(null);
+          setMinute(null);
+        } else {
+          const [h, m] = parsed.birthTime.split(":");
+          setUnknownTime(false);
+          setHour(h ?? null);
+          setMinute(m ?? null);
+        }
+      }
+
+      
+if (parsed.birthCity) {
+  const matched = SIMPLE_REGIONS.find((r) => r.label === parsed.birthCity);
+
+  if (matched) {
+    const city = {
+      sido: matched.sido,
+      sgg: matched.sgg,
+      address: matched.label,
+    };
+
+    // 🔹 드롭다운 value + 텍스트 state 둘 다 채우기
+    setBirthCity(city);
+    setBirthCityText(city.address);
+  } else {
+    // 🔹 매칭 안 되면 텍스트만 복원해서 유저가 다시 선택하게
+    setBirthCity(null);
+    setBirthCityText(parsed.birthCity);
+  }
+}
+ } catch (e) {
+   console.warn("[guestProfile] 파싱 실패:", e);
+ }
+    }, []);
+  
+   if (showLoading) {
     return (
       <main className="min-h-screen py-4">
         <section className="w-full max-w-[420px] mx-auto px-4">
@@ -524,13 +614,13 @@ useEffect(() => {
 </div>
 
         {/* 하단 버튼 */}
-        <div className="mt-30 flex justify-center pb-15">
-          <Button_L
-            label="다음 단계로"
-            width={260}
-            onClick={handleFortuneSubmit}
-          />
-        </div>
+      <div className="mt-30 flex justify-center pb-15">
+  <Button_L
+    label={showGuide ? "회원가입 완료" : "다음 단계로"}
+    width={260}
+    onClick={handleFortuneSubmit}
+  />
+</div>
       </div>
     </main>
   );

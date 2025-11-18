@@ -15,7 +15,7 @@ export function WeeklyFortuneCard() {
         bg-[url('@/assets/ui/paper-frame.png')]
         bg-cover bg-center
         border-0 shadow-none
-        mx-auto my-2
+        mx-auto
         overflow-hidden
       "
     >
