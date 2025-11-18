@@ -222,9 +222,9 @@ setClickLocked(true);
     const rawMsg = res.error?.message ?? "";
 
     if (status === 409) {
-      if (rawMsg.includes("UQ_member_email")) {
+      if (rawMsg.includes("이메일")) {
         alert("이미 가입된 이메일입니다. 로그인 해주세요.");
-      } else if (rawMsg.includes("UQ_member_nickname")) {
+      } else if (rawMsg.includes("닉네임")) {
         alert("이미 사용 중인 닉네임입니다. 다른 닉네임을 입력해주세요.");
       } else {
         alert("이미 존재하는 회원 정보입니다.");
@@ -288,9 +288,9 @@ setClickLocked(true);
 
   if (status === 409) {
     // 이메일 중복인지 닉네임 중복인지 구분할 수도 있음
-    if (rawMsg.includes("UQ_member_email")) {
+    if (rawMsg.includes("이메일")) {
       alert("이미 가입된 이메일입니다. 로그인 해주세요.");
-    } else if (rawMsg.includes("UQ_member_nickname")) {
+    } else if (rawMsg.includes("닉네임")) {
       alert("이미 사용 중인 닉네임입니다. 다른 닉네임을 입력해주세요.");
     } else {
       alert("이미 존재하는 회원 정보입니다.");
