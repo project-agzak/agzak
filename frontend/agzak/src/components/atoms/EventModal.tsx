@@ -143,7 +143,7 @@ export function EventModal({ onClose }: EventModalProps) {
       return;
     }
 
-    const memberId = (member as any).memberId; // TS 타입에 맞게 필요하면 수정
+    const memberId = member.id;
 
     const res = await api.post<unknown>(
       `/coupons/issue/${primaryCoupon.couponId}/members/${memberId}`
