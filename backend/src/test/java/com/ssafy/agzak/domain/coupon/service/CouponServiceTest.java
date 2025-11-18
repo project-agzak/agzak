@@ -9,8 +9,8 @@ import com.ssafy.agzak.domain.coupon.repository.CouponRepository;
 import com.ssafy.agzak.domain.coupon.repository.CouponTypeRepository;
 import com.ssafy.agzak.domain.coupon.repository.CustomCouponRepository;
 import com.ssafy.agzak.domain.coupon.repository.MemberCouponRepository;
-import com.ssafy.agzak.domain.coupon.util.ConcurrentFCSUtil;
-import com.ssafy.agzak.domain.coupon.util.FCSUtil;
+import com.ssafy.agzak.domain.coupon.adapter.LocalCouponIssueOrderAdapter;
+import com.ssafy.agzak.domain.coupon.port.CouponIssueOrderPort;
 import com.ssafy.agzak.domain.member.entity.Member;
 import com.ssafy.agzak.domain.member.repository.MemberRepository;
 import org.junit.jupiter.api.Test;
@@ -55,7 +55,7 @@ class CouponServiceTest {
     @Mock
     private CustomCouponRepository customCouponRepository;
     @Mock
-    private final ConcurrentFCSUtil fcsUtil = new ConcurrentFCSUtil();
+    private final LocalCouponIssueOrderAdapter fcsUtil = new LocalCouponIssueOrderAdapter();
 
     @Test
     void createCoupon_정상_생성() {
@@ -121,7 +121,7 @@ class CouponServiceTest {
 
         // 1) 쿠폰 조회 + 미만료 상태
         when(couponRepository.findById(couponId)).thenReturn(Optional.of(coupon));
-        when(coupon.getExpiresAt()).thenReturn(LocalDateTime.now().plusHours(1)); // 미래 → 만료 아님
+        when(coupon.getExpiresAt()).thenReturn(null); // 미래 → 만료 아님
 
         // 2) 순번 발급
         when(fcsUtil.nextOrder(couponId)).thenReturn(1L);
@@ -172,7 +172,7 @@ class CouponServiceTest {
 
         // 1) 쿠폰은 존재하고, 만료도 안 됐다
         when(couponRepository.findById(couponId)).thenReturn(Optional.of(coupon));
-        when(coupon.getExpiresAt()).thenReturn(LocalDateTime.now().plusHours(1));
+        when(coupon.getExpiresAt()).thenReturn(null);
 
         // 2) 순번은 101번째라고 치자
         when(fcsUtil.nextOrder(couponId)).thenReturn(101L);
@@ -224,7 +224,7 @@ class CouponServiceTest {
 
         // 1) 쿠폰 존재 + 미만료
         when(couponRepository.findById(couponId)).thenReturn(Optional.of(coupon));
-        when(coupon.getExpiresAt()).thenReturn(LocalDateTime.now().plusHours(1));
+        when(coupon.getExpiresAt()).thenReturn(null);
 
         // 2) 순번은 동시 호출이라도 그냥 1 만 리턴해도 상관 없음 (값 검증 안 하니까)
         when(fcsUtil.nextOrder(couponId)).thenReturn(1L);
@@ -268,12 +268,12 @@ class CouponServiceTest {
     void nextOrder_단일_스레드에서는_1부터_순차적으로_증가한다() {
         // given
         Long couponId = 1L;
-        FCSUtil fcsUtil = new ConcurrentFCSUtil();
+        CouponIssueOrderPort couponIssueOrderPort = new LocalCouponIssueOrderAdapter();
 
         // when
-        long first  = fcsUtil.nextOrder(couponId);
-        long second = fcsUtil.nextOrder(couponId);
-        long third  = fcsUtil.nextOrder(couponId);
+        long first  = couponIssueOrderPort.nextOrder(couponId);
+        long second = couponIssueOrderPort.nextOrder(couponId);
+        long third  = couponIssueOrderPort.nextOrder(couponId);
 
         // then
         assertThat(first).isEqualTo(1L);
@@ -287,7 +287,7 @@ class CouponServiceTest {
         Long couponId = 1L;
         int requestCount = 50;
         int threadPoolSize = 10;
-        FCSUtil fcsUtil = new ConcurrentFCSUtil();
+        CouponIssueOrderPort couponIssueOrderPort = new LocalCouponIssueOrderAdapter();
 
         ExecutorService executor = Executors.newFixedThreadPool(threadPoolSize);
         CountDownLatch start = new CountDownLatch(1);
@@ -300,7 +300,7 @@ class CouponServiceTest {
             executor.submit(() -> {
                 try {
                     start.await(); // 출발 신호 기다렸다가
-                    long order = fcsUtil.nextOrder(couponId);
+                    long order = couponIssueOrderPort.nextOrder(couponId);
                     results.add(order);
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
@@ -337,14 +337,14 @@ class CouponServiceTest {
         // given
         Long couponA = 1L;
         Long couponB = 2L;
-        FCSUtil fcsUtil = new ConcurrentFCSUtil();
+        CouponIssueOrderPort couponIssueOrderPort = new LocalCouponIssueOrderAdapter();
 
         // when
-        long a1 = fcsUtil.nextOrder(couponA); // 1
-        long a2 = fcsUtil.nextOrder(couponA); // 2
-        long b1 = fcsUtil.nextOrder(couponB); // 1
-        long a3 = fcsUtil.nextOrder(couponA); // 3
-        long b2 = fcsUtil.nextOrder(couponB); // 2
+        long a1 = couponIssueOrderPort.nextOrder(couponA); // 1
+        long a2 = couponIssueOrderPort.nextOrder(couponA); // 2
+        long b1 = couponIssueOrderPort.nextOrder(couponB); // 1
+        long a3 = couponIssueOrderPort.nextOrder(couponA); // 3
+        long b2 = couponIssueOrderPort.nextOrder(couponB); // 2
 
         // then
         assertThat(a1).isEqualTo(1L);

@@ -6,16 +6,16 @@ import com.ssafy.agzak.domain.coupon.entity.Coupon;
 //import com.ssafy.agzak.domain.coupon.entity.CouponEventCounter;
 import com.ssafy.agzak.domain.coupon.entity.MemberCoupon;
 import com.ssafy.agzak.domain.coupon.repository.*;
-import com.ssafy.agzak.domain.coupon.util.FCSUtil;
+import com.ssafy.agzak.domain.coupon.port.CouponIssueOrderPort;
 import com.ssafy.agzak.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 
 @Service
-@RequiredArgsConstructor
 public class CouponService {
 
     private final CouponRepository couponRepository;
@@ -24,7 +24,24 @@ public class CouponService {
     private final MemberRepository memberRepository;
     private final CustomCouponRepository customCouponRepository;
 //    private final CouponEventCounterRepository couponEventCounterRepository;
-    private final FCSUtil fcsUtil;
+    private final CouponIssueOrderPort couponIssueOrderPort;
+
+    public CouponService(
+            CouponRepository couponRepository,
+            CouponTypeRepository couponTypeRepository,
+            MemberCouponRepository memberCouponRepository,
+            MemberRepository memberRepository,
+            CustomCouponRepository customCouponRepository,
+            @Qualifier("redisCouponIssueOrderAdapter")
+            CouponIssueOrderPort couponIssueOrderPort
+    ) {
+        this.couponRepository = couponRepository;
+        this.couponTypeRepository = couponTypeRepository;
+        this.memberCouponRepository = memberCouponRepository;
+        this.memberRepository = memberRepository;
+        this.customCouponRepository = customCouponRepository;
+        this.couponIssueOrderPort = couponIssueOrderPort;
+    }
 
     @Transactional
     public void createCoupon(CreateCouponRequest request) {
@@ -44,7 +61,7 @@ public class CouponService {
         Coupon coupon = couponRepository.findById(couponId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 쿠폰입니다."));
         coupon.expire();
-        fcsUtil.cleanCache(couponId);
+        couponIssueOrderPort.cleanCache(couponId);
     }
 
 
@@ -154,11 +171,11 @@ public class CouponService {
         Coupon coupon = couponRepository.findById(couponId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 쿠폰입니다."));
 
-        if (coupon.getExpiresAt() == null || coupon.getExpiresAt().isBefore(LocalDateTime.now())) {
+        if (coupon.getExpiresAt() != null) {
             throw new IllegalArgumentException("만료된 쿠폰입니다.");
         }
 
-        long order = fcsUtil.nextOrder(couponId);
+        long order = couponIssueOrderPort.nextOrder(couponId);
         long updated = customCouponRepository.updateCouponQuantity(couponId);
 
         if (updated == 0) {
