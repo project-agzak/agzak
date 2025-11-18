@@ -1,4 +1,5 @@
 // src/lib/axios.ts
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import axios, { AxiosError } from "axios";
 
 export const apiClient = axios.create({
@@ -20,8 +21,8 @@ apiClient.interceptors.response.use(
 apiClient.interceptors.response.use(
   (res) => res,
   async (error: AxiosError<any>) => {
-  
-  
+
+
     return Promise.reject(error);
   }
 );

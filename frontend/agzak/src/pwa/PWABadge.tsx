@@ -1,5 +1,6 @@
 // PWABadge.tsx
-import { useEffect, useState } from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useEffect, useState } from 'react';
 
 declare global {
   interface Window {
@@ -7,7 +8,7 @@ declare global {
   }
 }
 
-const SEEN_KEY = "pwa_install_banner_shown_v1";
+const SEEN_KEY = 'pwa_install_banner_shown_v1';
 
 export default function PWABadge() {
   const [show, setShow] = useState(false);
@@ -15,35 +16,35 @@ export default function PWABadge() {
 
   useEffect(() => {
     // 브라우저 환경 가드 (SSR/테스트 방지)
-    if (typeof window === "undefined") return;
+    if (typeof window === 'undefined') return;
 
-    const alreadySeen = localStorage.getItem(SEEN_KEY) === "1";
+    const alreadySeen = localStorage.getItem(SEEN_KEY) === '1';
 
     // 1) 핸들러를 먼저 선언
     const onPrompt = (e: any) => {
       e.preventDefault();
       window.__pwaDeferredPrompt = e;
-      window.dispatchEvent(new CustomEvent("pwa:beforeinstallprompt", { detail: e }));
+      window.dispatchEvent(new CustomEvent('pwa:beforeinstallprompt', { detail: e }));
       setDeferred(e);
       if (!alreadySeen) setShow(true); // 닫은 적 있으면 배지는 띄우지 않음
     };
 
     const onInstalled = () => {
-      localStorage.setItem(SEEN_KEY, "1");
+      localStorage.setItem(SEEN_KEY, '1');
       setShow(false);
       setDeferred(null);
       window.__pwaDeferredPrompt = null;
-      window.dispatchEvent(new CustomEvent("pwa:consumed"));
+      window.dispatchEvent(new CustomEvent('pwa:consumed'));
     };
 
     // 2) 그 다음 리스너 등록
-    window.addEventListener("beforeinstallprompt", onPrompt as any);
-    window.addEventListener("appinstalled", onInstalled);
+    window.addEventListener('beforeinstallprompt', onPrompt as any);
+    window.addEventListener('appinstalled', onInstalled);
 
     // 3) 클린업에서도 동일한 참조 사용
     return () => {
-      window.removeEventListener("beforeinstallprompt", onPrompt as any);
-      window.removeEventListener("appinstalled", onInstalled);
+      window.removeEventListener('beforeinstallprompt', onPrompt as any);
+      window.removeEventListener('appinstalled', onInstalled);
     };
   }, []);
 
@@ -56,7 +57,7 @@ export default function PWABadge() {
           aria-label="닫기"
           className="rounded-md px-2 py-1 cursor-pointer"
           onClick={() => {
-            localStorage.setItem(SEEN_KEY, "1"); // 다시는 배지 안 뜨게
+            localStorage.setItem(SEEN_KEY, '1'); // 다시는 배지 안 뜨게
             setShow(false);
           }}
         >
@@ -74,12 +75,12 @@ export default function PWABadge() {
               await evt.prompt();
               try {
                 await evt.userChoice;
-              } catch {}
+              } catch { /* empty */ }
               window.__pwaDeferredPrompt = null;
-              window.dispatchEvent(new CustomEvent("pwa:consumed"));
+              window.dispatchEvent(new CustomEvent('pwa:consumed'));
               setDeferred(null);
               setShow(false);
-              localStorage.setItem(SEEN_KEY, "1"); // 설치/시도 후에도 재노출 방지
+              localStorage.setItem(SEEN_KEY, '1'); // 설치/시도 후에도 재노출 방지
             }}
           >
             설치

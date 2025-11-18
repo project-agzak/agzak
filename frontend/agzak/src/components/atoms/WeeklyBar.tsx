@@ -1,12 +1,6 @@
-"use client"
+'use client';
 
-import {
-  Bar,
-  BarChart,
-  ResponsiveContainer,
-  XAxis,
-  YAxis
-} from "recharts"
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 
 import {
   ChartContainer,
@@ -15,35 +9,35 @@ import {
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
-} from "@/components/ui/Chart"
+} from '@/components/ui/Chart';
 
 const chartConfig = {
   base: {
-    label: "기본 운세",
-    color: "hsl(var(--chart-1))",
+    label: '기본 운세',
+    color: 'hsl(var(--chart-1))',
   },
   enhanced: {
-    label: "강화 운세",
-    color: "hsl(var(--chart-2))",
+    label: '강화 운세',
+    color: 'hsl(var(--chart-2))',
   },
-} satisfies ChartConfig
+} satisfies ChartConfig;
 
 const fallback = [
-  { day: "월", base: 0, enhanced: 0 },
-  { day: "화", base: 0, enhanced: 0 },
-  { day: "수", base: 0, enhanced: 0 },
-  { day: "목", base: 0, enhanced: 0 },
-  { day: "금", base: 0, enhanced: 0 },
-  { day: "토", base: 0, enhanced: 0 },
-  { day: "일", base: 0, enhanced: 0 },
-]
+  { day: '월', base: 0, enhanced: 0 },
+  { day: '화', base: 0, enhanced: 0 },
+  { day: '수', base: 0, enhanced: 0 },
+  { day: '목', base: 0, enhanced: 0 },
+  { day: '금', base: 0, enhanced: 0 },
+  { day: '토', base: 0, enhanced: 0 },
+  { day: '일', base: 0, enhanced: 0 },
+];
 
 export function WeeklyFortuneBar({
   data = fallback,
 }: {
-  data?: { day: string; base: number; enhanced: number }[]
+  data?: { day: string; base: number; enhanced: number }[];
 }) {
-  const safeData = data.length ? data : fallback
+  const safeData = data.length ? data : fallback;
 
   return (
     <ChartContainer config={chartConfig} className="h-[180px] w-full pb-5">
@@ -51,26 +45,13 @@ export function WeeklyFortuneBar({
         <BarChart
           data={safeData}
           barSize={20}
-          barGap={-20}   
+          barGap={-20}
           barCategoryGap={0}
           margin={{ top: 6, right: 6, left: -20, bottom: 0 }}
         >
-          <XAxis
-            dataKey="day"
-            tickLine={false}
-            axisLine={false}
-            tickMargin={6}
-          />
-          <YAxis
-            axisLine={false}
-            tickLine={false}
-            tickMargin={4}
-            domain={[0, 1000]}
-          />
-          <ChartTooltip
-            cursor={{ fill: "rgba(0,0,0,0.04)" }}
-            content={<ChartTooltipContent />}
-          />
+          <XAxis dataKey="day" tickLine={false} axisLine={false} tickMargin={6} />
+          <YAxis axisLine={false} tickLine={false} tickMargin={4} domain={[0, 1000]} />
+          <ChartTooltip cursor={{ fill: 'rgba(0,0,0,0.04)' }} content={<ChartTooltipContent />} />
 
           {/* 강화 운세 (상단 / 녹색) */}
           <Bar
@@ -103,5 +84,5 @@ export function WeeklyFortuneBar({
         </BarChart>
       </ResponsiveContainer>
     </ChartContainer>
-  )
+  );
 }

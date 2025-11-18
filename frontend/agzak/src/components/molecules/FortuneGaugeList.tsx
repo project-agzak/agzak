@@ -1,15 +1,15 @@
 // @/components/molecules/FortuneGaugeList.tsx
-"use client"
+'use client';
 
-import type { FortuneGaugeColor } from "@/adapters/fortuneAdapter";
-import { COLOR_MAP } from "@/adapters/fortuneAdapter";
-import { FortuneGauge } from "@/components/atoms/FortuneGauge";
+import type { FortuneGaugeColor } from '@/adapters/fortuneAdapter';
+import { COLOR_MAP } from '@/adapters/fortuneAdapter';
+import { FortuneGauge } from '@/components/atoms/FortuneGauge';
 
 export type FortuneStat = {
-  label: string
-  value: number
-  color?: FortuneGaugeColor
-}
+  label: string;
+  value: number;
+  color?: FortuneGaugeColor;
+};
 
 export function FortuneGaugeList({
   stats = [],
@@ -17,15 +17,15 @@ export function FortuneGaugeList({
   labelClassName,
   dense = false,
 }: {
-  stats?: FortuneStat[],
-  max?: number,
-  labelClassName?: string,
-  dense?: boolean, 
+  stats?: FortuneStat[];
+  max?: number;
+  labelClassName?: string;
+  dense?: boolean;
 }) {
   return (
     <div
       className={`w-full font-galmuri-xsmall ${
-        dense ? "space-y-1" : "space-y-2"   // ⬅ 촘촘 모드일 땐 간격 줄이기
+        dense ? 'space-y-1' : 'space-y-2' // ⬅ 촘촘 모드일 땐 간격 줄이기
       }`}
     >
       {stats.length === 0 ? (
@@ -39,8 +39,8 @@ export function FortuneGaugeList({
       ) : (
         stats.map(({ label, value, color }) => {
           // 0 ~ max 범위로 안전 클램프
-          const safe = Math.max(0, Math.min(max, value ?? 0))
-          const c: FortuneGaugeColor = color ?? COLOR_MAP[label] ?? "green"
+          const safe = Math.max(0, Math.min(max, value ?? 0));
+          const c: FortuneGaugeColor = color ?? COLOR_MAP[label] ?? 'green';
           return (
             <FortuneGauge
               key={label}
@@ -49,7 +49,7 @@ export function FortuneGaugeList({
               color={c}
               labelClassName={labelClassName}
             />
-          )
+          );
         })
       )}
     </div>

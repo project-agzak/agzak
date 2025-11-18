@@ -1,6 +1,6 @@
-import "@/styles/components.css";
-import * as React from "react";
-import { useNavigate } from "react-router-dom";
+import '@/styles/components.css';
+import * as React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface ButtonMProps {
   to?: string;
@@ -9,17 +9,17 @@ interface ButtonMProps {
   className?: string;
   onClick?: () => void;
   disabled?: boolean;
-  type?: "button" | "submit" | "reset";
+  type?: 'button' | 'submit' | 'reset';
 }
 
 export function Button_M({
   to,
-  label = "다음",
+  label = '다음',
   width = 130,
   className,
   onClick,
   disabled = false,
-  type = "button", // ✅ 기본값 추가
+  type = 'button', // ✅ 기본값 추가
 }: ButtonMProps) {
   const navigate = useNavigate();
   const [pressed, setPressed] = React.useState(false);
@@ -34,10 +34,10 @@ export function Button_M({
 
   return (
     <div
-      className={`btnM-wrap ${pressed ? "is-pressed" : ""} ${className ?? ""} ${
-        disabled ? "opacity-50" : ""
+      className={`btnM-wrap ${pressed ? 'is-pressed' : ''} ${className ?? ''} ${
+        disabled ? 'opacity-50' : ''
       }`}
-      style={{ "--btn-width": `${width}px` } as React.CSSProperties}
+      style={{ '--btn-width': `${width}px` } as React.CSSProperties}
       aria-disabled={disabled}
     >
       <img

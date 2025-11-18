@@ -1,9 +1,9 @@
-
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useAuthStore } from "@/store/useAuthStore";
 import type { AxiosRequestConfig, AxiosResponse } from "axios";
 import { apiClient } from "./axios";
 
-export type ApiError = { status?: number; code?: string | number; message: string; raw?: any; timestamp?:string; path?:string };
+export type ApiError = { status?: number; code?: string | number; message: string; raw?: any; timestamp?: string; path?: string };
 export type ApiResponse<T> = {
   ok: boolean;
   data?: T | undefined;
@@ -16,9 +16,9 @@ function handleAuthError(status?: number, url?: string) {
   const { logout } = useAuthStore.getState();
 
   const isAuthRequest = !!url && url.startsWith("/auth/"); // /auth/* 는 건들지 않기
-if (isAuthRequest || status == null) return;
+  if (isAuthRequest || status == null) return;
 
-    // 401: 세션 만료 등
+  // 401: 세션 만료 등
   if (status === 401) {
 
     localStorage.removeItem("guestId");
@@ -35,7 +35,7 @@ if (isAuthRequest || status == null) return;
     window.location.replace("/login");
     return;
   }
-  
+
 }
 
 
@@ -50,7 +50,7 @@ async function request<T>(config: AxiosRequestConfig): Promise<ApiResponse<T>> {
 
     const isShareRequest = url.startsWith("/fortune/share/");
 
-      // 공통 요청 로깅 (최상단)
+    // 공통 요청 로깅 (최상단)
     console.group("[API_REQUEST]");
     console.log("url:", url);
     console.log("method:", config.method);
@@ -63,8 +63,8 @@ async function request<T>(config: AxiosRequestConfig): Promise<ApiResponse<T>> {
       expiresAt ? new Date(expiresAt).toISOString() : null,
     );
     console.groupEnd();
-    
-       //  0. 로그인 안 된 상태에서 게임 API는 아예 호출하지 않기
+
+    //  0. 로그인 안 된 상태에서 게임 API는 아예 호출하지 않기
     if (isGameRequest && !isLoggedIn) {
       console.log("[API_SKIP] 로그인 안 된 상태에서 게임 API 호출 차단:", {
         url,
@@ -94,7 +94,7 @@ async function request<T>(config: AxiosRequestConfig): Promise<ApiResponse<T>> {
       });
     }
 
-if (!isAuthRequest && !isShareRequest && accessToken) {
+    if (!isAuthRequest && !isShareRequest && accessToken) {
       // 토큰 만료 체크 (프론트 기준)
       if (expiresAt && expiresAt <= Date.now()) {
         logout("세션이 만료되었습니다. 다시 로그인해주세요.");
@@ -107,7 +107,7 @@ if (!isAuthRequest && !isShareRequest && accessToken) {
           },
         };
       }
-// 유효한 토큰이면 Authorization 헤더 추가
+      // 유효한 토큰이면 Authorization 헤더 추가
       config = {
         ...config,
         headers: {
@@ -129,8 +129,8 @@ if (!isAuthRequest && !isShareRequest && accessToken) {
 
     const url = typeof config.url === "string" ? config.url : "";
     const isAuthRequest = url.startsWith("/auth/");
-     const { accessToken, expiresAt, isLoggedIn } = useAuthStore.getState();
-     //  1) 네트워크 레벨 에러 (서버 꺼짐, DNS, CORS, 연결 거절 등)
+    const { accessToken, expiresAt, isLoggedIn } = useAuthStore.getState();
+    //  1) 네트워크 레벨 에러 (서버 꺼짐, DNS, CORS, 연결 거절 등)
     if (!e?.response) {
       console.error("[NETWORK_ERROR] 서버에 연결할 수 없습니다.", {
         url,
@@ -139,7 +139,7 @@ if (!isAuthRequest && !isShareRequest && accessToken) {
       });
 
       // 필요하면 여기서 한 번만 얼럿 띄우도록 토글 변수 둘 수도 있음
-   
+
 
       return {
         ok: false,
@@ -151,73 +151,73 @@ if (!isAuthRequest && !isShareRequest && accessToken) {
         },
       };
     }
-     const status = e?.response?.status;
-  const raw = e?.response?.data;
-  const backendCode =
-    raw?.code ?? raw?.errorCode ?? raw?.error ?? undefined;
-  const message = raw?.message ?? e?.message ?? "Unexpected error";
+    const status = e?.response?.status;
+    const raw = e?.response?.data;
+    const backendCode =
+      raw?.code ?? raw?.errorCode ?? raw?.error ?? undefined;
+    const message = raw?.message ?? e?.message ?? "Unexpected error";
 
-  const hasToken = !!accessToken;
-  const expiredOnClient = !!expiresAt && expiresAt <= Date.now();
+    const hasToken = !!accessToken;
+    const expiredOnClient = !!expiresAt && expiresAt <= Date.now();
 
-  // 🔥 401 디버깅용 상세 로그
-  if (status === 401) {
-    console.group("[AUTH_401_DEBUG]");
-    console.log("url:", url);
-    console.log("isAuthRequest:", isAuthRequest);
-    console.log("isLoggedIn:", isLoggedIn);
-    console.log("hasToken:", hasToken);
-    console.log(
-      "expiresAt:",
-      expiresAt ? new Date(expiresAt).toISOString() : null,
-    );
-    console.log("now:", new Date().toISOString());
-    console.log("expiredOnClient:", expiredOnClient);
-    console.log("backendCode:", backendCode);
-    console.log("backendMessage:", message);
-    console.log("raw:", raw);
-    console.groupEnd();
-
-    // 분류해서 한 번 더 찍어주면 더 보기 좋음
-    if (!hasToken) {
-      console.warn("[AUTH_401_REASON] 토큰 없음 → 로그인 필요");
-    } else if (expiredOnClient) {
-      console.warn(
-        "[AUTH_401_REASON] 프론트에서 이미 만료된 토큰으로 호출",
+    // 🔥 401 디버깅용 상세 로그
+    if (status === 401) {
+      console.group("[AUTH_401_DEBUG]");
+      console.log("url:", url);
+      console.log("isAuthRequest:", isAuthRequest);
+      console.log("isLoggedIn:", isLoggedIn);
+      console.log("hasToken:", hasToken);
+      console.log(
+        "expiresAt:",
+        expiresAt ? new Date(expiresAt).toISOString() : null,
       );
-    } else if (backendCode === "TOKEN_EXPIRED") {
-      console.warn("[AUTH_401_REASON] 서버 기준 토큰 만료");
-    } else {
-      console.warn(
-        "[AUTH_401_REASON] 기타 401 (권한 부족/잘못된 토큰/로그아웃 처리 등)",
-      );
+      console.log("now:", new Date().toISOString());
+      console.log("expiredOnClient:", expiredOnClient);
+      console.log("backendCode:", backendCode);
+      console.log("backendMessage:", message);
+      console.log("raw:", raw);
+      console.groupEnd();
+
+      // 분류해서 한 번 더 찍어주면 더 보기 좋음
+      if (!hasToken) {
+        console.warn("[AUTH_401_REASON] 토큰 없음 → 로그인 필요");
+      } else if (expiredOnClient) {
+        console.warn(
+          "[AUTH_401_REASON] 프론트에서 이미 만료된 토큰으로 호출",
+        );
+      } else if (backendCode === "TOKEN_EXPIRED") {
+        console.warn("[AUTH_401_REASON] 서버 기준 토큰 만료");
+      } else {
+        console.warn(
+          "[AUTH_401_REASON] 기타 401 (권한 부족/잘못된 토큰/로그아웃 처리 등)",
+        );
+      }
     }
-  }
     // handleAuthError는 한 번만 호출
     handleAuthError(status, url);
-    
-       if (!isAuthRequest && status === 500) {
+
+    if (!isAuthRequest && status === 500) {
       console.error("서버 오류(500) 감지됨. 홈으로 이동:", message);
       alert("서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
       window.location.replace("/"); // 새로고침 + 홈 이동
     }
 
 
-    
+
     return { ok: false, error: { status, code: status, message, raw } };
-    }
+  }
 }
 
 export const api = {
-  get:  <T>(url: string, config?: AxiosRequestConfig) =>
+  get: <T>(url: string, config?: AxiosRequestConfig) =>
     request<T>({ url, method: "GET", ...config }),
   post: <T>(url: string, body?: any, config?: AxiosRequestConfig) =>
     request<T>({ url, method: "POST", data: body, ...config }),
-  put:  <T>(url: string, body?: any, config?: AxiosRequestConfig) =>
+  put: <T>(url: string, body?: any, config?: AxiosRequestConfig) =>
     request<T>({ url, method: "PUT", data: body, ...config }),
-  patch:<T>(url: string, body?: any, config?: AxiosRequestConfig) =>
+  patch: <T>(url: string, body?: any, config?: AxiosRequestConfig) =>
     request<T>({ url, method: "PATCH", data: body, ...config }),
-  del:  <T>(url: string, config?: AxiosRequestConfig) =>
+  del: <T>(url: string, config?: AxiosRequestConfig) =>
     request<T>({ url, method: "DELETE", ...config }),
 };
 

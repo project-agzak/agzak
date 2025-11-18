@@ -1,29 +1,29 @@
 // src/components/molecules/OvenAspectPanel.tsx
-"use client"
+'use client';
 
-import achievement from "@/assets/Game/achievement-button.svg"
-import health from "@/assets/Game/health-button.svg"
-import love from "@/assets/Game/love-button.svg"
-import misfortune from "@/assets/Game/misfortune-button.svg"
-import money from "@/assets/Game/money-button.svg"
-import type { OvenAspectName } from "@/types/oven"
+import achievement from '@/assets/Game/achievement-button.svg';
+import health from '@/assets/Game/health-button.svg';
+import love from '@/assets/Game/love-button.svg';
+import misfortune from '@/assets/Game/misfortune-button.svg';
+import money from '@/assets/Game/money-button.svg';
+import type { OvenAspectName } from '@/types/oven';
 
 type Snap = {
-  snapLove: number
-  snapMoney: number
-  snapAchievement: number
-  snapHealth: number
-  snapMisfortune: number
-}
+  snapLove: number;
+  snapMoney: number;
+  snapAchievement: number;
+  snapHealth: number;
+  snapMisfortune: number;
+};
 
 export function OvenAspectPanel({
   snap,
   onSelect,
   disabled,
 }: {
-  snap: Snap
-  onSelect: (key: OvenAspectName) => void
-  disabled?: boolean
+  snap: Snap;
+  onSelect: (key: OvenAspectName) => void;
+  disabled?: boolean;
 }) {
   return (
     <div
@@ -38,21 +38,21 @@ export function OvenAspectPanel({
         label="금전"
         img={money}
         value={snap.snapMoney}
-        onClick={() => onSelect("MONEY")}
+        onClick={() => onSelect('MONEY')}
         disabled={disabled}
       />
       <AspectBtn
         label="애정"
         img={love}
         value={snap.snapLove}
-        onClick={() => onSelect("LOVE")}
+        onClick={() => onSelect('LOVE')}
         disabled={disabled}
       />
 
       {/* 액운 상승: 오른쪽 세로 긴 버튼 (2행 차지) */}
       <div className="row-span-2 flex flex-col items-center w-[100px]">
         <button
-          onClick={() => onSelect("MISFORTUNE")}
+          onClick={() => onSelect('MISFORTUNE')}
           disabled={disabled}
           className="w-[100px] h-[140px] disabled:opacity-60 cursor-pointer"
         >
@@ -72,18 +72,18 @@ export function OvenAspectPanel({
         label="성취"
         img={achievement}
         value={snap.snapAchievement}
-        onClick={() => onSelect("ACHIEVEMENT")}
+        onClick={() => onSelect('ACHIEVEMENT')}
         disabled={disabled}
       />
       <AspectBtn
         label="건강"
         img={health}
         value={snap.snapHealth}
-        onClick={() => onSelect("HEALTH")}
+        onClick={() => onSelect('HEALTH')}
         disabled={disabled}
       />
     </div>
-  )
+  );
 }
 
 function AspectBtn({
@@ -93,11 +93,11 @@ function AspectBtn({
   onClick,
   disabled,
 }: {
-  label: string
-  img: string
-  value: number
-  onClick: () => void
-  disabled?: boolean
+  label: string;
+  img: string;
+  value: number;
+  onClick: () => void;
+  disabled?: boolean;
 }) {
   return (
     <div className="flex flex-col items-center w-[100px]">
@@ -117,5 +117,5 @@ function AspectBtn({
         {value > 0 ? `+${value}` : value}
       </div>
     </div>
-  )
+  );
 }

@@ -1,4 +1,5 @@
 // src/pages/Fortune/FortunePage.tsx
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -10,7 +11,7 @@ import { Input } from '@/components/atoms/Input';
 import { TimeDropDown } from '@/components/atoms/TimeDropDown';
 
 import { DropDown } from '@/components/atoms/DropDown';
-import FortuneLoading from '@/components/templates/FortuneLoading';
+import FortuneLoading from '@/components/template/FortuneLoading';
 import { Calendar } from '@/components/ui/calendar';
 import { SIMPLE_REGIONS } from '@/constants/regions';
 import { AuthAPI } from '@/lib/AuthAPI';

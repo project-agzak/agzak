@@ -4,9 +4,9 @@ import { useMembersStore } from "@/store/useMembersStore"
 import type { FortuneData } from "@/types/fortune";
 
 export function useFortuneByDate(date?: string | null) {
-    const { fortuneCache, fortuneLoading, fortuneError, fetchFortuneByDate } = useMembersStore()
-    const [data, setData] = useState<FortuneData | null>(null)
-  
+  const { fortuneCache, fortuneLoading, fortuneError, fetchFortuneByDate } = useMembersStore()
+  const [data, setData] = useState<FortuneData | null>(null)
+
   useEffect(() => {
     if (!date) return
     if (fortuneCache[date] !== undefined) { setData(fortuneCache[date]!); return }

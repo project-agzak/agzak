@@ -8,7 +8,7 @@ export type Member = {
   gender: "MALE" | "FEMALE" | string;
   birthDate: string | null;
   birthTime: string | null;
-   birthHour?: string | null;
+  birthHour?: string | null;
   birthCity: string | null;
   latitude: number | null;
   longitude: number | null;
@@ -30,7 +30,7 @@ function loadInitialMember(): Member | null {
       nickname: parsed.nickname,
       gender: parsed.gender ?? "",
       birthDate: parsed.birthDate ?? null,
-        birthTime: parsed.birthTime ?? parsed.birthHour ?? null,
+      birthTime: parsed.birthTime ?? parsed.birthHour ?? null,
       birthHour: parsed.birthHour ?? null,
       birthCity: parsed.birthCity ?? null,
       latitude: parsed.latitude ?? null,
@@ -51,12 +51,12 @@ interface AuthState {
   expiresAt: number | null;
   member: Member | null;
 
-   /**
-   * 토큰 설정 (기존 사용처와 호환)
-   * - access: 필수
-   * - refresh: 선택
-   * - expiresInSeconds: 선택 (백엔드가 주는 expiresIn 초 단위 값)
-   */
+  /**
+  * 토큰 설정 (기존 사용처와 호환)
+  * - access: 필수
+  * - refresh: 선택
+  * - expiresInSeconds: 선택 (백엔드가 주는 expiresIn 초 단위 값)
+  */
   setTokens: (access: string, refresh?: string, expiresInSeconds?: number) => void;
   setMember: (member: Member | null) => void;
 
@@ -71,41 +71,39 @@ interface AuthState {
 const initialAccessToken = localStorage.getItem("access_token");
 const initialRefreshToken = localStorage.getItem("refresh_token");
 const expRaw = localStorage.getItem("access_token_expires_at");
-let initialExpiresAt: number | null = expRaw ? Number(expRaw) : null;
+const initialExpiresAt: number | null = expRaw ? Number(expRaw) : null;
+const initialIsLoggedIn = !!initialAccessToken;
 
-let initialIsLoggedIn = !!initialAccessToken;
-
-
-export const useAuthStore = create<AuthState>((set,get) => ({
-isLoggedIn: initialIsLoggedIn,
+export const useAuthStore = create<AuthState>((set, get) => ({
+  isLoggedIn: initialIsLoggedIn,
   accessToken: initialIsLoggedIn ? initialAccessToken : null,
   refreshToken: initialIsLoggedIn ? initialRefreshToken : null,
   expiresAt: initialIsLoggedIn ? initialExpiresAt : null,
   member: loadInitialMember(),
 
 
-   setTokens: (access, refresh, expiresInSeconds) => {
+  setTokens: (access, refresh, expiresInSeconds) => {
     // 만료 시각 계산 (초 단위 → ms)
     const expiresAt =
       typeof expiresInSeconds === "number"
         ? Date.now() + expiresInSeconds * 1000
         : null;
 
-          console.group("[AUTH] setTokens 호출됨");
-  console.log("accessToken:", access?.slice(0, 20) + "..."); // 토큰 앞부분만 표시
-  console.log("refreshToken:", refresh?.slice(0, 20) + "...");
-  console.log("expiresInSeconds:", expiresInSeconds);
+    console.group("[AUTH] setTokens 호출됨");
+    console.log("accessToken:", access?.slice(0, 20) + "..."); // 토큰 앞부분만 표시
+    console.log("refreshToken:", refresh?.slice(0, 20) + "...");
+    console.log("expiresInSeconds:", expiresInSeconds);
 
-  if (expiresAt) {
-    const remainingMs = expiresAt - Date.now();
-    const remainingMin = remainingMs / 1000 / 60;
-    console.log("만료 예정 시각:", new Date(expiresAt).toLocaleString());
-    console.log("남은 시간(ms):", remainingMs);
-    console.log("남은 시간(분):", remainingMin.toFixed(2));
-  } else {
-    console.warn(" expiresInSeconds 값이 없거나 숫자가 아님 — 만료 시간 계산 안 됨");
-  }
-  console.groupEnd();
+    if (expiresAt) {
+      const remainingMs = expiresAt - Date.now();
+      const remainingMin = remainingMs / 1000 / 60;
+      console.log("만료 예정 시각:", new Date(expiresAt).toLocaleString());
+      console.log("남은 시간(ms):", remainingMs);
+      console.log("남은 시간(분):", remainingMin.toFixed(2));
+    } else {
+      console.warn(" expiresInSeconds 값이 없거나 숫자가 아님 — 만료 시간 계산 안 됨");
+    }
+    console.groupEnd();
 
     localStorage.setItem("access_token", access);
     if (refresh) localStorage.setItem("refresh_token", refresh);
@@ -122,7 +120,7 @@ isLoggedIn: initialIsLoggedIn,
       expiresAt,
     });
 
-  
+
   },
   setMember: (member) => {
     if (member) localStorage.setItem("member", JSON.stringify(member));
@@ -177,12 +175,12 @@ isLoggedIn: initialIsLoggedIn,
       expiresAt: null,
     });
 
-      //  reason이 있으면 alert 띄우고 홈으로 이동
-  if (typeof reason === "string") {
-    alert(reason);
+    //  reason이 있으면 alert 띄우고 홈으로 이동
+    if (typeof reason === "string") {
+      alert(reason);
 
-    // react-router navigate 대신 강제 이동 (전역 store이기 때문)
-    window.location.href = "/";
-  }
+      // react-router navigate 대신 강제 이동 (전역 store이기 때문)
+      window.location.href = "/";
+    }
   },
 }));

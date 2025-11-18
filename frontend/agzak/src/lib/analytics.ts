@@ -1,4 +1,5 @@
 // 공통 로더 & 트래커 (GA4 + Hotjar)
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // Vite env
 const GA_ID = import.meta.env.VITE_GA_ID;
 const HJ_ID = Number(import.meta.env.VITE_HJ_ID);
@@ -7,14 +8,14 @@ const ENABLE = String(import.meta.env.VITE_ENABLE_ANALYTICS).toLowerCase() === "
 /** 페이지 최초 1회 호출 */
 export function loadAnalytics() {
   if (!ENABLE) return;
-  
+
   // ========== GA4 loader ==========
   if (GA_ID && !window.gtag) {
-      // dataLayer
-      window.dataLayer = window.dataLayer || [];
-      // gtag shim
-      window.gtag = function () {
-      // @ts-ignore
+    // dataLayer
+    window.dataLayer = window.dataLayer || [];
+    // gtag shim
+    window.gtag = function () {
+      // eslint-disable-next-line prefer-rest-params
       window.dataLayer.push(arguments);
     };
     window.gtag("js", new Date());
@@ -37,6 +38,7 @@ export function loadAnalytics() {
       c.hj =
         c.hj ||
         function () {
+          // eslint-disable-next-line prefer-rest-params
           (c.hj.q = c.hj.q || []).push(arguments);
         };
       c._hjSettings = { hjid: a };

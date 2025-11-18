@@ -72,7 +72,7 @@ export const fortuneAPI = {
   createGuestFortune: (body: GuestFortuneReq) =>
     api.post<GuestFortuneRes>("/fortune/guest", body),
 
-  /** 운세 타입 상세 조회 */  
+  /** 운세 타입 상세 조회 */
   getTypeDetail: (fortuneTypeId: number) =>
     api.get<FortuneTypeDetail>(`/fortune/fortuneType/${fortuneTypeId}`),
 

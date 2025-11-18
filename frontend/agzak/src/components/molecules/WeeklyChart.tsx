@@ -1,12 +1,12 @@
 // src/components/molecules/WeeklyChart.tsx
-"use client"
+'use client';
 
-import { WeeklyFortuneBar } from "@/components/atoms/WeeklyBar"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card"
-import { useWeeklyFortune } from "@/hooks/useWeeklyFortune"
+import { WeeklyFortuneBar } from '@/components/atoms/WeeklyBar';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import { useWeeklyFortune } from '@/hooks/useWeeklyFortune';
 
 export function WeeklyFortuneCard() {
-  const { weekly, loading, error } = useWeeklyFortune()
+  const { weekly, loading, error } = useWeeklyFortune();
 
   return (
     <Card
@@ -33,17 +33,13 @@ export function WeeklyFortuneCard() {
           </CardTitle>
         </CardHeader>
         <CardContent className="w-full font-galmuri p-0 flex flex-col items-center">
-          {loading && (
-            <div className="text-[10px] text-neutral-400 mb-1">그래프 로딩중…</div>
-          )}
-          {error && (
-            <div className="text-[10px] text-red-500 mb-1">오류: {error}</div>
-          )}
+          {loading && <div className="text-[10px] text-neutral-400 mb-1">그래프 로딩중…</div>}
+          {error && <div className="text-[10px] text-red-500 mb-1">오류: {error}</div>}
           <div className="w-[95%] mt-1">
             <WeeklyFortuneBar data={weekly} />
           </div>
         </CardContent>
       </div>
     </Card>
-  )
+  );
 }
