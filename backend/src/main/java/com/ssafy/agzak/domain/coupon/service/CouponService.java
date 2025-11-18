@@ -3,13 +3,16 @@ package com.ssafy.agzak.domain.coupon.service;
 import com.ssafy.agzak.domain.coupon.dto.request.CreateCouponRequest;
 import com.ssafy.agzak.domain.coupon.dto.response.CouponIssueResultResponse;
 import com.ssafy.agzak.domain.coupon.entity.Coupon;
-import com.ssafy.agzak.domain.coupon.entity.CouponEventCounter;
+//import com.ssafy.agzak.domain.coupon.entity.CouponEventCounter;
 import com.ssafy.agzak.domain.coupon.entity.MemberCoupon;
 import com.ssafy.agzak.domain.coupon.repository.*;
+import com.ssafy.agzak.domain.coupon.util.FCSUtil;
 import com.ssafy.agzak.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -20,7 +23,8 @@ public class CouponService {
     private final MemberCouponRepository memberCouponRepository;
     private final MemberRepository memberRepository;
     private final CustomCouponRepository customCouponRepository;
-    private final CouponEventCounterRepository couponEventCounterRepository;
+//    private final CouponEventCounterRepository couponEventCounterRepository;
+    private final FCSUtil fcsUtil;
 
     @Transactional
     public void createCoupon(CreateCouponRequest request) {
@@ -40,6 +44,7 @@ public class CouponService {
         Coupon coupon = couponRepository.findById(couponId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 쿠폰입니다."));
         coupon.expire();
+        fcsUtil.cleanCache(couponId);
     }
 
 
@@ -111,21 +116,49 @@ public class CouponService {
 //        );
 //    }
 
-//    // atomic update 버전: 동시성 문제 해결, 처리 속도 배타락 시도 대비 향상
+//    // atomic update 버전 + 발급 순서 반환: 발급 순서 반환 로직 데드록 발생
+//    @Transactional
+//    public CouponIssueResultResponse issueCoupon(Long couponId, Long memberId) {
+//
+//        int inc = couponEventCounterRepository.increaseAttemptCount(couponId);
+//
+//        if (inc == 0) {
+//            couponEventCounterRepository.save(
+//                    CouponEventCounter.builder()
+//                            .coupon(couponRepository.getReferenceById(couponId))
+//                            .build()
+//            );
+//        }
+//
+//        int order = couponEventCounterRepository.getAttemptCount(couponId);
+//        long updated = customCouponRepository.updateCouponQuantity(couponId);
+//
+//        if (updated == 0) {
+//            return CouponIssueResultResponse.failDueToSoldOut(order);
+//        }
+//
+//        MemberCoupon saved = memberCouponRepository.save(
+//                MemberCoupon.builder()
+//                        .coupon(couponRepository.getReferenceById(couponId))
+//                        .member(memberRepository.getReferenceById(memberId))
+//                        .build()
+//        );
+//
+//        return CouponIssueResultResponse.success(saved.getMemberCouponId(), order);
+//    }
+
+    // atomic update 버전 + Concurrent FCSUtil 발급 순서 반환: 발급 순서 반환 로직 데드록 해결
     @Transactional
     public CouponIssueResultResponse issueCoupon(Long couponId, Long memberId) {
 
-        int inc = couponEventCounterRepository.increaseAttemptCount(couponId);
+        Coupon coupon = couponRepository.findById(couponId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 쿠폰입니다."));
 
-        if (inc == 0) {
-            couponEventCounterRepository.save(
-                    CouponEventCounter.builder()
-                            .coupon(couponRepository.getReferenceById(couponId))
-                            .build()
-            );
+        if (coupon.getExpiresAt() == null || coupon.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("만료된 쿠폰입니다.");
         }
 
-        int order = couponEventCounterRepository.getAttemptCount(couponId);
+        long order = fcsUtil.nextOrder(couponId);
         long updated = customCouponRepository.updateCouponQuantity(couponId);
 
         if (updated == 0) {

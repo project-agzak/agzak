@@ -31,7 +31,8 @@ public class CustomCouponRepositoryImpl implements CustomCouponRepository {
         return queryFactory.update(coupon)
                 .set(coupon.issuedQuantity, coupon.issuedQuantity.add(1))
                 .where(coupon.couponId.eq(couponId)
-                        .and(coupon.issuedQuantity.lt(coupon.totalQuantity)))
+                        .and(coupon.issuedQuantity.lt(coupon.totalQuantity))
+                        .and(coupon.expiresAt.isNotNull()))
                 .execute();
     }
 
