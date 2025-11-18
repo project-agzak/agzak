@@ -2,63 +2,84 @@
 import { useState } from "react";
 import { EventDetail } from "./EventDetail";
 
-export type EventStatus = "ongoing" | "upcoming" | "ended";
+export type UiEventStatus = "ongoing" | "upcoming" | "ended";
+
+export type BackendEventType =
+  | "FIRST_COME_COUPON"
+  | "DAILY_RANKING"
+  | "WEEKEND_SPECIAL"
+  | "LAUNCH_EVENT"
+  | string;
 
 export type EventItem = {
+  /** 프론트에서 쓰는 내부 ID (슬러그 용) */
   id: string;
+  /** 백엔드 이벤트 PK */
+  eventId: number;
+  /** 백엔드 이벤트 타입 */
+  type: BackendEventType;
   title: string;
   summary: string;
   period: string;
-  status: EventStatus;
+  /** 목록에서 쓰는 단순 상태 힌트 (UI용) */
+  uiStatus: UiEventStatus;
 };
 
 type EventModalProps = {
   onClose: () => void;
 };
 
-// TODO: 실제 API 연동 시 이 배열을 교체하거나 props로 받을 수 있습니다.
+// TODO: 나중에 /events 목록 API로 교체 예정
 const events: EventItem[] = [
   {
     id: "first-come",
+    eventId: 1,
+    type: "FIRST_COME_COUPON",
     title: "오늘 13시, 넌 몇 번째? 선착순 포춘 이벤트",
     summary:
       "13:00 정각 이후 [쿠키 열기]를 누른 순서대로 1~3등에게 기프티콘이 지급돼요.",
     period: "매일 13:00 · 선착순 1~3등 보상",
-    status: "ongoing",
+    uiStatus: "ongoing",
   },
   {
     id: "daily-ranking",
+    eventId: 2,
+    type: "DAILY_RANKING",
     title: "오후 5시 데일리 운세 랭킹",
     summary:
       "오늘의 운세 총점과 전일 대비 증가율을 합산해 1위를 뽑아요. 1위에게 기프티콘을 드려요.",
     period: "매일 17:00 · 데일리 1위 보상",
-    status: "ongoing",
+    uiStatus: "ongoing",
   },
   {
     id: "weekend-special",
+    eventId: 3,
+    type: "WEEKEND_SPECIAL",
     title: "주말 한정 특집 쿠키 이벤트",
     summary:
       "주말 동안만 열리는 한정 쿠키와 특별 칭호를 준비 중이에요. 곧 상세 내용이 공개될 예정입니다.",
     period: "예정 · 주말 한정 진행 예정",
-    status: "upcoming",
+    uiStatus: "upcoming",
   },
   {
     id: "launch-event",
+    eventId: 4,
+    type: "LAUNCH_EVENT",
     title: "출시 기념 런칭 이벤트",
     summary:
       "서비스 오픈을 기념해 진행되었던 한정 이벤트입니다. 많은 참여 감사드려요!",
     period: "종료 · 2025.10 ~ 2025.11 진행",
-    status: "ended",
+    uiStatus: "ended",
   },
 ];
 
-const statusLabel: Record<EventStatus, string> = {
+const statusLabel: Record<UiEventStatus, string> = {
   ongoing: "진행 중",
   upcoming: "예정",
   ended: "종료",
 };
 
-const statusClass: Record<EventStatus, string> = {
+const statusClass: Record<UiEventStatus, string> = {
   ongoing: "bg-amber-100 text-amber-700 border-amber-200",
   upcoming: "bg-emerald-50 text-emerald-600 border-emerald-200",
   ended: "bg-zinc-50 text-zinc-400 border-zinc-200",
@@ -66,7 +87,7 @@ const statusClass: Record<EventStatus, string> = {
 
 export function EventModal({ onClose }: EventModalProps) {
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
-  const hasOngoing = events.some((e) => e.status === "ongoing");
+  const hasOngoing = events.some((e) => e.uiStatus === "ongoing");
 
   const handleSelect = (event: EventItem) => {
     setSelectedEvent(event);
@@ -122,10 +143,10 @@ export function EventModal({ onClose }: EventModalProps) {
                     <span
                       className={
                         "inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[11px] font-medium " +
-                        statusClass[event.status]
+                        statusClass[event.uiStatus]
                       }
                     >
-                      {statusLabel[event.status]}
+                      {statusLabel[event.uiStatus]}
                     </span>
                   </div>
 
@@ -173,8 +194,6 @@ export function EventModal({ onClose }: EventModalProps) {
         {selectedEvent && (
           <EventDetail
             event={selectedEvent}
-            statusLabel={statusLabel[selectedEvent.status]}
-            statusClassName={statusClass[selectedEvent.status]}
             onBackToList={handleBackToList}
             onClose={onClose}
           />

@@ -1,15 +1,47 @@
 // src/components/atoms/EventDetail.tsx
-import type { EventItem } from "./EventModal";
+import { useEffect, useState } from "react";
+import type { EventItem, BackendEventType } from "./EventModal";
+import { api } from "@/lib/api";
+
+type BackendEventStatus = "READY" | "OPEN" | "CLOSED" | "PAUSED";
+
+type EventStatusResponse = {
+  eventId: number;
+  type: BackendEventType;
+  title: string;
+  status: BackendEventStatus;
+  startsAt: string;
+  endsAt: string;
+  serverTime: string;
+  maxWinners: number;
+  issuedCount: number;
+  canTry: boolean;
+};
+
+type ClaimResult =
+  | {
+      result: "SUCCESS";
+      rank: number;
+      couponId: number;
+    }
+  | {
+      result:
+        | "SOLD_OUT"
+        | "ENDED"
+        | "NOT_OPEN"
+        | "ALREADY_CLAIMED"
+        | "ERROR";
+      rank?: number;
+      couponId?: number;
+    };
 
 type EventDetailProps = {
   event: EventItem;
-  statusLabel: string;
-  statusClassName: string;
   onBackToList: () => void;
   onClose: () => void;
 };
 
-// 이벤트별 상세 설명
+// 이벤트별 상세 설명 (정적 텍스트 영역)
 const eventDetails: Record<
   string,
   {
@@ -62,14 +94,212 @@ const eventDetails: Record<
   },
 };
 
+const backendStatusLabel: Record<BackendEventStatus, string> = {
+  READY: "시작 대기중",
+  OPEN: "진행 중",
+  CLOSED: "종료",
+  PAUSED: "일시 중단",
+};
+
 export function EventDetail({
   event,
-  statusLabel,
-  statusClassName,
   onBackToList,
   onClose,
 }: EventDetailProps) {
+  const [statusData, setStatusData] = useState<EventStatusResponse | null>(null);
+  const [loadingStatus, setLoadingStatus] = useState(false);
+  const [statusError, setStatusError] = useState<string | null>(null);
+  const [claiming, setClaiming] = useState(false);
+
   const detail = eventDetails[event.id];
+
+  const isFirstCome = event.type === "FIRST_COME_COUPON";
+
+  const isOpenForUser =
+    !!statusData &&
+    statusData.status === "OPEN" &&
+    statusData.canTry === true;
+
+  // 1) 최초 상태 조회
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchStatus = async () => {
+      setLoadingStatus(true);
+      setStatusError(null);
+      const res = await api.get<EventStatusResponse>(
+        `/events/${event.eventId}/status`
+      );
+
+      if (cancelled) return;
+
+      if (!res.ok || !res.data) {
+        setStatusError("이벤트 정보를 불러오지 못했어요.");
+        setStatusData(null);
+      } else {
+        setStatusData(res.data);
+      }
+      setLoadingStatus(false);
+    };
+
+    fetchStatus();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [event.eventId]);
+
+  // 2) READY 상태일 때 일정 간격으로 자동 리프레시 (시간이 되면 자동으로 버튼 활성화)
+  useEffect(() => {
+    if (!statusData || statusData.status !== "READY") {
+      return;
+    }
+
+    let cancelled = false;
+    const intervalId = setInterval(async () => {
+      const res = await api.get<EventStatusResponse>(
+        `/events/${event.eventId}/status`
+      );
+      if (cancelled) return;
+      if (res.ok && res.data) {
+        setStatusData(res.data);
+        // READY가 아니게 되면(OPEN/ CLOSED 등) 이후에는 다시 폴링하지 않도록
+        if (res.data.status !== "READY") {
+          clearInterval(intervalId);
+        }
+      }
+    }, 3000); // 3초 간격
+
+    return () => {
+      cancelled = true;
+      clearInterval(intervalId);
+    };
+  }, [event.eventId, statusData?.status]);
+
+  const handleClaim = async () => {
+    if (!isFirstCome) return;
+    if (!isOpenForUser || claiming) return;
+
+    setClaiming(true);
+    const res = await api.post<ClaimResult>(
+      `/events/${event.eventId}/claim-coupon`
+    );
+    setClaiming(false);
+
+    if (!res.ok || !res.data) {
+      alert("참여 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.");
+      return;
+    }
+
+    const data = res.data;
+
+    if (data.result === "SUCCESS") {
+      // 성공 시 상태도 한 번 더 갱신
+      alert(`축하합니다! ${data.rank}번째로 선착순에 성공했어요!`);
+      const statusRes = await api.get<EventStatusResponse>(
+        `/events/${event.eventId}/status`
+      );
+      if (statusRes.ok && statusRes.data) {
+        setStatusData(statusRes.data);
+      }
+      return;
+    }
+
+    if (data.result === "SOLD_OUT") {
+      alert("선착순 마감되었습니다. 다음 이벤트를 노려주세요!");
+      const statusRes = await api.get<EventStatusResponse>(
+        `/events/${event.eventId}/status`
+      );
+      if (statusRes.ok && statusRes.data) {
+        setStatusData(statusRes.data);
+      }
+      return;
+    }
+
+    if (data.result === "ALREADY_CLAIMED") {
+      alert("이미 참여하신 이벤트입니다.");
+      return;
+    }
+
+    if (data.result === "NOT_OPEN") {
+      alert("아직 이벤트가 시작되지 않았거나 이미 종료되었습니다.");
+      const statusRes = await api.get<EventStatusResponse>(
+        `/events/${event.eventId}/status`
+      );
+      if (statusRes.ok && statusRes.data) {
+        setStatusData(statusRes.data);
+      }
+      return;
+    }
+
+    if (data.result === "ENDED") {
+      alert("이미 종료된 이벤트입니다.");
+      const statusRes = await api.get<EventStatusResponse>(
+        `/events/${event.eventId}/status`
+      );
+      if (statusRes.ok && statusRes.data) {
+        setStatusData(statusRes.data);
+      }
+      return;
+    }
+
+    // 기타 에러
+    alert("참여 처리 중 알 수 없는 오류가 발생했어요.");
+  };
+
+  const renderStatusSubText = () => {
+    if (loadingStatus && !statusData) {
+      return "이벤트 정보를 불러오는 중입니다...";
+    }
+    if (statusError) {
+      return statusError;
+    }
+    if (!statusData) {
+      return "이벤트 정보를 불러오지 못했습니다.";
+    }
+
+    const base = backendStatusLabel[statusData.status] ?? "알 수 없음";
+
+    if (statusData.status === "READY") {
+      return `${base} · 시작 시간: ${statusData.startsAt}`;
+    }
+    if (statusData.status === "OPEN") {
+      const remain = Math.max(
+        statusData.maxWinners - statusData.issuedCount,
+        0
+      );
+      return `${base} · 남은 수량: ${remain}개`;
+    }
+    if (statusData.status === "CLOSED") {
+      return `${base} · 이벤트 종료 시간: ${statusData.endsAt}`;
+    }
+    if (statusData.status === "PAUSED") {
+      return `${base} · 일시 중단된 이벤트입니다.`;
+    }
+    return base;
+  };
+
+  const claimButtonLabel = () => {
+    if (!isFirstCome) return "이벤트 참여";
+    if (loadingStatus && !statusData) return "불러오는 중...";
+    if (claiming) return "참여 중...";
+    if (!statusData) return "이벤트 정보 오류";
+    if (statusData.status === "READY") return "시작 대기 중";
+    if (statusData.status === "OPEN") {
+      if (!statusData.canTry) return "이미 참여 완료";
+      return "선착순 쿠폰 받기";
+    }
+    if (statusData.status === "CLOSED") return "이미 종료된 이벤트";
+    if (statusData.status === "PAUSED") return "일시 중단된 이벤트";
+    return "이벤트 참여";
+  };
+
+  const disabledClaim =
+    !isFirstCome ||
+    !statusData ||
+    statusData.status !== "OPEN" ||
+    !statusData.canTry ||
+    claiming;
 
   return (
     <div className="mt-0">
@@ -100,18 +330,25 @@ export function EventDetail({
               )}
             </div>
 
-            <span
-              className={
-                "inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[11px] font-medium " +
-                statusClassName
-              }
-            >
-              {statusLabel}
-            </span>
+            {statusData && (
+              <span className="inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[11px] font-medium bg-zinc-50 text-zinc-600 border-zinc-200">
+                {backendStatusLabel[statusData.status] ?? "알 수 없음"}
+              </span>
+            )}
           </div>
 
-          <p className="mt-2 text-[11px] text-zinc-500">{event.period}</p>
+          <p className="mt-2 text-[11px] text-zinc-500">
+            {statusData?.startsAt && statusData?.endsAt
+              ? event.period
+              : event.period}
+          </p>
 
+          {/* 서버 상태 서브 텍스트 */}
+          <p className="mt-1 text-[11px] text-zinc-500">
+            {renderStatusSubText()}
+          </p>
+
+          {/* 참여 방법 */}
           {detail?.steps && detail.steps.length > 0 && (
             <div className="mt-3">
               <h4 className="text-xs font-medium text-[#121212] mb-1.5">
@@ -133,6 +370,7 @@ export function EventDetail({
             </div>
           )}
 
+          {/* 유의사항 */}
           {detail?.notes && detail.notes.length > 0 && (
             <div className="mt-3">
               <h4 className="text-xs font-medium text-[#121212] mb-1.5">
@@ -150,6 +388,20 @@ export function EventDetail({
                 ))}
               </ul>
             </div>
+          )}
+
+          {/* 선착순 쿠폰 이벤트 참여 버튼 */}
+          {isFirstCome && (
+            <button
+              type="button"
+              onClick={handleClaim}
+              disabled={disabledClaim}
+              className="mt-3 w-full rounded-md px-3 py-2 text-sm font-bitbit
+                         text-[#121212] bg-amber-100 hover:bg-amber-200
+                         disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {claimButtonLabel()}
+            </button>
           )}
         </div>
 
