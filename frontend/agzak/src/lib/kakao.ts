@@ -3,7 +3,7 @@
 // 타입 보강 안 쓸 거면 이거 아예 제거해도 됨
 // declare global { interface Window { Kakao?: any } }
 
-const KAKAO_JS_KEY = import.meta.env.VITE_KAKAO_JS_KEY; // 실제 .env 이름에 맞춰서 하나만!
+const KAKAO_JS_KEY = import.meta.env.VITE_KAKAO_LOGIN_JS_KEY; // 실제 .env 이름에 맞춰서 하나만!
 
 export function getKakao() {
   if (typeof window === "undefined") return null;
