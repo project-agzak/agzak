@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 public record CouponResponse(
         Long couponId,
-        CouponType couponType,
+        String couponTypeName,
         String description,
         Integer totalQuantity,
         Integer issuedQuantity,
@@ -21,7 +21,7 @@ public record CouponResponse(
     public static CouponResponse from(Coupon coupon) {
         return CouponResponse.builder()
                 .couponId(coupon.getCouponId())
-                .couponType(coupon.getCouponType())
+                .couponTypeName(coupon.getCouponType().getTypeName())
                 .description(coupon.getDescription())
                 .totalQuantity(coupon.getTotalQuantity())
                 .issuedQuantity(coupon.getIssuedQuantity())
