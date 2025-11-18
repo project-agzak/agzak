@@ -4,6 +4,7 @@ import com.ssafy.agzak.docs.CouponApiDocs;
 import com.ssafy.agzak.domain.coupon.dto.request.CreateCouponRequest;
 import com.ssafy.agzak.domain.coupon.dto.request.CreateCouponTypeRequest;
 import com.ssafy.agzak.domain.coupon.dto.response.CouponIssueResultResponse;
+import com.ssafy.agzak.domain.coupon.dto.response.CouponResponse;
 import com.ssafy.agzak.domain.coupon.service.CouponService;
 import com.ssafy.agzak.domain.coupon.service.CouponTypeService;
 import jakarta.validation.Valid;
@@ -11,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -25,6 +28,13 @@ public class CouponController implements CouponApiDocs {
     public ResponseEntity<Void> createCoupon(@RequestBody @Valid CreateCouponRequest request) {
         couponService.createCoupon(request);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/events/{eventId}")
+    public ResponseEntity<List<CouponResponse>> getCouponsByEvent(@PathVariable @Valid Long eventId) {
+        return ResponseEntity.ok(
+                couponService.getCouponsByEvent(eventId)
+        );
     }
 
     @PostMapping("/types")

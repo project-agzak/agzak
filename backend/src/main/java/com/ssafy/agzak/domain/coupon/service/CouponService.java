@@ -2,11 +2,13 @@ package com.ssafy.agzak.domain.coupon.service;
 
 import com.ssafy.agzak.domain.coupon.dto.request.CreateCouponRequest;
 import com.ssafy.agzak.domain.coupon.dto.response.CouponIssueResultResponse;
+import com.ssafy.agzak.domain.coupon.dto.response.CouponResponse;
 import com.ssafy.agzak.domain.coupon.entity.Coupon;
 //import com.ssafy.agzak.domain.coupon.entity.CouponEventCounter;
 import com.ssafy.agzak.domain.coupon.entity.MemberCoupon;
 import com.ssafy.agzak.domain.coupon.repository.*;
 import com.ssafy.agzak.domain.coupon.port.CouponIssueOrderPort;
+import com.ssafy.agzak.domain.event.repository.EventRepository;
 import com.ssafy.agzak.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class CouponService {
@@ -25,6 +28,7 @@ public class CouponService {
     private final CustomCouponRepository customCouponRepository;
 //    private final CouponEventCounterRepository couponEventCounterRepository;
     private final CouponIssueOrderPort couponIssueOrderPort;
+    private final EventRepository eventRepository;
 
     public CouponService(
             CouponRepository couponRepository,
@@ -33,7 +37,7 @@ public class CouponService {
             MemberRepository memberRepository,
             CustomCouponRepository customCouponRepository,
             @Qualifier("redisCouponIssueOrderAdapter")
-            CouponIssueOrderPort couponIssueOrderPort
+            CouponIssueOrderPort couponIssueOrderPort, EventRepository eventRepository
     ) {
         this.couponRepository = couponRepository;
         this.couponTypeRepository = couponTypeRepository;
@@ -41,6 +45,7 @@ public class CouponService {
         this.memberRepository = memberRepository;
         this.customCouponRepository = customCouponRepository;
         this.couponIssueOrderPort = couponIssueOrderPort;
+        this.eventRepository = eventRepository;
     }
 
     @Transactional
@@ -50,10 +55,19 @@ public class CouponService {
                         .couponType(
                                 couponTypeRepository.getReferenceById(request.couponTypeId()
                         ))
+                        .event(eventRepository.getReferenceById(request.eventId()))
                         .description(request.description())
                         .totalQuantity(request.totalQuantity())
                         .build()
         );
+    }
+
+    @Transactional(readOnly = true)
+    public List<CouponResponse> getCouponsByEvent(Long eventId) {
+        return couponRepository.findByEvent_EventId(eventId)
+                .stream()
+                .map(CouponResponse::from)
+                .toList();
     }
 
     @Transactional
