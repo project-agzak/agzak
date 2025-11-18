@@ -32,7 +32,7 @@ public class CustomCouponRepositoryImpl implements CustomCouponRepository {
                 .set(coupon.issuedQuantity, coupon.issuedQuantity.add(1))
                 .where(coupon.couponId.eq(couponId)
                         .and(coupon.issuedQuantity.lt(coupon.totalQuantity))
-                        .and(coupon.expiresAt.isNotNull()))
+                        .and(coupon.expiresAt.isNull()))
                 .execute();
     }
 

@@ -44,6 +44,12 @@ kakao:
 server:
   port: ${SPRING_PORT:8082}
   forward-headers-strategy: native
+  tomcat:
+    max-connections: 2000     # 동시에 유지 가능한 커넥션 수
+    accept-count: 1000        # 대기열 길이
+    threads:
+      max: 200
+      min-spare: 20
 
 # === JWT ===
 jwt:
@@ -93,3 +99,4 @@ app:
   share:
     base-url: https://agzak.co.kr/share/fortune
     secret: ${SHARE_LINK_SECRET}
+

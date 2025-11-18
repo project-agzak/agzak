@@ -1,12 +1,13 @@
-package com.ssafy.agzak.domain.coupon.util;
+package com.ssafy.agzak.domain.coupon.adapter;
 
+import com.ssafy.agzak.domain.coupon.port.CouponIssueOrderPort;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Component
-public class ConcurrentFCSUtil implements FCSUtil{
+public class LocalCouponIssueOrderAdapter implements CouponIssueOrderPort {
 
     private static final int MAX_RETRY_COUNT = 5;
     private final ConcurrentHashMap<Long, AtomicLong> counterMap = new ConcurrentHashMap<>();
