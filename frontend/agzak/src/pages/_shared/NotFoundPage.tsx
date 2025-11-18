@@ -3,8 +3,6 @@ import FortuneCookieGif from "@/assets/Gifs/FortuneCookie.gif";
 import { Button } from "@/components/ui/button";
 import { Link, useNavigate } from "react-router-dom";
 
-
-
 export default function NotFoundPage() {
   const navigate = useNavigate();
   const HOME_PATH = "/home";

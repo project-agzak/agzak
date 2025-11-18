@@ -5,13 +5,26 @@ import LoveGif from "@/assets/Gifs/love-cookie.gif";
 import MixedGif from "@/assets/Gifs/mixed-cookie.gif";
 import MoneyGif from "@/assets/Gifs/money-cookie.gif";
 import RottenGif from "@/assets/Gifs/rotten-cookie.gif";
-import Pig from "@/assets/ui/MainPig.svg";
-import * as React from "react";
+import GloomyGif from "@/assets/Gifs/gloomy-cookie.gif";
+import SansamGif from "@/assets/Gifs/sansam-cookie.gif";
+import DeveloperGif from "@/assets/Gifs/developer-cookie.gif";
+import LavaGif from "@/assets/Gifs/lava-cookie.gif";
+import SantaGif from "@/assets/Gifs/santa-cookie.gif";
+import UnicornGif from "@/assets/Gifs/unicorn-cookie.gif";
+// import LuckyGif from "@/assets/Gifs/lucky-cookie.gif";
 
+import BinButton from "@/assets/ui/bin-button.webp";
 import InventoryImg from "@/assets/ui/CookieInventory.svg";
+import Pig from "@/assets/ui/MainPig.svg";
+import SendButton from "@/assets/ui/send-button.webp";
 import { ActionButton_M } from "@/components/atoms/ActionButton_M";
+import { CookieHeader } from "@/components/atoms/CookieHeader";
+import CookieHelpSheet from "@/components/atoms/CookieHelpSheet";
 import { FortuneGaugeList } from "@/components/molecules/FortuneGaugeList";
 import { CookieInventory } from "@/components/organisms/CookieInventory";
+import { GiftModal } from "@/components/organisms/GiftModal";
+import { useGiftStore } from "@/store/useGiftStore";
+import * as React from "react";
 import { useCookiesStore } from "../../store/useCookiesStore";
 import { useFortuneStore } from "../../store/useFortuneStore";
 import { useMembersStore } from "../../store/useMembersStore";
@@ -38,7 +51,14 @@ const titleToGif: Record<string, string> = {
   "애정쿠키": LoveGif,
   "금전쿠키": MoneyGif,
   "믹스쿠키": MixedGif,
-  "시련쿠키": RottenGif,
+  "썩은쿠키": RottenGif,
+  "먹구름쿠키": GloomyGif,
+  "산삼쿠키": SansamGif,
+  "개발자쿠키": DeveloperGif,
+  "용암쿠키": LavaGif,
+  "산타쿠키": SantaGif,
+  "유니콘쿠키": UnicornGif,
+  // "행운쿠키": LuckyGif
 };
 
 const getTodayLocalString = () => {
@@ -50,9 +70,13 @@ const getTodayLocalString = () => {
 };
 
 export default function CookiesPage() {
+  const [giftOpen, setGiftOpen] = React.useState(false);
+  const { searchUsers, sendGift } = useGiftStore();
+
+
   // 총운 (날짜별 조회 방식)
   const scores = useFortuneStore((s) => s.scores);
- const today = getTodayLocalString();
+  const today = getTodayLocalString();
   const { fortuneCache, fortuneLoading, fortuneError, fetchFortuneByDate } = useMembersStore();
   const totalScore = fortuneCache[today]?.totalScore ?? null;
   const loadingFortune = fortuneLoading[today] ?? false;
@@ -60,6 +84,8 @@ export default function CookiesPage() {
   const addStats = useFortuneStore((s) => s.addStats);
 
   const todayData = fortuneCache[today] ?? null;
+
+  const [helpOpen, setHelpOpen] = React.useState(false)
 
   // 게이지: todayData.aspects → 우선, 없으면 fortuneScores 사용
   const gaugeStats = React.useMemo(() => {
@@ -97,6 +123,12 @@ export default function CookiesPage() {
   const selectedCookie = useCookiesStore((s) =>
     s.items.find((c) => c.id === s.selectedId) ?? null
   );
+
+const isLuckySelected =
+  !!selectedCookie &&
+  (selectedCookie.code === "LUCKY" ||
+    selectedCookie.detail?.title === "럭키쿠키");
+
   const isDetailLoading = loadingDetailId === selectedId;
 
   const isDeleting = deletingId === selectedId;  
@@ -119,9 +151,49 @@ export default function CookiesPage() {
     fetchCookies("recent");
   }, [fetchCookies]);
 
+  // 유저 검색 핸들러 (API 연결)
+  const handleSearchUsers = async (query: string) => {
+    const results = await searchUsers(query);
+    
+    // GiftModal이 요구하는 형식으로 변환
+    return results.map(user => ({
+      id: user.memberId,      // memberId → id
+      nickname: user.nickname
+    }));
+  };
+
+  // 선물 전송 핸들러 (API 연결)
+  const handleGiftSubmit = async (payload: { 
+    receiverId: number;
+    cookieId: number;
+    message: string 
+    }) => {
+      console.log('CookiesPage handleGiftSubmit:', payload)
+
+      await sendGift(payload);
+
+
+    // // 선물 성공 후 쿠키 목록 새로고침
+    // await fetchCookies("recent");
+  };
+
+  // 선물하기 버튼 클릭
+  const giftSelected = () => {
+    if (!selectedCookie) return;
+    setGiftOpen(true);
+  };
+
   // 쿠키 먹기
     const eatSelected = async () => {
     if (!selectedCookie) return;
+
+    if (
+      selectedCookie.code === "LUCKY" ||
+      selectedCookie.detail?.title === "럭키쿠키"
+    ) {
+      alert("행운 쿠키는 사용할 수 없는 기념 쿠키예요!");
+      return;
+    }
 
     // 1) 돼지 GIF로 전환 (타입 매핑)
     const gif = titleToGif[selectedCookie.detail.title] ?? MixedGif;
@@ -157,7 +229,7 @@ export default function CookiesPage() {
       // ignore optimistic update failures
     }
 
-    addStats(delta); // ✅ total_score까지 일관 반영
+    addStats(delta);
 
     // 3) 서버 반영 (USED 처리) + 인벤토리에서 제거
     try {
@@ -182,6 +254,7 @@ export default function CookiesPage() {
 
   return (
     <main className="relative z-10 p-4 min-h-screen">
+      <CookieHeader onHelp={() => setHelpOpen(true)} />
       <div className="flex flex-row justify-center items-center">
         <img src={pigSrc} alt="" className="w-1/2 max-w-[220px] h-auto mt-5" />
         <div className="flex flex-col items-center pr-2 w-1/2 max-w-[220px]">
@@ -201,14 +274,22 @@ export default function CookiesPage() {
             className="shrink-0 !mx-0"
             label= "쿠키 먹기"
             onClick={eatSelected}
-            disabled={!selectedCookie || isDetailLoading || isEating || isDeleting}
+            disabled={!selectedCookie || isDetailLoading || isEating || isDeleting || isLuckySelected}
           />
-          <ActionButton_M
-            className="shrink-0 !mx-0"
-            label= "쿠키 삭제"  
+          <button
             onClick={removeSelected}
             disabled={!selectedCookie || isDeleting}
-          />
+            className="disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition"
+          >
+            <img src={BinButton} alt="삭제하기" className="w-auto h-[50px] cursor-pointer" />
+          </button>
+          <button
+            onClick={giftSelected}
+            disabled={!selectedCookie || isDetailLoading || isDeleting}
+            className="disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition"
+          >
+            <img src={SendButton} alt="선물하기" className="w-auto h-[50px] cursor-pointer" />
+          </button>
         </div>
       </div>
 
@@ -248,6 +329,21 @@ export default function CookiesPage() {
           />
         )}
       </div>
+      {selectedCookie && (
+        <GiftModal
+          open={giftOpen}
+          onOpenChange={setGiftOpen}
+          CookieSrc={selectedCookie.imgSrc}
+          cookieId={Number(selectedCookie.id)}
+          searchUsers={handleSearchUsers}
+          onSubmit={handleGiftSubmit}
+          onSuccessClose={async () => {
+            await fetchCookies("recent")
+          }}
+        />
+      )}
+
+      <CookieHelpSheet open={helpOpen} onClose={() => setHelpOpen(false)} />
     </main>
   );
 }
