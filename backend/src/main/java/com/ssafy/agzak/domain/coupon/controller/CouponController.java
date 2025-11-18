@@ -47,7 +47,7 @@ public class CouponController implements CouponApiDocs {
         );
     }
 
-    @PostMapping("/expire/{couponId} ")
+    @PostMapping("/expire/{couponId}")
     public ResponseEntity<Void> expireCoupon(@PathVariable @Valid Long couponId) {
         couponService.expireCoupon(couponId);
         return ResponseEntity.ok().build();
