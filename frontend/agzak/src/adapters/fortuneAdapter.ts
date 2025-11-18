@@ -1,6 +1,7 @@
 // src/adapters/fortuneAdapter.ts
 import type { FortuneData, AspectKey, FortuneAspectUI, FortuneDetail } from "@/types/fortune";
-  
+import type { FortuneScores, FortuneTypeInfo } from "@/lib/fortuneAPI";
+
 export type FortuneGaugeColor = "green" | "blue" | "pink" | "yellow";
 
 export const COLOR_MAP: Record<string, FortuneGaugeColor> = {
@@ -96,5 +97,20 @@ export function adaptGuest(res: any): ScoresLike {
     achievement: Number(s.achievement ?? 0),
     love: Number(s.love ?? 0),
     money: Number(s.money ?? 0),
+  };
+}
+
+// 링크 공유용
+// GET /fortune/share/{token} 원시 응답 타입
+export type RawFortuneResponse = {
+  scores: FortuneScores;
+  type: FortuneTypeInfo;
+};
+
+// scores / type 만 뽑아서 내보내는 어댑터
+export function adaptFortune(raw: RawFortuneResponse) {
+  return {
+    scores: raw?.scores ?? null,
+    type: raw?.type ?? null,
   };
 }

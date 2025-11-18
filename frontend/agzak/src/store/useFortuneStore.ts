@@ -1,5 +1,6 @@
 // src/store/useFortuneStore.ts
 import { create } from "zustand";
+import { api } from "@/lib/api";
 import {
   fortuneAPI,
   type FortuneResponse,
@@ -9,6 +10,11 @@ import {
   type GuestFortuneRes,
   type FortuneTypeDetail,
 } from "@/lib/fortuneAPI";
+
+import {
+  adaptFortune,
+  type RawFortuneResponse,
+} from "@/adapters/fortuneAdapter";
 
 type ScoreKeys = "health" | "achievement" | "love" | "money";
 
@@ -72,6 +78,8 @@ type FortuneState = {
   scores: FortuneScores | null; // 실제 런타임에서는 flat/nested 둘 다 허용(아래 유틸이 처리)
   typeInfo: FortuneTypeInfo | null;
 
+    memberScores: FortuneScores | null;
+  memberTypeInfo: FortuneTypeInfo | null;
   // 게스트 전용
   guestId: string | null;
 
@@ -89,8 +97,10 @@ type FortuneState = {
 
   // actions
   fetchToday: () => Promise<void>;
+  fetchMemberToday: (memberId: number) => Promise<void>;
   fetchGuest: (payload: GuestFortuneReq) => Promise<void>;
   fetchTypeDetail: (fortuneTypeId: number, force?: boolean) => Promise<FortuneTypeDetail | null>;
+  fetchSharedFortune: (token: string) => Promise<void>;
   reset: () => void;
 
   // 쿠키 효과 합산
@@ -118,6 +128,10 @@ const pickTotalSummary = (src: any): string | undefined => {
 export const useFortuneStore = create<FortuneState>((set, get) => ({
   scores: null,
   typeInfo: null,
+
+   memberScores: null,
+  memberTypeInfo: null,
+
   guestId: typeof window !== "undefined" ? localStorage.getItem("guestId") : null,
 
   typeDetails: {},
@@ -228,6 +242,10 @@ export const useFortuneStore = create<FortuneState>((set, get) => ({
     set({
       scores: null,
       typeInfo: null,
+
+       memberScores: null,      
+    memberTypeInfo: null,  
+
       guestId: null,
       typeDetails: {},
       loading: false,
@@ -271,5 +289,65 @@ export const useFortuneStore = create<FortuneState>((set, get) => ({
     return pickTotalSummary(s as any);
   },
 
+
+  // 공유하기
+  async fetchSharedFortune(token: string) {
+    set({ loading: true, error: null });
+    try {
+      const res = await api.get<RawFortuneResponse>(`/fortune/share/${token}`);
+      if (!res.ok || !res.data) throw new Error("공유 운세 조회 실패");
+
+      const adapted = adaptFortune(res.data);
+
+      set({
+        scores: adapted.scores,
+        typeInfo: adapted.type,
+        // fetchToday에서 세팅하는 나머지 값들 동일하게
+        loading: false,
+      });
+    } catch (e) {
+      console.error(e);
+      set({
+        error: "공유된 운세 정보를 불러오지 못했어요.",
+        loading: false,
+      });
+    }
+  },
+
+  // 특정 회원 오늘 운세 조회
+  fetchMemberToday: async (memberId) => {
+    const { loading } = get();
+    if (loading) return;
+
+    set({ loading: true, error: null });
+    try {
+      const res = await fortuneAPI.getMemberToday(memberId);
+      if (res.ok && res.data) {
+        const d: FortuneResponse | any = res.data;
+        const { scores, type } = pickScoresTypeGuestId(d);
+
+        set({
+          memberScores: scores ?? null,      //  다른 사람용 필드에만 저장
+        memberTypeInfo: type ?? null,
+          loading: false,
+        });
+      } else {
+        set({
+          loading: false,
+          error:
+            res.error?.code === 404
+              ? "해당 회원의 오늘 운세가 아직 없습니다."
+              : toErrorMsg(res.error) ??
+                "해당 회원의 오늘 운세를 불러오지 못했습니다.",
+        });
+      }
+    } catch (e) {
+      set({
+        loading: false,
+        error:
+          toErrorMsg(e) ?? "해당 회원의 오늘 운세를 불러오지 못했습니다.",
+      });
+    }
+  },
 }));
 

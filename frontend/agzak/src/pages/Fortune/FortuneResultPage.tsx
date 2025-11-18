@@ -1,5 +1,7 @@
 // src/pages/Fortune/FortuneResultPage.tsx
 import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { issueFortuneShareLink } from "@/lib/shareAPI";
 
 import { Button_L } from "@/components/atoms/Button_L";
 import { ExpandableFortune } from "@/components/molecules/ExpandableFortune";
@@ -35,6 +37,7 @@ import FriendRabbit from "@/assets/Friends/FriendRabbit.webp";
 import FriendSheep from "@/assets/Friends/FriendSheep.webp";
 import FriendSnake from "@/assets/Friends/FriendSnake.webp";
 import FriendTiger from "@/assets/Friends/FriendTiger.webp";
+import { KakaoShareButton } from "@/components/atoms/KakaoShareButton";
 
 /** 앞면 카드: 이름 → 이미지 */
 const FRONT_BY_TYPE: Record<string, string> = {
@@ -100,20 +103,54 @@ export default function FortuneResultPage() {
   const getDetailSummary = useFortuneStore((s) => s.getDetailSummary);
   const getScoreValue    = useFortuneStore((s) => s.getScoreValue);
 
+  // 공유하기
+  const { token } = useParams<{ token?: string }>();
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const fetchSharedFortune = useFortuneStore((s) => s.fetchSharedFortune);
+  
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    if (token) return; // 공유 링크로 들어온 경우는 2단계에서 처리
 
-  const shareUrl = "https://www.agzak.co.kr/";
+    fetchToday();
 
+    // 공유 URL 발급
+    (async () => {
+      try {
+        const data = await issueFortuneShareLink();
+        setShareUrl(data.url); // "https://agzak.app/share/fortune/..." 그대로
+      } catch (e) {
+        console.error(e);
+        // 실패해도 일단 현재 URL로 공유는 가능하게
+      }
+    })();
+  }, [isLoggedIn, token, fetchToday]);
 
-useEffect(() => {
-  // 1) 로그인 유저: 오늘 운세 없을 때만 한 번 불러오기
-  if (isLoggedIn) {
-    const hasFortune = totalScore !== null || !!typeInfo;
-    if (!hasFortune && !loadingFortune && !errorFortune) {
+  const effectiveShareUrl =
+    shareUrl ??
+    (typeof window !== "undefined" ? window.location.href : "");
+
+  // 진입 시 로딩 로직
+  useEffect(() => {
+    if (token) {
+      // 공유 링크로 들어온 사람 (로그인 여부 상관 없음)
+      fetchSharedFortune(token);
+    } else if (isLoggedIn) {
+      // 그냥 결과 페이지(/fortune/result) – 내 오늘 운세
       fetchToday();
     }
-    return;
-  }
-}, [isLoggedIn, fetchToday, totalScore, typeInfo, loadingFortune, errorFortune]);
+  }, [token, isLoggedIn, fetchToday, fetchSharedFortune]);
+
+  useEffect(() => {
+    // 1) 로그인 유저: 오늘 운세 없을 때만 한 번 불러오기
+    if (isLoggedIn) {
+      const hasFortune = totalScore !== null || !!typeInfo;
+      if (!hasFortune && !loadingFortune && !errorFortune) {
+        fetchToday();
+      }
+      return;
+    }
+  }, [isLoggedIn, fetchToday, totalScore, typeInfo, loadingFortune, errorFortune]);
 
   //   // 2) 비로그인 유저:
   //   // - 정상 플로우라면 useFortuneStore에 이미 결과가 존재해야 함
@@ -147,7 +184,7 @@ useEffect(() => {
    const bestieDescription = goodWithId ? DESCRIPTION_BY_TYPE[goodWithId] : undefined;
   const enemyDescription = badWithId ? DESCRIPTION_BY_TYPE[badWithId] : undefined;
 
-  const userId = localStorage.getItem("userId");
+  const userId = sessionStorage.getItem("userId");
   const targetPath = isLoggedIn
   ? "/enforce"
   : userId
@@ -221,7 +258,7 @@ useEffect(() => {
             </div>
 
             {bestieDescription && (
-              <p className="mt-3 px-6 text-center text-[12px] leading-relaxed text-[#3A3A3A] font-galmuri-xsmall max-w-[240px]">
+              <p className="mt-3 px-6 text-center text-[12px] leading-relaxed text-[#121212] font-galmuri-xsmall max-w-[240px]">
                 {bestieDescription}
               </p>
             )}
@@ -240,7 +277,7 @@ useEffect(() => {
             </div>
 
             {enemyDescription && (
-              <p className="mt-3 px-6 text-center text-[12px] leading-relaxed text-[#3A3A3A] font-galmuri-xsmall max-w-[240px]">
+              <p className="mt-3 px-6 text-center leading-relaxed text-[#121212] font-galmuri-xsmall max-w-[240px]">
                 {enemyDescription}
               </p>
             )}
@@ -259,7 +296,7 @@ useEffect(() => {
                 pointer-events-none z-20
               "
             >
-              로그인 후 강화 기능을 이용할 수 있습니다.
+              회원가입 후 강화 기능을 이용할 수 있습니다.
             </div>
           )}
             <div
@@ -297,13 +334,24 @@ useEffect(() => {
           </style>
         </div>
 
-        <div>
-          <ShareButton
-          label="공유하기"
-          width={260}
-          url={shareUrl}
-          />
-        </div>
+     {isLoggedIn && (
+  <div className="flex justify-center pt-4 pb-5">
+    <div className="flex w-fit gap-[10px] items-center">
+      <ShareButton
+        label="공유하기"
+        width={140}
+        url={effectiveShareUrl}
+      />
+
+      <KakaoShareButton
+        url={effectiveShareUrl}
+        title="오늘의 내 운세 카드 🔮"
+        description="운세 결과 공유하기"
+        imgClassName="w-[40px]"
+      />
+    </div>
+  </div>
+)}
       </div>
       </div>
     </main>

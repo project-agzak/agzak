@@ -1,5 +1,5 @@
 // @/components/atoms/FortuneGauge.tsx
-
+import clsx from "clsx";
 import type { FortuneGaugeColor } from "@/adapters/fortuneAdapter";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
@@ -42,7 +42,7 @@ export function FortuneGauge({
     <div className={cn("w-full space-y-1", className)}>
       {/* 라벨 줄 */}
       <div className="flex items-center justify-between">
-        <span className={cn("text-[15px] font-galmuri-small font-bold text-[#2E2E2E] leading-none", labelClassName)}>
+        <span className={clsx("font-galmuri-small font-bold text-[#121212] leading-none", labelClassName)}>
           {label}
         </span>
         {rightSlot ? rightSlot : null}

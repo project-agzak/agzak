@@ -1,6 +1,6 @@
 // src/store/useCookiesStore.ts
+import { cookiesAPI, type CookieDetail } from "@/lib/cookiesAPI";
 import { create } from "zustand";
-import { cookiesAPI, deleteCookieAPI, type CookieDetail } from "@/lib/cookiesAPI";
 
 // type CookiesState = {
 //   // 캐시 (상세)
@@ -117,14 +117,24 @@ export type CookieData = {
     effects: { label: string; value: number }[];
   };
   createdAt: number;
+  name: string;
+  code: string;
+  rarityCode: string;
 };
 
-import HealthCookie from "@/assets/Cookies/health-cookie.webp";
 import AchievementCookie from "@/assets/Cookies/achievement-cookie.webp";
+import DeveloperCookie from "@/assets/Cookies/developer-cookie.webp";
+import GloomyCookie from "@/assets/Cookies/gloomy-cookie.webp";
+import HealthCookie from "@/assets/Cookies/health-cookie.webp";
+import LavaCookie from "@/assets/Cookies/lava-cookie.webp";
 import LoveCookie from "@/assets/Cookies/love-cookie.webp";
-import MoneyCookie from "@/assets/Cookies/money-cookie.webp";
 import MixedCookie from "@/assets/Cookies/mixed-cookie.webp";
+import MoneyCookie from "@/assets/Cookies/money-cookie.webp";
 import RottenCookie from "@/assets/Cookies/rotten-cookie.webp";
+import SansamCookie from "@/assets/Cookies/sansam-cookie.webp";
+import SantaCookie from "@/assets/Cookies/santa-cookie.webp";
+import UnicornCookie from "@/assets/Cookies/unicorn-cookie.webp";
+import LuckyCookie from "@/assets/Cookies/lucky-cookie.webp";
 
 const typeToMeta = (t: string) => {
   const key = t.toUpperCase();
@@ -140,14 +150,28 @@ const typeToMeta = (t: string) => {
     case "MIXED":
       return { title: "믹스쿠키", img: MixedCookie };
     case "ROTTEN":
-      return { title: "시련쿠키", img: RottenCookie };
+      return { title: "썩은쿠키", img: RottenCookie };
+    case "GLOOMY":
+      return { title: "먹구름쿠키", img: GloomyCookie };
+    case "SANSAM":
+      return { title: "산삼쿠키", img: SansamCookie };
+    case "DEVELOPER":
+      return { title: "개발자쿠키", img: DeveloperCookie };
+    case "LAVA":
+      return { title: "용암쿠키", img: LavaCookie };
+    case "SANTA":
+      return { title: "산타쿠키", img: SantaCookie };
+    case "UNICORN":
+      return { title: "유니콘쿠키", img: UnicornCookie };
+    case "LUCKY":
+      return { title: "럭키쿠키", img: LuckyCookie };
     default:
       return { title: t, img: MixedCookie };
   }
 };
 
 const mapRaw = (r: CookieDetail): CookieData => {
-  const meta = typeToMeta(r.type);
+  const meta = typeToMeta(r.code);
   const effects = [
     { label: "건강운", value: r.health },
     { label: "성취운", value: r.achievement },
@@ -159,6 +183,10 @@ const mapRaw = (r: CookieDetail): CookieData => {
     imgSrc: meta.img,
     detail: { title: meta.title, effects },
     createdAt: Date.parse(r.createdAt),
+    name: r.name,      
+    code: r.code,        
+    rarityCode: r.rarityCode,
+
   };
 };
 
@@ -311,7 +339,7 @@ export const useCookiesStore = create<State>((set, get) => ({
     }
 
     try {
-      await deleteCookieAPI(id); 
+      await cookiesAPI.remove(Number(id));
       // 성공
     } catch (e: any) {
       // 실패: 롤백
@@ -329,6 +357,16 @@ export const useCookiesStore = create<State>((set, get) => ({
 
   eatCookie: async (id) => {
     if (!id) return;
+
+    const state = get();
+    const target = state.items.find((c) => c.id === id);
+    if (target?.code === "LUCKY") {
+      set({
+        error: "럭키 쿠키는 사용할 수 없는 기념 쿠키예요!",
+      });
+      return;
+    }
+
     try {
       set({ eatingId: id, error: null });
       await cookiesAPI.useCookie(Number(id)); 

@@ -12,17 +12,21 @@ type ShareButtonProps = {
   files?: File[];          // Web Share Level 2 (선택)
   onShared?: () => void;   // ✅ 성공 콜백(네이티브/복사 모두)
   className?: string;      // 선택: 추가 클래스
+
+   beforeShare?: () => boolean | Promise<boolean>;
 };
 
 export default function ShareButton({
   label = "공유하기",
-  width = 260,
+  width = 130,
   title = "아그작",
   text = "오늘의 운세를 확인하고 강화 해보세요. 점성술 기반 운세 + 쿠키 강화 게임!",
   url = typeof window !== "undefined" ? window.location.href : "",
   files,
   onShared,
   className,
+
+    beforeShare,
 }: ShareButtonProps) {
   const [pressed, setPressed] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
@@ -42,8 +46,21 @@ export default function ShareButton({
     // 트래킹: 클릭
     trackEvent("share_click", { origin });
 
+    
     try {
-      // 1) 파일까지 포함 가능한 경우
+      // 🔹 0. 세션/조건 체크 (예: 남은 unlockable 확인)
+      if (beforeShare) {
+        const ok = await beforeShare();
+        if (!ok) {
+          // 세션 없어서 공유 중단
+          return;
+        }
+      }
+
+      // 1. 트래킹: 공유 버튼 클릭
+      trackEvent("share_click", { origin });
+
+      // 2-1. 파일 공유 가능
       if (canShareFiles) {
         await (navigator as any).share({ title, text, files });
         trackEvent("share_success", { origin, method: "files" });
@@ -51,7 +68,7 @@ export default function ShareButton({
         return;
       }
 
-      // 2) 일반 네이티브 공유
+      // 2-2. 일반 네이티브 공유
       if (canNativeShare) {
         await (navigator as any).share({ title, text, url });
         trackEvent("share_success", { origin, method: "native" });
@@ -91,21 +108,21 @@ export default function ShareButton({
 
   return (
     <div
-      className={`btnL-wrap ${pressed ? "is-pressed" : ""} ${className ?? ""}`}
+      className={`btnM-wrap ${pressed ? "is-pressed" : ""} ${className ?? ""}`}
       style={{ "--btn-width": `${width}px` } as React.CSSProperties}
       aria-busy={busy}
       aria-live="polite"
     >
       <img
-        src="/images/Button_Large.svg"
+        src="/images/Button_Medium.svg"
         alt=""
-        className="btnL-img"
+        className="btnM-img"
         draggable={false}
         aria-hidden="true"
       />
       <button
         type="button"
-        className="btnL-click"
+        className="btnM-click"
         onClick={shareOrCopy}
         onMouseDown={() => setPressed(true)}
         onMouseUp={() => setPressed(false)}

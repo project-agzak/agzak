@@ -1,4 +1,4 @@
-import { trackError, trackEvent } from "@/lib/analytics";
+import { trackEvent } from "@/lib/analytics";
 import { api } from "@/lib/api";
 import { useState, type ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
@@ -16,10 +16,7 @@ type CheckEmailResponse = {
 
 };
 
-type RegisterWithGuestResponse = {
-  accessToken?: string;
-  refreshToken?: string;
-};
+
 
 export default function SignupPage() {
   const navigate = useNavigate();
@@ -38,7 +35,6 @@ export default function SignupPage() {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [passwordCheckVisible, setPasswordCheckVisible] = useState(false);
 
-  const guestId = localStorage.getItem("guestId");
 
   // 이메일 형식 검사
   const validateEmail = (value: string) => {
@@ -149,7 +145,6 @@ const handleKakaoLogin = () => {
   
   // 회원가입
   const handleRegister = async () => {
-    const guestId = localStorage.getItem("guestId");
 
     if (!email || !password || !passwordCheck) {
       alert("모든 항목을 입력해주세요.");
@@ -177,55 +172,19 @@ const handleKakaoLogin = () => {
     }
 
     // 게스트가 아닌 경우 → 이메일/비번만 저장 후 Fortune 페이지로 이동
-    if (!guestId) {
-      const userInfo = {
-        email,
-        password,
-        passwordCheck,
-      };
-      localStorage.setItem("userId", JSON.stringify(userInfo));
-      navigate("/fortune");
-      return;
-    }
+     const userInfo = {
+      email,
+      password,
+      passwordCheck,
+    };
+    sessionStorage.setItem("userId", JSON.stringify(userInfo));
 
-    // 게스트인 경우 → with-guest 회원가입
-    const res = await api.post<RegisterWithGuestResponse>(
-      "/auth/register/with-guest",
-      {
-        email,
-        password,
-        guestId,
-      }
-    );
-
-    if (!res.ok || !res.data) {
-      //console.error("회원가입 요청 실패:", res.error);
-      alert(res.error?.message ?? "서버와 통신 중 오류가 발생했습니다.");
-      return;
-    }
-
-    const data = res.data;
-    //console.log("게스트 정보로 회원가입 성공:", data);
-
-    if (data.accessToken) {
-      localStorage.setItem("access_token", data.accessToken);
-      if (data.refreshToken) {
-        localStorage.setItem("refresh_token", data.refreshToken);
-      }
-    }
-
-    localStorage.removeItem("guestId");
-
-    // Analytics: 회원가입 완료
-    try {
-      trackEvent("auth_signup_complete", { method: guestId ? "with_guest" : "email" });
-    } catch (e) {
-      trackError("auth_signup_event_fail", (e as any)?.message ?? "event error");
-    }
-
-    alert("회원가입이 완료되었습니다!");
-    navigate("/login");
+    navigate("/fortune");
   };
+
+   
+    
+
 
   return (
     <main className="relative z-10 min-h-screen p-4">
@@ -343,7 +302,7 @@ const handleKakaoLogin = () => {
 </div>
         <div className="mt-12 flex justify-center pb-15">
           <Button_L
-            label={guestId ? "계정 등록" : "다음 단계로"}
+            label={"다음 단계로"}
             width={260}
             onClick={handleRegister}
           />
