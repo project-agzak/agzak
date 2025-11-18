@@ -321,8 +321,45 @@ CREATE TABLE `interpretations` (
                             PRIMARY KEY (`id`),
                             UNIQUE KEY `UK_interpretations_aspect_key` (`aspect_key`)
 ) ENGINE=InnoDB;
+
 /* =========================================================
-   11) 쿠폰 타입
+   11) 이벤트 타입
+   ========================================================= */
+
+CREATE TABLE event_types
+(
+    event_type_id BIGINT AUTO_INCREMENT NOT NULL,
+    name          VARCHAR(255)          NOT NULL,
+    CONSTRAINT pk_event_types PRIMARY KEY (event_type_id)
+);
+
+ALTER TABLE event_types
+    ADD CONSTRAINT uc_event_types_name UNIQUE (name);
+
+/* =========================================================
+    12) 이벤트
+    ========================================================= */
+
+CREATE TABLE events
+(
+    event_id      BIGINT AUTO_INCREMENT NOT NULL,
+    event_type_id BIGINT                NOT NULL,
+    event_status  VARCHAR(255)          NOT NULL,
+    title         VARCHAR(100)          NOT NULL,
+    `description` VARCHAR(500)          NULL,
+    image_url     VARCHAR(255)          NULL,
+    start_at      datetime              NOT NULL,
+    end_at        datetime              NOT NULL,
+    created_at    datetime              NOT NULL,
+    updated_at    datetime              NULL,
+    CONSTRAINT pk_events PRIMARY KEY (event_id)
+);
+
+ALTER TABLE events
+    ADD CONSTRAINT FK_EVENTS_ON_EVENT_TYPE FOREIGN KEY (event_type_id) REFERENCES event_types (event_type_id);
+
+/* =========================================================
+   13) 쿠폰 타입
    ========================================================= */
 
 CREATE TABLE coupon_types
@@ -336,7 +373,7 @@ ALTER TABLE coupon_types
     ADD CONSTRAINT uc_coupon_types_type_name UNIQUE (type_name);
 
 /* =========================================================
-    12) 쿠폰
+    14) 쿠폰
     =========================================================
  */
 
@@ -344,6 +381,7 @@ CREATE TABLE coupons
 (
     coupon_id       BIGINT AUTO_INCREMENT NOT NULL,
     coupon_type_id  BIGINT                NOT NULL,
+    event_id        BIGINT                NULL,
     `description`   VARCHAR(255)          NOT NULL,
     total_quantity  INT                   NOT NULL,
     issued_quantity INT DEFAULT 0         NOT NULL,
@@ -355,8 +393,11 @@ CREATE TABLE coupons
 ALTER TABLE coupons
     ADD CONSTRAINT FK_COUPONS_ON_COUPON_TYPE FOREIGN KEY (coupon_type_id) REFERENCES coupon_types (coupon_type_id);
 
+ALTER TABLE coupons
+    ADD CONSTRAINT FK_COUPONS_ON_EVENT FOREIGN KEY (event_id) REFERENCES events (event_id);
+
 /* =========================================================
-    13) 회원 쿠폰
+    15) 회원 쿠폰
     =========================================================
  */
 
