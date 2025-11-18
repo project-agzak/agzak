@@ -217,18 +217,12 @@ setClickLocked(true);
           birthCity: birthCity.address,
         });
 
-     if (!res.ok || !res.data) {
+  if (!res.ok || !res.data) {
     const status = res.error?.status;
-    const rawMsg = res.error?.message ?? "";
+    // const rawMsg = res.error?.message ?? "";
 
     if (status === 409) {
-      if (rawMsg.includes("이메일")) {
-        alert("이미 가입된 이메일입니다. 로그인 해주세요.");
-      } else if (rawMsg.includes("닉네임")) {
-        alert("이미 사용 중인 닉네임입니다. 다른 닉네임을 입력해주세요.");
-      } else {
-        alert("이미 존재하는 회원 정보입니다.");
-      }
+      alert("이미 사용 중인 닉네임입니다. 다른 닉네임을 입력해주세요.");
     } else if (status === 400) {
       alert("입력한 정보를 다시 확인해주세요.");
     } else {
@@ -282,28 +276,21 @@ setClickLocked(true);
           birthCity: birthCity.address,
         });
 
-       if (!res.ok) {
-  const status = res.error?.status;
-  const rawMsg = res.error?.message ?? "";
+  if (!res.ok) {
+    const status = res.error?.status;
+    // const rawMsg = res.error?.message ?? "";
 
-  if (status === 409) {
-    // 이메일 중복인지 닉네임 중복인지 구분할 수도 있음
-    if (rawMsg.includes("이메일")) {
-      alert("이미 가입된 이메일입니다. 로그인 해주세요.");
-    } else if (rawMsg.includes("닉네임")) {
+    if (status === 409) {
       alert("이미 사용 중인 닉네임입니다. 다른 닉네임을 입력해주세요.");
+    } else if (status === 400) {
+      alert("입력한 정보를 다시 확인해주세요.");
     } else {
-      alert("이미 존재하는 회원 정보입니다.");
+      alert("회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
     }
-  } else if (status === 400) {
-    alert("입력한 정보를 다시 확인해주세요.");
-  } else {
-    alert("회원가입 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
-  }
 
-  setClickLocked(false);
-  return;
-}
+    setClickLocked(false);
+    return;
+  }
 
         // 임시 저장한 userId 제거
      removeWithTTL("guestProfile");
