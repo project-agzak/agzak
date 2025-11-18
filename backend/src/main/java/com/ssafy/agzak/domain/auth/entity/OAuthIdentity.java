@@ -16,6 +16,7 @@ import lombok.*;
         }
 )
 public class OAuthIdentity {
+
     @EmbeddedId
     private OAuthIdentityId id;
 
@@ -24,19 +25,5 @@ public class OAuthIdentity {
             foreignKey = @ForeignKey(name = "FK_oauth_member"))
     private Member member;
 
-    @Embeddable
-    @Getter
-    @NoArgsConstructor(access = AccessLevel.PROTECTED)
-    @AllArgsConstructor(access = AccessLevel.PRIVATE)
-    @Builder
-    public static class OAuthIdentityId {
-        @Enumerated(EnumType.STRING)
-        @Column(name = "provider", nullable = false, length = 50)
-        private OAuthProvider provider;
-
-        @Column(name = "sub", nullable = false)
-        private String sub;
-    }
-
-    public enum OAuthProvider { KAKAO, NAVER, GOOGLE }
+    public enum OAuthProvider {KAKAO, NAVER, GOOGLE}
 }

@@ -8,7 +8,7 @@ import com.ssafy.agzak.domain.auth.dto.response.CheckNicknameResponse;
 import com.ssafy.agzak.domain.auth.dto.response.SocialLoginResponse;
 import com.ssafy.agzak.domain.auth.dto.response.TokenResponse;
 import com.ssafy.agzak.domain.auth.entity.OAuthIdentity;
-import com.ssafy.agzak.domain.auth.entity.OAuthIdentity.OAuthIdentityId;
+import com.ssafy.agzak.domain.auth.entity.OAuthIdentityId;
 import com.ssafy.agzak.domain.auth.entity.OAuthIdentity.OAuthProvider;
 import com.ssafy.agzak.domain.auth.repository.OAuthIdentityRepository;
 import com.ssafy.agzak.domain.auth.support.SocialSignupTicketStore;

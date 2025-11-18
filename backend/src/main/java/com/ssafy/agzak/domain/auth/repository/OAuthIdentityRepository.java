@@ -1,7 +1,7 @@
 package com.ssafy.agzak.domain.auth.repository;
 
 import com.ssafy.agzak.domain.auth.entity.OAuthIdentity;
-import com.ssafy.agzak.domain.auth.entity.OAuthIdentity.OAuthIdentityId;
+import com.ssafy.agzak.domain.auth.entity.OAuthIdentityId;
 import com.ssafy.agzak.domain.auth.entity.OAuthIdentity.OAuthProvider;
 import com.ssafy.agzak.domain.member.entity.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
