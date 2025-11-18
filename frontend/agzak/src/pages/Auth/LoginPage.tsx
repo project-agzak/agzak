@@ -121,6 +121,24 @@ const hasHandledKakaoCode = useRef(false);
       // ?code 제거
       window.history.replaceState(null, "", window.location.pathname);
 
+         if (data.success && data.tokens) {
+             console.log("🎉 기존 회원 or 게스트 → 카카오 회원 성공!");
+        console.log("🔑 tokens:", data.tokens);
+        
+        const { accessToken, refreshToken, expiresInSeconds } = data.tokens;
+
+        // 토큰은 스토어에만 세팅
+        setTokens(accessToken, refreshToken, expiresInSeconds);
+
+     
+    
+
+        //  카카오 로그인/회원가입까지 끝난 상태라 바로 홈으로
+        navigate("/home");
+        return;
+      }
+
+
         // 2) success=false & ticket 있음 → 추가 정보 필요 → FortunePage에서 kakao/complete
       if (!data.success && data.ticket) {
         sessionStorage.setItem("kakao_ticket", data.ticket);
