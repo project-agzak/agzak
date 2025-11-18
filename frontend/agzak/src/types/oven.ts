@@ -18,6 +18,7 @@ export interface GameSessionStart {
   snapAchievement: number;   // int32
   snapHealth: number;        // int32
   snapMisfortune: number;    // int32
+  remaining: number;
 }
 
 // 공통 스냅 타입 (UI용)
@@ -37,7 +38,7 @@ export type OvenAspectName =
   | "HEALTH"      // 건강
   | "MISFORTUNE"  // 액운 상승
 
-export type OvenFireType = "WEAK" | "STRONG" // 지금 스펙엔 WEAK만 있어도 됨
+export type OvenFireType = "WEAK" | "MEDIUM" | "STRONG" // MEDIUM 추가
 
 export interface OvenAttemptRequest {
   aspectName: OvenAspectName
@@ -51,12 +52,24 @@ export type FortuneCookieType =
   | "HEALTH"
   | "MIXED"
   | "ROTTEN"
+  | "GLOOMY"
+  | "SANSAM"
+  | "DEVELOPER"
+  | "LAVA"
+  | "SANTA"
+  | "UNICORN"
+  | "LUCKY"
+
 
 export interface FortuneCookieResult {
   fortuneCookieId: number
   inventoryId: number
   gameSessionId: number
-  type: FortuneCookieType
+  code: FortuneCookieType
+  name: string
+  cookieKindId: number
+  rarityCode: string
+  recipe: string
   love: number
   money: number
   achievement: number

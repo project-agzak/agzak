@@ -2,7 +2,7 @@
 
 export type FortuneEffect = {
   label: string;
-  value: number;
+  value?: number;
 };
 
 export type FortuneCookieDetail = {

@@ -96,23 +96,17 @@ const hasHandledKakaoCode = useRef(false);
   hasHandledKakaoCode.current = true;
 
     const redirectUri = `${window.location.origin}${window.location.pathname}`;
-    const guestId = localStorage.getItem("guestId") ?? undefined;
 
    const payload = {
       authCode: code,
       redirectUri,
-      ...(guestId ? { guestId } : {}),
+ 
     };
 
-      console.group("%c[KAKAO LOGIN FLOW]", "color: #FFB400; font-weight: bold;");
-  console.log("📤 요청 payload:", payload);
 
     (async () => {
       const res = await AuthAPI.kakaoLogin(payload);
-        console.log("📩 Raw 응답 객체:", res);
-      console.log("✅ 응답 status:", res.ok ? "OK" : "FAIL");
-      console.log("📦 응답 data:", res.data);
-      console.log("❗ 응답 error:", res.error);
+
 
       if (!res.ok || !res.data) {
         console.error("카카오 로그인 응답 에러:", res.error);
@@ -127,34 +121,9 @@ const hasHandledKakaoCode = useRef(false);
       // ?code 제거
       window.history.replaceState(null, "", window.location.pathname);
 
-      // 1) 기존 회원 / 게스트 이관 완료 → 로그인 성공
-      if (data.success && data.tokens) {
-             console.log("🎉 기존 회원 or 게스트 → 카카오 회원 성공!");
-        console.log("🔑 tokens:", data.tokens);
-        
-        const { accessToken, refreshToken, expiresInSeconds } = data.tokens;
-
-        // 토큰은 스토어에만 세팅
-        setTokens(accessToken, refreshToken, expiresInSeconds);
-
-     
-      // Analytics: 로그인 성공
-        trackEvent("auth_login_kakao_success", { guestId: guestId ?? null });
-
-        // 게스트 → 카카오 회원인 경우 guestId 정리
-        if (guestId) {
-          localStorage.removeItem("guestId");
-        }
-
-        //  카카오 로그인/회원가입까지 끝난 상태라 바로 홈으로
-        navigate("/home");
-        return;
-      }
-
         // 2) success=false & ticket 있음 → 추가 정보 필요 → FortunePage에서 kakao/complete
       if (!data.success && data.ticket) {
         sessionStorage.setItem("kakao_ticket", data.ticket);
-        console.log("📝 추가 정보 필요, ticket 저장:", data.ticket);
         if (data.email) {
           sessionStorage.setItem("kakao_email", data.email ?? "");
         }

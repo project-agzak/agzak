@@ -1,7 +1,6 @@
 // src/components/oven/OvenHelpSheet.tsx
 "use client"
-
-import helpCard from "@/assets/Game/oven-rule.webp"
+import helpCard from "@/assets/ui/parchment-frame.png"
 
 type Props = {
   open: boolean
@@ -10,7 +9,7 @@ type Props = {
   src?: string
 }
 
-export default function OvenHelpSheet({ open, onClose, src }: Props) {
+export default function CookieHelpSheet({ open, onClose, src }: Props) {
   const img = src ?? (typeof helpCard === "string" ? helpCard : (helpCard as any).src)
 
   return (
@@ -38,10 +37,31 @@ export default function OvenHelpSheet({ open, onClose, src }: Props) {
           <img
             src={img}
             alt="강화 쿠키 오븐 도움말"
-            className="block w-full h-auto
-              max-w-[min(92vw,280px)] max-h-[70vh] object-contain"
+            className="block w-full h-[500px]
+              max-w-[min(92vw,300px)] object-fil"
             draggable={false}
           />
+        
+          <div
+            className="absolute inset-x-6 top-10 bottom-8 left-28 right-28
+                        overflow-y-auto leading-relaxed
+                    text-[121212]"
+            >
+                <div className="flex justify-center font-bitbit">
+                    마법 오븐 사용법<br />
+                </div>
+                <div className="font-galmuri-condensed mt-5 space-y-3 ">
+                  <p>① 성공 확률 확인</p>
+                  <p>② 성공할 필이 찌르르 온다면... &nbsp; <ins>원하는 운세 버튼</ins>을 눌러 작동 </p>
+                  <p>③ 실패할 필이 찌르르 온다면... &nbsp; <ins>액운 상승 버튼</ins>을 눌러 실패 처리 </p>
+                  <p>④ 열 번 버튼을 누르면 완성!</p>
+                </div>
+                <div className="font-galmuri-condensed-small mt-5 space-y-1">
+                  <p>• 약불은 로우리스크 로우리턴, <br />&nbsp;&nbsp;강불은 하이리스크 하이리턴</p>
+                  <p>• 강화한 운세에 따라 쿠키가 달라진다! </p>
+                  <p>• 성공 후엔 성공 확률이 감소하고,<br />&nbsp;&nbsp;실패 후엔 성공 확률이 증가한다!</p>
+                </div>
+            </div>
 
           {/* 닫기 버튼: 이미지 우상단에 겹치기 */}
           <button
@@ -49,7 +69,7 @@ export default function OvenHelpSheet({ open, onClose, src }: Props) {
               aria-label="도움말 닫기"
               onClick={onClose}
               className="absolute top-2 right-2
-                w-55 h-15 rounded-full
+                w-55 h-15 rounded-full cursor-pointer
                 text-[#70431B] font-extrabold
                 "
             >
