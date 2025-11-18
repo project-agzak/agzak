@@ -76,4 +76,8 @@ export const fortuneAPI = {
   getTypeDetail: (fortuneTypeId: number) =>
     api.get<FortuneTypeDetail>(`/fortune/fortuneType/${fortuneTypeId}`),
 
+  // 특정 회원 오늘의 운세 조회
+  getMemberToday: (memberId: number) =>
+    api.get<FortuneResponse>(`/fortune/members/${memberId}/today`),
+
 };

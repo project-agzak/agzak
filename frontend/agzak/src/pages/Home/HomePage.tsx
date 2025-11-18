@@ -5,17 +5,19 @@ import ShareButton from "@/components/atoms/ShareButton";
 import RankingList from "@/components/molecules/RankingList";
 import { trackEvent } from "@/lib/analytics";
 import { useEffect, useMemo } from "react";
-
+import { KakaoShareButton } from "@/components/atoms/KakaoShareButton";
 import { useSessionQuotaStore } from "@/store/sessionQuotaStore";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useFortuneStore } from "@/store/useFortuneStore";
 import { nanoid } from "nanoid";
 import BubbleImg from "@/assets/ui/BubbleMain.svg"
+import HomeLoading from "@/components/templates/HomeLoading";   
+import { useHomeStore } from "@/store/useHomeStore";    
 
 export default function HomePage() {
   const shareUrl = "https://www.agzak.co.kr/";
   const { isLoggedIn } = useAuthStore();
-
+const { initHome } = useHomeStore();
     const accessedAtKST = useMemo(() => {
     const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
     const y = kst.getUTCFullYear();
@@ -30,50 +32,81 @@ export default function HomePage() {
   const totalScore       = useFortuneStore((s) => s.scores?.total_score ?? null);
   const loadingFortune   = useFortuneStore((s) => s.loading);
   const errorFortune     = useFortuneStore((s) => s.error);
-  const fetchToday       = useFortuneStore((s) => s.fetchToday);
 
   // 강화 세션 쿼터
-  const { quota, loading: quotaLoading, error: quotaError, refresh, claim } = useSessionQuotaStore();
+  const { quota, loading: quotaLoading, error: quotaError, refresh, claim } =
+  useSessionQuotaStore();
+
+// 🔹 카카오 공유 전에: 세션 남았는지 확인
+const checkShareQuota = async () => {
+  if (!quota?.unlockable || quota.unlockable <= 0) {
+    alert("오늘은 더 이상 세션을 획득할 수 없습니다.");
+    return false;
+  }
+  return true;
+};
+
+// 🔹 카카오 공유 후: 실제 세션 +1 처리
+const rewardAfterShare = async () => {
+  if (!quota?.unlockable || quota.unlockable <= 0) return;
+
+  const req = {
+    type: "ad" as const,
+    proof: "sdk-server-callback-token",
+    idempotencyKey: `${new Date().toISOString()}:ad:${nanoid(6)}`,
+  };
+
+  const r = await claim(req);
+  if (r.ok) {
+    await refresh();
+  } else {
+    alert(r.error || "세션 획득에 실패했습니다.");
+    console.warn(r.error);
+  }
+};
   // 현재 사용 가능한 세션 정보
   const remainingSessions = quota?.remaining ?? 0;
   const canEnforce = remainingSessions > 0; // 세션이 남아야 강화 페이지 진입 허용
   const canUnlockMore = quota?.unlockable ? quota.unlockable > 0 : false; // 더 획득 가능한지
+const shouldShowLoading =
+  isLoggedIn && loadingFortune && totalScore === null;
 
   useEffect(() => {
     refresh(); // KST 자정 기준 새로고침해도 여기서 갱신됨
   }, [refresh]);
 
-
-  useEffect(() => {
-    if (!isLoggedIn) return;
-    if (loadingFortune || totalScore != null) return;
-    fetchToday();
-  }, [isLoggedIn, loadingFortune, totalScore, fetchToday]);
+useEffect(() => {
+  if (!isLoggedIn) return;
+  initHome();
+}, [isLoggedIn, initHome]);
 
   // 공유 완료 시 → claim +1
-  const handleShared = async () => {
-    if (!quota?.unlockable || quota.unlockable <= 0) {
-      alert("오늘은 더 이상 세션을 획득할 수 없습니다.");
-      return;
-    }
+  // const handleShared = async () => {
+  //   if (!quota?.unlockable || quota.unlockable <= 0) {
+  //     alert("오늘은 더 이상 세션을 획득할 수 없습니다.");
+  //     return;
+  //   }
 
-    // 실제론 광고 SDK 콜백/미션 코드/구매 영수증 등으로 채움
-    const req = {
-      type: "ad" as const,
-      proof: "sdk-server-callback-token",
-      idempotencyKey: `${new Date().toISOString()}:ad:${nanoid(6)}`
-    };
-    const r = await claim(req);
-    if (r.ok) {
-      // 최신 수치는 claim 응답에서 이미 반영됨. 혹시 몰라 재조회해도 OK
-      await refresh();
-    } else {
-      // 사용자에게 에러 메시지 표시
-      alert(r.error || "세션 획득에 실패했습니다.");
-      console.warn(r.error);
-    }
-  };
+  //   // 실제론 광고 SDK 콜백/미션 코드/구매 영수증 등으로 채움
+  //   const req = {
+  //     type: "ad" as const,
+  //     proof: "sdk-server-callback-token",
+  //     idempotencyKey: `${new Date().toISOString()}:ad:${nanoid(6)}`
+  //   };
+  //   const r = await claim(req);
+  //   if (r.ok) {
+  //     // 최신 수치는 claim 응답에서 이미 반영됨. 혹시 몰라 재조회해도 OK
+  //     await refresh();
+  //   } else {
+  //     // 사용자에게 에러 메시지 표시
+  //     alert(r.error || "세션 획득에 실패했습니다.");
+  //     console.warn(r.error);
+  //   }
+  // };
 
+if (shouldShowLoading) {
+  return <HomeLoading />;
+}
   return (
     <main className="relative z-10 p-4 min-h-screen">
       <div className="flex justify-center">
@@ -120,7 +153,7 @@ export default function HomePage() {
         <div className="flex justify-center pb-2">
           <div className="flex w-fit gap-2.5">
             <Button_M
-              label="운세 상세"
+              label="운세 확인"
               to="/fortune/result"
               disabled={!isLoggedIn}
               onClick={() => trackEvent("cta_result_click", { is_logged_in: isLoggedIn, })}
@@ -134,11 +167,32 @@ export default function HomePage() {
             />
           </div>
         </div>
-        <ShareButton
-          label={canUnlockMore ? "공유하고 강화 횟수 +1" : "오늘의 세션 한도 도달"}
-          url={shareUrl}
-          onShared={handleShared}
-        />
+        <p className="text-center font-galmuri-xsmall text-[#777] mt-1 mb-2">
+    아래 버튼으로 공유하고 강화 횟수 +1
+  </p>
+         {/* 🔽 여기 부분만 변경 */}
+        <div className="flex justify-center pb-2 mt-2">
+          <div className="flex w-fit gap-[10px]">
+            <ShareButton
+              label={
+                canUnlockMore
+                  ? "공유하기"
+                  : "세션 끝"
+              }
+              url={shareUrl}
+                 beforeShare={checkShareQuota}   // ⬅️ 먼저 세션 확인
+              onShared={rewardAfterShare}     // ⬅️ 공유 성공 시 세션 +1
+            />
+          <KakaoShareButton
+            title="아그작 🥠 오늘의 운세"
+  description="쿠키 깨물고 운세 강화해봐!"
+  label="카카오로 공유하기"
+  url={shareUrl}
+  beforeShare={checkShareQuota}
+        afterShare={rewardAfterShare}  // ShareButton의 onShared와 동일한 콜백 재사용 가능
+/>
+          </div>
+        </div>
       </div>
       
       <div className="mt-1">

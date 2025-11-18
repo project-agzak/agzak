@@ -207,7 +207,7 @@ export function useOvenGame() {
 
         if (d.cookie) {
           trackEvent("game_cookie_created", {
-            type: d.cookie.type,
+            type: d.cookie.code,
             total: d.cookie.total,
             love: d.cookie.love,
             money: d.cookie.money,

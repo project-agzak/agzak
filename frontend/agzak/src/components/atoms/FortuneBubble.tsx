@@ -95,12 +95,14 @@ export function FortuneBubble({
           {effects.map((eff) => (
             <li
               key={eff.label}
-              className="font-galmuri-condensed-small pl-2 leading-none text-[#121212]"
+              className="font-galmuri-condensed-small pl-2 leading-none text-[#121212] break-keep"
             >
               {eff.label}{" "}
-              <span className="font-bold">
-                {eff.value > 0 ? `+${eff.value}` : eff.value}
-              </span>
+              {typeof eff.value === "number" && (
+                <span className="font-bold">
+                  {eff.value > 0 ? `+${eff.value}` : eff.value}
+                </span>
+              )}
             </li>
           ))}
         </ul>

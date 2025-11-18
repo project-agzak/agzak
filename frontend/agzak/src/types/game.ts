@@ -19,12 +19,3 @@ export interface GameClaimRequest {
 export interface GameClaimResponse extends GameTodayQuota {
   message: string;
 }
-
-// 공통 오류 (BE 스웨거 스키마)
-export interface ApiErrorPayload {
-  timestamp: string;
-  status: number;
-  code: string;
-  message: string;
-  path: string;
-}
