@@ -1,5 +1,6 @@
 package com.ssafy.agzak.domain.coupon.entity;
 
+import com.ssafy.agzak.domain.event.entity.Event;
 import jakarta.persistence.*;
 import lombok.Builder;
 import lombok.Getter;
@@ -28,6 +29,10 @@ public class Coupon {
     @JoinColumn(name = "coupon_type_id", nullable = false)
     private CouponType couponType;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "event_id")
+    private Event event;
+
     @Column(name = "description", nullable = false)
     private String description;
 
@@ -46,8 +51,12 @@ public class Coupon {
     private LocalDateTime expiresAt;
 
     @Builder
-    public Coupon(CouponType couponType, String description, Integer totalQuantity) {
+    public Coupon(CouponType couponType,
+                  Event event,
+                  String description,
+                  Integer totalQuantity) {
         this.couponType = couponType;
+        this.event = event;
         this.description = description;
         this.totalQuantity = totalQuantity;
     }
