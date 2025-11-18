@@ -308,3 +308,57 @@ CREATE TABLE `notification` (
                                     FOREIGN KEY (`member_id`) REFERENCES `member`(`member_id`)
                                         ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB;
+
+/* =========================================================
+   10) 쿠폰 타입
+   ========================================================= */
+
+CREATE TABLE coupon_types
+(
+    coupon_type_id BIGINT AUTO_INCREMENT NOT NULL,
+    type_name      VARCHAR(255)          NOT NULL,
+    CONSTRAINT pk_coupon_types PRIMARY KEY (coupon_type_id)
+);
+
+ALTER TABLE coupon_types
+    ADD CONSTRAINT uc_coupon_types_type_name UNIQUE (type_name);
+
+/* =========================================================
+    11) 쿠폰
+    =========================================================
+ */
+
+CREATE TABLE coupons
+(
+    coupon_id       BIGINT AUTO_INCREMENT NOT NULL,
+    coupon_type_id  BIGINT                NOT NULL,
+    `description`   VARCHAR(255)          NOT NULL,
+    total_quantity  INT                   NOT NULL,
+    issued_quantity INT DEFAULT 0         NOT NULL,
+    created_at      datetime              NOT NULL,
+    expires_at      datetime              NULL,
+    CONSTRAINT pk_coupons PRIMARY KEY (coupon_id)
+);
+
+ALTER TABLE coupons
+    ADD CONSTRAINT FK_COUPONS_ON_COUPON_TYPE FOREIGN KEY (coupon_type_id) REFERENCES coupon_types (coupon_type_id);
+
+/* =========================================================
+    12) 회원 쿠폰
+    =========================================================
+ */
+
+CREATE TABLE member_coupons
+(
+    member_coupon_id BIGINT AUTO_INCREMENT NOT NULL,
+    coupon_id        BIGINT                NOT NULL,
+    member_id        BIGINT                NOT NULL,
+    issued_at        datetime              NOT NULL,
+    CONSTRAINT pk_member_coupons PRIMARY KEY (member_coupon_id)
+);
+
+ALTER TABLE member_coupons
+    ADD CONSTRAINT FK_MEMBER_COUPONS_ON_COUPON FOREIGN KEY (coupon_id) REFERENCES coupons (coupon_id);
+
+ALTER TABLE member_coupons
+    ADD CONSTRAINT FK_MEMBER_COUPONS_ON_MEMBER FOREIGN KEY (member_id) REFERENCES member (member_id);

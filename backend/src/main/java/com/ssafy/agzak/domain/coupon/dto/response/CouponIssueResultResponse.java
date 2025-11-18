@@ -5,13 +5,13 @@ import lombok.Builder;
 public record CouponIssueResultResponse(
     boolean isSuccess,
     Long memberCouponId,
-    Integer order
+    Long order
 ) {
     @Builder
     public CouponIssueResultResponse {
     }
 
-    public static CouponIssueResultResponse failDueToSoldOut(int order) {
+    public static CouponIssueResultResponse failDueToSoldOut(long order) {
         return CouponIssueResultResponse.builder()
                 .isSuccess(false)
                 .memberCouponId(null)
@@ -19,7 +19,7 @@ public record CouponIssueResultResponse(
                 .build();
     }
 
-    public static CouponIssueResultResponse success(Long memberCouponId, int order) {
+    public static CouponIssueResultResponse success(Long memberCouponId, long order) {
         return CouponIssueResultResponse.builder()
                 .isSuccess(true)
                 .memberCouponId(memberCouponId)
