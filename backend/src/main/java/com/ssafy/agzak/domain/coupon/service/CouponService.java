@@ -11,6 +11,7 @@ import com.ssafy.agzak.domain.coupon.exception.CouponExpiredException;
 import com.ssafy.agzak.domain.coupon.exception.NoSuchCouponException;
 import com.ssafy.agzak.domain.coupon.repository.*;
 import com.ssafy.agzak.domain.coupon.port.CouponIssueOrderPort;
+import com.ssafy.agzak.domain.event.entity.Event;
 import com.ssafy.agzak.domain.event.repository.EventRepository;
 import com.ssafy.agzak.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
@@ -186,10 +187,18 @@ public class CouponService {
     @Transactional
     public CouponIssueResultResponse issueCoupon(Long couponId, Long memberId) {
 
+        LocalDateTime now = LocalDateTime.now();
+
         Coupon coupon = couponRepository.findById(couponId)
                 .orElseThrow(() -> new NoSuchCouponException("존재하지 않는 쿠폰입니다."));
 
-        if (coupon.getExpiresAt() != null && LocalDateTime.now().isAfter(coupon.getExpiresAt())) {
+        Event event = coupon.getEvent();
+
+        if (now.isBefore(event.getStartAt())) {
+            throw new CouponExpiredException("아직 발급이 시작되지 않은 쿠폰입니다.");
+        }
+
+        if (coupon.getExpiresAt() != null && now.isAfter(coupon.getExpiresAt())) {
             throw new CouponExpiredException("만료된 쿠폰입니다.");
         }
 
