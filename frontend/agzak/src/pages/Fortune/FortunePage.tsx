@@ -51,7 +51,6 @@ const { email, password } = location.state || {};
  useEffect(() => {
   const userId = sessionStorage.getItem("userId");
   const kakaoTicket = sessionStorage.getItem("kakao_ticket");
-console.log(email,password,userId,kakaoTicket);
   // 1) email/password가 있다 → 정상 (일반 회원가입 Step1 → Step2)
   if (email && password) return;
 
