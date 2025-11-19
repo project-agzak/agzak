@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { useAuthStore } from "@/store/useAuthStore";
+import { EventResultView } from "./EventResultView";
 
 type EventModalProps = {
   onClose: () => void;
@@ -53,6 +54,9 @@ export function EventModal({ onClose }: EventModalProps) {
   // 이 이벤트에 대해 이미 참여했는지(프론트 기준)
   const [hasJoined, setHasJoined] = useState(false);
 
+  // 선착순 결과 (성공/실패 + 순번)
+  const [joinResult, setJoinResult] = useState<CouponIssueResult | null>(null);
+
   // 클라이언트 기준 현재 시간 (1초마다 업데이트)
   const [now, setNow] = useState<Date>(() => new Date());
 
@@ -86,12 +90,14 @@ export function EventModal({ onClose }: EventModalProps) {
       setCouponError(null);
       setCouponLoading(false);
       setHasJoined(false);
+      setJoinResult(null);
       return;
     }
 
     const key = `event_joined_${selectedEvent.eventId}`;
     const joined = localStorage.getItem(key) === "true";
     setHasJoined(joined);
+    setJoinResult(null);
 
     const fetchCoupons = async () => {
       setCouponLoading(true);
@@ -165,7 +171,7 @@ export function EventModal({ onClose }: EventModalProps) {
     );
   };
 
-  // ✅ 참가 버튼 클릭
+  // 참가 버튼 클릭
   const handleJoin = async () => {
     if (!selectedEvent || !primaryCoupon) return;
 
@@ -220,21 +226,8 @@ export function EventModal({ onClose }: EventModalProps) {
     }
 
     // ✅ 정상 응답 (isSuccess true/false 모두 포함)
-    const { isSuccess, order } = res.data;
-
-    if (isSuccess) {
-      // 성공 케이스: 쿠폰 발급 완료 + 등수 안내
-      alert(
-          `축하합니다! 🎉\n\n` +
-          `${order}번째로 선착순 쿠폰을 받으셨습니다.`,
-      );
-    } else {
-      // 실패 케이스(매진 등): 그래도 본인이 몇 번째였는지는 알려줌
-      alert(
-          `아쉽지만 선착순 쿠폰이 모두 소진되었습니다.\n\n` +
-          `회원님은 ${order}번째로 참여하셨습니다.`,
-      );
-    }
+    const result = res.data;
+    setJoinResult(result);
 
     if (selectedEvent) {
       const key = `event_joined_${selectedEvent.eventId}`;
@@ -309,6 +302,22 @@ export function EventModal({ onClose }: EventModalProps) {
   // ───────────────── 상세 화면 ─────────────────
   const renderDetailView = () => {
     if (!selectedEvent) return null;
+
+    // ✅ 이미 선착순 결과가 있으면 결과 화면으로 전환
+    if (joinResult) {
+      return (
+          <EventResultView
+              eventTitle={selectedEvent.title}
+              isSuccess={joinResult.isSuccess}
+              order={joinResult.order}
+              onClose={onClose}
+              onBackToList={() => {
+                setJoinResult(null);
+                setSelectedEvent(null);
+              }}
+          />
+      );
+    }
 
     const start = new Date(selectedEvent.startAt);
     const end = new Date(selectedEvent.endAt);
