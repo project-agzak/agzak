@@ -16,7 +16,8 @@ function handleAuthError(status?: number, url?: string) {
   const { logout } = useAuthStore.getState();
 
   const isAuthRequest = !!url && url.startsWith("/auth/"); // /auth/* 는 건들지 않기
-  if (isAuthRequest || status == null) return;
+  const isCouponRequest = !!url && url.startsWith("/coupons/"); // /coupon/* 도 건들지 않기
+  if (isAuthRequest || isCouponRequest || status == null) return;
 
   // 401: 세션 만료 등
   if (status === 401) {

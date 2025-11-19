@@ -56,7 +56,7 @@ export function WeeklyFortuneBar({
           {/* 강화 운세 (상단 / 녹색) */}
           <Bar
             dataKey="enhanced"
-            fill="#6750A4"
+            fill="#873AED"
             isAnimationActive
             animationDuration={700}
             animationEasing="ease-out"
@@ -64,7 +64,7 @@ export function WeeklyFortuneBar({
           {/* 기본 운세 (하단 / 파란색) */}
           <Bar
             dataKey="base"
-            fill="#4D9EFF"
+            fill="#BB95ED"
             isAnimationActive
             animationDuration={600}
             fillOpacity={0.7}
