@@ -145,7 +145,7 @@
 - 날짜별 운세 타입/점수를 달력의 날짜를 클릭해 한눈에 확인
 - 포춘쿠키 사용/강화 이력과 연동된 통계 제공
 
-| <img src="exec/images/6.월별 운세 조회 (캘린더+그래프)-1.png" width="160"> | <img src="exec/images/6.월별 운세 조회 (캘린더+그래프)-2.png" width="160"> |
+| <img src="exec/images/6.월별 운세 조회 (캘린더+그래프)-1.png" width="160"> | <img src="exec/images/6.월별 운세 조회 (캘린더+그래프)-2.png.pngs" width="160"> |
 
 ---
 
