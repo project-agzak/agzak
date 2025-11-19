@@ -1,0 +1,20 @@
+@font-face {
+  font-family: DNF;
+  src: url(../assets/Fonts/DNFBitBitv2.otf);
+}
+
+@font-face {
+  font-family: Galmuri-Bold;
+  src: url(../assets/Fonts/Galmuri11-Bold.woff2);
+}
+
+@font-face {
+  font-family: Galmuri-Condensed;
+  src: url(../assets/Fonts/Galmuri11-Condensed.woff2);
+  font-display: swap;
+}
+
+@font-face {
+  font-family: Galmuri;
+  src: url(../assets/Fonts/Galmuri11.woff2);
+}
