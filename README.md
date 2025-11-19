@@ -112,6 +112,18 @@
 
 | <img src="exec/images/1.게스트 운세 확인-1.png" width="120"> | <img src="exec/images/1.게스트 운세 확인-2.png" width="120"> | <img src="exec/images/1.게스트 운세 확인-5.png" width="120"> |
 
+<div align="center">
+  <span style="display:inline-block; margin: 0 6px;">
+    <img src="exec/images/1.게스트 운세 확인-1.png" width="120">
+  </span>
+  <span style="display:inline-block; margin: 0 6px;">
+    <img src="exec/images/1.게스트 운세 확인-2.png" width="120">
+  </span>
+  <span style="display:inline-block; margin: 0 6px;">
+    <img src="exec/images/1.게스트 운세 확인-5.png" width="120">
+  </span>
+</div>
+
 ---
 
 ### 7-2. 운세 강화 – 오븐 미니게임
@@ -155,7 +167,7 @@
 - 랭킹 보드에서 상위 유저의 쿠키 타입/점수 확인
 - 오늘의 운세/쿠키 결과를 **SNS 카드 이미지** 형태로 공유
 
-| <img src="exec/images/10.랭킹 확인하기-1.png" width="160"> | <img src="exec/images/9.운세 공유하기-1.png"> |
+| <img src="exec/images/10.랭킹 확인하기-1.png" width="160"> | <img src="exec/images/9.운세 공유하기-1.png" width="160"> |
 
 
 ---
