@@ -181,8 +181,7 @@ export default function FortuneResultPage() {
   const bestieDescription = goodWithId ? DESCRIPTION_BY_TYPE[goodWithId] : undefined;
   const enemyDescription = badWithId ? DESCRIPTION_BY_TYPE[badWithId] : undefined;
 
-  const userId = sessionStorage.getItem('userId');
-  const targetPath = isLoggedIn ? '/enforce' : userId ? '/login' : '/signup';
+  const targetPath = isLoggedIn ? '/enforce' :  '/signup';
   return (
     <main className="relative z-10 p-4 min-h-screen">
       <div className="flex flex-col justify-center items-center pb-5 gap-3">
@@ -310,8 +309,6 @@ export default function FortuneResultPage() {
               label={
                 isLoggedIn
                   ? '운세 상승 아이템 얻으러 가기'
-                  : userId
-                    ? '운세 상승 아이템 얻으러 가기'
                     : '운세 상승 아이템 얻으러 가기'
               }
               width={260}

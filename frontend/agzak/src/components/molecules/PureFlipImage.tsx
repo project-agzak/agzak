@@ -1,5 +1,5 @@
-import { useState, type KeyboardEvent, type ReactNode } from 'react';
 import clsx from 'clsx';
+import { useState, type KeyboardEvent, type ReactNode } from 'react';
 
 export type PureFlipImageProps = {
   // 기존 이미지 src 방식
