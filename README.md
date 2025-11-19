@@ -110,17 +110,10 @@
 - 오늘의 운세 점수 + 운세 타입 + 설명 제공
 - 잘 맞는 운세 타입 / 주의해야 할 타입 매칭
 
-
-<div align="center">
-  <span style="display:inline-block; margin: 0 6px;">
-    <img src="exec/images/1.게스트 운세 확인-1.png" width="120">
-  </span>
-  <span style="display:inline-block; margin: 0 6px;">
-    <img src="exec/images/1.게스트 운세 확인-2.png" width="120">
-  </span>
-  <span style="display:inline-block; margin: 0 6px;">
-    <img src="exec/images/1.게스트 운세 확인-5.png" width="120">
-  </span>
+<div style="display: flex; justify-content: center; gap: 10px;">
+  <img src="exec/images/1.게스트 운세 확인-1.png" width="120">
+  <img src="exec/images/1.게스트 운세 확인-2.png" width="120">
+  <img src="exec/images/1.게스트 운세 확인-5.png" width="120">
 </div>
 
 ---
