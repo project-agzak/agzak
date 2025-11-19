@@ -1,7 +1,7 @@
 // src/pages/Fortune/FortunePage.tsx
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate,useLocation  } from 'react-router-dom';
 
 import FullnameLogo from '@/assets/Background/agzak-fullname.svg';
 import FortuneCookie from '@/assets/Gifs/FortuneCookie.gif';
@@ -39,11 +39,34 @@ export default function FortunePage() {
   const [clickLocked, setClickLocked] = useState(false); // 더블클릭 방지용
   const [showLoading, setShowLoading] = useState(false);
 
+  const location = useLocation();
+const { email, password } = location.state || {};
+
   useEffect(() => {
     if (isLoggedIn) {
       navigate('/home', { replace: true });
     }
   }, [isLoggedIn, navigate]);
+
+ useEffect(() => {
+  const userId = sessionStorage.getItem("userId");
+  const kakaoTicket = sessionStorage.getItem("kakao_ticket");
+console.log(email,password,userId,kakaoTicket);
+  // 1) email/password가 있다 → 정상 (일반 회원가입 Step1 → Step2)
+  if (email && password) return;
+
+  // 2) 카카오 회원가입 진행 중 → 정상
+  if (kakaoTicket) return;
+
+  // 3) 게스트로 접근(userId 없음) → 정상
+  if (!userId) return;
+
+  // 4) 비정상 케이스: userId는 있는데 email/password(state)는 없는 경우
+  alert("회원가입 정보를 다시 입력해주세요.");
+  navigate("/signup", { replace: true });
+}, [email, password, navigate]);
+
+
 
   const handleFortuneSubmit = async () => {
     if (clickLocked) return; // 중복 클릭 방지
@@ -154,7 +177,8 @@ export default function FortunePage() {
     }
 
     const kakaoTicket = sessionStorage.getItem('kakao_ticket');
-    const userInfoStr = sessionStorage.getItem('userId');
+    //const userInfoStr = sessionStorage.getItem('userId');
+    const hasEmailPassword = email && password;
     const MIN_LOADING_MS = 8000; // 최소 10초
     const startTime = Date.now();
 
@@ -168,7 +192,7 @@ export default function FortunePage() {
     };
 
     //  userId / kakao_ticket 둘 다 *없을 때만* guestProfile 저장
-    if (!kakaoTicket && !userInfoStr) {
+    if (!kakaoTicket && !hasEmailPassword) {
       try {
         setWithTTL('guestProfile', guestProfile, 24 * 60 * 60 * 1000); //  24시간 TTL
       } catch (e) {
@@ -239,21 +263,16 @@ export default function FortunePage() {
       }
 
       // 2) 일반 회원가입 후 운세
-      if (userInfoStr) {
-        const { email, password } = JSON.parse(userInfoStr) as {
-          email: string;
-          password: string;
-        };
-
-        const res = await AuthAPI.register({
-          email,
-          password,
-          nickname,
-          birthDate,
-          gender: gender.toUpperCase() as 'MALE' | 'FEMALE',
-          birthTime,
-          birthCity: birthCity.address,
-        });
+      if (hasEmailPassword) {
+          const res = await AuthAPI.register({
+    email,
+    password,
+    nickname,
+    birthDate,
+    gender: gender.toUpperCase() as 'MALE' | 'FEMALE',
+    birthTime,
+    birthCity: birthCity.address,
+  });
 
         if (!res.ok) {
           const status = res.error?.status;
@@ -305,11 +324,12 @@ export default function FortunePage() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const hasUserId = !!sessionStorage.getItem('userId');
+   // const hasUserId = !!sessionStorage.getItem('userId');
+   const hasEmailPassword = email && password;
     const hasKakaoTicket = !!sessionStorage.getItem('kakao_ticket');
 
     //  userId 또는 kakao_ticket이 없으면 안내문 숨김
-    setShowGuide(hasUserId || hasKakaoTicket);
+    setShowGuide(hasEmailPassword || hasKakaoTicket);
     try {
       const parsed = getWithTTL<{
         nickname?: string;
