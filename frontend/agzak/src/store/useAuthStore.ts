@@ -161,6 +161,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       "access_token_expires_at",
       "member",
       "userId",
+      "guestId",
       "guestProfile",
     ];
     keysToRemove.forEach((k) => localStorage.removeItem(k));

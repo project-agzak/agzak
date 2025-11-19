@@ -213,6 +213,7 @@ console.log(email,password,userId,kakaoTicket);
     setClickLocked(true);
     // 1) 카카오 회원가입 완료
     try {
+      // setShowLoading(true);
       // setSubmitting(true);
 
       if (kakaoTicket) {
@@ -248,7 +249,7 @@ console.log(email,password,userId,kakaoTicket);
 
         removeWithTTL('guestProfile');
 
-        await fetchGuest(payload);
+       // await fetchGuest(payload);
 
         alert('회원가입이 완료되었습니다.');
 
@@ -294,7 +295,7 @@ console.log(email,password,userId,kakaoTicket);
         removeWithTTL('guestProfile');
         sessionStorage.removeItem('userId');
 
-        await fetchGuest(payload);
+       // await fetchGuest(payload);
 
         alert('회원가입이 완료되었습니다.');
 
@@ -303,7 +304,7 @@ console.log(email,password,userId,kakaoTicket);
 
         return;
       }
-      setShowLoading(true);
+     setShowLoading(true);
       // 3) 위 둘 다 없으면 → 순수 게스트 운세
       await fetchGuest(payload);
 
