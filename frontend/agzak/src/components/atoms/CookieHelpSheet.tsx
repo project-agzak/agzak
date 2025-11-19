@@ -1,7 +1,7 @@
 // src/components/oven/OvenHelpSheet.tsx
 /* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
-import helpCard from '@/assets/ui/parchment-frame.png';
+import helpCard from '@/assets/ui/rule-paper.png';
 
 type Props = {
   open: boolean;
@@ -32,46 +32,59 @@ export default function CookieHelpSheet({ open, onClose, src }: Props) {
         `}
         aria-hidden={!open}
       >
-        {/* 이미지 래퍼: 비율 유지 + 잘림 방지 */}
-        <div className="mx-4 mb-4 relative flex items-center justify-center">
-          {/* 이미지: 최대 폭/높이 제한으로 항상 온전히 보이게 */}
-          <img
-            src={img}
-            alt=""
-            className="block w-full h-[360px]
-              max-w-[min(92vw,300px)] object-fill"
-            draggable={false}
-          />
-
+        <div className="mx-4 mb-4 flex items-center justify-center">
+          {/* 양피지 카드 컨테이너 */}
           <div
-            className="absolute inset-x-6 top-10 bottom-8 left-30 right-30
-                        overflow-y-auto leading-relaxed
-                    text-[121212]"
+            className="
+              relative
+              w-full
+              max-w-[min(92vw,300px)]
+              aspect-[3/5]
+              bg-no-repeat
+              bg-contain
+              bg-center
+            "
+            style={{ backgroundImage: `url(${img})` }}
           >
-            <div className="flex justify-center font-bitbit">
-              쿠키 맛있게 먹는 법<br />
-            </div>
-            <div className="font-galmuri-condensed mt-5 space-y-1.5">
-              <p>① 맛있게 구운 쿠키를 클릭해 &nbsp;&nbsp;보세요. </p>
-              <p>
-                ② 쿠키 선택 후 먹기 버튼을 <br /> &nbsp;&nbsp;누르면 총운이 올라가요.
-              </p>
-              <p>③ 쿠키는 소비기한이 없어요. </p>
+            {/* 닫기 버튼: 카드 우상단 */}
+            <button
+              type="button"
+              aria-label="도움말 닫기"
+              onClick={onClose}
+              className="absolute top-[8%] right-[10%] text-[#70431B] font-extrabold"
+            >
+              ✕
+            </button>
+
+            {/* 텍스트 영역: 양피지 안쪽 패딩으로 조절 */}
+            <div
+              className="
+                absolute
+                top-[16%]
+                bottom-[12%]
+                left-[14%]
+                right-[14%]
+                overflow-y-auto
+                leading-relaxed
+                text-[#121212]
+              "
+            >
+              <div className="flex justify-center font-bitbit">
+                쿠키 맛있게 먹는 법
+                <br />
+              </div>
+
+              <div className="font-galmuri-condensed ml-3 mt-5 space-y-1.5">
+                <p>① 맛있게 구운 쿠키를 클릭해&nbsp;&nbsp;보세요.</p>
+                <p>
+                  ② 쿠키 선택 후 먹기 버튼을
+                  <br />
+                  &nbsp;&nbsp;누르면 총운이 올라가요.
+                </p>
+                <p>③ 쿠키는 소비기한이 없어요.</p>
+              </div>
             </div>
           </div>
-
-          {/* 닫기 버튼: 이미지 우상단에 겹치기 */}
-          <button
-            type="button"
-            aria-label="도움말 닫기"
-            onClick={onClose}
-            className="absolute top-2 right-2
-                w-55 h-15 rounded-full cursor-pointer
-                text-[#70431B] font-extrabold
-                "
-          >
-            ✕
-          </button>
         </div>
       </div>
     </>
