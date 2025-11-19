@@ -1,5 +1,8 @@
 package com.ssafy.agzak.domain.game.service;
 
+import com.ssafy.agzak.domain.collection.service.CollectionService;
+import com.ssafy.agzak.domain.cookie.entity.CookieKind;
+import com.ssafy.agzak.domain.cookie.repository.CookieKindRepository;
 import com.ssafy.agzak.domain.game.dto.request.AttemptRequest;
 import com.ssafy.agzak.domain.game.dto.response.AttemptResponse;
 import com.ssafy.agzak.domain.game.dto.response.CookieCreatedResponse;
@@ -13,10 +16,13 @@ import com.ssafy.agzak.domain.game.repository.GameAttemptRepository;
 import com.ssafy.agzak.domain.game.repository.GameSessionRepository;
 import com.ssafy.agzak.domain.inventory.entity.FortuneCookie;
 import com.ssafy.agzak.domain.inventory.entity.Inventory;
+import com.ssafy.agzak.domain.inventory.exception.InventoryCapacityExceededException;
 import com.ssafy.agzak.domain.inventory.repository.FortuneCookieRepository;
 import com.ssafy.agzak.domain.inventory.repository.InventoryRepository;
 import com.ssafy.agzak.domain.member.entity.Member;
 import com.ssafy.agzak.domain.member.repository.MemberRepository;
+import com.ssafy.agzak.global.security.AuthMemberProvider;
+import com.ssafy.agzak.global.time.DateProvider;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,8 +32,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.security.SecureRandom;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 
 @Service
 @RequiredArgsConstructor
@@ -36,23 +40,30 @@ public class CookieGameService {
 
     private final GameSessionRepository gameSessionRepository;
     private final GameAttemptRepository gameAttemptRepository;
+    private final CookieKindRepository cookieKindRepository;
     private final MemberRepository memberRepository;
     private final InventoryRepository inventoryRepository;
     private final FortuneCookieRepository fortuneCookieRepository;
-//  private final AuthMemberProvider authMemberProvider;
+    private final AuthMemberProvider authMemberProvider;
+    private final DateProvider date;
+    private final RedisQuotaService quotaService;
+    private final CollectionService collectionService;
 
     private static final BigDecimal INIT_PROB = new BigDecimal("70.00");
     private static final int ATTEMPTS_LIMIT = 10;
-    private static final int SESSIONS_PER_DAY = 3;
-    private static final ZoneId KST = ZoneId.of("Asia/Seoul");
+    private static final int INVENTORY_LIMIT = 50;
 
     public StartGameResponse startForCurrentUser() {
-        // Long memberId = authMemberProvider.currentMemberId();
-        Long memberId = 1L; // TODO: JWT에서 꺼내기
+        Long memberId = authMemberProvider.currentMemberId();
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new EntityNotFoundException("member not found: " + memberId));
 
-        LocalDate today = LocalDate.now(KST);
+        LocalDate today = date.today();
+
+        long avail = lockInventoryAndCountAvailable(member);
+        if (avail >= INVENTORY_LIMIT) {
+            throw new InventoryCapacityExceededException(memberId, INVENTORY_LIMIT);
+        }
 
         // 1) 오늘 진행 중 세션이 있으면 => "재개" 로직
         var inProgressOpt = gameSessionRepository
@@ -101,14 +112,17 @@ public class CookieGameService {
                     .snapAchievement(snapAchievement)
                     .snapHealth(snapHealth)
                     .snapMisfortune(snapMisfortune)
+                    .remaining(calcRemaining(member.getMemberId()))
                     .build();
         }
 
         // 2) 진행 중 세션이 없다면 => "새로 생성" (쿼터 체크)
         long completedCount = gameSessionRepository.countByMemberAndGameDateAndStatus(
                 member, today, GameSession.SessionStatus.COMPLETED);
-        if (completedCount >= SESSIONS_PER_DAY) {
-            throw new DailyQuotaExceededException("오늘은 이미 3회 완료하여 더 이상 시작할 수 없습니다.");
+
+        int cap = quotaService.getTodayCap(memberId);
+        if (completedCount >= cap) {
+            throw new DailyQuotaExceededException("오늘은 이미 %d회 완료하여 더 이상 시작할 수 없습니다.".formatted(cap));
         }
 
         // 회차 결정(동일 날짜 최대 session_no 기반 +1, 단 1..3 범위)
@@ -116,7 +130,7 @@ public class CookieGameService {
         int maxExistingNo = gameSessionRepository.findTopByMemberAndGameDateOrderBySessionNoDesc(member, today)
                 .map(GameSession::getSessionNo)
                 .orElse(0);
-        int sessionNo = Math.max(baseSessionNo, Math.min(maxExistingNo + 1, SESSIONS_PER_DAY));
+        int sessionNo = Math.max(baseSessionNo, Math.min(maxExistingNo + 1, cap));
 
         GameSession session = GameSession.builder()
                 .member(member)
@@ -125,8 +139,8 @@ public class CookieGameService {
                 .status(GameSession.SessionStatus.IN_PROGRESS)
                 .initialSuccessProb(INIT_PROB)
                 .attemptsLimit(ATTEMPTS_LIMIT)
-                .createdAt(LocalDateTime.now(KST))
-                .updatedAt(LocalDateTime.now(KST))
+                .createdAt(date.todayTime())
+                .updatedAt(date.todayTime())
                 .build();
 
         GameSession saved = gameSessionRepository.save(session);
@@ -148,15 +162,23 @@ public class CookieGameService {
                 .snapAchievement(0)
                 .snapHealth(0)
                 .snapMisfortune(0)
+                .remaining(calcRemaining(memberId))
                 .build();
     }
 
+    private int calcRemaining(Long memberId) {
+        int cap = quotaService.getTodayCap(memberId);
+        long used = gameSessionRepository.countByMember_MemberIdAndGameDateAndStatus(
+                memberId, date.today(), GameSession.SessionStatus.COMPLETED);
+        return Math.max(0, cap - (int) used);
+    }
+
     public AttemptResponse attemptForCurrentUser(AttemptRequest req) {
-        Long memberId = 1L; // TODO JWT
+        Long memberId = authMemberProvider.currentMemberId();
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new EntityNotFoundException("member not found: " + memberId));
 
-        LocalDate today = LocalDate.now(KST);
+        LocalDate today = date.today();
 
         GameSession session = gameSessionRepository
                 .findTopByMemberAndGameDateAndStatusOrderBySessionNoDesc(
@@ -187,9 +209,11 @@ public class CookieGameService {
             snapLove = snapMoney = snapAchievement = snapHealth = snapMisfortune = 0;
         }
 
-        // 적용 확률: base + (약:+5 / 강:-5) → [0,100]
-        BigDecimal adjustment = (req.fireType() == AttemptRequest.FireType.WEAK)
-                ? new BigDecimal("5.00") : new BigDecimal("-5.00");
+        // 적용 확률: base + (약:+5 / 중:0 / 강:-5) → [0,100]
+        BigDecimal adjustment =
+                (req.fireType() == AttemptRequest.FireType.WEAK)   ? new BigDecimal("5.00") :
+                (req.fireType() == AttemptRequest.FireType.MEDIUM) ? new BigDecimal("0.00") :
+                                                                     new BigDecimal("-5.00");
         BigDecimal applied = clamp0to100(baseProb.add(adjustment));
 
         // 성공/실패: 정확히 applied% 확률
@@ -229,7 +253,7 @@ public class CookieGameService {
                 .snapAchievement(snapAchievement)
                 .snapHealth(snapHealth)
                 .snapMisfortune(snapMisfortune)
-                .createdAt(LocalDateTime.now(KST))
+                .createdAt(date.todayTime())
                 .build();
         gameAttemptRepository.save(attempt);
 
@@ -237,15 +261,23 @@ public class CookieGameService {
         boolean completed = (nextAttemptNo >= ATTEMPTS_LIMIT);
         session = session.toBuilder()
                 .status(completed ? GameSession.SessionStatus.COMPLETED : GameSession.SessionStatus.IN_PROGRESS)
-                .updatedAt(LocalDateTime.now(KST))
+                .updatedAt(date.todayTime())
                 .build();
         gameSessionRepository.save(session);
 
         CookieCreatedResponse cookieResult = null;
 
-        // ★ 10회차 완료 → 포춘쿠키 생성
+        // 10회차 완료 → 포춘쿠키 생성
         if (completed) {
-            // 1) 액운 재분배 후 최종 능력치 산출
+            long avail = lockInventoryAndCountAvailable(member);
+            if (avail >= INVENTORY_LIMIT) {
+                int needDelete = (int) (avail - (INVENTORY_LIMIT - 1));
+                deleteOldestAvailable(member, needDelete);
+            }
+
+            Inventory inventory = inventoryRepository.findWithPessimisticWriteByMember(member)
+                    .orElseGet(() -> inventoryRepository.save(Inventory.builder().member(member).build()));
+
             int[] after = applyMisfortuneRedistribution(
                     snapLove, snapMoney, snapAchievement, snapHealth, snapMisfortune,
                     session.getGameSessionId()
@@ -253,39 +285,42 @@ public class CookieGameService {
             int fLove = after[0], fMoney = after[1], fAch = after[2], fHealth = after[3];
             int total = fLove + fMoney + fAch + fHealth;
 
-            // 2) 타입 판정
-            CookieCreatedResponse.CookieTypeDto typeDto = decideType(fLove, fMoney, fAch, fHealth, total);
+            // 1) 규칙으로 code 결정
+            String kindCode = decideCookieKindCode(fLove, fMoney, fAch, fHealth, total);
 
-            // 3) 인벤토리 조회/생성
-            Inventory inventory = inventoryRepository.findTopByMemberOrderByInventoryIdAsc(member)
-                    .orElseGet(() -> inventoryRepository.save(
-                            Inventory.builder().member(member).build()
-                    ));
+            // 2) 종류 로드
+            CookieKind ck = cookieKindRepository.findActiveByCodeWithRarity(kindCode)
+                    .orElseThrow(() -> new IllegalStateException("쿠키 종류 시드 누락/비활성: " + kindCode)); // ★
 
-            // 4) 저장
+            // 3) 저장
             var cookieEntity = FortuneCookie.builder()
                     .inventory(inventory)
                     .gameSession(session)
-                    .type(mapCookieType(typeDto))
-                    .love(fLove)
-                    .money(fMoney)
-                    .achievement(fAch)
-                    .health(fHealth)
+                    .cookieKind(ck)
+                    .love(fLove).money(fMoney).achievement(fAch).health(fHealth)
                     .build();
             var saved = fortuneCookieRepository.save(cookieEntity);
+
+            // 4) 도감 갱신
+            collectionService.onCookieCreated(
+                    member.getMemberId(),
+                    ck.getCookieKindId(),
+                    date.todayTime()
+            );
 
             // 5) 응답 DTO
             cookieResult = CookieCreatedResponse.builder()
                     .fortuneCookieId(saved.getFortuneCookieId())
                     .inventoryId(inventory.getInventoryId())
                     .gameSessionId(session.getGameSessionId())
-                    .type(typeDto)
-                    .love(fLove)
-                    .money(fMoney)
-                    .achievement(fAch)
-                    .health(fHealth)
+                    .cookieKindId(ck.getCookieKindId())
+                    .code(ck.getCode())
+                    .name(ck.getName())
+                    .rarityCode(ck.getRarity().getCode())
+                    .recipe(ck.getRecipe())
+                    .message(ck.getMessage())
+                    .love(fLove).money(fMoney).achievement(fAch).health(fHealth)
                     .total(total)
-                    .message(typeMessage(typeDto))
                     .build();
         }
 
@@ -310,18 +345,70 @@ public class CookieGameService {
                 .build();
     }
 
+    private static String decideCookieKindCode(int love, int money, int ach, int health, int total) {
+        // ---- LEGENDARY ----
+        if (total == 77) return "LUCKY";
+
+        // ---- UNIQUE ----
+        if (love <= -20 && money <= -20 && ach <= -20 && health <= -20) return "LAVA";
+        if (love == 12 && health == 25) return "SANTA";
+        if (love >= 22 && money >= 22 && ach >= 22 && health >= 22) return "UNICORN";
+
+        // ---- EPIC ----
+        if (love <= -10 && money <= -10 && ach <= -10 && health <= -10) return "GLOOMY";
+//        if (love == 11 && (money == 11 || ach == 11 || health == 11)) return "PPEPPERO";
+        if (money >= 20 && health >= 20) return "SANSAM";
+        if (money >= 10 && health <= -10) return "DEVELOPER";
+        if (love >= 10 && money >= 10 && ach >= 10 && health >= 10) return "MIXED";
+
+        // ---- RARE ----
+        // 조건: 최대값 ≥ +5 && 총점 ≥ +10, 아니면 전부 ROTTEN
+        if (total < 10) return "ROTTEN";
+        int max = Math.max(Math.max(love, money), Math.max(ach, health));
+        if (max < 5) return "ROTTEN";
+
+        // 동률 우선순위: 금전 > 애정 > 성취 > 건강
+        if (money == max) return "MONEY";
+        if (love  == max) return "LOVE";
+        if (ach   == max) return "ACHIEVEMENT";
+        return "HEALTH";
+    }
+
+
+        /** 인벤토리를 잠그고(비관적 락) 현재 AVAILABLE 개수를 반환 */
+    private long lockInventoryAndCountAvailable(Member member) {
+        var inv = inventoryRepository.findWithPessimisticWriteByMember(member)
+                .orElseGet(() -> inventoryRepository.save(Inventory.builder().member(member).build()));
+        return fortuneCookieRepository.countAvailableByMemberId(member.getMemberId());
+    }
+
+    /** oldest → AVAILABLE을 (need 개수)만큼 삭제 표시 */
+    private void deleteOldestAvailable(Member member, int need) {
+        if (need <= 0) return;
+        var list = fortuneCookieRepository.findOldestAvailableByMemberId(member.getMemberId());
+        int n = Math.min(need, list.size());
+        for (int i = 0; i < n; i++) {
+            var fc = list.get(i);
+            if (fc.getStatus() == FortuneCookie.CookieStatus.AVAILABLE) {
+                fc.markDeleted();
+            }
+        }
+    }
+
     private static int getDelta(AttemptRequest req, boolean success) {
         if (req.aspectName() == AttemptRequest.AttemptAspect.MISFORTUNE) {
             // 액운
             return switch (req.fireType()) {
-                case WEAK -> success ? +5 : -7;
-                case STRONG -> success ? +14 : -13;
+                case WEAK   -> success ? +4  : -6;
+                case MEDIUM -> success ? +9  : -9;
+                case STRONG -> success ? +14 : -12;
             };
         } else {
             // 행운 4종
             return switch (req.fireType()) {
-                case WEAK -> success ? +7 : -5;
-                case STRONG -> success ? +13 : -14;
+                case WEAK   -> success ? +6  : -4;
+                case MEDIUM -> success ? +9  : -9;
+                case STRONG -> success ? +12 : -14;
             };
         }
     }
@@ -352,45 +439,6 @@ public class CookieGameService {
                 money  + s * p2,
                 ach    + s * p3,
                 health + s * p4
-        };
-    }
-
-    private static CookieCreatedResponse.CookieTypeDto decideType(int love, int money, int ach, int health, int total) {
-        if (total <= 10) return CookieCreatedResponse.CookieTypeDto.ROTTEN;
-
-        int max = Math.max(Math.max(love, money), Math.max(ach, health));
-        int tie = 0;
-        if (love == max) tie++;
-        if (money == max) tie++;
-        if (ach == max) tie++;
-        if (health == max) tie++;
-
-        if (tie >= 2) return CookieCreatedResponse.CookieTypeDto.MIXED;
-        if (love == max) return CookieCreatedResponse.CookieTypeDto.LOVE;
-        if (money == max) return CookieCreatedResponse.CookieTypeDto.MONEY;
-        if (ach == max) return CookieCreatedResponse.CookieTypeDto.ACHIEVEMENT;
-        return CookieCreatedResponse.CookieTypeDto.HEALTH;
-    }
-
-    private static FortuneCookie.CookieType mapCookieType(CookieCreatedResponse.CookieTypeDto dto) {
-        return switch (dto) {
-            case LOVE -> FortuneCookie.CookieType.LOVE;
-            case MONEY -> FortuneCookie.CookieType.MONEY;
-            case ACHIEVEMENT -> FortuneCookie.CookieType.ACHIEVEMENT;
-            case HEALTH -> FortuneCookie.CookieType.HEALTH;
-            case MIXED -> FortuneCookie.CookieType.MIXED;
-            case ROTTEN -> FortuneCookie.CookieType.ROTTEN;
-        };
-    }
-
-    private static String typeMessage(CookieCreatedResponse.CookieTypeDto type) {
-        return switch (type) {
-            case ROTTEN -> "쿠키가 상했어요..";
-            case MIXED -> "성공적으로 '믹스' 쿠키가 구워졌습니다!";
-            case LOVE -> "성공적으로 '애정' 쿠키가 구워졌습니다!";
-            case MONEY -> "성공적으로 '금전' 쿠키가 구워졌습니다!";
-            case ACHIEVEMENT -> "성공적으로 '성취' 쿠키가 구워졌습니다!";
-            case HEALTH -> "성공적으로 '건강' 쿠키가 구워졌습니다!";
         };
     }
 

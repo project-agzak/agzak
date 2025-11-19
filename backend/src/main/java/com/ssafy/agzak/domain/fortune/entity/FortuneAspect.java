@@ -35,5 +35,19 @@ public class FortuneAspect {
     @Column(name = "original_score", nullable = false)
     private Integer originalScore;
 
+    @Column(name = "description", length = 1000)
+    private String description;
+
     public enum AspectName { MONEY, LOVE, ACHIEVEMENT, HEALTH }
+
+    public int increaseWithUpperCap(int delta, int cap) {
+        if (delta <= 0) {
+            this.score += delta;
+            return delta;
+        }
+        int allowed = Math.max(0, cap - this.score);
+        int applied = Math.min(delta, allowed);
+        this.score += applied;
+        return applied;
+    }
 }

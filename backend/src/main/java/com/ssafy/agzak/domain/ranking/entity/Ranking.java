@@ -43,6 +43,9 @@ public class Ranking {
     @Column(name = "total_score", nullable = false)
     private Integer totalScore;
 
+    @Column(name = "original_total_score", nullable = false)
+    private Integer originalTotalScore;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;

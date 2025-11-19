@@ -5,5 +5,5 @@ public record AttemptRequest(
         FireType fireType           // WEAK, STRONG
 ) {
         public enum AttemptAspect { MONEY, LOVE, ACHIEVEMENT, HEALTH, MISFORTUNE }
-        public enum FireType { WEAK, STRONG }
+        public enum FireType { WEAK, MEDIUM, STRONG }
 }

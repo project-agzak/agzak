@@ -47,4 +47,9 @@ public class Fortune {
 
     @Column(name = "original_total_score", nullable = false)
     private Integer originalTotalScore;
+
+    public void updateScore(int num) {
+        this.totalScore += num;
+    }
+
 }
