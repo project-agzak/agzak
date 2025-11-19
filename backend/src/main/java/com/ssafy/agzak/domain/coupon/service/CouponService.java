@@ -7,6 +7,8 @@ import com.ssafy.agzak.domain.coupon.entity.Coupon;
 //import com.ssafy.agzak.domain.coupon.entity.CouponEventCounter;
 import com.ssafy.agzak.domain.coupon.entity.MemberCoupon;
 import com.ssafy.agzak.domain.coupon.exception.AlreadyIssuedCouponException;
+import com.ssafy.agzak.domain.coupon.exception.CouponExpiredException;
+import com.ssafy.agzak.domain.coupon.exception.NoSuchCouponException;
 import com.ssafy.agzak.domain.coupon.repository.*;
 import com.ssafy.agzak.domain.coupon.port.CouponIssueOrderPort;
 import com.ssafy.agzak.domain.event.repository.EventRepository;
@@ -185,10 +187,10 @@ public class CouponService {
     public CouponIssueResultResponse issueCoupon(Long couponId, Long memberId) {
 
         Coupon coupon = couponRepository.findById(couponId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 쿠폰입니다."));
+                .orElseThrow(() -> new NoSuchCouponException("존재하지 않는 쿠폰입니다."));
 
         if (coupon.getExpiresAt() != null && LocalDateTime.now().isAfter(coupon.getExpiresAt())) {
-            throw new IllegalArgumentException("만료된 쿠폰입니다.");
+            throw new CouponExpiredException("만료된 쿠폰입니다.");
         }
 
         long order = couponIssueOrderPort.nextOrder(couponId);
