@@ -60,8 +60,7 @@ export default defineConfig(({ mode }) => {
     },
 
     // console 제거
-
-   esbuild: { drop: ['console', 'debugger'] },
+    esbuild: { drop: ['console', 'debugger'] },
 
   }
 })
