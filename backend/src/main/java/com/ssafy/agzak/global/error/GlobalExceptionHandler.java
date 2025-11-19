@@ -1,5 +1,8 @@
 package com.ssafy.agzak.global.error;
 
+import com.ssafy.agzak.domain.coupon.exception.AlreadyIssuedCouponException;
+import com.ssafy.agzak.domain.coupon.exception.CouponExpiredException;
+import com.ssafy.agzak.domain.coupon.exception.NoSuchCouponException;
 import com.ssafy.agzak.domain.fortune.exception.IllegalCityNameException;
 import com.ssafy.agzak.domain.game.exception.AttemptLimitReachedException;
 import com.ssafy.agzak.domain.game.exception.DailyQuotaExceededException;
@@ -69,7 +72,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({
             EntityNotFoundException.class,
             NoSuchElementException.class,
-            NoFortuneFoundException.class
+            NoFortuneFoundException.class,
+            NoSuchCouponException.class
     })
     public ResponseEntity<ErrorResponse> handleNotFound(RuntimeException e, HttpServletRequest req) {
         return build(HttpStatus.NOT_FOUND, "NOT_FOUND", e.getMessage(), req);
@@ -113,7 +117,9 @@ public class GlobalExceptionHandler {
             TypeMismatchException.class,
             HttpMessageNotReadableException.class,            // JSON 파싱 오류
             IllegalArgumentException.class,
-            IllegalCityNameException.class
+            IllegalCityNameException.class,
+            AlreadyIssuedCouponException.class,
+            CouponExpiredException.class
     })
     public ResponseEntity<ErrorResponse> handleBadRequest(Exception e, HttpServletRequest req) {
         return build(HttpStatus.BAD_REQUEST, "BAD_REQUEST", e.getMessage(), req);
