@@ -1,5 +1,7 @@
 package com.ssafy.agzak.domain.member.entity;
 
+import com.ssafy.agzak.domain.fortune.dto.response.LatLng;
+import com.ssafy.agzak.domain.member.dto.request.MemberEditRequest;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -7,6 +9,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -16,11 +19,11 @@ import java.time.LocalDateTime;
 @Table(
         name = "member",
         uniqueConstraints = {
-                @UniqueConstraint(name = "UQ_member_nickname", columnNames = {"nickname"}),
-                @UniqueConstraint(name = "UQ_member_email", columnNames = {"email"})
+                @UniqueConstraint(name = "UQ_member_nickname", columnNames = {"nickname"})
         }
 )
 public class Member {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "member_id", nullable = false)
@@ -42,12 +45,17 @@ public class Member {
     @Column(name = "birth_date", nullable = false)
     private LocalDate birthDate;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "birth_branch", length = 50)
-    private BirthBranch birthBranch;
+    @Column(name = "birth_time", nullable = false)
+    private LocalTime birthTime;
 
     @Column(name = "birth_city", length = 100)
     private String birthCity;
+
+    @Column(name = "latitude")
+    private Double latitude;
+
+    @Column(name = "longitude")
+    private Double longitude;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false)
@@ -63,9 +71,25 @@ public class Member {
 
     public enum Gender { MALE, FEMALE }
 
-    public enum BirthBranch {
-        RAT, OX, TIGER, RABBIT, DRAGON, SNAKE, HORSE, SHEEP, MONKEY, ROOSTER, DOG, PIG
+    public enum MemberStatus { ACTIVE, WITHDRAWN }
+
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
     }
 
-    public enum MemberStatus { ACTIVE, WITHDRAWN }
+    public void updateInfo(MemberEditRequest request) {
+        this.gender = request.gender();
+        this.birthDate = request.birthDate();
+        this.birthTime = request.birthTime();
+        this.birthCity = request.birthCity();
+    }
+
+    public void updateLatlng(LatLng request) {
+        this.latitude = request.latitude();
+        this.longitude = request.longitude();
+    }
+
+    public void deleteMember() {
+        this.status = MemberStatus.WITHDRAWN;
+    }
 }

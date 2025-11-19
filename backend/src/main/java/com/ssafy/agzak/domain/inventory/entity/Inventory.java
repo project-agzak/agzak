@@ -12,7 +12,7 @@ import lombok.*;
 @Table(
         name = "inventory",
         uniqueConstraints = {
-                @UniqueConstraint(name = "UQ_inventory_member", columnNames = {"member_id", "inventory_id"})
+                @UniqueConstraint(name = "UQ_inventory_member", columnNames = {"member_id"})
         }
 )
 public class Inventory {
@@ -25,4 +25,9 @@ public class Inventory {
     @JoinColumn(name = "member_id", nullable = false,
             foreignKey = @ForeignKey(name = "FK_inventory_member"))
     private Member member;
+
+    public Inventory updateMember(Member member) {
+        this.member = member;
+        return this;
+    }
 }
