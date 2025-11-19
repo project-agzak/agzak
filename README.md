@@ -110,7 +110,6 @@
 - 오늘의 운세 점수 + 운세 타입 + 설명 제공
 - 잘 맞는 운세 타입 / 주의해야 할 타입 매칭
 
-| <img src="exec/images/1.게스트 운세 확인-1.png" width="120"> | <img src="exec/images/1.게스트 운세 확인-2.png" width="120"> | <img src="exec/images/1.게스트 운세 확인-5.png" width="120"> |
 
 <div align="center">
   <span style="display:inline-block; margin: 0 6px;">
@@ -134,9 +133,10 @@
 - 성공/실패에 따라 네 가지 운세(사랑, 재물, 건강, 성취 등)가 강화/감소
 - 오르거나 내린 각 운세 점수를 기준으로 **포춘쿠키 타입 결정**
 
-<div align="center">
+<div style="display:flex; justify-content:center;">
   <img src="exec/images/4.운세 강화 게임 (쿠키 굽기)-1.png" width="240">
 </div>
+
 ---
 
 ### 7-3. 포춘쿠키 인벤토리
@@ -146,9 +146,10 @@
 - 쿠키 삭제 / 정렬(타입, 점수 등) 기능 제공
 - 쿠키 상세에서 강화 내역, 메시지 확인 가능
 
-<div align="center">
+<div style="display:flex; justify-content:center;">
   <img src="exec/images/5.운세 강화 (쿠키 먹기)-1.png" width="240">
 </div>
+
 ---
 
 ### 7-4. 운세 통계 & 달력
@@ -157,7 +158,10 @@
 - 날짜별 운세 타입/점수를 달력의 날짜를 클릭해 한눈에 확인
 - 포춘쿠키 사용/강화 이력과 연동된 통계 제공
 
-| <img src="exec/images/6.월별 운세 조회 (캘린더+그래프)-1.png" width="160"> | <img src="exec/images/6.월별 운세 조회 (캘린더+그래프)-2.png.pngs" width="160"> |
+<div style="display: flex; justify-content: center; gap: 10px;">
+  <img src="exec/images/6.월별 운세 조회 (캘린더+그래프)-1.png" width="160">
+  <img src="exec/images/6.월별 운세 조회 (캘린더+그래프)-2.png" width="160">
+</div>
 
 ---
 
@@ -167,7 +171,10 @@
 - 랭킹 보드에서 상위 유저의 쿠키 타입/점수 확인
 - 오늘의 운세/쿠키 결과를 **SNS 카드 이미지** 형태로 공유
 
-| <img src="exec/images/10.랭킹 확인하기-1.png" width="160"> | <img src="exec/images/9.운세 공유하기-1.png" width="160"> |
+<div style="display:flex; justify-content:center; gap:10px;">
+  <img src="exec/images/10.랭킹 확인하기-1.png" width="160">
+  <img src="exec/images/9.운세 공유하기-1.png" width="160">
+</div>
 
 
 ---
@@ -177,7 +184,12 @@
 - 보유한 쿠키를 메시지와 함께 다른 유저에게 선물
 - 알림 사이드바를 통하여 선물 목록 확인 및 획득
 
-| <img src="exec/images/8.쿠키 선물하기 & 알림-2.png" width="120"> | <img src="exec/images/8.쿠키 선물하기 & 알림-3.png" width="120"> | <img src="exec/images/8.쿠키 선물하기 & 알림-5.png" width="120"> |
+<div style="display:flex; justify-content:center; gap:10px;">
+  <img src="exec/images/8.쿠키 선물하기 & 알림-2.png" width="120">
+  <img src="exec/images/8.쿠키 선물하기 & 알림-3.png" width="120">
+  <img src="exec/images/8.쿠키 선물하기 & 알림-5.png" width="120">
+</div>
+
 ---
 
 ### 7-6. (확장 예정 기능)
