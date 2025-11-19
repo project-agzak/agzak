@@ -165,9 +165,16 @@ export function EventModal({ onClose }: EventModalProps) {
     }
 
     return (
-        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] ${color}`}>
-        {label}
-      </span>
+        <span
+            className={`
+        inline-flex items-center justify-center
+        rounded-full px-3 h-6
+        text-[11px] whitespace-nowrap
+        ${color}
+      `}
+        >
+      {label}
+    </span>
     );
   };
 
@@ -350,11 +357,19 @@ export function EventModal({ onClose }: EventModalProps) {
           </div>
 
           {/* 제목 + 상태 배지 */}
-          <div className="mb-2 flex items-start justify-between gap-2">
-            <h2 className="text-lg font-bitbit text-[#121212] leading-snug flex-1">
+          <div className="mb-2 flex flex-col gap-1">
+            <h2
+                className="
+                  text-lg font-bitbit text-[#121212] leading-snug
+                  whitespace-normal break-keep  /* ← 줄바꿈 허용 */
+                "
+            >
               {selectedEvent.title}
             </h2>
-            {renderStatusBadge(selectedEvent.eventStatus)}
+
+            <div className="flex">
+              {renderStatusBadge(selectedEvent.eventStatus)}
+            </div>
           </div>
 
           {/* 이벤트 설명 */}
