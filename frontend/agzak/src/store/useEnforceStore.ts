@@ -26,7 +26,7 @@ type PersistShape = { remaining: number; dateKey: string };
 function save(v: PersistShape) {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(v));
-  } catch {}
+  } catch { /* empty */ }
 }
 
 export const useEnforceStore = create<EnforceState>((set, get) => ({

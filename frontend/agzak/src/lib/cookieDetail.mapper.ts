@@ -9,13 +9,13 @@ const TYPE_TITLE: Record<string, string> = {
   money: "금전쿠키",
   mix: "믹스쿠키",
   rotten: "썩은쿠키",
-  gloomy:"먹구름쿠키",
-  sansam:"산삼쿠키",
-  developer:"개발자쿠키",
-  lava:"용암쿠키",
-  santa:"산타쿠키",
-  unicorn:"유니콘쿠키",
-  lucky:"럭키쿠키",
+  gloomy: "먹구름쿠키",
+  sansam: "산삼쿠키",
+  developer: "개발자쿠키",
+  lava: "용암쿠키",
+  santa: "산타쿠키",
+  unicorn: "유니콘쿠키",
+  lucky: "럭키쿠키",
 };
 
 export function toFortuneCookieDetail(dto: CookieDetail): FortuneCookieDetail {
@@ -25,10 +25,10 @@ export function toFortuneCookieDetail(dto: CookieDetail): FortuneCookieDetail {
   return {
     title,
     effects: [
-      { label: "건강운",   value: dto.health },
-      { label: "성취운",   value: dto.achievement },
-      { label: "애정운",   value: dto.love },
-      { label: "금전운",   value: dto.money },
+      { label: "건강운", value: dto.health },
+      { label: "성취운", value: dto.achievement },
+      { label: "애정운", value: dto.love },
+      { label: "금전운", value: dto.money },
     ],
   };
 }

@@ -1,4 +1,5 @@
 // src/lib/kakao.ts
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 // 타입 보강 안 쓸 거면 이거 아예 제거해도 됨
 // declare global { interface Window { Kakao?: any } }

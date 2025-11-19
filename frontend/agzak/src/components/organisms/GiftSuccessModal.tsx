@@ -1,12 +1,12 @@
 // src/components/organisms/GiftSuccessModal.tsx
-import successModalBg from "@/assets/ui/letter-envelope.webp"
-import { Button_M } from "@/components/atoms/Button_M"
-import { Dialog, DialogContent } from "@/components/ui/Dialog"
+import successModalBg from '@/assets/ui/letter-envelope.webp';
+import { Button_M } from '@/components/atoms/Button_M';
+import { Dialog, DialogContent } from '@/components/ui/Dialog';
 
 type SuccessModalProps = {
-  open: boolean
-  onClose: () => void
-}
+  open: boolean;
+  onClose: () => void;
+};
 
 export function SuccessModal({ open, onClose }: SuccessModalProps) {
   return (
@@ -44,17 +44,14 @@ export function SuccessModal({ open, onClose }: SuccessModalProps) {
               <h3 className="text-lg font-galmuri-small font-bold text-gray-800 flex flex-col items-center pt-4 pl-2">
                 전송되었습니다!
               </h3>
-              
+
               <div className="pt-2">
-                <Button_M 
-                  label="확인"
-                  onClick={onClose}
-                />
+                <Button_M label="확인" onClick={onClose} />
               </div>
             </div>
           </div>
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

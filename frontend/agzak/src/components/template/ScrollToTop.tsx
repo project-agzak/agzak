@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 export function ScrollToTop() {
   const { pathname, search } = useLocation();
@@ -9,7 +9,7 @@ export function ScrollToTop() {
     window.scrollTo({
       top: 0,
       left: 0,
-      behavior: "auto", // 필요하면 "smooth"로
+      behavior: 'auto', // 필요하면 "smooth"로
     });
   }, [pathname, search]); // 쿼리까지 바뀔 때도 올리고 싶으면 search 포함
 

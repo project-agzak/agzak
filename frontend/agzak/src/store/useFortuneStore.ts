@@ -1,4 +1,5 @@
 // src/store/useFortuneStore.ts
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from "zustand";
 import { api } from "@/lib/api";
 import {
@@ -78,7 +79,7 @@ type FortuneState = {
   scores: FortuneScores | null; // 실제 런타임에서는 flat/nested 둘 다 허용(아래 유틸이 처리)
   typeInfo: FortuneTypeInfo | null;
 
-    memberScores: FortuneScores | null;
+  memberScores: FortuneScores | null;
   memberTypeInfo: FortuneTypeInfo | null;
   // 게스트 전용
   guestId: string | null;
@@ -93,7 +94,7 @@ type FortuneState = {
   // 운세 상세 보기
   getDetailSummary: (key: ScoreKeys) => string | undefined;
   getScoreValue?: (key: ScoreKeys) => number;
-  getTotalSummary: () => string | undefined; 
+  getTotalSummary: () => string | undefined;
 
   // actions
   fetchToday: () => Promise<void>;
@@ -129,7 +130,7 @@ export const useFortuneStore = create<FortuneState>((set, get) => ({
   scores: null,
   typeInfo: null,
 
-   memberScores: null,
+  memberScores: null,
   memberTypeInfo: null,
 
   guestId: typeof window !== "undefined" ? localStorage.getItem("guestId") : null,
@@ -155,7 +156,7 @@ export const useFortuneStore = create<FortuneState>((set, get) => ({
           set({ guestId });
           try {
             localStorage.setItem("guestId", guestId);
-          } catch {}
+          } catch { /* empty */ }
         }
 
         set({ scores: scores ?? null, typeInfo: type ?? null, loading: false });
@@ -189,7 +190,7 @@ export const useFortuneStore = create<FortuneState>((set, get) => ({
           set({ guestId });
           try {
             localStorage.setItem("guestId", guestId);
-          } catch {}
+          } catch { /* empty */ }
         }
 
         set({
@@ -243,8 +244,8 @@ export const useFortuneStore = create<FortuneState>((set, get) => ({
       scores: null,
       typeInfo: null,
 
-       memberScores: null,      
-    memberTypeInfo: null,  
+      memberScores: null,
+      memberTypeInfo: null,
 
       guestId: null,
       typeDetails: {},
@@ -328,7 +329,7 @@ export const useFortuneStore = create<FortuneState>((set, get) => ({
 
         set({
           memberScores: scores ?? null,      //  다른 사람용 필드에만 저장
-        memberTypeInfo: type ?? null,
+          memberTypeInfo: type ?? null,
           loading: false,
         });
       } else {
@@ -338,7 +339,7 @@ export const useFortuneStore = create<FortuneState>((set, get) => ({
             res.error?.code === 404
               ? "해당 회원의 오늘 운세가 아직 없습니다."
               : toErrorMsg(res.error) ??
-                "해당 회원의 오늘 운세를 불러오지 못했습니다.",
+              "해당 회원의 오늘 운세를 불러오지 못했습니다.",
         });
       }
     } catch (e) {

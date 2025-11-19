@@ -1,16 +1,15 @@
 // @/pages/_shared/AppError.tsx
-
-import { useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 export default function AppError() {
   const location = useLocation();
   const navigate = useNavigate();
-  const isEnforcePath = location.pathname.includes("/enforce");
+  const isEnforcePath = location.pathname.includes('/enforce');
 
   useEffect(() => {
     if (isEnforcePath) {
-      console.error("[APP_ERROR] /enforce 경로에서 에러 발생, 홈으로 리디렉션:", {
+      console.error('[APP_ERROR] /enforce 경로에서 에러 발생, 홈으로 리디렉션:', {
         pathname: location.pathname,
         search: location.search,
         hash: location.hash,
@@ -18,7 +17,7 @@ export default function AppError() {
       });
       // iOS에서 화면이 막히지 않도록 즉시 리디렉션
       setTimeout(() => {
-        navigate("/", { replace: true });
+        navigate('/', { replace: true });
       }, 100);
     }
   }, [isEnforcePath, location, navigate]);

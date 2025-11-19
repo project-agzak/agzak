@@ -1,5 +1,5 @@
-import * as React from "react";
-import "@/styles/components.css"; // ✅ 전역 경로 설정된 경우
+import * as React from 'react';
+import '@/styles/components.css'; // ✅ 전역 경로 설정된 경우
 
 export interface DropDownProps {
   label?: string;
@@ -8,12 +8,7 @@ export interface DropDownProps {
   width?: number; // 원하는 가로폭(px). 기본 260
 }
 
-export function DropDown({
-  label = "메뉴",
-  items = [],
-  onSelect,
-  width = 260,
-}: DropDownProps) {
+export function DropDown({ label = '메뉴', items = [], onSelect, width = 260 }: DropDownProps) {
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef<HTMLDivElement>(null);
 
@@ -23,15 +18,15 @@ export function DropDown({
       if (!ref.current) return;
       if (!ref.current.contains(e.target as Node)) setOpen(false);
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
   }, []);
 
   return (
     <div
       ref={ref}
-      className={`dropdown-container ${open ? "open" : ""}`}
-      style={{ "--dropdown-width": `${width}px` } as React.CSSProperties}
+      className={`dropdown-container ${open ? 'open' : ''}`}
+      style={{ '--dropdown-width': `${width}px` } as React.CSSProperties}
     >
       {/* 배경 */}
       <img
@@ -47,20 +42,22 @@ export function DropDown({
         className="dropdown-button"
         aria-expanded={open}
         aria-haspopup="listbox"
-        onClick={() => setOpen(v => !v)}
+        onClick={() => setOpen((v) => !v)}
         onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === " ") {
+          if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            setOpen(v => !v);
+            setOpen((v) => !v);
           }
-          if (e.key === "Escape") setOpen(false);
+          if (e.key === 'Escape') setOpen(false);
         }}
       >
-        <span className="dropdown-label font-galmuri"  style={{ fontSize: "12px", fontWeight: 400 }}>{label}</span>
+        <span className="dropdown-label font-galmuri" style={{ fontSize: '12px', fontWeight: 400 }}>
+          {label}
+        </span>
         <img
           src="/images/DropDown_Button.png"
           alt="드롭다운 버튼"
-          className={`dropdown-arrow ${open ? "rotated" : ""}`}
+          className={`dropdown-arrow ${open ? 'rotated' : ''}`}
         />
       </button>
 

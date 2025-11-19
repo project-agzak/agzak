@@ -1,6 +1,6 @@
 // src/app/router.tsx
-import { RequireAuth } from "@/components/templates/RequireAuth";
-import { ScrollToTop } from "@/components/templates/ScrollToTop";
+import { RequireAuth } from "@/components/template/RequireAuth";
+import { ScrollToTop } from "@/components/template/ScrollToTop";
 import AppLoader from '@/components/ui/AppLoader';
 import { lazy, Suspense, type ReactNode } from 'react';
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';

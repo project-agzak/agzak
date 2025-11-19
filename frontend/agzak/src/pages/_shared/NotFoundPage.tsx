@@ -1,12 +1,11 @@
 // @/pages/_shared/NotFoundPage.tsx
-import FortuneCookieGif from "@/assets/Gifs/FortuneCookie.gif";
-import { Button } from "@/components/ui/button";
-import { Link, useNavigate } from "react-router-dom";
+import FortuneCookieGif from '@/assets/Gifs/FortuneCookie.gif';
+import { Button } from '@/components/ui/button';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function NotFoundPage() {
   const navigate = useNavigate();
-  const HOME_PATH = "/home";
-  
+  const HOME_PATH = '/home';
 
   return (
     <main className="relative z-10 min-h-screen flex items-center justify-center p-3">
@@ -14,7 +13,7 @@ export default function NotFoundPage() {
         <div className="text-center">
           <p className="text-xs tracking-widest text-gray-400">ERROR</p>
           <div className="flex justify-center items-center">
-            <img src={ FortuneCookieGif } alt="아그작" />
+            <img src={FortuneCookieGif} alt="아그작" />
           </div>
           <h1 className="mt-1 text-5xl font-extrabold leading-tight">
             <span className="font-bitbit-xlarge bg-clip-text text-transparent bg-gradient-to-r from-gray-800 to-gray-500">
@@ -37,10 +36,7 @@ export default function NotFoundPage() {
             </Link>
           </div>
         </div>
-
       </div>
-
-
     </main>
   );
 }

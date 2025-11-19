@@ -1,5 +1,6 @@
-import * as React from "react";
-import "@/styles/components.css";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import * as React from 'react';
+import '@/styles/components.css';
 
 type Props = {
   hour?: string | null;
@@ -16,7 +17,7 @@ export function TimeDropDown({
   minute = null,
   onChange,
   width = 260,
-  placeholder = "시간 선택",
+  placeholder = '시간 선택',
   disabled = false,
   showArrow = true,
 }: Props) {
@@ -24,11 +25,11 @@ export function TimeDropDown({
   const ref = React.useRef<HTMLDivElement>(null);
 
   const hours = React.useMemo(
-    () => Array.from({ length: 24 }, (_, h) => String(h).padStart(2, "0")),
+    () => Array.from({ length: 24 }, (_, h) => String(h).padStart(2, '0')),
     []
   );
   const minutes = React.useMemo(
-    () => Array.from({ length: 60 }, (_, m) => String(m).padStart(2, "0")),
+    () => Array.from({ length: 60 }, (_, m) => String(m).padStart(2, '0')),
     []
   );
 
@@ -37,8 +38,8 @@ export function TimeDropDown({
       if (!ref.current) return;
       if (!ref.current.contains(e.target as Node)) setOpen(false);
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
   }, []);
 
   const isSelected = !!(hour && minute);
@@ -46,11 +47,11 @@ export function TimeDropDown({
 
   const selectHour = (h: string) => {
     if (disabled) return;
-    onChange?.({ hour: h, minute: minute ?? "00" });
+    onChange?.({ hour: h, minute: minute ?? '00' });
   };
   const selectMinute = (m: string) => {
     if (disabled) return;
-    onChange?.({ hour: hour ?? "00", minute: m });
+    onChange?.({ hour: hour ?? '00', minute: m });
   };
 
   const handleToggle = () => {
@@ -61,9 +62,9 @@ export function TimeDropDown({
   return (
     <div
       ref={ref}
-      className={`dropdown-container ${open ? "open" : ""} ${isSelected ? "has-value" : ""} ${disabled ? "is-disabled" : ""} ${!showArrow ? "no-arrow" : ""}`} // ← 공백 추가
+      className={`dropdown-container ${open ? 'open' : ''} ${isSelected ? 'has-value' : ''} ${disabled ? 'is-disabled' : ''} ${!showArrow ? 'no-arrow' : ''}`} // ← 공백 추가
       style={
-        { ["--dropdown-width" as any]: `${width}px` } as React.CSSProperties // ← 타입 캐스팅 추가
+        { ['--dropdown-width' as any]: `${width}px` } as React.CSSProperties // ← 타입 캐스팅 추가
       }
     >
       <img
@@ -83,7 +84,7 @@ export function TimeDropDown({
       >
         <span
           className={`dropdown-label font-galmuri ${
-            isSelected ? "text-active" : "text-placeholder"
+            isSelected ? 'text-active' : 'text-placeholder'
           }`}
           style={{ fontSize: 12, fontWeight: 400 }}
         >
@@ -93,7 +94,7 @@ export function TimeDropDown({
           <img
             src="/images/DropDown_Button.png"
             alt=""
-            className={`dropdown-arrow ${open ? "rotated" : ""}`}
+            className={`dropdown-arrow ${open ? 'rotated' : ''}`}
           />
         )}
       </button>
@@ -104,7 +105,7 @@ export function TimeDropDown({
             {hours.map((h) => (
               <div
                 key={h}
-                className={`time-item font-galmuri ${h === hour ? "is-active" : ""}`}
+                className={`time-item font-galmuri ${h === hour ? 'is-active' : ''}`}
                 onClick={() => selectHour(h)}
               >
                 {h}
@@ -116,7 +117,7 @@ export function TimeDropDown({
             {minutes.map((m) => (
               <div
                 key={m}
-                className={`time-item font-galmuri ${m === minute ? "is-active" : ""}`}
+                className={`time-item font-galmuri ${m === minute ? 'is-active' : ''}`}
                 onClick={() => selectMinute(m)}
               >
                 {m}
