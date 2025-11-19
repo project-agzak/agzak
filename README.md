@@ -110,11 +110,15 @@
 - 오늘의 운세 점수 + 운세 타입 + 설명 제공
 - 잘 맞는 운세 타입 / 주의해야 할 타입 매칭
 
+| <img src="exec/images/1.게스트 운세 확인-1.png" width="120"> | <img src="exec/images/1.게스트 운세 확인-2.png" width="120"> | img src="exec/images/1.게스트 운세 확인-5.png" width="120"> |
+
+
 <div align="center">
-  <img src="exec/images/1.게스트 운세 확인-1.png" style="max-width: 260px; margin: 0 8px;">
-  <img src="exec/images/1.게스트 운세 확인-2.png" style="max-width: 260px; margin: 0 8px;">
-  <img src="exec/images/1.게스트 운세 확인-5.png" style="max-width: 260px; margin: 0 8px;">
+  <img src="exec/images/1.게스트 운세 확인-1.png" style="max-width: 260px;">
+  <img src="exec/images/1.게스트 운세 확인-2.png" style="max-width: 260px;">
+  <img src="exec/images/1.게스트 운세 확인-5.png" style="max-width: 260px;">
 </div>
+
 
 ---
 
@@ -127,7 +131,7 @@
 - 오르거나 내린 각 운세 점수를 기준으로 **포춘쿠키 타입 결정**
 
 <div align="center">
-  <img src="exec/images/4.운세 강화 게임 (쿠키 굽기)-1.png" style="max-width: 260px; margin: 0 8px;">
+  <img src="exec/images/4.운세 강화 게임 (쿠키 굽기)-1.png" style="max-width: 260px;">
 </div>
 ---
 
@@ -139,7 +143,7 @@
 - 쿠키 상세에서 강화 내역, 메시지 확인 가능
 
 <div align="center">
-  <img src="exec/images/5.운세 강화 (쿠키 먹기)-1.png" style="max-width: 260px; margin: 0 8px;">
+  <img src="exec/images/5.운세 강화 (쿠키 먹기)-1.png" style="max-width: 260px;">
 </div>
 ---
 
@@ -150,8 +154,8 @@
 - 포춘쿠키 사용/강화 이력과 연동된 통계 제공
 
 <div align="center">
-  <img src="exec/images/6.월별 운세 조회 (캘린더+그래프)-1.png" style="max-width: 260px; margin: 0 8px;">
-  <img src="exec/images/6.월별 운세 조회 (캘린더+그래프)-2.png.png" style="max-width: 260px; margin: 0 8px;">
+  <img src="exec/images/6.월별 운세 조회 (캘린더+그래프)-1.png" style="max-width: 260px;">
+  <img src="exec/images/6.월별 운세 조회 (캘린더+그래프)-2.png.png" style="max-width: 260px;">
 </div>
 ---
 
@@ -162,8 +166,8 @@
 - 오늘의 운세/쿠키 결과를 **SNS 카드 이미지** 형태로 공유
 
 <div align="center">
-  <img src="exec/images/10.랭킹 확인하기-1.png" style="max-width: 260px; margin: 0 8px;">
-  <img src="exec/images/9.운세 공유하기-1.png" style="max-width: 260px; margin: 0 8px;">
+  <img src="exec/images/10.랭킹 확인하기-1.png" style="max-width: 260px;">
+  <img src="exec/images/9.운세 공유하기-1.png" style="max-width: 260px;">
 </div>
 
 ---
@@ -174,9 +178,9 @@
 - 알림 사이드바를 통하여 선물 목록 확인 및 획득
 
 <div align="center">
-  <img src="exec/images/8.쿠키 선물하기 & 알림-2.png" style="max-width: 260px; margin: 0 8px;">
-  <img src="exec/images/8.쿠키 선물하기 & 알림-3.png" style="max-width: 260px; margin: 0 8px;">
-  <img src="exec/images/8.쿠키 선물하기 & 알림-5.png" style="max-width: 260px; margin: 0 8px;">
+  <img src="exec/images/8.쿠키 선물하기 & 알림-2.png" style="max-width: 260px;">
+  <img src="exec/images/8.쿠키 선물하기 & 알림-3.png" style="max-width: 260px;">
+  <img src="exec/images/8.쿠키 선물하기 & 알림-5.png" style="max-width: 260px;">
 </div>
 
 ---
