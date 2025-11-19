@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { useCookiesStore } from '@/store/useCookiesStore';
 import { NotificationList } from '@/components/molecules/NotificationList';
 import { NotificationModal } from '@/components/atoms/NotificationModal'; // 이미 있으니까 있으면 유지
+import { EventModal } from "@/components/atoms/EventModal";
 
 import { useAlarmStore } from '@/store/useAlarmStore';
 
@@ -34,6 +35,29 @@ export function BellIcon({ className = 'w-6 h-6' }: { className?: string }) {
   );
 }
 
+export function EventIcon({
+  className = "w-6 h-6",
+}: {
+  className?: string;
+}) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      fill="none"
+      className={className}
+      aria-hidden="true"
+    >
+      <path
+        d="M12 2.5l2.39 4.84 5.34.78-3.87 3.77.91 5.31L12 14.9l-4.77 2.5.91-5.31-3.87-3.77 5.34-.78L12 2.5z"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export default function Header() {
   // 전역 인증 상태
   const { isLoggedIn, member, setMember, logout } = useAuthStore();
@@ -45,6 +69,8 @@ export default function Header() {
   // 🔥 알림 시트 open 상태 + 쿠키페이지 리로드 플래그
   const [notifyOpen, setNotifyOpen] = useState(false);
   const [shouldReloadAfterClose, setShouldReloadAfterClose] = useState(false);
+
+  const [eventModalOpen, setEventModalOpen] = useState(false);
 
   useEffect(() => {
     const fetchMember = async () => {
@@ -99,91 +125,111 @@ export default function Header() {
     window.location.replace('/home');
   };
 
-  const nickname = member?.nickname ?? '';
+  const nickname = member?.nickname ?? "";
+
+  const handleEventClick = () => {
+    setEventModalOpen(true);
+  };
 
   return (
-    <header className="fixed inset-x-0 top-0 z-50">
-      <div className="mx-auto w-full max-w-[360px] bg-[#FEFBF2]">
-        <div className="flex h-16 items-center px-4 ">
-          <a href="/home">
-            <img
-              src="/agzak-logo.svg"
-              alt="Agzak Logo"
-              className="h-10 object-contain cursor-pointer"
-            />
-          </a>
+    <>
+      <header className="fixed inset-x-0 top-0 z-50">
+        <div className="mx-auto w-full max-w-[360px] bg-[#FEFBF2]">
+          <div className="flex h-16 items-center px-4 ">
+            <a href="/home">
+              <img
+                src="/agzak-logo.svg"
+                alt="Agzak Logo"
+                className="h-10 object-contain cursor-pointer"
+              />
+            </a>
 
-          <div className="ml-auto">
-            {/* 🔔 알림 사이드바 */}
-            <Sheet
-              open={notifyOpen}
-              onOpenChange={(open) => {
-                // 닫히는 순간 + 플래그 true + /cookies 에 있을 때만 reload
-                if (!open && shouldReloadAfterClose) {
-                  if (window.location.pathname.startsWith('/cookies')) {
-                    window.location.reload();
+            <div className="ml-auto flex items-center gap-1">
+              {/* ⭐ 이벤트 아이콘 버튼 (모달 오픈) */}
+              <button
+                className="rounded-full hover:bg-zinc-900/5 p-2 cursor-pointer"
+                aria-label="이벤트"
+                onClick={handleEventClick}
+              >
+                <EventIcon className="w-[22px] h-[22px] translate-y-[3px]" />
+              </button>
+
+              {/* 🔔 알림 사이드바 */}
+              <Sheet
+                open={notifyOpen}
+                onOpenChange={(open) => {
+                  if (!open && shouldReloadAfterClose) {
+                    if (window.location.pathname.startsWith("/cookies")) {
+                      window.location.reload();
+                    }
+                    setShouldReloadAfterClose(false);
                   }
-                  setShouldReloadAfterClose(false);
-                }
-                setNotifyOpen(open);
-              }}
-            >
-              <SheetTrigger asChild>
-                <button
-                  className="rounded-full hover:bg-zinc-900/5 p-2 cursor-pointer relative"
-                  aria-label="알림"
-                >
-                  <BellIcon className="w-5 h-5" />
-                  {unreadCount > 0 && (
-                    <span className="absolute top-1 right-1 block w-2 h-2 bg-red-500 rounded-full" />
-                  )}
-                </button>
-              </SheetTrigger>
-
-              <SheetContent
-                side="right"
-                className="
-                  !w-[260px] max-w-none p-0 bg-[#FEFBF2]
-                  data-[side=right]:!w-[260px]
-                  sm:!w-[260px]
-                "
+                  setNotifyOpen(open);
+                }}
               >
-                {/* 🔥 선물 수락 후 reload 플래그만 세팅 */}
-                <NotificationSidebar onGiftAccepted={() => setShouldReloadAfterClose(true)} />
-              </SheetContent>
-            </Sheet>
+                <SheetTrigger asChild>
+                  <button
+                    className="rounded-full hover:bg-zinc-900/5 p-2 cursor-pointer relative"
+                    aria-label="알림"
+                  >
+                    <BellIcon className="w-5 h-5" />
+                    {unreadCount > 0 && (
+                      <span className="absolute top-1 right-1 block w-2 h-2 bg-red-500 rounded-full" />
+                    )}
+                  </button>
+                </SheetTrigger>
 
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  aria-label="열기"
-                  className="rounded-full hover:bg-zinc-900/5 cursor-pointer"
+                <SheetContent
+                  side="right"
+                  className="
+                    !w-[260px] max-w-none p-0 bg-[#FEFBF2]
+                    data-[side=right]:!w-[260px]
+                    sm:!w-[260px]
+                  "
                 >
-                  <HamburgerIcon className="w-7 h-7" />
-                </Button>
-              </SheetTrigger>
+                  <NotificationSidebar
+                    onGiftAccepted={() => setShouldReloadAfterClose(true)}
+                  />
+                </SheetContent>
+              </Sheet>
 
-              <SheetContent
-                side="right"
-                className="
-                  !w-[260px] max-w-none p-0 bg-[#FEFBF2]
-                  data-[side=right]:!w-[260px]
-                  sm:!w-[260px]
-                "
-              >
-                <SidebarContent
-                  isLoggedIn={isLoggedIn}
-                  nickname={nickname}
-                  onLogout={handleLogout}
-                />
-              </SheetContent>
-            </Sheet>
+              <Sheet>
+                <SheetTrigger asChild>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    aria-label="열기"
+                    className="rounded-full hover:bg-zinc-900/5 cursor-pointer"
+                  >
+                    <HamburgerIcon className="w-7 h-7" />
+                  </Button>
+                </SheetTrigger>
+
+                <SheetContent
+                  side="right"
+                  className="
+                    !w-[260px] max-w-none p-0 bg-[#FEFBF2]
+                    data-[side=right]:!w-[260px]
+                    sm:!w-[260px]
+                  "
+                >
+                  <SidebarContent
+                    isLoggedIn={isLoggedIn}
+                    nickname={nickname}
+                    onLogout={handleLogout}
+                  />
+                </SheetContent>
+              </Sheet>
+            </div>
           </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* ⭐ 이벤트 모달 */}
+      {eventModalOpen && (
+        <EventModal onClose={() => setEventModalOpen(false)} />
+      )}
+    </>
   );
 }
 
