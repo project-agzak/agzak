@@ -1,0 +1,560 @@
+/* =========================
+   INPUT (픽셀 프레임)
+   ========================= */
+.input-wrap {
+  position: relative;
+  display: inline-block;
+  line-height: 0;
+}
+
+.input-bg {
+  display: block;
+  width: 260px;
+  /* 인풋 가로 */
+  height: auto;
+  /* 세로는 비율대로 */
+  user-select: none;
+  pointer-events: none;
+  /* 클릭은 실제 input이 받도록 */
+}
+
+.input-field {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  box-sizing: border-box;
+
+  text-align: left;
+  padding-left: 20px;
+
+  font-family: 'Galmuri11', 'Galmuri', sans-serif !important;
+  font-weight: 400 !important;
+  font-size: 12px !important;
+  /* xsmall */
+  color: #111;
+}
+
+.input-field::placeholder {
+  font-family: 'Galmuri11', 'Galmuri', sans-serif !important;
+  font-weight: 400 !important;
+  font-size: 12px !important;
+  opacity: 1;
+}
+
+/* =========================
+   BUTTONS (L / M)
+   ========================= */
+.btnL-wrap {
+  position: relative;
+  display: block;
+  width: var(--btn-width, 260px);
+  margin: 0 auto;
+  line-height: 0;
+}
+
+.btnL-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  transition: filter .1s ease;
+  user-select: none;
+  pointer-events: none;
+}
+
+.btnL-wrap.is-pressed .btnL-img {
+  filter: brightness(.85);
+}
+
+.btnL-click {
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+
+  /* ✅ 수정된 부분 */
+  font-family: 'Galmuri-Bold', 'Galmuri', sans-serif;
+  font-weight: 400;
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+
+  color: #fff;
+  font-size: 20px;
+  text-shadow:
+    -1px 0 #121212, 1px 0 #121212, 0 -1px #121212, 0 1px #121212,
+    -1px -1px #121212, 1px -1px #121212, -1px 1px #121212, 1px 1px #121212;
+}
+
+.btnM-wrap {
+  position: relative;
+  display: block;
+  width: var(--btn-width, 130px);
+  margin: 0 auto;
+  line-height: 0;
+}
+
+.btnM-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  transition: filter .1s ease;
+  user-select: none;
+  pointer-events: none;
+}
+
+.btnM-wrap.is-pressed .btnM-img {
+  filter: brightness(.85);
+}
+
+.btnM-click {
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+
+  /* ✅ 수정된 부분 */
+  font-family: 'Galmuri-Bold', 'Galmuri', sans-serif;
+  font-weight: 400;
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+
+  color: #fff;
+  font-size: 20px;
+  text-shadow:
+    -1px 0 #121212, 1px 0 #121212, 0 -1px #121212, 0 1px #121212,
+    -1px -1px #121212, 1px -1px #121212, -1px 1px #121212, 1px 1px #121212;
+}
+
+/* 정렬 헬퍼 */
+.right-align .btnM-wrap {
+  margin-left: auto !important;
+  margin-right: 0 !important;
+}
+
+.right-align .btnM-click {
+  font-size: 14px !important;
+}
+
+/* =========================
+   DROPDOWN (Input.svg 프레임 재사용)
+   ========================= */
+/* 컨테이너: Input과 동일 규칙(가로 고정, 세로 auto) */
+.dropdown-container {
+  position: relative;
+  display: inline-block;
+  width: var(--dropdown-width, 260px);
+  line-height: 0;
+}
+
+/* 프레임 이미지: 비율 유지 */
+.dropdown-bg {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* 중요: auto (contain/fill 금지) */
+  user-select: none;
+  pointer-events: none;
+}
+
+/* 버튼(내용) */
+.dropdown-button {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  /* Input과 비슷한 내부 여백 */
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  color: #121212;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.dropdown-label {
+  line-height: 1;
+}
+
+.dropdown-arrow {
+  width: 24px;
+  height: 24px;
+  user-select: none;
+  transition: transform .1s linear;
+}
+
+.dropdown-arrow.rotated {
+  transform: rotate(180deg);
+}
+
+/* 펼친 리스트: 7행 스크롤(변수 기반) */
+.dropdown-list {
+  position: absolute;
+  left: 0;
+  top: 100%;
+  width: 100%;
+  background: #fff;
+  border: 1px solid #121212;
+  border-radius: 4px;
+  margin-top: 4px;
+  z-index: 10;
+  line-height: 1.4;
+
+  max-height: calc(var(--dropdown-row-height, 36px) * var(--dropdown-max-rows, 7));
+  overflow-y: auto;
+}
+
+.dropdown-item {
+  height: var(--dropdown-row-height, 36px);
+  line-height: var(--dropdown-row-height, 36px);
+  padding: 0 16px;
+  font-size: 14px;
+  cursor: pointer;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.dropdown-item:hover {
+  background: #FFDB7C;
+}
+
+.dropdown-empty {
+  padding: 8px 16px;
+  font-size: 14px;
+  color: #9ca3af;
+  text-align: center;
+  user-select: none;
+}
+
+/* =========================
+   TimeDropDown 전용 (시/분 2칼럼 패널)
+   ========================= */
+
+:root {
+  --td-row-h: 36px;
+  /* 한 행 높이 */
+  --td-max-rows: 5;
+  /* 보이는 행 수 */
+}
+
+.time-panel {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 4px;
+
+  /* 외부 박스는 Input.svg가 담당 → 이건 내부 카드만 */
+  width: var(--dropdown-width, 260px);
+  padding: 10px 14px;
+
+  background-color: #ffffff;
+  border-radius: 5px;
+  border: 1px solid #121212;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
+
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 8px;
+
+  z-index: 999;
+}
+
+/* 🔹 시 / 분 컬럼 */
+.time-col {
+  flex: 1;
+  max-height: 150px;
+  /* 높이 제한 + 스크롤 */
+  overflow-y: auto;
+  padding: 2px 0;
+  text-align: center;
+}
+
+/* 스크롤바 살짝 얇게 */
+
+
+/* 🔹 가운데 콜론 */
+.time-sep {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: #999999;
+  padding: 0 2px;
+}
+
+/*  각각의 시/분 아이템 */
+.time-item {
+  margin: 2px 0;
+  padding: 4px 0;
+  border-radius: 8px;
+  cursor: pointer;
+
+  font-size: 12px;
+  color: #121212;
+
+  transition: background-color 0.15s ease, color 0.15s ease,
+    transform 0.08s ease;
+}
+
+.time-item:hover {
+  background-color: #f2f2f2;
+}
+
+.time-item.is-active {
+  background-color: #FFDB7C;
+  color: #121212;
+  transform: translateY(-1px);
+}
+
+.time-sep {
+  text-align: center;
+  font-weight: 700;
+  color: #999;
+}
+
+/* =========================
+   공통 폰트 적용 (Galmuri11, 12px)
+   ========================= */
+.dropdown-label,
+.input-field,
+.time-item,
+.pixel-text-12 {
+  font-family: 'Galmuri', sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+
+}
+
+/* 전역 유틸은 유지해도 OK. 다만 input 요소 전체에 !important 주는 규칙은 피하세요. */
+/* .dropdown-label, .input-field, .time-item, .pixel-text-12 { ... } ← 이건 유지 가능 */
+
+:root {
+  --field-h: 48px;
+}
+
+/*  입력 전/후(포커스 포함), 오토필 포함해서 사이즈 고정 */
+.birthcity-input {
+  height: var(--field-h) !important;
+  box-sizing: border-box !important;
+
+  /* 세로 위치 미세 보정: 필요시 1~2px만 조절 */
+  padding-top: 16px !important;
+  padding-bottom: 10px !important;
+
+  line-height: 1 !important;
+  font-family: 'Galmuri11', 'Galmuri', sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  color: #121212 !important;
+
+  -webkit-text-size-adjust: 100%;
+}
+
+/* 포커스 시에도 동일하게 고정 */
+.birthcity-input:focus {
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  line-height: 1 !important;
+}
+
+/* placeholder도 동일 톤 */
+.birthcity-input::placeholder {
+  font-family: 'Galmuri11', 'Galmuri', sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  line-height: 1 !important;
+  color: #12121299 !important;
+}
+
+/* 크롬 오토필 케이스(폰트/사이즈 유지) */
+.birthcity-input:-webkit-autofill,
+.birthcity-input:-webkit-autofill:hover,
+.birthcity-input:-webkit-autofill:focus {
+  -webkit-text-size-adjust: 100%;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  font-family: 'Galmuri11', 'Galmuri', sans-serif !important;
+  transition: background-color 9999s ease-out, color 9999s ease-out;
+}
+
+.mid-grid-smart {
+  content-visibility: auto;
+  contain-intrinsic-size: 280px 280px;
+}
+
+/* 회색/검정 전환 */
+.dropdown-label.text-placeholder {
+  color: #777 !important;
+}
+
+.dropdown-label.text-active {
+  color: #121212 !important;
+}
+
+
+.dropdown-container.is-disabled .dropdown-button {
+  pointer-events: none !important;
+}
+
+.pixel-button {
+  font-family: 'Galmuri', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #121212;
+  background: transparent;
+  border: 3px solid #121212;
+  padding: 6px 14px;
+  cursor: pointer;
+  /* 손가락 커서 */
+  user-select: none;
+  image-rendering: pixelated;
+  /* 픽셀 질감 강조 */
+  box-shadow:
+    0 2px 0 #121212,
+    2px 0 0 #121212,
+    -2px 0 0 #121212,
+    0 -2px 0 #121212;
+  transition: all 0.1s ease;
+}
+
+/* 눌림 / 활성화 상태 */
+.pixel-button.is-active {
+  background: #121212;
+  color: #fff;
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 2px 0 #000,
+    inset 2px 0 0 #000,
+    inset -2px 0 0 #000,
+    inset 0 -2px 0 #000;
+}
+
+/* 호버 시 */
+.pixel-button:hover:not(.is-active) {
+  background: #ddd;
+}
+
+/* 🔧 달력 아이콘 겹침 방지 */
+.input-field[type="date"] {
+  padding-right: 28px !important;
+  /* ✅ 아이콘 영역만큼 여백 확보 */
+  box-sizing: border-box;
+}
+
+/* 크롬/사파리용 달력 아이콘 위치 조정 */
+.input-field[type="date"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  right: 25px;
+  /* 픽셀프레임 안쪽으로 살짝 이동 */
+  filter: invert(0.2);
+  /* 어두운 테마 대비용 (필요시 조정) */
+  cursor: pointer;
+  /* 손가락 커서 */
+}
+
+/* 파이어폭스용 (기본적으로 겹치지 않지만 혹시모를 대비) */
+@supports selector(::-moz-focus-inner) {
+  .input-field[type="date"] {
+    padding-right: 24px !important;
+  }
+}
+
+.account-delete-btn {
+
+  background: transparent;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+
+  /* ✅ 버튼 스타일 (Galmuri + 픽셀 테두리 느낌) */
+  font-family: 'Galmuri-Bold', 'Galmuri', sans-serif;
+  font-weight: 400;
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+
+  color: #fff;
+  font-size: 15px;
+  text-shadow:
+    -1px 0 #121212, 1px 0 #121212,
+    0 -1px #121212, 0 1px #121212,
+    -1px -1px #121212, 1px -1px #121212,
+    -1px 1px #121212, 1px 1px #121212;
+
+  transition: transform 0.15s ease;
+}
+
+/* =========================
+   MyPage용 입력 필드 상태 (회색 / 검정)
+   ========================= */
+
+.input-field.input-readonly {
+  color: #888 !important;
+}
+
+.input-field.input-readonly::placeholder {
+  color: #b3b3b3 !important;
+}
+
+.input-field.input-editable {
+  color: #121212 !important;
+}
+
+.pixel-button-light {
+  display: inline-block;
+  padding: 4px 14px;
+  /* ⬅ 가로 여백 증가 */
+  min-width: 64px;
+  /* ⬅ 최소 너비 확보 (줄바꿈 방지) */
+  text-align: center;
+  white-space: nowrap;
+  /* ⬅ 글자 줄바꿈 금지 */
+
+  font-family: "Galmuri9", monospace;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+
+  color: #121212;
+  background-color: #fff8e7;
+
+  border: 2px solid #000;
+  border-radius: 0;
+  box-shadow: 2px 2px 0 #000;
+
+  transition: all 0.1s ease-in-out;
+}
+
+.pixel-button-light:hover {
+  transform: translate(1px, 1px);
+  box-shadow: none;
+  background-color: #f4e9d3;
+}
+
+.pixel-button-light:active {
+  background-color: #e9dfc5;
+}

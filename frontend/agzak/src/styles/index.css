@@ -1,0 +1,245 @@
+@import "tailwindcss";
+@import "./fonts.css";
+
+/* 레이아웃 토큰 */
+:root {
+  --app-width: 360px;
+  --bg-pattern: url("@/assets/Background/fortune-tile.png");
+  --fz-caption: 9pt;
+  --fz-xsmall: 10pt;
+  --fz-small: 12pt;
+  --fz-medium: 16pt;
+  --fz-large: 24pt;
+  --fz-xlarge: 36pt;
+  --lh-tight: 1.4;
+  /* 줄간격 기본값 */
+}
+
+/* 바디: 데스크톱에서 전체 패턴 */
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply text-gray-900;
+  overflow-y: auto;
+  image-rendering: pixelated;
+  -ms-overflow-style: none;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
+/* 앱 프레임: 360 고정 + 가운데 정렬 */
+.app-shell {
+  @apply relative;
+  min-height: 100svh;
+  width: 100vw;
+  /* 화면 가로 꽉 채우기 */
+  max-width: 100vw;
+  margin: 0;
+  /* 가운데 정렬 제거(풀블리드) */
+  background-color: #FEFBF2;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  box-shadow: none;
+  /* 모바일에서 테두리/그림자 제거 */
+  border-radius: 0;
+}
+
+.app-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -10;
+  background-image: var(--bg-pattern);
+  background-repeat: repeat;
+  background-size: 512px 512px;
+  image-rendering: pixelated;
+}
+
+/* .app-content {
+  height: 100svh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+} */
+
+/* === md 이상(태블릿/데스크톱) : 패턴 + 360px 프레임 === */
+@media (min-width: 768px) {
+  body {
+    background-image: var(--bg-pattern);
+    background-repeat: repeat;
+    background-size: 512px 512px;
+  }
+
+  .app-shell {
+    width: var(--app-width);
+    /* 360px 프레임 복구 */
+    max-width: none;
+    margin-left: auto;
+    margin-right: auto;
+    /* 가운데 정렬 */
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, .04), 0 10px 30px rgba(0, 0, 0, .08);
+    border-radius: 16px;
+  }
+}
+
+/* PWA 배지 위치 */
+.pwa-badge-wrap {
+  @apply fixed left-1/2 -translate-x-1/2 bottom-4 z-50;
+  width: var(--app-width);
+  max-width: calc(100vw - 32px);
+}
+
+@theme {
+  --font-galmuri: "Galmuri", system-ui, sans-serif;
+  --font-bitbit: "DNF", system-ui, sans-serif;
+  --font-galmuri-condensed: "Galmuri-Condensed", "Galmuri", system-ui, sans-serif;
+
+  /* 애니메이션 keyframes */
+  --animate-shake: shake 0.4s ease-in-out;
+}
+
+/* shake 애니메이션 keyframes 정의 */
+@keyframes shake {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  20% {
+    transform: translateX(-5px);
+  }
+
+  40% {
+    transform: translateX(5px);
+  }
+
+  60% {
+    transform: translateX(-3px);
+  }
+
+  80% {
+    transform: translateX(3px);
+  }
+}
+
+@layer utilities {
+  .pixelated {
+    image-rendering: pixelated;
+  }
+
+  /* shake 애니메이션 클래스 */
+  .animate-shake {
+    animation: shake 0.4s ease-in-out;
+  }
+}
+
+/* ===== Galmuri (5종) ===== */
+.font-galmuri-caption {
+  font-family: var(--font-galmuri);
+  font-size: var(--fz-caption);
+  line-height: var(--lh-tight);
+}
+
+.font-galmuri-xsmall {
+  font-family: var(--font-galmuri);
+  font-size: var(--fz-xsmall);
+  line-height: var(--lh-tight);
+}
+
+.font-galmuri-small {
+  font-family: var(--font-galmuri);
+  font-size: var(--fz-small);
+  line-height: var(--lh-tight);
+}
+
+.font-galmuri {
+  font-family: var(--font-galmuri);
+  font-size: var(--fz-medium);
+  line-height: var(--lh-tight);
+}
+
+.font-galmuri-large {
+  font-family: var(--font-galmuri);
+  font-size: var(--fz-large);
+  line-height: var(--lh-tight);
+}
+
+.font-galmuri-xlarge {
+  font-family: var(--font-galmuri);
+  font-size: var(--fz-xlarge);
+  line-height: var(--lh-tight);
+}
+
+/* ===== BitBit (5종) ===== */
+.font-bitbit-xsmall {
+  font-family: var(--font-bitbit);
+  font-size: var(--fz-xsmall);
+  line-height: var(--lh-tight);
+}
+
+.font-bitbit-small {
+  font-family: var(--font-bitbit);
+  font-size: var(--fz-small);
+  line-height: var(--lh-tight);
+}
+
+.font-bitbit {
+  font-family: var(--font-bitbit);
+  font-size: var(--fz-medium);
+  line-height: var(--lh-tight);
+}
+
+.font-bitbit-large {
+  font-family: var(--font-bitbit);
+  font-size: var(--fz-large);
+  line-height: var(--lh-tight);
+}
+
+.font-bitbit-xlarge {
+  font-family: var(--font-bitbit);
+  font-size: var(--fz-xlarge);
+  line-height: var(--lh-tight);
+}
+
+.font-galmuri-condensed-xsmall {
+  font-family: var(--font-galmuri-condensed);
+  font-size: var(--fz-xsmall);
+  line-height: var(--lh-tight);
+}
+
+.font-galmuri-condensed-small {
+  font-family: var(--font-galmuri-condensed);
+  font-size: var(--fz-small);
+  line-height: var(--lh-tight);
+}
+
+.font-galmuri-condensed {
+  font-family: var(--font-galmuri-condensed);
+  font-size: var(--fz-medium);
+  line-height: var(--lh-tight);
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, .2);
+  border-radius: 9999px;
+}
+
+.font-galmuri-caption-force {
+  font-family: var(--font-galmuri);
+  font-size: var(--fz-caption) !important;
+  line-height: var(--lh-tight);
+}

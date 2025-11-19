@@ -1,0 +1,280 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { cookiesAPI, type CookieDetail } from "@/lib/cookiesAPI";
+import { create } from "zustand";
+
+export type CookieData = {
+  id: string;
+  imgSrc: string;
+  detail: {
+    title: string;
+    effects: { label: string; value: number }[];
+  };
+  createdAt: number;
+  name: string;
+  code: string;
+  rarityCode: string;
+};
+
+import AchievementCookie from "@/assets/Cookies/achievement-cookie.webp";
+import DeveloperCookie from "@/assets/Cookies/developer-cookie.webp";
+import GloomyCookie from "@/assets/Cookies/gloomy-cookie.webp";
+import HealthCookie from "@/assets/Cookies/health-cookie.webp";
+import LavaCookie from "@/assets/Cookies/lava-cookie.webp";
+import LoveCookie from "@/assets/Cookies/love-cookie.webp";
+import MixedCookie from "@/assets/Cookies/mixed-cookie.webp";
+import MoneyCookie from "@/assets/Cookies/money-cookie.webp";
+import RottenCookie from "@/assets/Cookies/rotten-cookie.webp";
+import SansamCookie from "@/assets/Cookies/sansam-cookie.webp";
+import SantaCookie from "@/assets/Cookies/santa-cookie.webp";
+import UnicornCookie from "@/assets/Cookies/unicorn-cookie.webp";
+import LuckyCookie from "@/assets/Cookies/lucky-cookie.webp";
+
+const typeToMeta = (t: string) => {
+  const key = t.toUpperCase();
+  switch (key) {
+    case "HEALTH":
+      return { title: "건강쿠키", img: HealthCookie };
+    case "ACHIEVEMENT":
+      return { title: "성취쿠키", img: AchievementCookie };
+    case "LOVE":
+      return { title: "애정쿠키", img: LoveCookie };
+    case "MONEY":
+      return { title: "금전쿠키", img: MoneyCookie };
+    case "MIXED":
+      return { title: "믹스쿠키", img: MixedCookie };
+    case "ROTTEN":
+      return { title: "썩은쿠키", img: RottenCookie };
+    case "GLOOMY":
+      return { title: "먹구름쿠키", img: GloomyCookie };
+    case "SANSAM":
+      return { title: "산삼쿠키", img: SansamCookie };
+    case "DEVELOPER":
+      return { title: "개발자쿠키", img: DeveloperCookie };
+    case "LAVA":
+      return { title: "용암쿠키", img: LavaCookie };
+    case "SANTA":
+      return { title: "산타쿠키", img: SantaCookie };
+    case "UNICORN":
+      return { title: "유니콘쿠키", img: UnicornCookie };
+    case "LUCKY":
+      return { title: "럭키쿠키", img: LuckyCookie };
+    default:
+      return { title: t, img: MixedCookie };
+  }
+};
+
+const mapRaw = (r: CookieDetail): CookieData => {
+  const meta = typeToMeta(r.code);
+  const effects = [
+    { label: "건강운", value: r.health },
+    { label: "성취운", value: r.achievement },
+    { label: "애정운", value: r.love },
+    { label: "금전운", value: r.money },
+  ].filter(e => e.value !== 0); // 0은 표시 생략(MVP)
+  return {
+    id: String(r.fortuneCookieId),
+    imgSrc: meta.img,
+    detail: { title: meta.title, effects },
+    createdAt: Date.parse(r.createdAt),
+    name: r.name,
+    code: r.code,
+    rarityCode: r.rarityCode,
+
+  };
+};
+
+type State = {
+  // 목록 + 공통 상태
+  items: CookieData[];
+  loading: boolean;
+  error: string | null;
+
+  // 선택/상세 상태
+  selectedId: string | null;
+  loadingDetailId: string | null;
+  cache: Record<string, CookieDetail | null>; // id → 원본 DTO 캐시
+
+  // 목록
+  fetchCookies: (sortType?: "recent" | "score" | "category") => Promise<void>;
+
+  // 상세
+  fetchCookieDetail: (id: string, force?: boolean) => Promise<CookieData | null>;
+  select: (id: string | null) => void;         // 선택만
+  open: (id: string) => Promise<void>;         // 선택 + 상세 필요 시 로드
+  reset: () => void;
+
+  // 삭제
+  deletingId: string | null;
+  deleteCookie: (id: string) => Promise<void>;
+
+  // 쿠키 먹기 
+  eatingId: string | null;
+  eatCookie: (id: string) => Promise<void>;
+};
+
+export const useCookiesStore = create<State>((set, get) => ({
+  items: [],
+  loading: false,
+  error: null,
+
+  selectedId: null,
+  loadingDetailId: null,
+  cache: {},
+
+  deletingId: null,
+
+  eatingId: null,
+
+  // 목록 조회
+  fetchCookies: async (sortType = "recent") => {
+    try {
+      set({ loading: true, error: null });
+      const { data } = await cookiesAPI.list(sortType); // axios 스타일 가정
+      const items = (data ?? []).map(mapRaw);
+      set({ items, loading: false, error: null });
+    } catch (e: any) {
+      const msg =
+        e?.response?.data?.message || e?.message || "쿠키 목록 조회 실패";
+      set({ loading: false, error: msg });
+    }
+  },
+
+  // 상세 조회 (캐시 우선)
+  fetchCookieDetail: async (id, force = false) => {
+    const { cache, items } = get();
+
+    // 캐시가 있으면(성공 or 실패) 우선 판단
+    if (!force && Object.prototype.hasOwnProperty.call(cache, id)) {
+      const cached = cache[id];
+      if (!cached) return null; // 이전 실패 캐시
+      // 성공 캐시 → items에 반영 보장
+      const mapped = mapRaw(cached);
+      // 목록에 있으면 업데이트, 없으면 추가
+      const idx = items.findIndex((c) => c.id === id);
+      if (idx >= 0) {
+        const next = items.slice();
+        next[idx] = { ...next[idx], ...mapped };
+        set({ items: next });
+      } else {
+        set({ items: [mapped, ...items] });
+      }
+      return mapped;
+    }
+
+    try {
+      set({ loadingDetailId: id, error: null });
+      const { data } = await cookiesAPI.getById(Number(id));
+      // 성공 응답 캐시
+      set((s) => ({ cache: { ...s.cache, [id]: data ?? null } }));
+
+      if (!data) {
+        set({ loadingDetailId: null });
+        return null;
+      }
+
+      const mapped = mapRaw(data);
+
+      // 목록에 반영(있으면 교체, 없으면 prepend)
+      const idx = get().items.findIndex((c) => c.id === id);
+      if (idx >= 0) {
+        const next = get().items.slice();
+        next[idx] = { ...next[idx], ...mapped };
+        set({ items: next, loadingDetailId: null });
+      } else {
+        set({ items: [mapped, ...get().items], loadingDetailId: null });
+      }
+      return mapped;
+    } catch (e: any) {
+      const msg =
+        e?.response?.data?.message || e?.message || "쿠키 상세 조회 실패";
+      // 실패도 캐시에 남겨 중복 호출 방지(원하면 제거)
+      set((s) => ({
+        cache: { ...s.cache, [id]: null },
+        loadingDetailId: null,
+        error: msg,
+      }));
+      return null;
+    }
+  },
+
+  // 선택만 변경
+  select: (id) => set({ selectedId: id }),
+
+  // 선택 + 상세 없으면 로드
+  open: async (id) => {
+    set({ selectedId: id });
+    const hasCache = Object.prototype.hasOwnProperty.call(get().cache, id);
+    if (!hasCache) {
+      await get().fetchCookieDetail(id);
+    }
+  },
+
+  reset: () =>
+    set({
+      items: [],
+      loading: false,
+      error: null,
+      selectedId: null,
+      loadingDetailId: null,
+      cache: {},
+    }),
+
+  // 삭제 액션
+  async deleteCookie(id: string) {
+    const prev = get().items;
+    // 목록에서 먼저 제거
+    const next = prev.filter((c) => c.id !== id);
+    set({ deletingId: id, items: next, error: null });
+
+    // 선택 중이던 항목이면 선택 해제
+    if (get().selectedId === id) {
+      set({ selectedId: null });
+    }
+
+    try {
+      await cookiesAPI.remove(Number(id));
+      // 성공
+    } catch (e: any) {
+      // 실패: 롤백
+      set({
+        items: prev,
+        error:
+          e?.response?.status === 400
+            ? "삭제할 수 없는 쿠키입니다(이미 사용되었거나 잘못된 ID)."
+            : e?.message ?? "쿠키 삭제 중 오류가 발생했습니다.",
+      });
+    } finally {
+      set({ deletingId: null });
+    }
+  },
+
+  eatCookie: async (id) => {
+    if (!id) return;
+
+    const state = get();
+    const target = state.items.find((c) => c.id === id);
+    if (target?.code === "LUCKY") {
+      set({
+        error: "럭키 쿠키는 사용할 수 없는 기념 쿠키예요!",
+      });
+      return;
+    }
+
+    try {
+      set({ eatingId: id, error: null });
+      await cookiesAPI.useCookie(Number(id));
+
+      // 성공 시: 목록/캐시/선택 정리
+      set((s) => {
+        const nextItems = s.items.filter((c) => c.id !== id);
+        const nextCache = { ...s.cache };
+        delete nextCache[id];
+        const nextSelected = s.selectedId === id ? null : s.selectedId;
+        return { items: nextItems, cache: nextCache, selectedId: nextSelected, eatingId: null };
+      });
+    } catch (e: any) {
+      const msg = e?.response?.data?.message || e?.message || "쿠키 사용에 실패했습니다.";
+      set({ eatingId: null, error: msg });
+    }
+  },
+}));

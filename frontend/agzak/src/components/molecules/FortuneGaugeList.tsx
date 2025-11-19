@@ -1,0 +1,57 @@
+// @/components/molecules/FortuneGaugeList.tsx
+'use client';
+
+import type { FortuneGaugeColor } from '@/adapters/fortuneAdapter';
+import { COLOR_MAP } from '@/adapters/fortuneAdapter';
+import { FortuneGauge } from '@/components/atoms/FortuneGauge';
+
+export type FortuneStat = {
+  label: string;
+  value: number;
+  color?: FortuneGaugeColor;
+};
+
+export function FortuneGaugeList({
+  stats = [],
+  max = 250,
+  labelClassName,
+  dense = false,
+}: {
+  stats?: FortuneStat[];
+  max?: number;
+  labelClassName?: string;
+  dense?: boolean;
+}) {
+  return (
+    <div
+      className={`w-full font-galmuri-xsmall ${
+        dense ? 'space-y-1' : 'space-y-2' // ⬅ 촘촘 모드일 땐 간격 줄이기
+      }`}
+    >
+      {stats.length === 0 ? (
+        // 데이터가 비어있을 때 레이아웃 깨지지 않도록 0값 4개 출력
+        <>
+          <FortuneGauge label="건강운" value={0} color="green" labelClassName={labelClassName} />
+          <FortuneGauge label="성취운" value={0} color="blue" labelClassName={labelClassName} />
+          <FortuneGauge label="애정운" value={0} color="pink" labelClassName={labelClassName} />
+          <FortuneGauge label="금전운" value={0} color="yellow" labelClassName={labelClassName} />
+        </>
+      ) : (
+        stats.map(({ label, value, color }) => {
+          // 0 ~ max 범위로 안전 클램프
+          const safe = Math.max(0, Math.min(max, value ?? 0));
+          const c: FortuneGaugeColor = color ?? COLOR_MAP[label] ?? 'green';
+          return (
+            <FortuneGauge
+              key={label}
+              label={label}
+              value={safe}
+              color={c}
+              labelClassName={labelClassName}
+            />
+          );
+        })
+      )}
+    </div>
+  );
+}
