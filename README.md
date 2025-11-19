@@ -153,7 +153,7 @@
 
 <div style="display: flex; justify-content: center; gap: 10px;">
   <img src="exec/images/6.월별 운세 조회 (캘린더+그래프)-1.png" width="160">
-  <img src="exec/images/6.월별 운세 조회 (캘린더+그래프)-2.png" width="160">
+  <img src="exec/images/6.월별 운세 조회 (캘린더+그래프)-2.png.png" width="160">
 </div>
 
 ---
