@@ -1,11 +1,11 @@
-import * as React from "react";
-import "@/styles/components.css"; // ✅ 전역 경로 설정된 경우
+import * as React from 'react';
+import '@/styles/components.css'; // ✅ 전역 경로 설정된 경우
 
 export function Input({
-  placeholder = "텍스트를 입력하세요",
+  placeholder = '텍스트를 입력하세요',
   ...props
 }: React.InputHTMLAttributes<HTMLInputElement>) {
-  const SRC = "/images/Input.svg";
+  const SRC = '/images/Input.svg';
 
   return (
     <div className="input-wrap">
@@ -16,7 +16,7 @@ export function Input({
         placeholder={placeholder}
         {...props}
         className="input-field font-galmuri"
-         style={{ fontWeight: 600 }}
+        style={{ fontWeight: 600 }}
       />
     </div>
   );

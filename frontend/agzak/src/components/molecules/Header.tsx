@@ -1,25 +1,21 @@
 // src/components/molecules/Header.tsx
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { api } from "@/lib/api";
-import { useAuthStore, type Member } from "@/store/useAuthStore";
-import { useSessionQuotaStore } from "@/store/sessionQuotaStore";
-import { Button_M } from "@/components/atoms/Button_M";
-import { Button } from "@/components/ui/button";
-import { useCookiesStore } from "@/store/useCookiesStore";
-import { NotificationList } from "@/components/molecules/NotificationList";
-import { NotificationModal } from "@/components/atoms/NotificationModal"; // 이미 있으니까 있으면 유지
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { api } from '@/lib/api';
+import { useAuthStore, type Member } from '@/store/useAuthStore';
+import { useSessionQuotaStore } from '@/store/sessionQuotaStore';
+import { Button_M } from '@/components/atoms/Button_M';
+import { Button } from '@/components/ui/button';
+import { useCookiesStore } from '@/store/useCookiesStore';
+import { NotificationList } from '@/components/molecules/NotificationList';
+import { NotificationModal } from '@/components/atoms/NotificationModal'; // 이미 있으니까 있으면 유지
 
-import { useAlarmStore } from "@/store/useAlarmStore";
+import { useAlarmStore } from '@/store/useAlarmStore';
 
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetClose, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
-export function BellIcon({ className = "w-6 h-6" }: { className?: string }) {
+export function BellIcon({ className = 'w-6 h-6' }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -39,7 +35,6 @@ export function BellIcon({ className = "w-6 h-6" }: { className?: string }) {
 }
 
 export default function Header() {
-
   // 전역 인증 상태
   const { isLoggedIn, member, setMember, logout } = useAuthStore();
 
@@ -47,30 +42,28 @@ export default function Header() {
   const { notifications, fetchNotifications, reset } = useAlarmStore();
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
-
-   // 🔥 알림 시트 open 상태 + 쿠키페이지 리로드 플래그
+  // 🔥 알림 시트 open 상태 + 쿠키페이지 리로드 플래그
   const [notifyOpen, setNotifyOpen] = useState(false);
   const [shouldReloadAfterClose, setShouldReloadAfterClose] = useState(false);
 
+  useEffect(() => {
+    const fetchMember = async () => {
+      if (!isLoggedIn || member) return;
 
-useEffect(() => {
-  const fetchMember = async () => {
-    if (!isLoggedIn || member) return;
+      const res = await api.get<Member>('/members'); // ⬅ 전체 Member 타입으로 받기
 
-    const res = await api.get<Member>("/members"); // ⬅ 전체 Member 타입으로 받기
+      if (!res.ok || !res.data) {
+        //console.error("회원 정보 불러오기 실패:", res.error);
+        return;
+      }
 
-    if (!res.ok || !res.data) {
-      //console.error("회원 정보 불러오기 실패:", res.error);
-      return;
-    }
+      const data = res.data;
+      //console.log("Header - 회원 정보 불러오기 성공:", data); // 여기 birthTime 나와야 함
+      setMember(data); // ⬅ 이제 birthTime까지 포함된 객체가 store에 저장됨
+    };
 
-    const data = res.data;
-    //console.log("Header - 회원 정보 불러오기 성공:", data); // 여기 birthTime 나와야 함
-    setMember(data); // ⬅ 이제 birthTime까지 포함된 객체가 store에 저장됨
-  };
-
-  fetchMember();
-}, [isLoggedIn, member, setMember]);
+    fetchMember();
+  }, [isLoggedIn, member, setMember]);
   // ✅ 헤더에서 알림 목록 동기화
   useEffect(() => {
     if (!isLoggedIn) {
@@ -86,11 +79,11 @@ useEffect(() => {
   // 로그아웃 처리
   const handleLogout = async () => {
     if (!isLoggedIn) {
-      alert("이미 로그아웃 상태입니다.");
+      alert('이미 로그아웃 상태입니다.');
       return;
     }
 
-    const res = await api.post<null>("/auth/logout");
+    const res = await api.post<null>('/auth/logout');
 
     if (!res.ok) {
       //console.error("로그아웃 요청 실패:", res.error);
@@ -102,11 +95,11 @@ useEffect(() => {
     // 전역 인증 상태 및 토큰 정리
     logout();
 
-    alert("로그아웃 되었습니다.");
-    window.location.replace("/home");
+    alert('로그아웃 되었습니다.');
+    window.location.replace('/home');
   };
 
-  const nickname = member?.nickname ?? "";
+  const nickname = member?.nickname ?? '';
 
   return (
     <header className="fixed inset-x-0 top-0 z-50">
@@ -123,11 +116,11 @@ useEffect(() => {
           <div className="ml-auto">
             {/* 🔔 알림 사이드바 */}
             <Sheet
-               open={notifyOpen}
+              open={notifyOpen}
               onOpenChange={(open) => {
                 // 닫히는 순간 + 플래그 true + /cookies 에 있을 때만 reload
                 if (!open && shouldReloadAfterClose) {
-                  if (window.location.pathname.startsWith("/cookies")) {
+                  if (window.location.pathname.startsWith('/cookies')) {
                     window.location.reload();
                   }
                   setShouldReloadAfterClose(false);
@@ -141,9 +134,9 @@ useEffect(() => {
                   aria-label="알림"
                 >
                   <BellIcon className="w-5 h-5" />
-{unreadCount > 0 && (
-  <span className="absolute top-1 right-1 block w-2 h-2 bg-red-500 rounded-full" />
-)}
+                  {unreadCount > 0 && (
+                    <span className="absolute top-1 right-1 block w-2 h-2 bg-red-500 rounded-full" />
+                  )}
                 </button>
               </SheetTrigger>
 
@@ -155,16 +148,13 @@ useEffect(() => {
                   sm:!w-[260px]
                 "
               >
-                   {/* 🔥 선물 수락 후 reload 플래그만 세팅 */}
-                <NotificationSidebar
-                  onGiftAccepted={() => setShouldReloadAfterClose(true)}
-                />
+                {/* 🔥 선물 수락 후 reload 플래그만 세팅 */}
+                <NotificationSidebar onGiftAccepted={() => setShouldReloadAfterClose(true)} />
               </SheetContent>
             </Sheet>
- 
- <Sheet>
+
+            <Sheet>
               <SheetTrigger asChild>
-                
                 <Button
                   size="icon"
                   variant="ghost"
@@ -198,7 +188,7 @@ useEffect(() => {
 }
 
 /** 3줄 햄버거 아이콘 */
-function HamburgerIcon({ className = "w-6 h-6" }: { className?: string }) {
+function HamburgerIcon({ className = 'w-6 h-6' }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -227,16 +217,16 @@ function SidebarContent({ isLoggedIn, onLogout }: SidebarContentProps) {
 
   const handleFortuneClick = () => {
     if (isLoggedIn) {
-      navigate("/fortune/result"); // ✅ 로그인 시 바로 결과 페이지로 이동
+      navigate('/fortune/result'); // ✅ 로그인 시 바로 결과 페이지로 이동
     } else {
-      navigate("/fortune"); // ✅ 비로그인 시 기존 폼 페이지
+      navigate('/fortune'); // ✅ 비로그인 시 기존 폼 페이지
     }
   };
 
   // 강화 버튼 비활성화
   const { quota, refresh } = useSessionQuotaStore();
   const remainingSessions = quota?.remaining ?? 0;
-  const canEnforce = remainingSessions > 0; 
+  const canEnforce = remainingSessions > 0;
 
   useEffect(() => {
     refresh(); // 홈과 동일하게 진입 시 최신화
@@ -264,22 +254,21 @@ function SidebarContent({ isLoggedIn, onLogout }: SidebarContentProps) {
     if (!evt) return;
 
     await evt.prompt();
-    try { await evt.userChoice; } catch {}
+    try {
+      await evt.userChoice;
+    } catch {
+      /* empty */
+    }
     (window as any).__pwaDeferredPrompt = null;
     window.dispatchEvent(new CustomEvent('pwa:consumed'));
     setDeferred(null);
   };
 
-
   return (
     <div className="h-full flex flex-col">
       {/* 로고 */}
       <div className="px-5 py-3 flex items-center gap-2">
-        <img
-          src="/agzak-logo.svg"
-          alt="Agzak Logo"
-          className="h-10 object-contain"
-        />
+        <img src="/agzak-logo.svg" alt="Agzak Logo" className="h-10 object-contain" />
       </div>
 
       {/* 로그인 / 회원가입 or 로그아웃 + 환영 문구 */}
@@ -293,7 +282,13 @@ function SidebarContent({ isLoggedIn, onLogout }: SidebarContentProps) {
             </SheetClose>
             <SheetClose asChild>
               <div>
-                <Button_M label="운세 강화" width={170} onClick={() => canEnforce && navigate("/enforce")} disabled={!canEnforce} className="disabled:opacity-40 cursor-not-allowed" />
+                <Button_M
+                  label="운세 강화"
+                  width={170}
+                  onClick={() => canEnforce && navigate('/enforce')}
+                  disabled={!canEnforce}
+                  className="disabled:opacity-40 cursor-not-allowed"
+                />
               </div>
             </SheetClose>
           </>
@@ -315,7 +310,7 @@ function SidebarContent({ isLoggedIn, onLogout }: SidebarContentProps) {
       </div>
 
       {/* 메뉴 */}
-       {/*  운세 보기 수정됨 */}
+      {/*  운세 보기 수정됨 */}
       <nav className="ml-10 font-bitbit flex-1 flex flex-col">
         <SheetClose asChild>
           <button
@@ -385,30 +380,16 @@ function SidebarContent({ isLoggedIn, onLogout }: SidebarContentProps) {
       </nav>
 
       {/* 하단 버전 표시 */}
-      <div className="mt-auto px-4 py-3 text-xs text-zinc-500">
-        @ agzak v1.0.0
-      </div>
+      <div className="mt-auto px-4 py-3 text-xs text-zinc-500">@ agzak v1.0.0</div>
     </div>
   );
 }
 
-
-
-
-
-function NotificationSidebar({
-  onGiftAccepted,
-}: {
-  onGiftAccepted?: () => void;
-}) {
+function NotificationSidebar({ onGiftAccepted }: { onGiftAccepted?: () => void }) {
   const [deferred, setDeferred] = useState<any>(null);
   const { isLoggedIn } = useAuthStore();
- 
 
-
-
- 
-   // ✅ [추가] 알림 스토어 사용
+  // ✅ [추가] 알림 스토어 사용
   const {
     notifications,
     loadingList,
@@ -422,7 +403,7 @@ function NotificationSidebar({
     reset,
   } = useAlarmStore();
 
-    const fetchCookies = useCookiesStore((s) => s.fetchCookies);
+  const fetchCookies = useCookiesStore((s) => s.fetchCookies);
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -430,9 +411,8 @@ function NotificationSidebar({
       return;
     }
     fetchNotifications();
-      fetchCookies("recent");
-
-  }, [isLoggedIn, fetchNotifications, fetchCookies,reset]);
+    fetchCookies('recent');
+  }, [isLoggedIn, fetchNotifications, fetchCookies, reset]);
 
   // PWA 설치 이벤트 구독 (햄버거 사이드바와 동일)
   useEffect(() => {
@@ -441,12 +421,12 @@ function NotificationSidebar({
     const onDeferred = (e: any) => setDeferred(e.detail ?? null);
     const onConsumed = () => setDeferred(null);
 
-    window.addEventListener("pwa:beforeinstallprompt", onDeferred as any);
-    window.addEventListener("pwa:consumed", onConsumed);
+    window.addEventListener('pwa:beforeinstallprompt', onDeferred as any);
+    window.addEventListener('pwa:consumed', onConsumed);
 
     return () => {
-      window.removeEventListener("pwa:beforeinstallprompt", onDeferred as any);
-      window.removeEventListener("pwa:consumed", onConsumed);
+      window.removeEventListener('pwa:beforeinstallprompt', onDeferred as any);
+      window.removeEventListener('pwa:consumed', onConsumed);
     };
   }, []);
 
@@ -457,53 +437,47 @@ function NotificationSidebar({
     await evt.prompt();
     try {
       await evt.userChoice;
-    } catch {}
+    } catch {
+      /* empty */
+    }
     (window as any).__pwaDeferredPrompt = null;
-    window.dispatchEvent(new CustomEvent("pwa:consumed"));
+    window.dispatchEvent(new CustomEvent('pwa:consumed'));
     setDeferred(null);
   };
   // ✅ [변경] 선물 쿠키 확인 버튼 핸들러 (스토어 액션 호출)
-const handleGiftConfirm = async () => {
-  // ✅ 인벤토리 체크 + 서버 호출 여부는 스토어에서 알아서 처리
-  const result = await acceptSelectedGift();
+  const handleGiftConfirm = async () => {
+    // ✅ 인벤토리 체크 + 서버 호출 여부는 스토어에서 알아서 처리
+    const result = await acceptSelectedGift();
 
-  if (result === "NO_SELECTION") {
-    return;
-  }
+    if (result === 'NO_SELECTION') {
+      return;
+    }
 
-  if (result === "FULL") {
-    alert("인벤토리가 꽉 찼습니다. 삭제 후 다시 확인해 주세요.");
-    return;
-  }
+    if (result === 'FULL') {
+      alert('인벤토리가 꽉 찼습니다. 삭제 후 다시 확인해 주세요.');
+      return;
+    }
 
-  if (result === "ERROR") {
-    alert("선물을 수락하는 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.");
-    return;
-  }
+    if (result === 'ERROR') {
+      alert('선물을 수락하는 중 오류가 발생했어요. 잠시 후 다시 시도해 주세요.');
+      return;
+    }
 
-  // OK
-  alert("선물 받은 쿠키가 인벤토리에 담겼어요!");
-   // 🔥 현재 URL이 /cookies 또는 /cookies?xxx 일 때만 reload
-  onGiftAccepted?.();
-};
+    // OK
+    alert('선물 받은 쿠키가 인벤토리에 담겼어요!');
+    // 🔥 현재 URL이 /cookies 또는 /cookies?xxx 일 때만 reload
+    onGiftAccepted?.();
+  };
   return (
     <div className="h-full flex flex-col">
       {/* 로고 */}
       <div className="px-5 py-3 flex items-center gap-2">
-        <img
-          src="/agzak-logo.svg"
-          alt="Agzak Logo"
-          className="h-10 object-contain"
-        />
+        <img src="/agzak-logo.svg" alt="Agzak Logo" className="h-10 object-contain" />
       </div>
-
-    
 
       {/* 알림 헤더 */}
       <div className="px-5 py-3 flex items-center gap-2 border-t border-zinc-200">
-        <span className="font-bitbit text-[#121212]">
-          알림
-        </span>
+        <span className="font-bitbit text-[#121212]">알림</span>
       </div>
       {/* 🔽 알림 리스트 영역 (로그인 여부 + 실제 API 데이터 사용) */}
       <NotificationList
@@ -514,7 +488,6 @@ const handleGiftConfirm = async () => {
         onClickItem={openNotification}
       />
 
-      
       {/* 🔼 여기까지 리스트 + 토글 */}
 
       {/* 하단 버튼 + 버전 (햄버거 사이드바와 동일 구조) */}
@@ -542,10 +515,8 @@ const handleGiftConfirm = async () => {
       </nav>
 
       {/* 하단 버전 표시 */}
-      <div className="mt-auto px-4 py-3 text-xs text-zinc-500">
-        @ agzak v1.0.0
-      </div>
-         {/* 🔽 알림 상세 모달 (선물/일반 분기) */}
+      <div className="mt-auto px-4 py-3 text-xs text-zinc-500">@ agzak v1.0.0</div>
+      {/* 🔽 알림 상세 모달 (선물/일반 분기) */}
       {selectedNotification && (
         <NotificationModal
           notification={selectedNotification}
@@ -555,7 +526,6 @@ const handleGiftConfirm = async () => {
         />
       )}
       {/* 🔼 모달 끝 */}
- 
     </div>
   );
 }

@@ -1,71 +1,85 @@
 // src/components/atoms/GiftRecipient.tsx
-"use client"
+'use client';
 
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/Command"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/Popover"
-import * as React from "react"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from '@/components/ui/Command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/Popover';
+import * as React from 'react';
 
-type UserOption = { id: number; nickname: string }
+type UserOption = { id: number; nickname: string };
 
 type Props = {
   /** 검색 함수(닉네임 쿼리 → 후보들) */
-  searchUsers: (q: string) => Promise<UserOption[]>
+  searchUsers: (q: string) => Promise<UserOption[]>;
   /** 선택 결과를 상위로 */
-  onChange: (v: { userId?: number; nickname?: string }) => void
-  value?: { userId?: number; nickname?: string }
-  placeholder?: string
-}
+  onChange: (v: { userId?: number; nickname?: string }) => void;
+  value?: { userId?: number; nickname?: string };
+  placeholder?: string;
+};
 
-export function GiftRecipient({ searchUsers, onChange, value, placeholder = "받는 이를 검색하세요" }: Props) {
-  const [open, setOpen] = React.useState(false)
-  const [query, setQuery] = React.useState("")
-  const [items, setItems] = React.useState<UserOption[]>([])
-  const [loading, setLoading] = React.useState(false)
+export function GiftRecipient({
+  searchUsers,
+  onChange,
+  value,
+  placeholder = '받는 이를 검색하세요',
+}: Props) {
+  const [open, setOpen] = React.useState(false);
+  const [query, setQuery] = React.useState('');
+  const [items, setItems] = React.useState<UserOption[]>([]);
+  const [loading, setLoading] = React.useState(false);
 
-  //마지막으로 api호출한 query를 기억 
-   const lastFetchedRef = React.useRef<string | null>(null)
+  //마지막으로 api호출한 query를 기억
+  const lastFetchedRef = React.useRef<string | null>(null);
   // 디바운스 검색
   React.useEffect(() => {
-    const trimmed = query.trim()
+    const trimmed = query.trim();
 
     // 입력이 없으면: 목록 초기화 + 상태 리셋
     if (!trimmed) {
-      setItems([])
-      setLoading(false)
-      lastFetchedRef.current = null
-      return
+      setItems([]);
+      setLoading(false);
+      lastFetchedRef.current = null;
+      return;
     }
 
     // 🔒 같은 query로 이미 호출했으면 더 이상 호출 X
     if (lastFetchedRef.current === trimmed) {
-      return
+      return;
     }
 
     const t = setTimeout(async () => {
-      setLoading(true)
+      setLoading(true);
       try {
-        const r = await searchUsers(trimmed)
-        setItems(r ?? [])
+        const r = await searchUsers(trimmed);
+        setItems(r ?? []);
         // ✅ 이 query로는 호출 완료했다고 기록
-        lastFetchedRef.current = trimmed
+        lastFetchedRef.current = trimmed;
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }, 300)
+    }, 300);
 
-    return () => clearTimeout(t)
+    return () => clearTimeout(t);
     //  query만 의존하게: searchUsers는 바뀌지 않는다고 가정
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query])
+  }, [query]);
 
-  const handleSelect = React.useCallback((user: UserOption) => {
-    console.log('Selected user:', user)
-    onChange({ userId: user.id, nickname: user.nickname })
-    setOpen(false)
-    setQuery("")          // 검색어 초기화
-    setItems([])          // 목록도 정리
-    lastFetchedRef.current = null // 다시 검색 가능하게 리셋
-  }, [onChange])
+  const handleSelect = React.useCallback(
+    (user: UserOption) => {
+      console.log('Selected user:', user);
+      onChange({ userId: user.id, nickname: user.nickname });
+      setOpen(false);
+      setQuery(''); // 검색어 초기화
+      setItems([]); // 목록도 정리
+      lastFetchedRef.current = null; // 다시 검색 가능하게 리셋
+    },
+    [onChange]
+  );
 
   return (
     <div className="w-full space-y-2 flex flex-row">
@@ -94,7 +108,7 @@ export function GiftRecipient({ searchUsers, onChange, value, placeholder = "받
               onValueChange={setQuery}
             />
             <CommandEmpty className="py-6 text-center text-sm">
-              {loading ? "검색 중…" : "검색 결과가 없습니다"}
+              {loading ? '검색 중…' : '검색 결과가 없습니다'}
             </CommandEmpty>
             <CommandGroup>
               {items.map((u) => (
@@ -113,5 +127,5 @@ export function GiftRecipient({ searchUsers, onChange, value, placeholder = "받
         </PopoverContent>
       </Popover>
     </div>
-  )
+  );
 }

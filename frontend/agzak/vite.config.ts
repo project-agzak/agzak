@@ -26,14 +26,14 @@ export default defineConfig(({ mode }) => {
         manifest: false,
 
         // SPA 라우팅 & 캐시 전략
-        // workbox: {
-        //   globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
-        //   // SPA fallback (API는 제외)
-        //   navigateFallback: '/index.html',
-        //   navigateFallbackDenylist: [/^\/api(\/|$)/],
-        //   // 큰 번들 캐시 필요 시 용량 상향
-        //   maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
-        // },
+        workbox: {
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,webp,woff2}'],
+          // SPA fallback (API는 제외)
+          navigateFallback: '/index.html',
+          navigateFallbackDenylist: [/^\/api(\/|$)/],
+          // 큰 번들 캐시 필요 시 용량 상향
+          maximumFileSizeToCacheInBytes: 10 * 1024 * 1024,
+        },
         // 정적 에셋
         includeAssets: ['favicon.ico', 'robots.txt', 'apple-touch-icon.png'],
       }),
@@ -44,7 +44,7 @@ export default defineConfig(({ mode }) => {
       proxy: {
         // 개발용 프록시 (배포에서는 웹서버에서 처리)
         '/api': {
-          target: 'http://k13b102.p.ssafy.io:18082',
+          target: 'http://k13b102.p.ssafy.io:8082',
           changeOrigin: true,
           secure: false,
         },
@@ -60,8 +60,7 @@ export default defineConfig(({ mode }) => {
     },
 
     // console 제거
-
-   // esbuild: { drop: ['console', 'debugger'] },
+    esbuild: { drop: ['console', 'debugger'] },
 
   }
 })

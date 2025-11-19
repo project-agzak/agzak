@@ -1,15 +1,15 @@
 // @/components/atoms/FortuneGauge.tsx
-import clsx from "clsx";
-import type { FortuneGaugeColor } from "@/adapters/fortuneAdapter";
-import { Progress } from "@/components/ui/progress";
-import { cn } from "@/lib/utils";
-import * as React from "react";
+import clsx from 'clsx';
+import type { FortuneGaugeColor } from '@/adapters/fortuneAdapter';
+import { Progress } from '@/components/ui/progress';
+import { cn } from '@/lib/utils';
+import * as React from 'react';
 
 const colorMap: Record<FortuneGaugeColor, string> = {
-  green: "bg-[#559A2D]",   // 건강운
-  blue: "bg-[#27B1EB]",    // 성취운
-  pink: "bg-[#EF4F87]",    // 애정운
-  yellow: "bg-[#FEDC00]",  // 금전운
+  green: 'bg-[#559A2D]', // 건강운
+  blue: 'bg-[#27B1EB]', // 성취운
+  pink: 'bg-[#EF4F87]', // 애정운
+  yellow: 'bg-[#FEDC00]', // 금전운
 };
 
 interface FortuneGaugeProps {
@@ -30,7 +30,7 @@ interface FortuneGaugeProps {
 export function FortuneGauge({
   label,
   value,
-  color = "green",
+  color = 'green',
   className,
   labelClassName,
   rightSlot,
@@ -39,10 +39,15 @@ export function FortuneGauge({
   const safeValue = Math.max(0, Math.min(250, value));
 
   return (
-    <div className={cn("w-full space-y-1", className)}>
+    <div className={cn('w-full space-y-1', className)}>
       {/* 라벨 줄 */}
       <div className="flex items-center justify-between">
-        <span className={clsx("font-galmuri-small font-bold text-[#121212] leading-none", labelClassName)}>
+        <span
+          className={clsx(
+            'font-galmuri-small font-bold text-[#121212] leading-none',
+            labelClassName
+          )}
+        >
           {label}
         </span>
         {rightSlot ? rightSlot : null}
@@ -54,20 +59,14 @@ export function FortuneGauge({
           value={safeValue}
           max={250}
           className={cn(
-            "h-3 bg-[#DFDFDB]/90", // 배경 (이미지의 연회색 바탕)
+            'h-3 bg-[#DFDFDB]/90' // 배경 (이미지의 연회색 바탕)
             // progress.tsx 안에서 indicator에 스타일을 입힐 거라 여기선 배경만
           )}
-          indicatorClassName={cn(
-            "rounded-full",
-            colorMap[color]
-          )}
+          indicatorClassName={cn('rounded-full', colorMap[color])}
         />
-        <span
-          className="absolute right-1 text-[10px] text-gray-500 drop-shadow-sm select-none"
-        >
+        <span className="absolute right-1 text-[10px] text-gray-500 drop-shadow-sm select-none">
           {safeValue}
         </span>
-
       </div>
     </div>
   );

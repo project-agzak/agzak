@@ -1,21 +1,21 @@
 // src/components/molecules/CalendarBoard.tsx
-import blackboard from "@/assets/ui/blackboard.png";
-import { AspectRatio } from "@/components/ui/AspectRatio";
-import { cn } from "@/lib/utils";
-import * as React from "react";
+import blackboard from '@/assets/ui/blackboard.png';
+import { AspectRatio } from '@/components/ui/AspectRatio';
+import { cn } from '@/lib/utils';
+import * as React from 'react';
 
 type Props = {
-  className?: string
-  onSelectDate?: (isoDate: string) => void
-}
+  className?: string;
+  onSelectDate?: (isoDate: string) => void;
+};
 
 export default function BlackboardCalendar({ className, onSelectDate }: Props) {
   // 오늘 날짜
-  const today = React.useMemo(() => new Date(), [])
-  const year = today.getFullYear()
-  const month = today.getMonth() // 0~11
-  const daysInMonth = new Date(year, month + 1, 0).getDate()
-  const startWeekday = new Date(year, month, 1).getDay()
+  const today = React.useMemo(() => new Date(), []);
+  const year = today.getFullYear();
+  const month = today.getMonth(); // 0~11
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const startWeekday = new Date(year, month, 1).getDay();
 
   // ✅ 클릭해서 하이라이트할 날짜
   const [selectedDay, setSelectedDay] = React.useState<number | null>(null);
@@ -34,21 +34,21 @@ export default function BlackboardCalendar({ className, onSelectDate }: Props) {
 
   // 날짜 클릭 핸들러
   const handleDayClick = (day: number | null) => {
-    if (!day) return
+    if (!day) return;
 
     // 1) 내부 하이라이트는 무조건 유지
-    setSelectedDay(day)
+    setSelectedDay(day);
 
     // 2) 부모로도 알려주기 (YYYY-MM-DD)
     if (onSelectDate) {
-      const mm = String(month + 1).padStart(2, "0")
-      const dd = String(day).padStart(2, "0")
-      onSelectDate(`${year}-${mm}-${dd}`)
+      const mm = String(month + 1).padStart(2, '0');
+      const dd = String(day).padStart(2, '0');
+      onSelectDate(`${year}-${mm}-${dd}`);
     }
-  }
+  };
 
   return (
-    <div className={cn("w-full max-w-sm", className)}>
+    <div className={cn('w-full max-w-sm', className)}>
       <AspectRatio ratio={9 / 7}>
         <div className="relative h-full w-full">
           {/* 배경 보드 이미지 */}
@@ -76,51 +76,50 @@ export default function BlackboardCalendar({ className, onSelectDate }: Props) {
                 </span>
               </div>
 
-            <div
-              className={cn(
-                "grid grid-cols-7 gap-x-[6%] gap-y-[6%] h-full",
-                rows === 5 ? "grid-rows-5" : "grid-rows-6"
-              )}
-            >
-              {cells.map((num, idx) => {
-                const isSelected = num != null && num === selectedDay;
-                const isToday = num != null && num === today.getDate();
-                return (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => handleDayClick(num)}
-                    disabled={num === null}
-                    className={cn(
-                      "flex items-center justify-center cursor-pointer",
-                      // 빈칸은 클릭 불가 & 투명
-                      num === null && "cursor-default"
-                    )}
-                  >
-                    {num !== null ? (
-                      <span
-                        className={cn(
-                          "inline-flex items-center justify-center px-1",
-                          "text-white text-[clamp(10px,2.7vw,18px)] font-galmuri-condensed leading-none",
-                          isSelected &&
-                            "bg-[#9DD36D] font-bold text-white shadow-[0_1px_0_rgba(0,0,0,0.25)]",
-                          isToday && "text-[#FF6666] font-bold",
+              <div
+                className={cn(
+                  'grid grid-cols-7 gap-x-[6%] gap-y-[6%] h-full',
+                  rows === 5 ? 'grid-rows-5' : 'grid-rows-6'
+                )}
+              >
+                {cells.map((num, idx) => {
+                  const isSelected = num != null && num === selectedDay;
+                  const isToday = num != null && num === today.getDate();
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleDayClick(num)}
+                      disabled={num === null}
+                      className={cn(
+                        'flex items-center justify-center cursor-pointer',
+                        // 빈칸은 클릭 불가 & 투명
+                        num === null && 'cursor-default'
+                      )}
+                    >
+                      {num !== null ? (
+                        <span
+                          className={cn(
+                            'inline-flex items-center justify-center px-1',
+                            'text-white text-[clamp(10px,2.7vw,18px)] font-galmuri-condensed leading-none',
+                            isSelected &&
+                              'bg-[#9DD36D] font-bold text-white shadow-[0_1px_0_rgba(0,0,0,0.25)]',
+                            isToday && 'text-[#FF6666] font-bold',
 
-                          !isSelected &&
-                            "hover:text-slate-50/90 transition-colors"
-                        )}
-                      >
-                        {num}
-                      </span>
-                    ) : (
-                      <span className="opacity-0 select-none">0</span>
-                    )}
-                  </button>
-                );
-              })}
+                            !isSelected && 'hover:text-slate-50/90 transition-colors'
+                          )}
+                        >
+                          {num}
+                        </span>
+                      ) : (
+                        <span className="opacity-0 select-none">0</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
-        </div>
         </div>
       </AspectRatio>
     </div>

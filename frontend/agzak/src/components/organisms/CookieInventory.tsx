@@ -1,11 +1,11 @@
-import { CookieCloverItem } from "@/components/molecules/CookieCloverItem";
-import type { FortuneCookieDetail } from "@/types/cookies";
+import { CookieCloverItem } from '@/components/molecules/CookieCloverItem';
+import type { FortuneCookieDetail } from '@/types/cookies';
 
 export type CookieData = {
   id: string;
   imgSrc: string;
   detail: FortuneCookieDetail; // { title, effects:[{label, value}] }
-  createdAt: number; 
+  createdAt: number;
 };
 
 type Props = {
@@ -15,25 +15,15 @@ type Props = {
   className?: string;
 };
 
-export function CookieInventory({
-  items,
-  selectedId,
-  onChangeSelected,
-  className,
-}: Props) {
+export function CookieInventory({ items, selectedId, onChangeSelected, className }: Props) {
   // 선택 토글 동작 (같은 걸 다시 누르면 해제)
   const handleSelect = (id: string) => {
     onChangeSelected(selectedId === id ? null : id);
   };
 
   return (
-    <section
-      className={className}
-      aria-label="쿠키 인벤토리"
-    >
-      <p className="ml-7 font-galmuri-small font-bold">
-        {items.length} / 50
-      </p>
+    <section className={className} aria-label="쿠키 인벤토리">
+      <p className="ml-7 font-galmuri-small font-bold">{items.length} / 50</p>
       <div
         className="
           h-[420px] overflow-y-auto px-2 py-3

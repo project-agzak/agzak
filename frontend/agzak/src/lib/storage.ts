@@ -1,4 +1,5 @@
 // src/lib/storage.ts
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export function setWithTTL(key: string, value: any, ttlMs: number) {
   const record = {
     value,

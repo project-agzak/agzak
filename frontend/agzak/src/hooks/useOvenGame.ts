@@ -1,4 +1,5 @@
 // src/hooks/useOvenGame.ts
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import { trackError, trackEvent } from "@/lib/analytics";
@@ -45,7 +46,7 @@ export function useOvenGame() {
       try {
         setInitLoading(true);
         setInitError(null);
-                
+
         // 먼저 오늘의 할당량을 체크
         const quotaRes = await GameAPI.getToday();
         if (quotaRes.ok && quotaRes.data.cap === quotaRes.data.used) {
@@ -64,13 +65,13 @@ export function useOvenGame() {
           ...(res.ok
             ? { hasData: !!res.data }
             : {
-                error: res.error,
-                status: res.error.status,
-                code: res.error.code,
-                message: res.error.message,
-              }),
+              error: res.error,
+              status: res.error.status,
+              code: res.error.code,
+              message: res.error.message,
+            }),
         });
-        
+
         if (res.ok) {
           trackEvent("game_session_start", {
             session_no: res.data.sessionNo,
@@ -135,7 +136,7 @@ export function useOvenGame() {
 
     // 🔁 409(NO_ACTIVE_SESSION) 자동복구 1회
     if (!res.ok) {
-      
+
       const code = res.error?.status ?? res.error?.code;
       const apiCode = (res.error as any)?.code;
       if (code === 409 || apiCode === "NO_ACTIVE_SESSION") {
@@ -154,7 +155,7 @@ export function useOvenGame() {
         }
       }
     }
-  
+
     if (res.ok) {
       const d = res.data!;
 
@@ -187,8 +188,8 @@ export function useOvenGame() {
       // 다음 확률
       const nextProb =
         (Number(d.nextBaseProb) || 0) > 0 ? Number(d.nextBaseProb)
-        : (Number(d.appliedProb) || 0) > 0 ? Number(d.appliedProb)
-        : successProb;
+          : (Number(d.appliedProb) || 0) > 0 ? Number(d.appliedProb)
+            : successProb;
       setSuccessProb(nextProb);
 
       // 보상 쿠키가 있으면 저장 및 관련 이벤트

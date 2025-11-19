@@ -4,7 +4,10 @@ import cookieGif from '@/assets/Gifs/FortuneCookie.gif';
 export default function AppLoader({
   label = '불러오는 중...',
   fullscreen = false,
-}: { label?: string; fullscreen?: boolean }) {
+}: {
+  label?: string;
+  fullscreen?: boolean;
+}) {
   return (
     <div
       className={

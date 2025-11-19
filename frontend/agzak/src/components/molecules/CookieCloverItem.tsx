@@ -1,8 +1,8 @@
-import * as React from "react";
-import { createPortal } from "react-dom";
-import { FortuneBubble } from "@/components/atoms/FortuneBubble";
-import type { FortuneCookieDetail } from "@/types/cookies";
-import clsx from "clsx";
+import * as React from 'react';
+import { createPortal } from 'react-dom';
+import { FortuneBubble } from '@/components/atoms/FortuneBubble';
+import type { FortuneCookieDetail } from '@/types/cookies';
+import clsx from 'clsx';
 
 export type CookieCloverItemProps = {
   id: string;
@@ -31,13 +31,12 @@ export function CookieCloverItem({
       const r = el.getBoundingClientRect();
 
       // 내부 스크롤 컨테이너(가운데 프레임)
-      const container =
-        document.querySelector<HTMLElement>('.app-content') || document.body;
+      const container = document.querySelector<HTMLElement>('.app-content') || document.body;
       const c = container.getBoundingClientRect();
 
       const BUBBLE_W = 100; // FortuneBubble width와 동일
-      const GAP = 8;        // 아이템-버블 간격
-      const PAD = 8;        // 컨테이너 안쪽 안전 여백
+      const GAP = 8; // 아이템-버블 간격
+      const PAD = 8; // 컨테이너 안쪽 안전 여백
 
       // 기본: 오른쪽
       let left = r.right + GAP;
@@ -78,7 +77,6 @@ export function CookieCloverItem({
     };
   }, [selected]);
 
-
   return (
     <div className="relative">
       <button
@@ -86,10 +84,10 @@ export function CookieCloverItem({
         type="button"
         onClick={() => onSelect(id)}
         className={clsx(
-          "w-full aspect-square rounded-xl grid place-items-center cursor-pointer",
-          "outline-none ring-0 focus:outline-none focus-visible:ring-0", // 테두리/포커스 링 제거
+          'w-full aspect-square rounded-xl grid place-items-center cursor-pointer',
+          'outline-none ring-0 focus:outline-none focus-visible:ring-0', // 테두리/포커스 링 제거
           // "active:translate-y-[1px]",
-          selected && "" // ← 필요 없으면 제거해도 됨
+          selected && '' // ← 필요 없으면 제거해도 됨
         )}
         aria-pressed={selected}
         aria-label={detail.title}
@@ -98,22 +96,22 @@ export function CookieCloverItem({
           src={imgSrc}
           alt={detail.title}
           className={clsx(
-            "w-20 h-20 object-contain pixelated inline-block max-[60px] mx-auto", 
-            selected && "animate-bounce motion-reduce:animate-none" // 접근성
+            'w-20 h-20 object-contain pixelated inline-block max-[60px] mx-auto',
+            selected && 'animate-bounce motion-reduce:animate-none' // 접근성
           )}
           draggable={false}
         />
       </button>
 
-
-      {selected && bubblePos &&
+      {selected &&
+        bubblePos &&
         createPortal(
           <div
             style={{
-              position: "fixed",
+              position: 'fixed',
               top: bubblePos.top,
               left: bubblePos.left,
-              transform: "translateY(-50%)",
+              transform: 'translateY(-50%)',
               zIndex: 50,
             }}
           >
@@ -125,9 +123,7 @@ export function CookieCloverItem({
             />
           </div>,
           document.body
-        )
-      }
+        )}
     </div>
   );
 }
-

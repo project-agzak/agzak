@@ -52,7 +52,7 @@ export const useMembersStore = create<MembersState>((set, get) => ({
 
   // actions - fortunes (with cache)
   fetchFortuneByDate: async (date, opts) => {
-    const key = date.length === 10 ? date : new Date(date).toISOString().slice(0,10)
+    const key = date.length === 10 ? date : new Date(date).toISOString().slice(0, 10)
 
     if (!opts?.noCache) {
       const hit = get().fortuneCache[key]

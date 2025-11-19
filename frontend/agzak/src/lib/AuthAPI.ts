@@ -105,10 +105,10 @@ export type KakaoCompleteRes = TokenResponse;
 export const AuthAPI = {
 
 
-    /** 🔄 토큰 재발급 (액세스 토큰 만료 시)
-   *  POST /api/v1/auth/refresh
-   *  Headers: { "X-Refresh-Token": refreshToken }
-   */
+  /** 🔄 토큰 재발급 (액세스 토큰 만료 시)
+ *  POST /api/v1/auth/refresh
+ *  Headers: { "X-Refresh-Token": refreshToken }
+ */
   refresh: (refreshToken: string) =>
     api.post<TokenResponse>(
       "/auth/refresh",
@@ -120,7 +120,7 @@ export const AuthAPI = {
       }
     ),
 
-    
+
   /** 이메일/비밀번호 로그인
    *  POST /api/v1/auth/login
    */

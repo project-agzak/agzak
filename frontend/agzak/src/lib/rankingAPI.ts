@@ -22,19 +22,19 @@ export type TodayRankingRes = {
 export type MyRankingRes = { date: string } & LeaderboardItem;
 
 export const RankingAPI = {
-    // 오늘의 랭킹(REDIS)
+  // 오늘의 랭킹(REDIS)
   getToday: (limit = 100) =>
     api.get<TodayRankingRes>("/rankings/today", { params: { limit } }),
 
-    /** 스냅샷 랭킹(과거일자, MySQL) — date: 'YYYY-MM-DD' */
+  /** 스냅샷 랭킹(과거일자, MySQL) — date: 'YYYY-MM-DD' */
   getByDate: (date: string, limit = 100) =>
     api.get<TodayRankingRes>(`/rankings/${date}`, { params: { limit } }),
 
-    /** 내 랭킹(과거일자, MySQL) */
+  /** 내 랭킹(과거일자, MySQL) */
   getMineByDate: (date: string) =>
     api.get<MyRankingRes>(`/rankings/me/${date}`),
 
-    // 내 랭킹(오늘, REDIS)
+  // 내 랭킹(오늘, REDIS)
   getMineToDay: () =>
     api.get<MyRankingRes>(`/rankings/me/today`),
 };

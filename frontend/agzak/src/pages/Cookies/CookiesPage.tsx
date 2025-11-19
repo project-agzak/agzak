@@ -1,40 +1,43 @@
 // @/src/pages/Cookies/CookiesPage.tsx
-import AchievementGif from "@/assets/Gifs/achievement-cookie.gif";
-import HealthGif from "@/assets/Gifs/health-cookie.gif";
-import LoveGif from "@/assets/Gifs/love-cookie.gif";
-import MixedGif from "@/assets/Gifs/mixed-cookie.gif";
-import MoneyGif from "@/assets/Gifs/money-cookie.gif";
-import RottenGif from "@/assets/Gifs/rotten-cookie.gif";
-import GloomyGif from "@/assets/Gifs/gloomy-cookie.gif";
-import SansamGif from "@/assets/Gifs/sansam-cookie.gif";
-import DeveloperGif from "@/assets/Gifs/developer-cookie.gif";
-import LavaGif from "@/assets/Gifs/lava-cookie.gif";
-import SantaGif from "@/assets/Gifs/santa-cookie.gif";
-import UnicornGif from "@/assets/Gifs/unicorn-cookie.gif";
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
+import AchievementGif from '@/assets/Gifs/achievement-cookie.gif';
+import HealthGif from '@/assets/Gifs/health-cookie.gif';
+import LoveGif from '@/assets/Gifs/love-cookie.gif';
+import MixedGif from '@/assets/Gifs/mixed-cookie.gif';
+import MoneyGif from '@/assets/Gifs/money-cookie.gif';
+import RottenGif from '@/assets/Gifs/rotten-cookie.gif';
+import GloomyGif from '@/assets/Gifs/gloomy-cookie.gif';
+import SansamGif from '@/assets/Gifs/sansam-cookie.gif';
+import DeveloperGif from '@/assets/Gifs/developer-cookie.gif';
+import LavaGif from '@/assets/Gifs/lava-cookie.gif';
+import SantaGif from '@/assets/Gifs/santa-cookie.gif';
+import UnicornGif from '@/assets/Gifs/unicorn-cookie.gif';
 // import LuckyGif from "@/assets/Gifs/lucky-cookie.gif";
 
-import BinButton from "@/assets/ui/bin-button.webp";
-import InventoryImg from "@/assets/ui/CookieInventory.svg";
-import Pig from "@/assets/ui/MainPig.svg";
-import SendButton from "@/assets/ui/send-button.webp";
-import { ActionButton_M } from "@/components/atoms/ActionButton_M";
-import { CookieHeader } from "@/components/atoms/CookieHeader";
-import CookieHelpSheet from "@/components/atoms/CookieHelpSheet";
-import { FortuneGaugeList } from "@/components/molecules/FortuneGaugeList";
-import { CookieInventory } from "@/components/organisms/CookieInventory";
-import { GiftModal } from "@/components/organisms/GiftModal";
-import { useGiftStore } from "@/store/useGiftStore";
-import * as React from "react";
-import { useCookiesStore } from "../../store/useCookiesStore";
-import { useFortuneStore } from "../../store/useFortuneStore";
-import { useMembersStore } from "../../store/useMembersStore";
+import BinButton from '@/assets/ui/bin-button.webp';
+import InventoryImg from '@/assets/ui/CookieInventory.svg';
+import Pig from '@/assets/ui/MainPig.svg';
+import SendButton from '@/assets/ui/send-button.webp';
+import { ActionButton_M } from '@/components/atoms/ActionButton_M';
+import { CookieHeader } from '@/components/atoms/CookieHeader';
+import CookieHelpSheet from '@/components/atoms/CookieHelpSheet';
+import { FortuneGaugeList } from '@/components/molecules/FortuneGaugeList';
+import { CookieInventory } from '@/components/organisms/CookieInventory';
+import { GiftModal } from '@/components/organisms/GiftModal';
+import { useGiftStore } from '@/store/useGiftStore';
+import * as React from 'react';
+import { useCookiesStore } from '../../store/useCookiesStore';
+import { useFortuneStore } from '../../store/useFortuneStore';
+import { useMembersStore } from '../../store/useMembersStore';
 
-import type { ScoresLike as AdapterScoresLike } from "@/adapters/fortuneAdapter";
-import { toGaugeStats } from "@/adapters/fortuneAdapter";
+import type { ScoresLike as AdapterScoresLike } from '@/adapters/fortuneAdapter';
+import { toGaugeStats } from '@/adapters/fortuneAdapter';
 
 const pickScores = (s: any): AdapterScoresLike | undefined => {
   if (!s) return undefined;
-  const src = "scores" in s ? s.scores : s;
+  const src = 'scores' in s ? s.scores : s;
 
   return {
     health: src?.health ?? 0,
@@ -46,33 +49,32 @@ const pickScores = (s: any): AdapterScoresLike | undefined => {
 };
 
 const titleToGif: Record<string, string> = {
-  "건강쿠키": HealthGif,
-  "성취쿠키": AchievementGif,
-  "애정쿠키": LoveGif,
-  "금전쿠키": MoneyGif,
-  "믹스쿠키": MixedGif,
-  "썩은쿠키": RottenGif,
-  "먹구름쿠키": GloomyGif,
-  "산삼쿠키": SansamGif,
-  "개발자쿠키": DeveloperGif,
-  "용암쿠키": LavaGif,
-  "산타쿠키": SantaGif,
-  "유니콘쿠키": UnicornGif,
+  건강쿠키: HealthGif,
+  성취쿠키: AchievementGif,
+  애정쿠키: LoveGif,
+  금전쿠키: MoneyGif,
+  믹스쿠키: MixedGif,
+  썩은쿠키: RottenGif,
+  먹구름쿠키: GloomyGif,
+  산삼쿠키: SansamGif,
+  개발자쿠키: DeveloperGif,
+  용암쿠키: LavaGif,
+  산타쿠키: SantaGif,
+  유니콘쿠키: UnicornGif,
   // "행운쿠키": LuckyGif
 };
 
 const getTodayLocalString = () => {
   const d = new Date();
   const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
 
 export default function CookiesPage() {
   const [giftOpen, setGiftOpen] = React.useState(false);
   const { searchUsers, sendGift } = useGiftStore();
-
 
   // 총운 (날짜별 조회 방식)
   const scores = useFortuneStore((s) => s.scores);
@@ -85,12 +87,12 @@ export default function CookiesPage() {
 
   const todayData = fortuneCache[today] ?? null;
 
-  const [helpOpen, setHelpOpen] = React.useState(false)
+  const [helpOpen, setHelpOpen] = React.useState(false);
 
   // 게이지: todayData.aspects → 우선, 없으면 fortuneScores 사용
   const gaugeStats = React.useMemo(() => {
     if (todayData) {
-      const s: AdapterScoresLike = { total_score:0, health: 0, achievement: 0, love: 0, money: 0 };
+      const s: AdapterScoresLike = { total_score: 0, health: 0, achievement: 0, love: 0, money: 0 };
 
       todayData.aspects.forEach((a) => {
         s[a.key] = a.score ?? 0;
@@ -120,18 +122,15 @@ export default function CookiesPage() {
   const eatingId = useCookiesStore((s) => s.eatingId);
   const eatCookie = useCookiesStore((s) => s.eatCookie);
 
-  const selectedCookie = useCookiesStore((s) =>
-    s.items.find((c) => c.id === s.selectedId) ?? null
-  );
+  const selectedCookie = useCookiesStore((s) => s.items.find((c) => c.id === s.selectedId) ?? null);
 
-const isLuckySelected =
-  !!selectedCookie &&
-  (selectedCookie.code === "LUCKY" ||
-    selectedCookie.detail?.title === "럭키쿠키");
+  const isLuckySelected =
+    !!selectedCookie &&
+    (selectedCookie.code === 'LUCKY' || selectedCookie.detail?.title === '럭키쿠키');
 
   const isDetailLoading = loadingDetailId === selectedId;
 
-  const isDeleting = deletingId === selectedId;  
+  const isDeleting = deletingId === selectedId;
 
   const isEating = eatingId === selectedId;
 
@@ -145,33 +144,31 @@ const isLuckySelected =
     }
   }, [today, totalScore, fetchFortuneByDate]);
 
-
   // 쿠키 목록: 최신순 기본 호출
   React.useEffect(() => {
-    fetchCookies("recent");
+    fetchCookies('recent');
   }, [fetchCookies]);
 
   // 유저 검색 핸들러 (API 연결)
   const handleSearchUsers = async (query: string) => {
     const results = await searchUsers(query);
-    
+
     // GiftModal이 요구하는 형식으로 변환
-    return results.map(user => ({
-      id: user.memberId,      // memberId → id
-      nickname: user.nickname
+    return results.map((user) => ({
+      id: user.memberId, // memberId → id
+      nickname: user.nickname,
     }));
   };
 
   // 선물 전송 핸들러 (API 연결)
-  const handleGiftSubmit = async (payload: { 
+  const handleGiftSubmit = async (payload: {
     receiverId: number;
     cookieId: number;
-    message: string 
-    }) => {
-      console.log('CookiesPage handleGiftSubmit:', payload)
+    message: string;
+  }) => {
+    console.log('CookiesPage handleGiftSubmit:', payload);
 
-      await sendGift(payload);
-
+    await sendGift(payload);
 
     // // 선물 성공 후 쿠키 목록 새로고침
     // await fetchCookies("recent");
@@ -184,14 +181,11 @@ const isLuckySelected =
   };
 
   // 쿠키 먹기
-    const eatSelected = async () => {
+  const eatSelected = async () => {
     if (!selectedCookie) return;
 
-    if (
-      selectedCookie.code === "LUCKY" ||
-      selectedCookie.detail?.title === "럭키쿠키"
-    ) {
-      alert("행운 쿠키는 사용할 수 없는 기념 쿠키예요!");
+    if (selectedCookie.code === 'LUCKY' || selectedCookie.detail?.title === '럭키쿠키') {
+      alert('행운 쿠키는 사용할 수 없는 기념 쿠키예요!');
       return;
     }
 
@@ -203,10 +197,10 @@ const isLuckySelected =
     //    effects[]: [{label, value}]
     const delta = selectedCookie.detail.effects.reduce(
       (acc, e) => {
-        if (e.label === "건강운") acc.health += e.value;
-        else if (e.label === "성취운") acc.achievement += e.value;
-        else if (e.label === "애정운") acc.love += e.value;
-        else if (e.label === "금전운") acc.money += e.value;
+        if (e.label === '건강운') acc.health += e.value;
+        else if (e.label === '성취운') acc.achievement += e.value;
+        else if (e.label === '애정운') acc.love += e.value;
+        else if (e.label === '금전운') acc.money += e.value;
         return acc;
       },
       { health: 0, achievement: 0, love: 0, money: 0 }
@@ -248,7 +242,7 @@ const isLuckySelected =
   };
   const removeSelected = async () => {
     if (!selectedId) return;
-    if (!confirm("정말 이 쿠키를 삭제할까요? 복구할 수 없습니다.")) return;
+    if (!confirm('정말 이 쿠키를 삭제할까요? 복구할 수 없습니다.')) return;
     await deleteCookie(selectedId);
   };
 
@@ -264,7 +258,7 @@ const isLuckySelected =
 
       <div className="flex flex-row  items-center justify-center mt-4 ml-10">
         <p className="font-bitbit-large mr-5">
-          {errorFortune ? "—" : totalScore ?? (loadingFortune ? "..." : "—")} 점
+          {errorFortune ? '—' : (totalScore ?? (loadingFortune ? '...' : '—'))} 점
         </p>
       </div>
 
@@ -272,9 +266,11 @@ const isLuckySelected =
         <div className="flex w-fit gap-[10px]">
           <ActionButton_M
             className="shrink-0 !mx-0"
-            label= "쿠키 먹기"
+            label="쿠키 먹기"
             onClick={eatSelected}
-            disabled={!selectedCookie || isDetailLoading || isEating || isDeleting || isLuckySelected}
+            disabled={
+              !selectedCookie || isDetailLoading || isEating || isDeleting || isLuckySelected
+            }
           />
           <button
             onClick={removeSelected}
@@ -338,7 +334,7 @@ const isLuckySelected =
           searchUsers={handleSearchUsers}
           onSubmit={handleGiftSubmit}
           onSuccessClose={async () => {
-            await fetchCookies("recent")
+            await fetchCookies('recent');
           }}
         />
       )}
