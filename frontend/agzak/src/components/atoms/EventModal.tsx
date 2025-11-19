@@ -57,9 +57,6 @@ export function EventModal({ onClose }: EventModalProps) {
   // 선착순 결과 (성공/실패 + 순번)
   const [joinResult, setJoinResult] = useState<CouponIssueResult | null>(null);
 
-  // 클라이언트 기준 현재 시간 (1초마다 업데이트)
-  const [now, setNow] = useState<Date>(() => new Date());
-
   // 로그인 / 회원 정보
   const { isLoggedIn, member } = useAuthStore();
 
@@ -120,19 +117,6 @@ export function EventModal({ onClose }: EventModalProps) {
     fetchCoupons();
   }, [selectedEvent]);
 
-  // 3) 선택된 이벤트가 있을 때만 1초마다 now 갱신
-  useEffect(() => {
-    if (!selectedEvent) return;
-
-    const timer = setInterval(() => {
-      setNow(new Date());
-    }, 1000);
-
-    return () => {
-      clearInterval(timer);
-    };
-  }, [selectedEvent]);
-
   const formatDate = (iso: string) => {
     if (!iso) return "";
     return iso.replace("T", " ").slice(0, 16);
@@ -167,14 +151,14 @@ export function EventModal({ onClose }: EventModalProps) {
     return (
         <span
             className={`
-        inline-flex items-center justify-center
-        rounded-full px-3 h-6
-        text-[11px] whitespace-nowrap
-        ${color}
-      `}
+          inline-flex items-center justify-center
+          rounded-full px-3 h-6
+          text-[11px] whitespace-nowrap
+          ${color}
+        `}
         >
-      {label}
-    </span>
+        {label}
+      </span>
     );
   };
 
@@ -210,8 +194,8 @@ export function EventModal({ onClose }: EventModalProps) {
 
       if (msg.includes("이미 발급된 쿠폰")) {
         alert("이미 참여하신 이벤트입니다.");
-        const key = selectedEvent ? `event_joined_${selectedEvent.eventId}` : "";
         if (selectedEvent) {
+          const key = `event_joined_${selectedEvent.eventId}`;
           localStorage.setItem(key, "true");
           setHasJoined(true);
         }
@@ -223,8 +207,13 @@ export function EventModal({ onClose }: EventModalProps) {
         return;
       }
 
-      if (msg.includes("아직 시작 전") || msg.includes("시작 전")) {
-        alert("아직 시작 전인 이벤트입니다.");
+      // 아직 시작 전(새 메시지 포함): 빠르게 재시도할 수 있도록 모달은 그대로 유지
+      if (
+          msg.includes("아직 발급이 시작되지 않은 쿠폰") ||
+          msg.includes("아직 시작 전") ||
+          msg.includes("시작 전")
+      ) {
+        alert("아직 발급이 시작되지 않은 쿠폰입니다.\n정해진 시간에 맞춰 다시 시도해 주세요.");
         return;
       }
 
@@ -232,7 +221,7 @@ export function EventModal({ onClose }: EventModalProps) {
       return;
     }
 
-    // ✅ 정상 응답 (isSuccess true/false 모두 포함)
+    // 정상 응답 (isSuccess true/false 모두 포함 → 결과 모달로 전환)
     const result = res.data;
     setJoinResult(result);
 
@@ -310,7 +299,7 @@ export function EventModal({ onClose }: EventModalProps) {
   const renderDetailView = () => {
     if (!selectedEvent) return null;
 
-    // ✅ 이미 선착순 결과가 있으면 결과 화면으로 전환
+    // 이미 선착순 결과가 있으면 결과 화면으로 전환
     if (joinResult) {
       return (
           <EventResultView
@@ -326,14 +315,8 @@ export function EventModal({ onClose }: EventModalProps) {
       );
     }
 
-    const start = new Date(selectedEvent.startAt);
-    const end = new Date(selectedEvent.endAt);
-    const isTimeOpened = now >= start && now <= end;
-
-    const isOpenStatus = selectedEvent.eventStatus === "OPEN";
-    const canJoinByTime = isTimeOpened && isOpenStatus;
-
-    const disabled = !primaryCoupon || hasJoined || !canJoinByTime;
+    // 시간/상태에 따른 비활성화 제거 → 서버가 막아 주고, 프론트는 시도만 허용
+    const disabled = !primaryCoupon || hasJoined;
 
     return (
         <>
@@ -356,13 +339,13 @@ export function EventModal({ onClose }: EventModalProps) {
             />
           </div>
 
-          {/* 제목 + 상태 배지 */}
+          {/* 제목 + 상태 배지 (제목 줄바꿈 허용) */}
           <div className="mb-2 flex flex-col gap-1">
             <h2
                 className="
-                  text-lg font-bitbit text-[#121212] leading-snug
-                  whitespace-normal break-keep  /* ← 줄바꿈 허용 */
-                "
+              text-lg font-bitbit text-[#121212] leading-snug
+              whitespace-normal break-keep
+            "
             >
               {selectedEvent.title}
             </h2>
@@ -409,11 +392,9 @@ export function EventModal({ onClose }: EventModalProps) {
             )}
           </div>
 
-          {/* 안내 문구 */}
+          {/* 안내 문구: 이제는 '이미 참여'만 표시 */}
           <div className="mt-2 text-[11px] text-zinc-500">
             {hasJoined && "이미 참여 완료한 이벤트입니다."}
-            {!hasJoined && !isTimeOpened && "참여 가능 시간이 아닙니다."}
-            {!hasJoined && isTimeOpened && !isOpenStatus && "현재 일시 중단 상태입니다."}
           </div>
 
           {/* 참여 버튼 */}
