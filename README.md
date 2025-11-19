@@ -1,5 +1,41 @@
 # 아그작(agzak)
 
+<div align="center">
+  <span style="display:inline-block; margin:0 4px;">
+    <img src="~/frontend/card/고양이.png" width="70">
+  </span>
+  <span style="display:inline-block; margin:0 4px;">
+    <img src="~/frontend/card/닭.png" width="70">
+  </span>
+  <span style="display:inline-block; margin:0 4px;">
+    <img src="~/frontend/card/말.png" width="70">
+  </span>
+  <span style="display:inline-block; margin:0 4px;">
+    <img src="~/frontend/card/뱀.png" width="70">
+  </span>
+  <span style="display:inline-block; margin:0 4px;">
+    <img src="~/frontend/card/생쥐.png" width="70">
+  </span>
+  <span style="display:inline-block; margin:0 4px;">
+    <img src="~/frontend/card/소.png" width="70">
+  </span>
+  <span style="display:inline-block; margin:0 4px;">
+    <img src="~/frontend/card/양.png" width="70">
+  </span>
+  <span style="display:inline-block; margin:0 4px;">
+    <img src="~/frontend/card/용.png" width="70">
+  </span>
+  <span style="display:inline-block; margin:0 4px;">
+    <img src="~/frontend/card/원숭이.png" width="70">
+  </span>
+  <span style="display:inline-block; margin:0 4px;">
+    <img src="~/frontend/card/토끼.png" width="70">
+  </span>
+  <span style="display:inline-block; margin:0 4px;">
+    <img src="~/frontend/card/호랑이.png" width="70">
+  </span>
+</div>
+
 하루 운세를 보고 끝나는 것이 아니라,  
 **오늘의 운세를 “강화하고 수집하고 공유하는” 운세 경험 서비스 아그작(agzak)** 입니다.
 
