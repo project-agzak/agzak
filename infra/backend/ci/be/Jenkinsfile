@@ -1,0 +1,125 @@
+pipeline {
+  agent any
+
+  options {
+    timestamps()
+    ansiColor('xterm')
+  }
+
+  environment {
+    SUBDIR      = 'backend'
+    IMAGE_NAME  = 'sso9594/agzak-app'
+    REGISTRY    = 'docker.io'
+    DEPLOY_USER = 'ubuntu'
+    DEPLOY_HOST = 'k13b102.p.ssafy.io'
+
+    EDGE_CONF   = '/home/ubuntu/agzak-app/deploy/infra/nginx/data/active_slot.conf'
+    BE_COMPOSE  = '/home/ubuntu/agzak-app/deploy/backend/agzak-app-server.yml'
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+        script {
+          def full = (env.GIT_BRANCH ?: '').replaceFirst(/^origin\//, '')
+          if (!full) {
+            full = sh(returnStdout: true, script: 'git rev-parse --abbrev-ref HEAD').trim()
+          }
+          env.TARGET_BRANCH_FULL = full
+          env.TARGET_BRANCH = full.replaceAll('/', '-')
+          echo "Target branch: ${env.TARGET_BRANCH_FULL} -> ${env.TARGET_BRANCH}"
+        }
+      }
+    }
+
+    stage('Docker Build & Push') {
+      steps {
+        dir("${env.SUBDIR}") {
+          withCredentials([usernamePassword(credentialsId: 'dockerhub-cred',
+              usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PWD')]) {
+            sh '''
+              set -eux
+
+              echo "$DOCKER_PWD" | docker login -u "$DOCKER_USER" --password-stdin ${REGISTRY}
+
+              export DOCKER_BUILDKIT=1
+              TAG="${TARGET_BRANCH}-${BUILD_NUMBER}"
+
+              if [ -n "${REGISTRY}" ] && [ "${REGISTRY}" != "docker.io" ]; then
+                REPO="${REGISTRY}/${IMAGE_NAME}"
+              else
+                REPO="${IMAGE_NAME}"
+              fi
+
+              docker build -t "${REPO}:${TAG}" .
+
+              docker push "${REPO}:${TAG}"
+
+              docker tag "${REPO}:${TAG}" "${REPO}:latest"
+              docker push "${REPO}:latest"
+            '''
+          }
+        }
+      }
+    }
+
+    stage('Deploy (Blue/Green)') {
+      steps {
+        sshagent(credentials: ['deploy-ssh']) {
+          withCredentials([usernamePassword(
+            credentialsId: 'dockerhub-cred',
+            usernameVariable: 'DOCKER_USER',
+            passwordVariable: 'DOCKER_PWD'
+          )]) {
+            script {
+              def repo = (env.REGISTRY?.trim() && env.REGISTRY != 'docker.io')
+                ? "${env.REGISTRY}/${env.IMAGE_NAME}"
+                : env.IMAGE_NAME
+              def tag   = "${env.TARGET_BRANCH}-${env.BUILD_NUMBER}"
+              def image = "${repo}:${tag}"
+
+              sh """
+                set -Eeuo pipefail
+                ssh -o StrictHostKeyChecking=no ${env.DEPLOY_USER}@${env.DEPLOY_HOST} \\
+                  IMAGE='${image}' \\
+                  EDGE_CONF='${env.EDGE_CONF}' \\
+                  BE_COMPOSE='${env.BE_COMPOSE}' \\
+                  DOCKER_USER='${DOCKER_USER}' \\
+                  DOCKER_PWD='${DOCKER_PWD}' \\
+                  /home/ubuntu/agzak-app/deploy/backend/blue_green_deploy.sh
+              """
+            }
+          }
+        }
+      }
+    }
+  }
+
+  post {
+    success {
+      script {
+        def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
+        def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
+        def buildLink = "https://jenkins.agzak.co.kr/job/${env.JOB_NAME}/${env.BUILD_NUMBER}/"
+        sh """
+          curl -X POST -H 'Content-Type: application/json' \
+          -d '{"text":"빌드 성공: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name}) (<${buildLink}|상세 보기>)"}' \
+          https://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo
+        """
+      }
+    }
+    failure {
+      script {
+        def Author_ID = sh(script: "git show -s --pretty=%an", returnStdout: true).trim()
+        def Author_Name = sh(script: "git show -s --pretty=%ae", returnStdout: true).trim()
+        def buildLink = "https://jenkins.agzak.co.kr/job/${env.JOB_NAME}/${env.BUILD_NUMBER}/"
+        sh """
+          curl -X POST -H 'Content-Type: application/json' \
+          -d '{"text":"빌드 실패: ${env.JOB_NAME} #${env.BUILD_NUMBER} by ${Author_ID}(${Author_Name}) (<${buildLink}|상세 보기>)"}' \
+          https://meeting.ssafy.com/hooks/j6qmearua7fx7pi8auyuyx1reo
+        """
+      }
+    }
+  }
+}

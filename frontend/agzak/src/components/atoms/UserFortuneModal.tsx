@@ -1,0 +1,274 @@
+// src/components/atoms/UserFortuneModal.tsx
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useEffect, useState, useCallback, useMemo } from 'react';
+import NoteModal from '@/assets/ui/NoteModal.svg';
+import { FortuneGaugeList } from '@/components/molecules/FortuneGaugeList';
+import { useFortuneStore } from '@/store/useFortuneStore';
+import { useCollectionStore } from '@/store/useCollectionStore';
+
+import type { ScoresLike as AdapterScoresLike } from '@/adapters/fortuneAdapter';
+import { toGaugeStats } from '@/adapters/fortuneAdapter';
+
+import FriendCat from '@/assets/Friends/FriendCat.webp';
+import FriendChicken from '@/assets/Friends/FriendChicken.webp';
+import FriendCow from '@/assets/Friends/FriendCow.webp';
+import FriendDog from '@/assets/Friends/FriendDog.webp';
+import FriendDragon from '@/assets/Friends/FriendDragon.webp';
+import FriendHorse from '@/assets/Friends/FriendHorse.webp';
+import FriendMonkey from '@/assets/Friends/FriendMonkey.webp';
+import FriendMouse from '@/assets/Friends/FriendMouse.webp';
+import FriendRabbit from '@/assets/Friends/FriendRabbit.webp';
+import FriendSheep from '@/assets/Friends/FriendSheep.webp';
+import FriendSnake from '@/assets/Friends/FriendSnake.webp';
+import FriendTiger from '@/assets/Friends/FriendTiger.webp';
+
+import AchievementCookie from '@/assets/Cookies/achievement-cookie.webp';
+import DeveloperCookie from '@/assets/Cookies/developer-cookie.webp';
+import GloomyCookie from '@/assets/Cookies/gloomy-cookie.webp';
+import HealthCookie from '@/assets/Cookies/health-cookie.webp';
+import LavaCookie from '@/assets/Cookies/lava-cookie.webp';
+import LoveCookie from '@/assets/Cookies/love-cookie.webp';
+import MixedCookie from '@/assets/Cookies/mixed-cookie.webp';
+import MoneyCookie from '@/assets/Cookies/money-cookie.webp';
+import RottenCookie from '@/assets/Cookies/rotten-cookie.webp';
+import SansamCookie from '@/assets/Cookies/sansam-cookie.webp';
+import SantaCookie from '@/assets/Cookies/santa-cookie.webp';
+import UnicornCookie from '@/assets/Cookies/unicorn-cookie.webp';
+import SecretCookie from '@/assets/Cookies/secret-cookie.webp';
+import LuckyCookie from '@/assets/Cookies/lucky-cookie.webp';
+
+import { COLLECTION_COOKIE_CODES, type CollectionCookieCode } from '@/lib/collectionAPI';
+
+type UserFortuneModalProps = {
+  nickname: string;
+  memberKey?: number | string;
+  onClose: () => void;
+};
+
+const TYPE_IMAGE_MAP: Record<string, string> = {
+  쥐: FriendMouse,
+  소: FriendCow,
+  호랑이: FriendTiger,
+  토끼: FriendRabbit,
+  용: FriendDragon,
+  뱀: FriendSnake,
+  말: FriendHorse,
+  양: FriendSheep,
+  원숭이: FriendMonkey,
+  닭: FriendChicken,
+  개: FriendDog,
+  고양이: FriendCat,
+};
+
+const COOKIE_IMAGE_MAP: Record<CollectionCookieCode, string> = {
+  GLOOMY: GloomyCookie,
+  SANSAM: SansamCookie,
+  DEVELOPER: DeveloperCookie,
+  MIXED: MixedCookie,
+  MONEY: MoneyCookie,
+  LOVE: LoveCookie,
+  ACHIEVEMENT: AchievementCookie,
+  HEALTH: HealthCookie,
+  ROTTEN: RottenCookie,
+  LAVA: LavaCookie,
+  SANTA: SantaCookie,
+  UNICORN: UnicornCookie,
+  LUCKY: LuckyCookie,
+};
+
+const pickScores = (s: any): AdapterScoresLike | undefined => {
+  if (!s) return undefined;
+  const src = 'scores' in s ? s.scores : s;
+
+  return {
+    health: src?.health ?? 0,
+    achievement: src?.achievement ?? 0,
+    love: src?.love ?? 0,
+    money: src?.money ?? 0,
+    total_score: (src?.total_score ?? src?.totalScore ?? 0) as number,
+  };
+};
+
+const ANIMATION_DURATION = 300;
+
+export function UserFortuneModal({ nickname, memberKey, onClose }: UserFortuneModalProps) {
+  const [entered, setEntered] = useState(false);
+  const [isAnimatingOut, setIsAnimatingOut] = useState(false);
+
+  // 운세 정보
+  const scores = useFortuneStore((s) => s.memberScores);
+  const typeInfo = useFortuneStore((s) => s.memberTypeInfo);
+  const fetchMemberToday = useFortuneStore((s) => s.fetchMemberToday);
+
+  // 쿠키 도감 상태
+  const memberCollection = useCollectionStore((s) => s.memberCollection);
+  const isLoadingMember = useCollectionStore((s) => s.isLoadingMember);
+  const loadMemberCollection = useCollectionStore((s) => s.loadMemberCollection);
+  const clearMemberCollection = useCollectionStore((s) => s.clearMemberCollection);
+
+  // 유저 조회
+  useEffect(() => {
+    if (memberKey == null) return;
+    void fetchMemberToday(Number(memberKey));
+  }, [memberKey, fetchMemberToday]);
+
+  // 유저 도감 조회
+  useEffect(() => {
+    if (!memberKey && !nickname) return;
+
+    const params = memberKey != null ? { memberId: Number(memberKey) } : { nickname };
+
+    void loadMemberCollection(params);
+
+    // 모달이 닫힐 때 도감 상태 정리
+    return () => {
+      clearMemberCollection();
+    };
+  }, [memberKey, nickname, loadMemberCollection, clearMemberCollection]);
+
+  // 닫기 애니메이션 시작 → 애니 후 onClose 호출
+  const startCloseAnimation = useCallback(() => {
+    if (isAnimatingOut) return; // 여러 번 눌러도 한 번만 실행
+    setIsAnimatingOut(true);
+    setEntered(false); // 아래로 내려가게 (translate-y, opacity 0)
+
+    setTimeout(() => {
+      onClose();
+    }, ANIMATION_DURATION);
+  }, [isAnimatingOut, onClose]);
+
+  // ESC 닫기 + 처음 열릴 때 위로 올라오는 애니메이션
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        startCloseAnimation();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+
+    // 첫 진입 시 한 프레임 뒤에 entered=true로 전환 → 아래에서 위로
+    requestAnimationFrame(() => setEntered(true));
+
+    return () => window.removeEventListener('keydown', onKey);
+  }, [startCloseAnimation]);
+
+  // 캐릭터 이미지 선택
+  const friendImage = useMemo(() => {
+    if (!typeInfo) return FriendCat; // fallback
+    return TYPE_IMAGE_MAP[typeInfo.name] ?? FriendCat;
+  }, [typeInfo]);
+
+  // scores → FortuneGaugeList 에 들어갈 stats 로 변환
+  const gaugeStats = useMemo(() => {
+    const normalized = pickScores(scores);
+    return normalized ? toGaugeStats(normalized) : undefined;
+  }, [scores]);
+
+  // 도감: 13개 코드 순서대로 정렬 + 수집 여부 계산
+  const orderedCollection = useMemo(() => {
+    const map = new Map((memberCollection ?? []).map((item) => [item.code, item]));
+
+    return COLLECTION_COOKIE_CODES.filter((code) => code !== 'LUCKY').map((code) => {
+      const dto = map.get(code);
+      const collected = !!dto && (dto.count ?? 0) > 0;
+
+      return { code, dto, collected };
+    });
+  }, [memberCollection]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      aria-modal="true"
+      role="dialog"
+    >
+      {/* 딤드 배경 */}
+      <button
+        type="button"
+        className="absolute inset-0"
+        aria-label="모달 닫기"
+        onClick={startCloseAnimation}
+      />
+
+      {/* 픽셀 노트 박스 */}
+      <div
+        className={
+          'relative w-[360px] md:w-[420px] max-w-[95vw] ' +
+          'transition-all duration-300 ease-out ' +
+          (entered ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0')
+        }
+      >
+        {/* 배경 이미지 */}
+        <img src={NoteModal} alt="" className="w-full h-auto pointer-events-none select-none" />
+
+        <div className="absolute top-[10px] right-[50px]">
+          <button
+            type="button"
+            onClick={startCloseAnimation}
+            className="font-bitbit px-1 cursor-pointer"
+          >
+            X
+          </button>
+        </div>
+
+        {/* 내용 영역 (노트 안쪽에 덮어쓰기) */}
+        <div className="absolute top-[55px] left-[40px] right-[30px] bottom-[34px] flex flex-col">
+          <div className="flex items-center justify-center">
+            <h2 className="font-bitbit text-[#121212]">{nickname} 님의 운세</h2>
+          </div>
+
+          <div className="flex items-center gap-1">
+            {/* 캐릭터 영역 */}
+            <div className="flex-none w-[110px] aspect-[2/3]">
+              <img
+                src={friendImage}
+                alt={typeInfo?.name ?? ''}
+                className="w-full h-full object-contain"
+              />
+            </div>
+
+            {/* 게이지 영역 */}
+            <div className="flex-1 pr-2">
+              <FortuneGaugeList
+                max={250}
+                dense
+                labelClassName="font-galmuri-caption-force"
+                stats={gaugeStats}
+              />
+            </div>
+          </div>
+
+          {/* 쿠키 도감 */}
+          <div className="mt-2 flex-1 flex flex-col overflow-hidden">
+            <p className="flex justify-center font-bitbit mb-1">쿠키 도감</p>
+
+            <div className="flex-1 overflow-y-auto">
+              {isLoadingMember && !memberCollection ? (
+                <p className="text-center text-xs font-galmuri-caption-force text-gray-500">
+                  쿠키 도감을 불러오는 중...
+                </p>
+              ) : (
+                <div className="grid grid-cols-3 gap-x-2 gap-y-1">
+                  {orderedCollection.map(({ code, dto, collected }) => (
+                    <div key={code} className="flex flex-col items-center justify-center">
+                      <div className="w-[50px] h-[50px]">
+                        <img
+                          src={collected ? COOKIE_IMAGE_MAP[code] : SecretCookie}
+                          alt={collected ? (dto?.name ?? code) : '아직 발견하지 못한 쿠키'}
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                      <span className="mt-1 text-[10px] font-galmuri-caption-force text-center">
+                        {collected ? dto?.name : '???'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

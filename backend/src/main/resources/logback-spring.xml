@@ -1,0 +1,41 @@
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+    <springProperty name="SERVICE_NAME" source="spring.application.name" defaultValue="unknown"/>
+    <springProperty name="LOG_PATH" source="logging.file.path" defaultValue="./logs"/>
+    <springProperty name="LOG_NAME" source="logging.file.name" defaultValue="app"/>
+
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+        <file>${LOG_PATH}/${LOG_NAME}.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_PATH}/${LOG_NAME}.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>7</maxHistory>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp><timeZone>Asia/Seoul</timeZone></timestamp>
+                <pattern>
+                    <pattern>{
+                        "service.name":"${SERVICE_NAME}",
+                        "level":"%level",
+                        "thread":"%thread",
+                        "logger":"%logger{36}",
+                        "message":"%message",
+                        "mdc":"%mdc"
+                        }</pattern>
+                </pattern>
+            </providers>
+        </encoder>
+    </appender>
+
+    <logger name="com.joeun.daeyeohaeyoung" level="DEBUG" additivity="true"/>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+    </root>
+</configuration>

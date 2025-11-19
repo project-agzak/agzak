@@ -1,0 +1,25 @@
+# === Profile: dev ===
+spring:
+  config:
+    activate:
+      on-profile: dev
+  datasource:
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:agzak}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
+    username: ${MYSQL_USER:agzak}
+    password: ${MYSQL_PASSWORD:agzak102}
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+
+  # DDL / DML
+  sql:
+    init:
+      mode: never
+      encoding: UTF-8
+      schema-locations: classpath:agzak_ddl.sql
+      data-locations: classpath:agzak_dml.sql
