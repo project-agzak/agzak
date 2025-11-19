@@ -6,12 +6,14 @@ import com.ssafy.agzak.domain.coupon.dto.response.CouponResponse;
 import com.ssafy.agzak.domain.coupon.entity.Coupon;
 //import com.ssafy.agzak.domain.coupon.entity.CouponEventCounter;
 import com.ssafy.agzak.domain.coupon.entity.MemberCoupon;
+import com.ssafy.agzak.domain.coupon.exception.AlreadyIssuedCouponException;
 import com.ssafy.agzak.domain.coupon.repository.*;
 import com.ssafy.agzak.domain.coupon.port.CouponIssueOrderPort;
 import com.ssafy.agzak.domain.event.repository.EventRepository;
 import com.ssafy.agzak.domain.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -185,7 +187,7 @@ public class CouponService {
         Coupon coupon = couponRepository.findById(couponId)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 쿠폰입니다."));
 
-        if (coupon.getExpiresAt() != null) {
+        if (coupon.getExpiresAt() != null && LocalDateTime.now().isAfter(coupon.getExpiresAt())) {
             throw new IllegalArgumentException("만료된 쿠폰입니다.");
         }
 
@@ -196,14 +198,19 @@ public class CouponService {
             return CouponIssueResultResponse.failDueToSoldOut(order);
         }
 
-        MemberCoupon saved = memberCouponRepository.save(
-                MemberCoupon.builder()
-                        .coupon(couponRepository.getReferenceById(couponId))
-                        .member(memberRepository.getReferenceById(memberId))
-                        .build()
-        );
+        try {
+            MemberCoupon saved = memberCouponRepository.save(
+                    MemberCoupon.builder()
+                            .coupon(couponRepository.getReferenceById(couponId))
+                            .member(memberRepository.getReferenceById(memberId))
+                            .build()
+            );
 
-        return CouponIssueResultResponse.success(saved.getMemberCouponId(), order);
+            return CouponIssueResultResponse.success(saved.getMemberCouponId(), order);
+
+        } catch (DataIntegrityViolationException e) {
+            throw new AlreadyIssuedCouponException("이미 발급된 쿠폰입니다.");
+        }
     }
 
 }
