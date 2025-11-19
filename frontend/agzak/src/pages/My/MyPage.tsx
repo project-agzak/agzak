@@ -403,7 +403,7 @@ export default function MyPage() {
               <div
                 className="
                   absolute
-                  bottom-[calc(100%+8px)]
+                  top-[calc(100%+8px)]
                   left-1/2
                   -translate-x-1/2
                   z-50

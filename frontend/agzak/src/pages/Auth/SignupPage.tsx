@@ -165,14 +165,20 @@ export default function SignupPage() {
     }
 
     // 게스트가 아닌 경우 → 이메일/비번만 저장 후 Fortune 페이지로 이동
-    const userInfo = {
+    // const userInfo = {
+    //   email,
+    //   password,
+    //   passwordCheck,
+    // };
+    sessionStorage.setItem('userId', "userId_check");
+
+    // navigate('/fortune');
+     navigate('/fortune', {
+    state: {
       email,
       password,
-      passwordCheck,
-    };
-    sessionStorage.setItem('userId', JSON.stringify(userInfo));
-
-    navigate('/fortune');
+    },
+  });
   };
 
   return (
