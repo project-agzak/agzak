@@ -37,6 +37,39 @@ type CouponIssueResult = {
   order: number;
 };
 
+// URL을 a 태그로 바꿔 주면서 줄바꿈(\n)도 유지
+const renderDescriptionWithLinks = (text: string) => {
+  const urlPattern = /(https?:\/\/[^\s]+)/g;
+
+  return text.split("\n").map((line, lineIndex) => (
+      <p
+          key={lineIndex}
+          className={lineIndex === 0 ? "" : "mt-1"}
+      >
+        {line.split(urlPattern).map((part, partIndex) => {
+          const isUrl =
+              part.startsWith("http://") || part.startsWith("https://");
+
+          if (isUrl) {
+            return (
+                <a
+                    key={partIndex}
+                    href={part}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-sky-600 underline break-all"
+                >
+                  {part}
+                </a>
+            );
+          }
+
+          return <span key={partIndex}>{part}</span>;
+        })}
+      </p>
+  ));
+};
+
 export function EventModal({ onClose }: EventModalProps) {
   const [events, setEvents] = useState<EventSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,7 +87,7 @@ export function EventModal({ onClose }: EventModalProps) {
   // 이 이벤트에 대해 이미 참여했는지(프론트 기준)
   const [hasJoined, setHasJoined] = useState(false);
 
-  // 선착순 결과 (성공/실패 + 순번)
+  // 선착순 결과 (성공/실패 + 순번) - 서버 응답을 프론트에서만 들고 있음
   const [joinResult, setJoinResult] = useState<CouponIssueResult | null>(null);
 
   // 로그인 / 회원 정보
@@ -91,6 +124,7 @@ export function EventModal({ onClose }: EventModalProps) {
       return;
     }
 
+    // 로컬 스토리지에 “이 이벤트 참여했는지” 기록
     const key = `event_joined_${selectedEvent.eventId}`;
     const joined = localStorage.getItem(key) === "true";
     setHasJoined(joined);
@@ -207,13 +241,15 @@ export function EventModal({ onClose }: EventModalProps) {
         return;
       }
 
-      // 아직 시작 전(새 메시지 포함): 빠르게 재시도할 수 있도록 모달은 그대로 유지
+      // 아직 시작 전(서버 메시지 여러 버전 대응)
       if (
           msg.includes("아직 발급이 시작되지 않은 쿠폰") ||
           msg.includes("아직 시작 전") ||
           msg.includes("시작 전")
       ) {
-        alert("아직 발급이 시작되지 않은 쿠폰입니다.\n정해진 시간에 맞춰 다시 시도해 주세요.");
+        alert(
+            "아직 발급이 시작되지 않은 쿠폰입니다.\n정해진 시간에 맞춰 다시 시도해 주세요.",
+        );
         return;
       }
 
@@ -221,7 +257,7 @@ export function EventModal({ onClose }: EventModalProps) {
       return;
     }
 
-    // 정상 응답 (isSuccess true/false 모두 포함 → 결과 모달로 전환)
+    // ✅ 정상 응답: 서버가 준 결과를 프론트 상태에 저장
     const result = res.data;
     setJoinResult(result);
 
@@ -299,7 +335,7 @@ export function EventModal({ onClose }: EventModalProps) {
   const renderDetailView = () => {
     if (!selectedEvent) return null;
 
-    // 이미 선착순 결과가 있으면 결과 화면으로 전환
+    // ✅ 이미 선착순 결과가 있으면, 결과 전용 뷰로 전환
     if (joinResult) {
       return (
           <EventResultView
@@ -315,8 +351,11 @@ export function EventModal({ onClose }: EventModalProps) {
       );
     }
 
-    // 시간/상태에 따른 비활성화 제거 → 서버가 막아 주고, 프론트는 시도만 허용
-    const disabled = !primaryCoupon || hasJoined;
+    // ✅ 버튼 활성화 조건: 쿠폰 있고, 아직 미참여이고, 이벤트가 OPEN 상태일 때만
+    const disabled =
+        !primaryCoupon ||
+        hasJoined ||
+        selectedEvent.eventStatus !== "OPEN";
 
     return (
         <>
@@ -357,9 +396,9 @@ export function EventModal({ onClose }: EventModalProps) {
 
           {/* 이벤트 설명 */}
           {selectedEvent.description && (
-              <p className="mt-1 text-sm text-zinc-700 leading-relaxed whitespace-pre-line">
-                {selectedEvent.description}
-              </p>
+              <div className="mt-1 text-sm text-zinc-700 leading-relaxed">
+                {renderDescriptionWithLinks(selectedEvent.description)}
+              </div>
           )}
 
           {/* 기간 표시 */}
@@ -392,9 +431,12 @@ export function EventModal({ onClose }: EventModalProps) {
             )}
           </div>
 
-          {/* 안내 문구: 이제는 '이미 참여'만 표시 */}
+          {/* 안내 문구: 상태별 안내 */}
           <div className="mt-2 text-[11px] text-zinc-500">
             {hasJoined && "이미 참여 완료한 이벤트입니다."}
+            {!hasJoined && selectedEvent.eventStatus === "READY" && "아직 시작 전인 이벤트입니다."}
+            {!hasJoined && selectedEvent.eventStatus === "CLOSED" && "이미 종료된 이벤트입니다."}
+            {!hasJoined && selectedEvent.eventStatus === "PAUSED" && "현재 일시 중단 상태입니다."}
           </div>
 
           {/* 참여 버튼 */}
