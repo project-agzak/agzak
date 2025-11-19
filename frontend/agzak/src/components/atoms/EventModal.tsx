@@ -1,7 +1,7 @@
 // src/components/atoms/EventModal.tsx
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import { useAuthStore } from "@/store/useAuthStore"; // ✅ 추가
+import { useAuthStore } from "@/store/useAuthStore";
 
 type EventModalProps = {
   onClose: () => void;
@@ -29,6 +29,13 @@ type EventCoupon = {
   createdAt: string;
 };
 
+// POST /api/v1/coupons/issue/{couponId}/members/{memberId} 응답 타입
+type CouponIssueResult = {
+  isSuccess: boolean;
+  memberCouponId: number;
+  order: number;
+};
+
 export function EventModal({ onClose }: EventModalProps) {
   const [events, setEvents] = useState<EventSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,7 +50,13 @@ export function EventModal({ onClose }: EventModalProps) {
 
   const primaryCoupon = coupons[0];
 
-  // ✅ 로그인 / 회원 정보
+  // 이 이벤트에 대해 이미 참여했는지(프론트 기준)
+  const [hasJoined, setHasJoined] = useState(false);
+
+  // 클라이언트 기준 현재 시간 (1초마다 업데이트)
+  const [now, setNow] = useState<Date>(() => new Date());
+
+  // 로그인 / 회원 정보
   const { isLoggedIn, member } = useAuthStore();
 
   // 1) 모달 최초 진입 시 이벤트 목록 조회
@@ -66,21 +79,26 @@ export function EventModal({ onClose }: EventModalProps) {
     fetchEvents();
   }, []);
 
-  // 2) 목록에서 이벤트 클릭 → 쿠폰 정보 조회
+  // 2) 목록에서 이벤트 클릭 → 쿠폰 정보 조회 + 로컬 참여 여부 확인
   useEffect(() => {
     if (!selectedEvent) {
       setCoupons([]);
       setCouponError(null);
       setCouponLoading(false);
+      setHasJoined(false);
       return;
     }
+
+    const key = `event_joined_${selectedEvent.eventId}`;
+    const joined = localStorage.getItem(key) === "true";
+    setHasJoined(joined);
 
     const fetchCoupons = async () => {
       setCouponLoading(true);
       setCouponError(null);
 
       const res = await api.get<EventCoupon[]>(
-        `/coupons/events/${selectedEvent.eventId}`
+          `/coupons/events/${selectedEvent.eventId}`,
       );
 
       if (!res.ok || !res.data) {
@@ -94,6 +112,19 @@ export function EventModal({ onClose }: EventModalProps) {
     };
 
     fetchCoupons();
+  }, [selectedEvent]);
+
+  // 3) 선택된 이벤트가 있을 때만 1초마다 now 갱신
+  useEffect(() => {
+    if (!selectedEvent) return;
+
+    const timer = setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+
+    return () => {
+      clearInterval(timer);
+    };
   }, [selectedEvent]);
 
   const formatDate = (iso: string) => {
@@ -128,7 +159,7 @@ export function EventModal({ onClose }: EventModalProps) {
     }
 
     return (
-      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] ${color}`}>
+        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] ${color}`}>
         {label}
       </span>
     );
@@ -138,192 +169,259 @@ export function EventModal({ onClose }: EventModalProps) {
   const handleJoin = async () => {
     if (!selectedEvent || !primaryCoupon) return;
 
+    if (hasJoined) {
+      alert("이미 참여하신 이벤트입니다.");
+      return;
+    }
+
     if (!isLoggedIn || !member) {
       alert("로그인 후 참여할 수 있는 이벤트입니다.");
       return;
     }
 
-    const memberId = (member as any).memberId; // TS 타입에 맞게 필요하면 수정
+    const memberId = member.id;
 
-    const res = await api.post<unknown>(
-      `/coupons/issue/${primaryCoupon.couponId}/members/${memberId}`
+    const res = await api.post<CouponIssueResult>(
+        `/coupons/issue/${primaryCoupon.couponId}/members/${memberId}`,
     );
 
-    if (!res.ok) {
+    // HTTP 에러 / 네트워크 에러 계열
+    if (!res.ok || !res.data) {
+      const rawError = (res as any).error;
+      const msg =
+          (rawError && typeof rawError === "object" && "message" in rawError
+              ? (rawError as any).message
+              : typeof rawError === "string"
+                  ? rawError
+                  : "") || "";
+
+      if (msg.includes("이미 발급된 쿠폰")) {
+        alert("이미 참여하신 이벤트입니다.");
+        const key = selectedEvent ? `event_joined_${selectedEvent.eventId}` : "";
+        if (selectedEvent) {
+          localStorage.setItem(key, "true");
+          setHasJoined(true);
+        }
+        return;
+      }
+
+      if (msg.includes("만료된 쿠폰")) {
+        alert("이벤트가 종료되었어요.");
+        return;
+      }
+
+      if (msg.includes("아직 시작 전") || msg.includes("시작 전")) {
+        alert("아직 시작 전인 이벤트입니다.");
+        return;
+      }
+
       alert("이벤트 참여에 실패했어요. 잠시 후 다시 시도해 주세요.");
       return;
     }
 
-    alert("이벤트에 참여했어요! (쿠폰이 발급되었습니다.)");
-    // 필요하다면 여기서 쿠폰 재조회 등 추가
+    // ✅ 정상 응답 (isSuccess true/false 모두 포함)
+    const { isSuccess, order } = res.data;
+
+    if (isSuccess) {
+      // 성공 케이스: 쿠폰 발급 완료 + 등수 안내
+      alert(
+          `축하합니다! 🎉\n\n` +
+          `${order}번째로 선착순 쿠폰을 받으셨습니다.`,
+      );
+    } else {
+      // 실패 케이스(매진 등): 그래도 본인이 몇 번째였는지는 알려줌
+      alert(
+          `아쉽지만 선착순 쿠폰이 모두 소진되었습니다.\n\n` +
+          `회원님은 ${order}번째로 참여하셨습니다.`,
+      );
+    }
+
+    if (selectedEvent) {
+      const key = `event_joined_${selectedEvent.eventId}`;
+      localStorage.setItem(key, "true");
+    }
+    setHasJoined(true);
   };
 
   // ───────────────── 목록 화면 ─────────────────
   const renderListView = () => (
-    <>
-      <h2 className="mb-2 text-lg font-bitbit text-[#121212]">이벤트</h2>
+      <>
+        <h2 className="mb-2 text-lg font-bitbit text-[#121212]">이벤트</h2>
 
-      {loading && (
-        <p className="text-sm text-zinc-600">이벤트를 불러오는 중입니다...</p>
-      )}
+        {loading && (
+            <p className="text-sm text-zinc-600">이벤트를 불러오는 중입니다...</p>
+        )}
 
-      {error && !loading && (
-        <p className="text-sm text-red-600">{error}</p>
-      )}
+        {error && !loading && (
+            <p className="text-sm text-red-600">{error}</p>
+        )}
 
-      {!loading && !error && events.length === 0 && (
-        <p className="text-sm text-zinc-600">진행 중인 이벤트가 없습니다.</p>
-      )}
+        {!loading && !error && events.length === 0 && (
+            <p className="text-sm text-zinc-600">진행 중인 이벤트가 없습니다.</p>
+        )}
 
-      {!loading && !error && events.length > 0 && (
-        <ul className="mt-2 space-y-2 max-h-[260px] overflow-y-auto pr-1">
-          {events.map((event) => (
-            <li key={event.eventId}>
-              <button
-                type="button"
-                onClick={() => setSelectedEvent(event)}
-                className="w-full flex items-center gap-3 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-left hover:bg-zinc-50 active:bg-zinc-100 cursor-pointer"
-              >
-                {/* 썸네일: 없으면 기본 이미지 */}
-                <img
-                  src={"/images/event-default.png"}
-                  alt={event.title}
-                  className="h-12 w-12 rounded-lg object-cover flex-shrink-0"
-                />
+        {!loading && !error && events.length > 0 && (
+            <ul className="mt-2 space-y-2 max-h-[260px] overflow-y-auto pr-1">
+              {events.map((event) => (
+                  <li key={event.eventId}>
+                    <button
+                        type="button"
+                        onClick={() => setSelectedEvent(event)}
+                        className="w-full flex items-center gap-3 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-left hover:bg-zinc-50 active:bg-zinc-100 cursor-pointer"
+                    >
+                      {/* 썸네일: 없으면 기본 이미지 */}
+                      <img
+                          src={"/images/event-default.png"}
+                          alt={event.title}
+                          className="h-12 w-12 rounded-lg object-cover flex-shrink-0"
+                      />
 
-                {/* 텍스트: 목록에서는 title만 */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-semibold text-[#121212] truncate">
-                      {event.title}
-                    </p>
-                    {renderStatusBadge(event.eventStatus)}
-                  </div>
-                  <p className="mt-[2px] text-[10px] text-zinc-400">
-                    {formatDate(event.startAt)} ~ {formatDate(event.endAt)}
-                  </p>
-                </div>
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
+                      {/* 텍스트: 목록에서는 title만 */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="text-sm font-semibold text-[#121212] truncate">
+                            {event.title}
+                          </p>
+                          {renderStatusBadge(event.eventStatus)}
+                        </div>
+                        <p className="mt-[2px] text-[10px] text-zinc-400">
+                          {formatDate(event.startAt)} ~ {formatDate(event.endAt)}
+                        </p>
+                      </div>
+                    </button>
+                  </li>
+              ))}
+            </ul>
+        )}
 
-      <div className="mt-4 flex justify-end">
-        <button
-          type="button"
-          onClick={onClose}
-          className="rounded-md px-3 py-1.5 text-sm text-[#121212] bg-zinc-100 hover:bg-zinc-200 cursor-pointer"
-        >
-          닫기
-        </button>
-      </div>
-    </>
+        <div className="mt-4 flex justify-end">
+          <button
+              type="button"
+              onClick={onClose}
+              className="rounded-md px-3 py-1.5 text-sm text-[#121212] bg-zinc-100 hover:bg-zinc-200 cursor-pointer"
+          >
+            닫기
+          </button>
+        </div>
+      </>
   );
 
   // ───────────────── 상세 화면 ─────────────────
   const renderDetailView = () => {
     if (!selectedEvent) return null;
 
+    const start = new Date(selectedEvent.startAt);
+    const end = new Date(selectedEvent.endAt);
+    const isTimeOpened = now >= start && now <= end;
+
+    const isOpenStatus = selectedEvent.eventStatus === "OPEN";
+    const canJoinByTime = isTimeOpened && isOpenStatus;
+
+    const disabled = !primaryCoupon || hasJoined || !canJoinByTime;
+
     return (
-      <>
-        {/* 목록으로 돌아가기 (작게) */}
-        <button
-          type="button"
-          className="mb-2 text-xs text-zinc-500 flex items-center gap-1 cursor-pointer"
-          onClick={() => setSelectedEvent(null)}
-        >
-          <span className="text-sm leading-none">←</span>
-          <span>목록으로</span>
-        </button>
-
-        {/* 상단 이미지 영역 */}
-        <div className="mb-3 overflow-hidden rounded-xl">
-          <img
-            src={"/images/event-default.png"}
-            alt={selectedEvent.title}
-            className="w-full h-32 object-cover"
-          />
-        </div>
-
-        {/* 제목 + 상태 배지 */}
-        <div className="mb-2 flex items-start justify-between gap-2">
-          <h2 className="text-lg font-bitbit text-[#121212] leading-snug flex-1">
-            {selectedEvent.title}
-          </h2>
-          {renderStatusBadge(selectedEvent.eventStatus)}
-        </div>
-
-        {/* 이벤트 설명 (상세에서만 노출) */}
-        {selectedEvent.description && (
-          <p className="mt-1 text-sm text-zinc-700 leading-relaxed whitespace-pre-line">
-            {selectedEvent.description}
-          </p>
-        )}
-
-        {/* 기간 표시 */}
-        <div className="mt-3 rounded-lg bg-zinc-50 px-3 py-2 text-xs text-zinc-500">
-          <div>시작: {formatDate(selectedEvent.startAt)}</div>
-          <div>종료: {formatDate(selectedEvent.endAt)}</div>
-        </div>
-
-        {/* 쿠폰 정보 영역 */}
-        <div className="mt-3 rounded-lg border border-zinc-200 bg-white px-3 py-2">
-          {couponLoading && (
-            <p className="text-xs text-zinc-600">쿠폰 정보를 불러오는 중입니다...</p>
-          )}
-
-          {couponError && !couponLoading && (
-            <p className="text-xs text-red-600">{couponError}</p>
-          )}
-
-          {!couponLoading && !couponError && !primaryCoupon && (
-            <p className="text-xs text-zinc-600">이벤트에 연결된 쿠폰이 없습니다.</p>
-          )}
-
-          {!couponLoading && !couponError && primaryCoupon && (
-            <div className="text-xs text-zinc-700 space-y-1">
-              <div className="font-semibold">
-                쿠폰 종류: {primaryCoupon.couponTypeName}
-              </div>
-              <div>쿠폰 설명: {primaryCoupon.description}</div>
-              <div>
-                발급 현황: {primaryCoupon.issuedQuantity} / {primaryCoupon.totalQuantity}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* 참여 버튼 */}
-        <div className="mt-4 flex justify-end">
+        <>
+          {/* 목록으로 돌아가기 (작게) */}
           <button
-            type="button"
-            onClick={handleJoin}
-            disabled={!primaryCoupon}
-            className="rounded-md px-3 py-1.5 text-sm text-white bg-[#121212] hover:bg-zinc-900 disabled:bg-zinc-300 disabled:cursor-not-allowed cursor-pointer"
+              type="button"
+              className="mb-2 text-xs text-zinc-500 flex items-center gap-1 cursor-pointer"
+              onClick={() => setSelectedEvent(null)}
           >
-            이벤트 참여하기
+            <span className="text-sm leading-none">←</span>
+            <span>목록으로</span>
           </button>
-        </div>
-      </>
+
+          {/* 상단 이미지 영역 */}
+          <div className="mb-3 overflow-hidden rounded-xl">
+            <img
+                src={"/images/event-default.png"}
+                alt={selectedEvent.title}
+                className="w-full h-32 object-cover"
+            />
+          </div>
+
+          {/* 제목 + 상태 배지 */}
+          <div className="mb-2 flex items-start justify-between gap-2">
+            <h2 className="text-lg font-bitbit text-[#121212] leading-snug flex-1">
+              {selectedEvent.title}
+            </h2>
+            {renderStatusBadge(selectedEvent.eventStatus)}
+          </div>
+
+          {/* 이벤트 설명 */}
+          {selectedEvent.description && (
+              <p className="mt-1 text-sm text-zinc-700 leading-relaxed whitespace-pre-line">
+                {selectedEvent.description}
+              </p>
+          )}
+
+          {/* 기간 표시 */}
+          <div className="mt-3 rounded-lg bg-zinc-50 px-3 py-2 text-xs text-zinc-500">
+            <div>시작: {formatDate(selectedEvent.startAt)}</div>
+            <div>종료: {formatDate(selectedEvent.endAt)}</div>
+          </div>
+
+          {/* 쿠폰 정보 */}
+          <div className="mt-3 rounded-lg border border-zinc-200 bg-white px-3 py-2">
+            {couponLoading && (
+                <p className="text-xs text-zinc-600">쿠폰 정보를 불러오는 중입니다...</p>
+            )}
+
+            {couponError && !couponLoading && (
+                <p className="text-xs text-red-600">{couponError}</p>
+            )}
+
+            {!couponLoading && !couponError && !primaryCoupon && (
+                <p className="text-xs text-zinc-600">이벤트에 연결된 쿠폰이 없습니다.</p>
+            )}
+
+            {!couponLoading && !couponError && primaryCoupon && (
+                <div className="text-xs text-zinc-700 space-y-1">
+                  <div className="font-semibold">
+                    쿠폰 종류: {primaryCoupon.couponTypeName}
+                  </div>
+                  <div>쿠폰 설명: {primaryCoupon.description}</div>
+                </div>
+            )}
+          </div>
+
+          {/* 안내 문구 */}
+          <div className="mt-2 text-[11px] text-zinc-500">
+            {hasJoined && "이미 참여 완료한 이벤트입니다."}
+            {!hasJoined && !isTimeOpened && "참여 가능 시간이 아닙니다."}
+            {!hasJoined && isTimeOpened && !isOpenStatus && "현재 일시 중단 상태입니다."}
+          </div>
+
+          {/* 참여 버튼 */}
+          <div className="mt-2 flex justify-end">
+            <button
+                type="button"
+                onClick={handleJoin}
+                disabled={disabled}
+                className="rounded-md px-3 py-1.5 text-sm text-white bg-[#121212] hover:bg-zinc-900 disabled:bg-zinc-300 disabled:cursor-not-allowed cursor-pointer"
+            >
+              {hasJoined ? "참여 완료" : "이벤트 참여하기"}
+            </button>
+          </div>
+        </>
     );
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
-      <div className="w-full max-w-xs rounded-2xl bg-[#FEFBF2] shadow-lg p-5 relative">
-        {/* 닫기 버튼 */}
-        <button
-          type="button"
-          aria-label="닫기"
-          className="absolute top-2 right-2 rounded-full px-2 py-1 text-sm text-zinc-600 hover:bg-zinc-100 cursor-pointer"
-          onClick={onClose}
-        >
-          ✕
-        </button>
+      <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
+        <div className="w-full max-w-xs rounded-2xl bg-[#FEFBF2] shadow-lg p-5 relative">
+          {/* 닫기 버튼 */}
+          <button
+              type="button"
+              aria-label="닫기"
+              className="absolute top-2 right-2 rounded-full px-2 py-1 text-sm text-zinc-600 hover:bg-zinc-100 cursor-pointer"
+              onClick={onClose}
+          >
+            ✕
+          </button>
 
-        {selectedEvent ? renderDetailView() : renderListView()}
+          {selectedEvent ? renderDetailView() : renderListView()}
+        </div>
       </div>
-    </div>
   );
 }
