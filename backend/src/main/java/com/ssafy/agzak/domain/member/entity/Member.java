@@ -80,7 +80,9 @@ public class Member {
     public void updateInfo(MemberEditRequest request) {
         this.gender = request.gender();
         this.birthDate = request.birthDate();
-        this.birthTime = request.birthTime();
+        this.birthTime = (request.birthTime() == null)
+                ? LocalTime.MIDNIGHT
+                : request.birthTime();
         this.birthCity = request.birthCity();
     }
 
