@@ -37,7 +37,7 @@ public class EventService {
 
     @Transactional(readOnly = true)
     public List<EventResponse> findAll() {
-        return eventRepository.findAll()
+        return eventRepository.findAllByOrderByEventIdDesc()
                 .stream()
                 .map(EventResponse::from)
                 .toList();
