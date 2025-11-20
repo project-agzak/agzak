@@ -267,13 +267,22 @@
 - PWA, GA4, Hotjar  
 
 ### Backend
-- 
+- Java 17 (JVM)
+- Spring Boot 3.5.x
+- 내장 Tomcat (Spring Boot Embedded)
+- MySQL 9.x
+- Redis 
+- Gradle
 
 ### AI
-- 
+- Python 3.x
+- FastAPI + Uvicorn
+- MySQL
 
 ### Infra
-- 
+- Ubuntu 22.04 LTS
+- Docker Engine 24.x+
+- Docker Compose v2.x+
 
 ---
 
