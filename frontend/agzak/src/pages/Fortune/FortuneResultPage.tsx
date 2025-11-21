@@ -39,6 +39,13 @@ import FriendSnake from '@/assets/Friends/FriendSnake.webp';
 import FriendTiger from '@/assets/Friends/FriendTiger.webp';
 import { KakaoShareButton } from '@/components/atoms/KakaoShareButton';
 
+
+import HealthIcon from '@/assets/Icon/health.webp';
+import SuccessIcon from '@/assets/Icon/success.webp';
+import LoveIcon from '@/assets/Icon/love.webp';
+import MoneyIcon from '@/assets/Icon/money.webp';
+
+
 /** 앞면 카드: 이름 → 이미지 */
 const FRONT_BY_TYPE: Record<string, string> = {
   쥐: FrontMouse,
@@ -210,6 +217,7 @@ export default function FortuneResultPage() {
             value={getScoreValue ? getScoreValue('health') : 0}
             color="green"
             description={getDetailSummary('health')}
+              icon={HealthIcon}
           />
 
           <ExpandableFortune
@@ -218,6 +226,7 @@ export default function FortuneResultPage() {
             value={getScoreValue ? getScoreValue('achievement') : 0}
             color="blue"
             description={getDetailSummary('achievement')}
+             icon={SuccessIcon}
           />
 
           <ExpandableFortune
@@ -226,6 +235,7 @@ export default function FortuneResultPage() {
             value={getScoreValue ? getScoreValue('love') : 0}
             color="pink"
             description={getDetailSummary('love')}
+             icon={LoveIcon}
           />
 
           <ExpandableFortune
@@ -234,6 +244,7 @@ export default function FortuneResultPage() {
             value={getScoreValue ? getScoreValue('money') : 0}
             color="yellow"
             description={getDetailSummary('money')}
+            icon={MoneyIcon}
           />
         </div>
       </div>
