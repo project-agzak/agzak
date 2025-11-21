@@ -15,6 +15,7 @@ type ExpandableFortuneProps = {
   description?: string;
   /** 여러 개를 묶어서 쓸 때 고유 id */
   itemValue?: string;
+  icon?: string;
 };
 
 export function ExpandableFortune({
@@ -23,6 +24,7 @@ export function ExpandableFortune({
   color,
   description,
   itemValue = 'item-1',
+    icon,
 }: ExpandableFortuneProps) {
   return (
     <Accordion
@@ -36,6 +38,16 @@ export function ExpandableFortune({
         {/* 헤더 영역을 우리가 커스텀해서 FortuneGauge로 대체 */}
         <AccordionTrigger className="p-0 hover:no-underline [&[data-state=open]>svg]:rotate-180 cursor-pointer">
           <div className="flex w-full items-center gap-2 font-galmuri-xsmall">
+                  {/*  추가된 아이콘 */}
+            {icon && (
+              <img
+                src={icon}
+                alt=""
+                className="w-6 h-6 object-contain -translate-y-[1px]"
+                draggable={false}
+              />
+            )}
+
             <FortuneGauge label={label} value={value} color={color} />
           </div>
         </AccordionTrigger>
