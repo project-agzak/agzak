@@ -118,12 +118,13 @@ export default function MyPage() {
       setIsEdit(true);
       return;
     }
+ 
 
     // 여기부터는 "수정 완료" 클릭 시
     try {
       const birthTime =
         unknownTime || !hour || !minute
-          ? null
+          ? '00:00'
           : `${hour.padStart(2, '0')}:${minute.padStart(2, '0')}`;
 
       const apiGender = gender === 'female' ? 'FEMALE' : gender === 'male' ? 'MALE' : null;
