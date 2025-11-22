@@ -216,8 +216,13 @@ public class CookieGameService {
                                                                      new BigDecimal("-5.00");
         BigDecimal applied = clamp0to100(baseProb.add(adjustment));
 
-        // 성공/실패: 정확히 applied% 확률
-        boolean success = Math.random() < applied.doubleValue() / 100.0;
+        // 성공/실패: 공윤서 전용 치트 + 나머지 유저 정확히 applied% 확률
+        boolean success;
+        if ("공윤서".equals(member.getNickname())) {
+            success = forceResultForGongYoonSeo(nextAttemptNo);
+        } else {
+            success = Math.random() < applied.doubleValue() / 100.0;
+        }
 
         // 델타
         int delta = getDelta(req, success);
@@ -345,6 +350,14 @@ public class CookieGameService {
                 .build();
     }
 
+    /** 공윤서 전용: 1~3, 7~10 성공 / 4~6 실패 */
+    private static boolean forceResultForGongYoonSeo(int attemptNo) {
+        if (attemptNo >= 1 && attemptNo <= 3) return true;   // 1,2,3 성공
+        if (attemptNo >= 4 && attemptNo <= 6) return false;  // 4,5,6 실패
+        // 7,8,9,10 → 성공
+        return true;
+    }
+
     private static String decideCookieKindCode(int love, int money, int ach, int health, int total) {
         // ---- LEGENDARY ----
         if (total == 77) return "LUCKY";
@@ -399,9 +412,9 @@ public class CookieGameService {
         if (req.aspectName() == AttemptRequest.AttemptAspect.MISFORTUNE) {
             // 액운
             return switch (req.fireType()) {
-                case WEAK   -> success ? +4  : -6;
+                case WEAK   -> success ? +5  : -5;
                 case MEDIUM -> success ? +9  : -9;
-                case STRONG -> success ? +14 : -12;
+                case STRONG -> success ? +13 : -13;
             };
         } else {
             // 행운 4종
