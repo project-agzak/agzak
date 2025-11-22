@@ -412,9 +412,9 @@ public class CookieGameService {
         if (req.aspectName() == AttemptRequest.AttemptAspect.MISFORTUNE) {
             // 액운
             return switch (req.fireType()) {
-                case WEAK   -> success ? +4  : -6;
+                case WEAK   -> success ? +5  : -5;
                 case MEDIUM -> success ? +9  : -9;
-                case STRONG -> success ? +14 : -12;
+                case STRONG -> success ? +13 : -13;
             };
         } else {
             // 행운 4종
