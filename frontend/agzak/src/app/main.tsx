@@ -7,6 +7,7 @@ import '../pwa/registerSW';
 import '../styles/index.css';
 import { router } from './router';
 import { initGlobalClickSound } from '@/lib/globalClickSound';
+import { initGlobalBgm } from "@/lib/globalBgm";
 
 const ENABLE_ANALYTICS = String(import.meta.env.VITE_ENABLE_ANALYTICS).toLowerCase() === 'true';
 if (ENABLE_ANALYTICS) loadAnalytics();
@@ -37,8 +38,8 @@ if (!KAKAO_JS_KEY) {
 
 function Root() {
   useEffect(() => {
-    // ✅ 전역 클릭 사운드 한 번만 세팅
     initGlobalClickSound();
+    initGlobalBgm();
   }, []);
 
   return (
@@ -50,4 +51,6 @@ function Root() {
   );
 }
 
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(<Root />);
+ReactDOM.createRoot(
+  document.getElementById('root') as HTMLElement
+).render(<Root />);
