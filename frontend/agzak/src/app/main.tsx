@@ -1,11 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { loadAnalytics } from '@/lib/analytics';
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import ReactDOM from 'react-dom/client';
 import { RouterProvider } from 'react-router-dom';
 import '../pwa/registerSW';
 import '../styles/index.css';
 import { router } from './router';
+import { initGlobalClickSound } from '@/lib/globalClickSound';
 
 const ENABLE_ANALYTICS = String(import.meta.env.VITE_ENABLE_ANALYTICS).toLowerCase() === 'true';
 if (ENABLE_ANALYTICS) loadAnalytics();
@@ -34,10 +35,19 @@ if (!KAKAO_JS_KEY) {
   );
 }
 
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <React.StrictMode>
-    <Suspense fallback={null}>
-      <RouterProvider router={router} />
-    </Suspense>
-  </React.StrictMode>
-);
+function Root() {
+  useEffect(() => {
+    // ✅ 전역 클릭 사운드 한 번만 세팅
+    initGlobalClickSound();
+  }, []);
+
+  return (
+    <React.StrictMode>
+      <Suspense fallback={null}>
+        <RouterProvider router={router} />
+      </Suspense>
+    </React.StrictMode>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(<Root />);
