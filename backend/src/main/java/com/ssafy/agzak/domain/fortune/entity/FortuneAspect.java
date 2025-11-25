@@ -42,9 +42,11 @@ public class FortuneAspect {
 
     public int increaseWithUpperCap(int delta, int cap) {
         if (delta <= 0) {
-            this.score += delta;
-            return delta;
+            int before = this.score;
+            this.score = Math.max(0, this.score + delta);
+            return this.score - before;
         }
+
         int allowed = Math.max(0, cap - this.score);
         int applied = Math.min(delta, allowed);
         this.score += applied;
