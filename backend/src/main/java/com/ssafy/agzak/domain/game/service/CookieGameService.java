@@ -216,7 +216,6 @@ public class CookieGameService {
                                                                      new BigDecimal("-5.00");
         BigDecimal applied = clamp0to100(baseProb.add(adjustment));
 
-        // 성공/실패: 정확히 applied% 확률
         boolean success = Math.random() < applied.doubleValue() / 100.0;
 
         // 델타
@@ -399,9 +398,9 @@ public class CookieGameService {
         if (req.aspectName() == AttemptRequest.AttemptAspect.MISFORTUNE) {
             // 액운
             return switch (req.fireType()) {
-                case WEAK   -> success ? +4  : -6;
+                case WEAK   -> success ? +5  : -5;
                 case MEDIUM -> success ? +9  : -9;
-                case STRONG -> success ? +14 : -12;
+                case STRONG -> success ? +13 : -13;
             };
         } else {
             // 행운 4종
