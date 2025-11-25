@@ -163,7 +163,26 @@ public class GlobalExceptionHandler {
     // ===== Fallback 500 =====
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleEtc(Exception e, HttpServletRequest req) {
-        log.error("INTERNAL_SERVER_ERROR", e);
-        return build(HttpStatus.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR", "서버 오류가 발생했습니다.", req);
+        String path = req.getRequestURI();
+        String method = req.getMethod();
+        String query = req.getQueryString();
+
+        log.error(
+                "[500] INTERNAL_SERVER_ERROR ex={} msg={} path={} method={} query={}",
+                e.getClass().getName(),
+                e.getMessage(),
+                path,
+                method,
+                query,
+                e
+        );
+
+        return build(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "INTERNAL_SERVER_ERROR",
+                "서버 오류가 발생했습니다.",
+                req
+        );
     }
+
 }
