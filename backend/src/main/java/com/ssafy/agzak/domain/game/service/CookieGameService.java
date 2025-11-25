@@ -216,7 +216,6 @@ public class CookieGameService {
                                                                      new BigDecimal("-5.00");
         BigDecimal applied = clamp0to100(baseProb.add(adjustment));
 
-        // 성공/실패: 공윤서 전용 치트 + 나머지 유저 정확히 applied% 확률
         boolean success = Math.random() < applied.doubleValue() / 100.0;
 
         // 델타
