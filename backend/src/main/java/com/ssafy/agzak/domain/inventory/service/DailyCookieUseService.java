@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class DailyCookieUseService {
 
-    private static final int DAILY_LIMIT = 10;
+    private static final int DAILY_LIMIT = 50;
 
     private final CookieDailyUsageRepository usageRepository;
     private final DateProvider date;
