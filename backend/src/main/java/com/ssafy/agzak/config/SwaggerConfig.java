@@ -25,10 +25,6 @@ public class SwaggerConfig {
     public OpenAPI openAPI() {
         return new OpenAPI()
                 .servers(List.of(
-                        // 테스트: Jenkins 배포 환경
-                        new Server()
-                                .url("http://k13b102.p.ssafy.io:18082")
-                                .description("Test Backend ( http://k13b102.p.ssafy.io:18082 )"),
                         // 로컬: 직접 호출용
                         new Server()
                                 .url("http://localhost:8082")
