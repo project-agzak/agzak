@@ -35,8 +35,7 @@ db_pool = None
 
 try:
     async_client = AsyncOpenAI(
-        api_key=settings.GMS_API_KEY,
-        base_url=settings.GMS_BASE_URL
+        api_key=settings.OPEN_AI_KEY,
     )
 except Exception as e:
     logger.error(f"CRITICAL: Failed to initialize GMS/OpenAI client: {e}")
@@ -128,7 +127,7 @@ async def generate_summary(score: int, expert_text: str, category: str) -> str:
     
     try:
         completion = await async_client.chat.completions.create(
-            model=settings.GMS_MODEL,
+            model=settings.AI_MODEL,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}

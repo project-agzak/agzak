@@ -12,9 +12,8 @@ class Settings(BaseSettings):
     DB_NAME: str
 
     # 2. OpenAI API Key
-    GMS_API_KEY: str
-    GMS_MODEL: str
-    GMS_BASE_URL: str
+    OPEN_AI_KEY: str
+    AI_MODEL: str
 
     # server
     SERVER_HOST: str
