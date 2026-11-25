@@ -307,6 +307,12 @@
 
 ### 10-1. 전체 구성
 
+<div align="center">
+  <img src="exec/images/프로젝트 아키텍처v1.png" width="860">
+</div>
+
+아래 다이어그램은 같은 구성을 요청 흐름 중심으로 요약한 것입니다.
+
 ```mermaid
 flowchart TB
   U["사용자<br/>모바일 · 데스크톱"] --> NGX["Nginx (agzak-nginx)<br/>HTTPS · 정적 파일 · /api 프록시"]
